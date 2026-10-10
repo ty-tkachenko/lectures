@@ -155,6 +155,41 @@ Built-in names: `ldo-dissipation`, `buck-converter`, `ldo-vs-buck`, `ohms-power`
 
 `css/style.css` is a copy of `/css/style.css` from `ty-tkachenko/ty-tkachenko.github.io`. Re-copy it on purpose when that file changes. Lecture-only rules go in `css/lectures.css`. Do not link across sites.
 
+`assets/css/pages.css` is the shared sheet for figures and embedded widgets. The layout links it on every page. Do not edit files under `rf/` to share styles. Each `rf/**/widgets/demo.html` keeps its CSS inline so the file still works when opened on its own.
+
+### Figures
+
+Put module figures in that module's `img/` folder (`ee/05-power-conversion/img/buck.svg`, and the same under `rf/`). Tag the image so it picks up the panel:
+
+```markdown
+![Buck switch and inductor](img/buck.svg){: .figure}
+
+*The switch is closed for D of the cycle.*
+```
+
+`{: .figure}` centers the image, caps it at the column width, and sets a light padded panel so SVG line art does not sit on the body background. An `<em>` or paragraph immediately after the image is the caption.
+
+### Embedding a widget
+
+A module's interactive page is `widgets/demo.html` next to `index.md`. It accepts `?w=<id>` and renders only that widget. The id is the same string as in the page's `widgets:` front matter.
+
+```liquid
+{% include widget.html widget="smith-chart" height=520 %}
+```
+
+`_includes/widget.html` parameters:
+
+| Param | Required | Default | Meaning |
+| --- | --- | --- | --- |
+| `widget` | yes |  | Id. Becomes `?w=` and the iframe title if `title` is omitted. |
+| `height` | no | `480` | Iframe height in pixels. |
+| `src` | no | `widgets/demo.html` | Path relative to this page's directory. Resolved from `page.url`, then passed through `relative_url`, so the `/lectures` baseurl is included. |
+| `title` | no | the widget id | Accessible iframe title. |
+
+The include renders `<figure class="widget-embed">`: a lazy iframe, an "Open full screen" link (`target="_blank"`, `rel="noopener"`) to the same URL, and a plain link inside `<noscript>`. `figure.widget-embed` is styled in `assets/css/pages.css`.
+
+EE `widgets/demo.html` files must honor `?w=` the same way. Link `assets/css/widgets.css` and keep a short inline copy of the widget rules so the file still works when double-clicked. Do not remove the inline CSS from `rf/` demos.
+
 ## Rules
 
 - Lowercase URLs and paths only. GitHub Pages is case-sensitive. Case-only renames need a two-step `git mv`.

@@ -1,0 +1,24 @@
+{% comment %}
+  Embed one widget from this page's widgets/demo.html.
+  widget — id, matching an entry in the page's widgets: front matter (required)
+  height — iframe height in px (default 480)
+  src    — file relative to this page's directory (default widgets/demo.html)
+  title  — iframe title and link text (default the widget id)
+  The demo page reads ?w=<id> and shows that widget. Link hrefs include the baseurl.
+{% endcomment %}
+{%- assign widget_id = include.widget -%}
+{%- assign widget_height = include.height | default: 480 -%}
+{%- assign widget_file = include.src | default: "widgets/demo.html" -%}
+{%- assign widget_title = include.title | default: widget_id -%}
+{%- assign page_url = page.url | replace: "index.html", "" -%}
+{%- assign tail = page_url | slice: -1, 1 -%}
+{%- unless tail == "/" -%}
+  {%- assign page_url = page_url | append: "/" -%}
+{%- endunless -%}
+{%- capture widget_path -%}{{ page_url }}{{ widget_file }}?w={{ widget_id }}{%- endcapture -%}
+{%- assign widget_href = widget_path | relative_url -%}
+<figure class="widget-embed">
+  <iframe src="{{ widget_href }}" title="{{ widget_title | escape }}" loading="lazy" style="height:{{ widget_height }}px"></iframe>
+  <figcaption><a href="{{ widget_href }}" target="_blank" rel="noopener">Open full screen ↗</a></figcaption>
+  <noscript><p><a href="{{ widget_href }}">Open the {{ widget_title | escape }} widget</a></p></noscript>
+</figure>
