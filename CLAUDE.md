@@ -145,9 +145,11 @@ Hook:
 | `polar(cx, cy, radius, angleRad)` | Point on a circle. For a later Smith chart. |
 | `svgEl(tag, attrs)` / `el(tag, attrs, text)` | DOM helpers. |
 | `calc.ldo`, `calc.junction`, `calc.buckCcm`, `calc.buckDcm`, `calc.ripple`, `calc.buckPower` | The regulator formulas. |
+| `calc.ohmsPower`, `calc.parallelPair`, `calc.dividerLoaded`, `calc.preferredResistor`, `calc.ledLimit`, `calc.resistorResult`, `calc.twoNode` | Ohm's law, dividers, E12/E24, and the two-node circuit. |
+| `calc.rcSquare`, `calc.rcSample`, `calc.xcOf`, `calc.xlOf`, `calc.fcRc`, `calc.lpMag`, `calc.hpMag`, `calc.dbOf`, `calc.kickVoltage`, `calc.diodeDecay` | RC waveforms, reactance, filters, and kickback. |
 | `sig` / `fixed` / `clamp` | Number formatting. |
 
-Built-in names: `ldo-dissipation`, `buck-converter`, `ldo-vs-buck`. Put a 2–3 sentence "try this" in `data-prompt`.
+Built-in names: `ldo-dissipation`, `buck-converter`, `ldo-vs-buck`, `ohms-power`, `voltage-divider`, `led-limit`, `kvl-kcl`, `rc-scope`, `rl-kickback`, `rc-filter`, `impedance-plot`. Put a 2–3 sentence "try this" in `data-prompt`. Plots are static, so they stay put when the reader prefers reduced motion. The buck widget is the one that animates, and it skips that animation in the same case.
 
 ## Styling
 
@@ -173,8 +175,8 @@ Each row opens with the motivating question in `question:`.
 
 | # | Folder | Title | Opens with |
 | --- | --- | --- | --- |
-| 01 | `ee/01-circuit-fundamentals/` | Circuit Fundamentals | Why does a circuit draw current, and what does a battery voltage actually promise? |
-| 02 | `ee/02-capacitors-inductors/` | Capacitors and Inductors in Circuits | Why does a rail dip when a radio keys up, and what stores the energy that fills the dip? |
+| 01 | `ee/01-circuit-fundamentals/` | Circuit Fundamentals | Why does the same battery light one LED fine and kill another? |
+| 02 | `ee/02-capacitors-and-inductors/` | Capacitors and Inductors in Circuits | Why does a circuit not respond instantly, and how do capacitors smooth a supply? |
 | 03 | `ee/03-diodes-transistors/` | Diodes and Transistors | How do you block a backwards battery, or switch a load, without a mechanical relay? |
 | 04 | `ee/04-op-amps/` | Op Amps and Analog Building Blocks | How do you turn a tiny sensor voltage into a signal a flight computer can trust? |
 | 05 | `ee/05-power-conversion/` | Power Conversion: Linear vs Switching | Why does a 3.3 V flight computer get hot when it runs from a higher pack voltage, and when should the regulator switch instead of throwing the spare volts away as heat? |
@@ -186,7 +188,7 @@ Each row opens with the motivating question in `question:`.
 | 11 | `ee/11-reading-a-schematic/` | Reading a Real Schematic (guided walkthrough) | Can you read a real schematic and say what each block is doing? |
 | 12 | `ee/12-reading-a-layout/` | Reading a Real Layout (guided walkthrough) | Can you look at a real layout and see where the current actually flows? |
 
-Module 05 is the one that is written. Modules 11 and 12 are guided walkthroughs of a real drawing and a real board. If the specimen is a YJSP board, the lesson is still the skill of reading it.
+Modules 01, 02, and 05 are written. Modules 11 and 12 are guided walkthroughs of a real drawing and a real board. If the specimen is a YJSP board, the lesson is still the skill of reading it.
 
 ## How to add a module
 

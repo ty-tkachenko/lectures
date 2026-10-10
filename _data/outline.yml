@@ -6,11 +6,11 @@ ee:
   - module: 1
     short_title: Circuits
     title: Circuit Fundamentals
-    blurb: "Opens with: why does a circuit draw current, and what does a battery voltage actually promise?"
+    blurb: "Opens with: why does the same battery light one LED fine and kill another?"
   - module: 2
     short_title: Capacitors
     title: Capacitors and Inductors in Circuits
-    blurb: "Opens with: why does a rail dip when a radio keys up, and what stores the energy that fills the dip?"
+    blurb: "Opens with: why does a circuit not respond instantly, and how do capacitors smooth a supply?"
   - module: 3
     short_title: Diodes
     title: Diodes and Transistors

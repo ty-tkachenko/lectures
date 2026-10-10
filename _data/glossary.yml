@@ -62,11 +62,11 @@
   units: hertz (Hz)
 - id: inductor
   term: Inductor
-  definition: A component that resists a change in current. In a buck it is the part that smooths the chopped input into a nearly steady load current. Symbol L.
+  definition: A component that stores energy in a magnetic field and resists a change in current. Symbol L, unit henry (H). Voltage across an ideal inductor is V = L dI/dt. In a buck it smooths the chopped input into a nearly steady load current.
   units: henry (H)
 - id: capacitor
   term: Capacitor
-  definition: A component that resists a change in voltage. The buck's output capacitor absorbs the inductor's current ripple so the load sees a steady voltage.
+  definition: A component that stores energy in an electric field and resists a change in voltage. Symbol C, unit farad (F). Current through an ideal capacitor is I = C dV/dt. The buck's output capacitor absorbs inductor ripple so the load sees a steady voltage.
   units: farad (F)
 - id: current-ripple
   term: Inductor current ripple
@@ -119,3 +119,66 @@
 - id: spread-spectrum
   term: Spread spectrum
   definition: A buck feature that dithers the switching frequency so the noise is smeared instead of sitting on one tone. Useful for some emissions tests. A nuisance when you want a spur at a known frequency that a filter or a measurement can aim at.
+- id: charge
+  term: Charge
+  definition: The quantity of electricity, in coulombs (C). One coulomb is the charge moved when one ampere flows for one second. Symbol Q.
+  units: coulomb (C)
+- id: current
+  term: Current
+  definition: How much charge passes a point in a second. Symbol I, unit ampere (A). One ampere is one coulomb per second.
+  units: ampere (A)
+- id: voltage
+  term: Voltage
+  definition: The difference in electric potential between two points. Symbol V, unit volt (V). It is always measured between two nodes. A battery voltage is the difference between its two terminals.
+  units: volt (V)
+- id: resistance
+  term: Resistance
+  definition: How strongly a part opposes current. Symbol R, unit ohm (Ω). Ohm's law relates it to voltage and current by V = I R.
+  units: ohm (Ω)
+- id: series-circuit
+  term: Series
+  definition: Parts connected so the same current flows through each of them. Resistances in series add. The voltages around a series loop add up to the source voltage.
+- id: parallel-circuit
+  term: Parallel
+  definition: Parts connected across the same two nodes, so each sees the same voltage. The currents add. Two resistors in parallel combine as R = R1 R2 / (R1 + R2).
+- id: kvl
+  term: KVL
+  definition: Kirchhoff's voltage law. Around any closed loop, the voltages sum to zero. A rise in the source is balanced by the drops in the resistors.
+- id: kcl
+  term: KCL
+  definition: Kirchhoff's current law. At any node, the current that arrives equals the current that leaves. Charge does not pile up at a plain junction.
+- id: voltage-divider
+  term: Voltage divider
+  definition: Two resistors in series across a source. The output is the voltage on the bottom resistor, Vout = Vin R2 / (R1 + R2), but only when nothing else draws current from that node.
+- id: internal-resistance
+  term: Internal resistance
+  definition: The resistance inside a real source. The voltage you measure falls as the load current rises, because some of the source voltage is dropped inside the source itself.
+  units: ohm (Ω)
+- id: forward-voltage
+  term: Forward voltage
+  definition: The voltage across a diode or an LED when it is conducting in the forward direction. Symbol Vf. It is a datasheet number and it depends on current. It is not a resistor.
+  units: volt (V)
+- id: time-constant
+  term: Time constant
+  definition: How fast a first-order circuit settles. For a resistor and a capacitor, τ = R C. For a resistor and an inductor, τ = L / R. After one time constant a charging exponential has covered 63.2% of the remaining step. After about five, it has covered 99.3%.
+  units: second (s)
+- id: reactance
+  term: Reactance
+  definition: The opposition an ideal capacitor or inductor presents to a sine wave, in ohms. Capacitive reactance is Xc = 1 / (2π f C). Inductive reactance is XL = 2π f L. A capacitor's reactance falls as frequency rises. An inductor's rises.
+  units: ohm (Ω)
+- id: low-pass
+  term: Low-pass filter
+  definition: A circuit that passes slow signals and attenuates fast ones. A series resistor and a capacitor to ground is the usual first example. Its cutoff is fc = 1 / (2π R C).
+- id: high-pass
+  term: High-pass filter
+  definition: A circuit that passes fast signals and attenuates slow ones. A series capacitor and a resistor to ground is the usual first example. It has the same cutoff formula, fc = 1 / (2π R C).
+- id: cutoff
+  term: Cutoff frequency
+  definition: The frequency where an RC filter's magnitude has fallen to 1/√2 of the passband, about 0.707, which is −3 dB. Symbol fc.
+  units: hertz (Hz)
+- id: flyback-diode
+  term: Flyback diode
+  definition: A diode across an inductive load, pointed so it does not conduct while the switch is on. When the switch opens, the inductor current runs through the diode instead of forcing a large voltage across the switch.
+- id: resonance
+  term: Resonance
+  definition: The frequency where an inductor's reactance and a capacitor's reactance are equal in magnitude. f0 = 1 / (2π √(L C)). The RF series takes this further. This series only names it.

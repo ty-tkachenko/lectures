@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 280" role="img" aria-labelledby="fbTitle fbDesc" font-family="Georgia, 'Times New Roman', serif">
+  <title id="fbTitle">Flyback diode across a coil</title>
+  <desc id="fbDesc">A coil sits between the supply and a low-side switch. A diode is in parallel with the coil, cathode toward the supply, so it is off while the switch is closed. When the switch opens, inductor current circulates through the diode instead of producing a large voltage on the switch.</desc>
+  <rect x="1" y="1" width="718" height="278" fill="#fff" stroke="#111"/>
+  <text x="24" y="32" font-size="20" fill="#111">The diode gives the coil current a path</text>
+  <text x="40" y="78" font-size="16" fill="#111">Vs</text>
+  <line x1="80" y1="90" x2="200" y2="90" stroke="#111" stroke-width="3"/>
+  <path d="M200 90 C 220 70, 240 110, 260 90 C 280 70, 300 110, 320 90" fill="none" stroke="#111" stroke-width="2"/>
+  <text x="230" y="70" font-size="16" fill="#111">coil</text>
+  <line x1="320" y1="90" x2="420" y2="90" stroke="#111" stroke-width="3"/>
+  <line x1="420" y1="70" x2="460" y2="90" stroke="#111" stroke-width="2"/>
+  <line x1="420" y1="110" x2="460" y2="90" stroke="#111" stroke-width="2"/>
+  <line x1="460" y1="70" x2="460" y2="110" stroke="#111" stroke-width="2"/>
+  <text x="470" y="96" font-size="16" fill="#111">switch</text>
+  <line x1="440" y1="90" x2="440" y2="200" stroke="#111" stroke-width="2"/>
+  <line x1="80" y1="200" x2="440" y2="200" stroke="#111" stroke-width="2"/>
+  <polygon points="250,70 290,90 250,110" fill="#fff" stroke="#0000cc" stroke-width="2"/>
+  <line x1="290" y1="70" x2="290" y2="110" stroke="#0000cc" stroke-width="3"/>
+  <text x="300" y="130" font-size="16" fill="#0000cc">diode</text>
+  <line x1="200" y1="90" x2="200" y2="90" stroke="#0000cc" stroke-width="2"/>
+  <line x1="230" y1="90" x2="230" y2="50" stroke="#0000cc" stroke-width="2"/>
+  <line x1="230" y1="50" x2="310" y2="50" stroke="#0000cc" stroke-width="2"/>
+  <line x1="310" y1="50" x2="310" y2="90" stroke="#0000cc" stroke-width="2"/>
+  <text x="24" y="250" font-size="16" fill="#111">Switch closed: diode is reverse biased. Switch open: current loops through the diode at about one forward drop.</text>
+</svg>

@@ -1,0 +1,50 @@
+---
+layout: reveal
+title: "Slides: Circuit Fundamentals"
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Slides: Circuit Fundamentals</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/white.css">
+  <style>
+    .slides-back {
+      position: fixed;
+      z-index: 20;
+      bottom: 12px;
+      left: 12px;
+      background: #fff;
+      color: #0000cc;
+      border: 1px solid #000;
+      padding: 0.45em 0.7em;
+      font-family: Georgia, "Times New Roman", serif;
+    }
+    .reveal { font-family: Georgia, "Times New Roman", serif; }
+  </style>
+</head>
+<body>
+  <a class="slides-back" href="index.html">Back to the reading</a>
+  <div class="reveal">
+    <div class="slides">
+      <section data-markdown="slides.md"
+               data-separator="^\n---\n$"
+               data-separator-vertical="^\n--\n$"
+               data-charset="utf-8"></section>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/markdown/markdown.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/math/math.js"></script>
+  <script>
+    Reveal.initialize({
+      hash: true,
+      slideNumber: true,
+      margin: 0.08,
+      plugins: [ RevealMarkdown, RevealMath.KaTeX ]
+    });
+  </script>
+</body>
+</html>

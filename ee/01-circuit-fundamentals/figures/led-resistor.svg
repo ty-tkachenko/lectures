@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 240" role="img" aria-labelledby="ledTitle ledDesc" font-family="Georgia, 'Times New Roman', serif">
+  <title id="ledTitle">LED with a series resistor</title>
+  <desc id="ledDesc">A battery, a resistor, and an LED in one series loop. The resistor drops the difference between the battery voltage and the LED forward voltage, and that sets the current.</desc>
+  <rect x="1" y="1" width="718" height="238" fill="#fff" stroke="#111"/>
+  <text x="24" y="32" font-size="20" fill="#111">The resistor, not the LED, sets the current</text>
+  <rect x="60" y="80" width="40" height="70" fill="#fff" stroke="#111" stroke-width="2"/>
+  <text x="80" y="122" font-size="16" fill="#111" text-anchor="middle">Vs</text>
+  <line x1="100" y1="100" x2="180" y2="100" stroke="#111" stroke-width="3"/>
+  <rect x="180" y="82" width="90" height="36" fill="#fff" stroke="#111" stroke-width="2"/>
+  <text x="225" y="106" font-size="16" fill="#111" text-anchor="middle">R</text>
+  <line x1="270" y1="100" x2="360" y2="100" stroke="#111" stroke-width="3"/>
+  <polygon points="360,80 400,100 360,120" fill="#fff" stroke="#111" stroke-width="2"/>
+  <line x1="400" y1="80" x2="400" y2="120" stroke="#111" stroke-width="3"/>
+  <text x="420" y="106" font-size="16" fill="#111">LED</text>
+  <line x1="400" y1="100" x2="480" y2="100" stroke="#111" stroke-width="3"/>
+  <line x1="480" y1="100" x2="480" y2="180" stroke="#111" stroke-width="3"/>
+  <line x1="80" y1="150" x2="80" y2="180" stroke="#111" stroke-width="3"/>
+  <line x1="80" y1="180" x2="480" y2="180" stroke="#111" stroke-width="3"/>
+  <text x="24" y="220" font-size="16" fill="#111">I = (Vs - Vf) / R. The LED is not a resistor. Without R, the battery decides the current.</text>
+</svg>
