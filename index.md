@@ -1,12 +1,12 @@
 ---
 layout: default
 title: Home
-description: EE and RF lectures for rocket-club members.
+description: Electrical and RF engineering fundamentals.
 ---
 
 # Lectures
 
-Two series of short modules for rocket-club members. A newcomer can start at any module. Each module is a reading page, slides, a video slot, interactive pictures, and a practical.
+Two series of short modules. A newcomer can start at any module. Each module is a reading page, slides, a video slot, interactive pictures, and a practical.
 
 ## [EE]({{ '/ee/' | relative_url }})
 

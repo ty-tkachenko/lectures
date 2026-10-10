@@ -13,8 +13,8 @@
   <a class="skip" href="#content">Skip to content</a>
   <div class="page">
     <header class="header">
-      <h1><a href="{{ '/' | relative_url }}">Rocket Club Lectures</a></h1>
-      <p class="subtitle">EE and RF fundamentals for rocket-club members</p>
+      <h1><a href="{{ '/' | relative_url }}">{{ site.title }}</a></h1>
+      <p class="subtitle">{{ site.description }}</p>
       <p class="nav">
         <a href="{{ '/' | relative_url }}" {% if page.url == "/" or page.url == "/index.html" %}class="current"{% endif %}>Home</a>
         ·
@@ -29,7 +29,7 @@
     </main>
     <hr>
     <footer class="footer">
-      <p>Rocket Club lectures. The base stylesheet is a copy of the main site's <code>css/style.css</code>, kept in this repo so a restyle over there does not break these pages.</p>
+      <p>{{ site.title }}. The base stylesheet is a copy of the main site's <code>css/style.css</code>, kept in this repo so a restyle over there does not break these pages.</p>
     </footer>
   </div>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.js"></script>

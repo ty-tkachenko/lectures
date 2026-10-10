@@ -1,6 +1,6 @@
 # Lectures
 
-Course site for the rocket-club EE and RF series. Built with Jekyll. The public site is <https://ty-tkachenko.github.io/lectures/>.
+Course site for the EE and RF series. Built with Jekyll. The public site is <https://ty-tkachenko.github.io/lectures/>. The site title is Fundamentals.
 
 How the repo is organized is in `CLAUDE.md`.
 

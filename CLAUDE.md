@@ -1,6 +1,6 @@
 # Lectures
 
-Persistent multi-media resource for teaching younger rocket-club members EE and RF fundamentals. Two series of standalone modules. A newcomer can join at any module.
+Persistent multi-media resource for EE and RF fundamentals. Two series of standalone modules. A newcomer can join at any module. The site title is **Fundamentals**. Do not brand pages, the header, or the footer for the rocket club. A rocket or a club project may appear as an example inside a lesson. It is not the name of the site.
 
 | Series | Path | Owner |
 | --- | --- | --- |
@@ -44,7 +44,7 @@ Write for a wide range: almost no exposure, then people who want to go further.
 
 Also:
 
-- Open every module with a **motivating question** (front matter `question:`). The layout prints it under the title, before the prerequisite box. One question, plain language, the reason a rocket-club member would care. The rest of the module answers it.
+- Open every module with a **motivating question** (front matter `question:`). The layout prints it under the title, before the prerequisite box. One question, plain language, the reason a newcomer would care. The rest of the module answers it.
 - Define each term the first time it appears and link it to `/glossary/#<id>`. Add the term to `_data/glossary.yml` if it is missing.
 - Then a **What you should already know** box (front matter `prereqs`, with a link to where to learn it).
 - End of the lesson: a **Key takeaways** box.
