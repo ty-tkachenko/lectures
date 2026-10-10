@@ -64,7 +64,7 @@ A practical is a **video of Tymur** walking through a design or taking a measure
 
 For Tymur, a shot list lives in `ee/<slug>/_recording-outline.md` (or the same name under `rf/`). A leading `_` keeps Jekyll from publishing it. About 8–15 minutes, with rough durations. Do not invent measurements in the outline or on the page.
 
-`design-walkthrough` sections when you have the material: requirements, topology and part selection (with why), key calculations, schematic, layout, bench results, what I'd change. Leave schematic, layout, and bench results as placeholders until they exist.
+`design-walkthrough` sections when you have the material: requirements, topology and part selection (with why), key calculations, schematic, layout, bench results, what I'd change. Leave schematic, layout, and bench results as placeholders until they exist. A practical may walk through the Vehicle Camera Unit (VCU, project HORUS/EYE), including a decision id and a coupon test, when that design is the example. The reading module stays general EE. Use only numbers from the source note, and label derived arithmetic as derived. Do not invent measurements.
 
 `case-study` sections: symptom, what was measured, root cause, fix, takeaway.
 

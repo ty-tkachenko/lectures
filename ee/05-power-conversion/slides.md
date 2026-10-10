@@ -146,7 +146,7 @@ Check-yourself questions are on the reading page, from recall up to a 3S design 
 
 Practicals (video, notes up now):
 
-- RF supply draft: 1 W at 915 MHz, from a 3S pack
+- Design walkthrough: 1 W PA and LNA from a 3S pack (draft)
 - Lab: LDO temperature, then scope ground lead versus spring
 
 Hands-on table: you measure an LDO. The recording is separate.

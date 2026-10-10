@@ -1,7 +1,7 @@
 ---
 layout: practical
-title: "RF supply for a 1 W 915 MHz transmitter and its LNA"
-description: "Draft design walkthrough: buck, pi filter, and two LDOs from a 3S pack."
+title: "Feeding a 1 W PA and a low-noise LNA from a 3S pack"
+description: "Draft PDR walkthrough of decision D-38: the EYE RF supply, buck plus pi filter plus two LDOs."
 series: ee
 module: 5
 level: intro
@@ -15,134 +15,225 @@ chapters:
     title: "What this supply has to feed"
   - time: "1:00"
     seconds: 60
-    title: "Why supply ripple shows up on a transmitter and an LNA"
+    title: "Why ripple shows up on a PA and an LNA"
   - time: "2:30"
     seconds: 150
     title: "Three options, and the heat"
   - time: "5:00"
     seconds: 300
-    title: "The chain that was chosen"
+    title: "The chain D-38 chose"
   - time: "7:30"
     seconds: 450
-    title: "Headroom and dissipation"
+    title: "Headroom, dissipation, loading, and the half watt"
   - time: "9:30"
     seconds: 570
-    title: "What the schematic and layout still need to show"
-  - time: "11:00"
-    seconds: 660
-    title: "How it will be checked"
-  - time: "12:30"
-    seconds: 750
-    title: "Takeaways"
+    title: "Design detail: the PA enable gate"
+  - time: "10:30"
+    seconds: 630
+    title: "Schematic and layout, after the coupon"
+  - time: "11:30"
+    seconds: 690
+    title: "How C1-12 will check it"
+  - time: "13:00"
+    seconds: 780
+    title: "Takeaways and the open question"
 ---
 
 ## What you will see
 
-A whiteboard walkthrough of one supply, treated on its own: a 1 W transmitter at 915 MHz, the LNA in front of that radio, and a 3S lithium-ion pack. The draft's pack range is about 9 V at the low end to 12.6 V full. Both rails in the draft are 5 V. The transmitter path is the high-current one. The LNA path is the quiet one.
+A whiteboard walkthrough of one decision, D-38, from the EYE power architecture (project HORUS, the Vehicle Camera Unit). The note this page follows is revision v0.6, dated 2026-10-06. This is a PDR-stage design. The topology is the baseline in that note. The schematic, the layout, and the bench results come after the coupon build. No number below is a measurement of a built board.
 
-You will not see a whole vehicle, a power tree, or a finished board. The schematic, the layout, and any bench photo are still empty on purpose.
+The job is to feed a 1 W power amplifier and a low-noise LNA from a 3S pack. In the note, cruise transmit is +30 dBm. One watt is +30 dBm by definition ($$10\log_{10}(1/0.001) = 30$$). The pack node is VSYS, 9.0–12.6 V, from a 3S1P 18650. The roll-up in the note uses 11.1 V when it turns watts at VSYS into amperes.
 
-The chain the draft chose is a buck, then a pi filter, then two linear regulators:
+## Requirements
 
-1. A TPS62933F buck makes an intermediate rail at 5.4 V.
-2. A pi filter, a ferrite bead plus two 22 µF capacitors, sits on that rail. The draft estimates about 40 dB of attenuation at the switching frequency. That estimate is not a measurement.
-3. A TPS7A85A linear regulator makes the 5 V rail for the transmitter.
-4. An LT3045 linear regulator makes the 5 V rail for the LNA.
+The PA and the LNA must not be fed straight from a buck. That is the requirement Tymur raised, and D-38 is the baseline that closes it (the note marks the earlier open item closed on 2026-10-02).
 
-The buck is the forced-continuous-conduction variant (TPS62933F). Texas Instruments' datasheet puts that variant in forced continuous conduction, so it keeps switching at the set frequency instead of skipping pulses when the load is light. The spread-spectrum feature on this family is on the other orderables, not on the F part. The spurs therefore sit at known frequencies. The datasheet input range is 3.8 V to 30 V and the current rating is 3 A, so a 9 V to 12.6 V pack and a load on the order of 1.2 A are inside those ratings. Those ratings are datasheet facts. They are not a test of this board.
+Why the PA cares: ripple on the PA drain becomes AM/PM [sidebands]({{ '/glossary/#sideband' | relative_url }}) at the carrier plus and minus the switching frequency, and at the harmonics of that switching frequency. Those sidebands raise [EVM]({{ '/glossary/#evm' | relative_url }}) and the band-edge spectrum.
 
-## Key numbers and formulas
+Why the LNA cares: ripple on the LNA supply modulates its gain and its [noise figure]({{ '/glossary/#noise-figure' | relative_url }}), and that shows up on the receive path.
 
-The reading page defines the symbols. Here they are used with the draft's numbers. Anything marked **derived** was calculated on this page from those numbers. The rounded figures the draft itself uses are marked **draft**.
+The two loads are not the same current. The note's PA rail consumers are two TQP7M9106 devices (quiescent 455 mA each, marked datasheet; about 0.52 A each at +31.4 dBm; about 0.7 A each near P1dB) plus a SKY65017 driver at 0.12 A (datasheet). The LNA is a SKY67150, 70–95 mA (datasheet).
 
-### Why the ripple matters
+## Options considered
 
-A wiggle on the transmitter supply becomes [sidebands]({{ '/glossary/#sideband' | relative_url }}) around the carrier: if the supply moves at frequency $$f_m$$, energy shows up near $$f_c + f_m$$ and $$f_c - f_m$$. That can raise [EVM]({{ '/glossary/#evm' | relative_url }}) and push energy toward a band edge. A wiggle on the LNA supply modulates the amplifier's gain and can worsen [noise figure]({{ '/glossary/#noise-figure' | relative_url }}). The RF series goes further. This page only needs the supply-side reason for keeping those two rails quiet.
+Three ways to make 5 V for those loads. Only the third is D-38.
 
-### Option: a linear regulator straight from the pack
+### Buck straight to the PA
 
-The draft compares a linear regulator from the nominal pack voltage, 11.1 V, straight to 5 V, at about 1.2 A.
+The note's old scheme was a TPS62933F straight onto the gated PA rail, and a second TPS62933F for a shared 5 V rail. D-38 removes that scheme. A buck is efficient, and the ripple and the switching spurs stay on the PA drain. That fails the requirement above. The note does not give a separate heat number for this rejected option. This page does not invent one.
 
-Step 1. Drop:
+### LDO straight from VSYS
 
-$$
-11.1\,\mathrm{V} - 5\,\mathrm{V} = 6.1\,\mathrm{V}
-$$
-
-Step 2. Heat, ignoring quiescent current because it is tiny next to 1.2 A:
+A linear regulator from the pack to 5 V spends the whole drop in the package. The note's flight roll-up uses 11.1 V at VSYS, and the PA rail's typical current in the same note is 1.16 A. That 1.16 A is about 1.2 A. The arithmetic, **derived** on this page:
 
 $$
-P_D = 6.1\,\mathrm{V} \times 1.2\,\mathrm{A} = 7.32\,\mathrm{W}
+11.1\,\mathrm{V} - 5.0\,\mathrm{V} = 6.1\,\mathrm{V}
 $$
 
-**Derived:** 7.32 W. **Draft:** about 7 W. That is a heater, not a regulator you want in an airframe.
+$$
+P_D = 6.1\,\mathrm{V} \times 1.16\,\mathrm{A} = 7.076\,\mathrm{W}
+$$
 
-### Option: a buck straight to the 5 V rail
+**Derived:** 7.076 W, about 7 W. The note does not print this product. It is the comparison that makes the pre-regulator worth doing. About 7 W in one package is a heater, not a regulator you want in an airframe.
 
-Efficient. The ripple and the switching spikes remain on the transmitter supply and, if you shared the rail, on the LNA. The draft does not take this option for the sensitive loads.
+### Buck, then a filter, then LDOs
 
-### Option taken: buck to 5.4 V, filter, then LDOs to 5 V
+This is D-38. A buck makes a 5.4 V intermediate, a filter knocks the switching ripple down, and a low-dropout regulator on each sensitive rail spends only the last 0.4 V. The note's figure for the PA regulator is about 0.46 W, worked below, against the derived 7.076 W for the straight linear regulator.
 
-Headroom of the transmitter regulator:
+## Topology and part selection
+
+```
+VSYS 9.0–12.6 V
+  → TPS62933F buck → RF_PRE 5.4 V
+  → LC π-filter (ferrite bead + 2×22 µF)
+  → TPS7A85A LDO → PA_5V 5.0 V
+  → LT3045 LDO  → LNA_5V 5.0 V
+```
+
+The buck is the TPS62933F, set for forced continuous conduction (FCCM in the note: fixed frequency, forced PWM). Spread spectrum is off, so the spurs sit at predictable frequencies and a filter can be aimed at them. The note rates this part at 3 A. Enable is PGOOD_ALL, the supervisor's "all rails in tolerance" signal.
+
+RF_PRE is 5.4 V ±3%. Its only loads are the two LDOs. Typical / maximum current in the note: 1.24 A / 1.62 A. The roll-up estimates efficiency at 0.90. That 0.90 is an estimate in the note, not a measurement of this converter.
+
+The π-filter is a ferrite bead plus two 22 µF capacitors. The note estimates about 40 dB at the switching frequency. That is an estimate in the note. It is not a spectrum plot. The switching frequency this design is tuned to is not stated in the note, so this page does not pick one.
+
+PA_5V is 5.0 V ±3% from a TPS7A85A. The note's datasheet column for that part: 4 A, 150 mV typical dropout at 4 A, 40 dB [PSRR]({{ '/glossary/#psrr' | relative_url }}) at 500 kHz, 6.5 V maximum input. Typical / maximum current: 1.16 A / 1.52 A. The 5.4 V intermediate is under the 6.5 V maximum input. That maximum is not the dropout number. Dropout is the 150 mV figure, and the note quotes it at 4 A, not at 1.16 A.
+
+LNA_5V is 5.0 V ±3% from an LT3045. The note's datasheet column: 500 mA, 0.8 µVrms, 76 dB PSRR at 1 MHz, 20 V maximum input. Typical / maximum current: 0.08 A / 0.10 A. Enable is LNA_EN, and that pin replaces a load switch on the LNA.
+
+The note says the π-filter's attenuation and the LDO PSRR add. It lists them at different frequencies (the filter at the switching frequency, the TPS7A85A at 500 kHz, the LT3045 at 1 MHz). This page does not add those decibel figures into one number.
+
+## Key calculations
+
+Anything marked **derived** was calculated on this page from numbers printed in the note. The note's own rounded figures are marked **note**.
+
+### Headroom against dropout
 
 $$
 5.4\,\mathrm{V} - 5.0\,\mathrm{V} = 0.4\,\mathrm{V}
 $$
 
-**Draft:** dropout of that regulator is about 150 mV, which is 0.15 V. Margin, **derived**:
+The note uses this 0.4 V as the drop in the dissipation product below. Dropout, from the note's datasheet column, is 150 mV typical at 4 A, which is 0.15 V. Margin, **derived**, using that 4 A figure even though the rail's typical current is 1.16 A:
 
 $$
 0.4\,\mathrm{V} - 0.15\,\mathrm{V} = 0.25\,\mathrm{V}
 $$
 
-Heat in the transmitter regulator. The draft uses 1.16 A for this product (and about 1.2 A in the straight-LDO comparison above). Both are kept as written. This page does not invent a story for the 0.04 A difference.
+**Derived:** 0.25 V of margin if dropout really is 150 mV at this current. The note does not print 0.25 V, and it does not give dropout at 1.16 A.
+
+### Dissipation
+
+The note prints the PA product itself:
 
 $$
-P_D = 0.4\,\mathrm{V} \times 1.16\,\mathrm{A} = 0.464\,\mathrm{W}
+P_D \approx 0.4\,\mathrm{V} \times 1.16\,\mathrm{A} \approx 0.46\,\mathrm{W}
 $$
 
-**Derived:** 0.464 W. **Draft:** about 0.46 W. Against about 7 W for the straight linear regulator, the pre-regulator is why this chain is possible.
+**Derived**, the same product without the rounding: $$0.4 \times 1.16 = 0.464\,\mathrm{W}$$. **Note:** ≈ 0.46 W.
 
-**Draft:** the post-regulator chain costs about an extra 0.5 W from the pack compared with a buck that made 5 V directly. The draft does not spell out the buck efficiency behind that 0.5 W, so this page does not re-derive it. Treat 0.5 W as the draft's figure.
-
-### The filter estimate
-
-**Draft:** the pi filter is estimated at about 40 dB at the switching frequency. **Derived**, the meaning of 40 dB as a voltage ratio:
+The LNA regulator, **note:** about 0.03 W. **Derived** from the same 0.4 V drop and the note's typical LNA current:
 
 $$
-10^{(40/20)} = 10^{2} = 100
+0.4\,\mathrm{V} \times 0.08\,\mathrm{A} = 0.032\,\mathrm{W}
 $$
 
-So the draft's estimate is a factor of about 100 in ripple voltage at that frequency. This page does not have a measured ripple to multiply by 100. Forty decibels is not a lab result.
+**Derived sum** of the two dissipation lines: $$0.46 + 0.03 = 0.49\,\mathrm{W}$$, using the note's rounded 0.46 W and 0.03 W. That is the half-watt class of the cost below.
 
-The switching frequency itself is not stated in the notes this page is allowed to use. The TPS62933 family can be set from 200 kHz to 2.2 MHz. That is a datasheet range, not the frequency this design was tuned to.
+### Where 1.16 A comes from
 
-## What to look for
+**Derived** check against the consumer currents in the note, at the +31.4 dBm operating point the note quotes (not a new measurement):
 
-When the recording exists, watch the whiteboard for the 7.32 W versus 0.46 W comparison, and for the 0.4 V of headroom drawn next to 0.15 V of dropout.
+$$
+2 \times 0.52\,\mathrm{A} + 0.12\,\mathrm{A} = 1.16\,\mathrm{A}
+$$
 
-On a future scope test, the plan is a board with a 0 Ω jumper that bypasses the linear regulator. Inject a tone onto the supply and compare the transmitter's sidebands with the regulator fitted and with it bypassed. Look for the tone moving the sidebands, and for those sidebands shrinking when the regulator is in circuit. No such plot exists yet.
+That matches the typical PA_5V current. The same check at the note's "near P1dB" currents:
+
+$$
+2 \times 0.7\,\mathrm{A} + 0.12\,\mathrm{A} = 1.52\,\mathrm{A}
+$$
+
+That matches the maximum PA_5V current. The note also says typical cruise is +30 dBm. It does not print a separate current at +30 dBm. This page keeps both sentences and does not invent the missing one.
+
+### Rail loading
+
+The note's "max load" column is the maximum current divided by the regulator rating.
+
+$$
+1.62\,\mathrm{A} / 3\,\mathrm{A} = 0.54 = 54\%
+$$
+
+$$
+1.52\,\mathrm{A} / 4\,\mathrm{A} = 0.38 = 38\%
+$$
+
+$$
+0.10\,\mathrm{A} / 0.5\,\mathrm{A} = 0.20 = 20\%
+$$
+
+**Note:** RF_PRE 54%, PA_5V 38%, LNA_5V 20%. The divisions above are **derived** and match those three figures.
+
+### What the filter estimate means
+
+**Note:** about 40 dB at the switching frequency. **Derived**, 40 dB as a voltage ratio:
+
+$$
+10^{(40/20)} = 100
+$$
+
+So the estimate is a factor of about 100 in ripple voltage at that frequency. The note does not give a ripple amplitude to multiply by 100. Forty decibels is not a lab result.
+
+### Cost at VSYS
+
+**Note**, in the summary of D-38: the chain costs about +0.5 W at VSYS. **Note**, in the D-38 section: LDO dissipation ≈ 0.46 W on the PA plus about 0.03 W on the LNA, and the flight total moves from 18.1 W to 18.7 W at VSYS (27.6 W to 27.8 W in the all-maximum column). The same summary's flight roll-up is 18.1 W typical, and it says the workbook still uses 18.7 W. The **derived** sum 0.49 W sits next to the summary's +0.5 W. The 18.1-to-18.7 sentence is a 0.6 W move. This page does not invent a reconciliation. Both sentences stay as written. The note also says the bill of materials is +$9 net. That dollar figure is the note's, not a sum done here.
+
+The roll-up table estimates the RF_PRE branch, LDOs included, at 6.70 W / 8.75 W out and 7.44 W / 9.72 W in, at the 0.90 efficiency estimate. **Derived** check: $$6.70 / 0.90 = 7.44$$ and $$8.75 / 0.90 = 9.72$$, matching the table. Those watts are the whole RF branch in the flight roll-up, not the 0.46 W of LDO heat.
+
+## Design detail: the PA enable
+
+Aside from the converter math. The TPS7A85A enable is a hardware AND gate:
+
+$$
+\mathrm{EN} = \mathrm{FW\_PA\_EN} \;\mathrm{AND}\; \mathrm{PGOOD\_ALL}
+$$
+
+FW_PA_EN is a processor GPIO with a pull-down. Firmware sets it after boot. PGOOD_ALL is the supervisor. The regulator's power-good output is available to firmware. The LNA regulator is separate: its enable is LNA_EN. The buck's enable is PGOOD_ALL, so the 5.4 V rail comes up with the rest of the "rails good" signal, and the PA rail waits for firmware as well.
+
+The note's bias sequence says PA_5V itself stays up during flight. What the transmit/receive turnaround gates is PA bias, not this regulator's enable.
+
+## Schematic
 
 <div class="placeholder">
-<p><strong>Schematic.</strong> Placeholder. A schematic of this chain (buck, pi filter, transmitter LDO, LNA LDO) goes here after review. Not drawn on this page.</p>
+<p><strong>Coming after the coupon build.</strong> No schematic is on this page. The drawing that belongs here is the D-38 chain only: TPS62933F from VSYS to RF_PRE, the ferrite and the two 22 µF capacitors, the TPS7A85A to PA_5V, the LT3045 to LNA_5V, and the enable pins named above. Not drawn yet.</p>
 </div>
+
+## Layout
 
 <div class="placeholder">
-<p><strong>Layout.</strong> Placeholder. Part placement, the buck hot loop, and how the filter and the linear regulators are grounded go here. Not drawn on this page.</p>
+<p><strong>Coming after the coupon build.</strong> No layout is on this page. The drawing that belongs here is the buck hot loop and its input capacitor, where the π-filter sits relative to the two LDOs, and the copper under the TPS7A85A that has to carry about half a watt. Not drawn yet.</p>
 </div>
+
+## Bench results
 
 <div class="placeholder">
-<p><strong>Bench results.</strong> Placeholder. No board has been measured for this page. Do not add numbers here until a real test is done. The verification plan above has not been run.</p>
+<p><strong>Coming after the coupon build.</strong> There are no measured sidebands, no measured EVM, no measured ripple, and no thermal photo on this page. Do not add numbers here until the coupon test has been run.</p>
 </div>
 
-## What I would change
+The planned check is already named. The C1 coupon keeps a 0 Ω bypass across the PA LDO. Test C1-12, supply pushing, injects a tone on PA_5V from 100 kHz to 2.2 MHz and measures sideband level, EVM, and band edge at +30 dBm, with the LDO fitted and with the LDO bypassed. That test verifies the D-38 baseline. It also produces the data for the open question below. It has not been run for this page.
 
-The open question in the draft is whether the transmitter's linear regulator could come out later, if the bypass test shows the pi filter alone keeps the sidebands small enough. That is not a decision. It waits on the test.
+## What I'd change
+
+Only what the note itself leaves open.
+
+The flight PA LDO could be removed later if C1-12 shows the π-filter alone keeps the sidebands, EVM, and band edge acceptable. The note says the test gives that data. It is not a decision. D-38, with the LDO fitted, is the baseline.
+
+The flight-power figures this chain sits inside, 18.1 W typical and the 18.7 W still used in the workbook, are planning estimates. The note says an XPE run and the C1/C2 coupon data replace them. This page does not treat 18.1 W or +0.5 W as a measured vehicle power.
 
 ## Takeaways
 
-- A linear regulator from an 11.1 V pack to 5 V at about 1.2 A is about 7 W of heat. The same current after a 5.4 V pre-regulator is about 0.46 W.
-- 0.4 V of headroom against about 0.15 V of dropout is the margin the draft is counting on. It is not a measurement of dropout on a built board.
-- Forced continuous conduction, and not using a spread-spectrum variant, keeps the spurs at frequencies you can filter and later measure.
-- The filter's 40 dB figure is an estimate in the draft. It means a factor of about 100 in voltage. It is not a scope capture.
-- Schematic, layout, and bench results are still empty.
+- Ripple on the PA drain becomes sidebands at the carrier ± the switching frequency and raises EVM and the band edge. Ripple on the LNA supply modulates gain and noise figure.
+- A linear regulator from 11.1 V to 5 V at the note's 1.16 A is 7.076 W, derived, about 7 W. The same current after the 5.4 V pre-regulator is the note's ≈ 0.46 W.
+- Headroom is 0.4 V. The datasheet dropout quoted in the note is 150 mV typical at 4 A. The 0.25 V margin is derived, and it is not a dropout measured at 1.16 A.
+- FCCM with spread spectrum off keeps the spurs at predictable frequencies. The π-filter's ~40 dB at the switching frequency is an estimate: a factor of 100 in voltage, derived, with no ripple amplitude in the note to multiply.
+- Max loading in the note is 54% on the 3 A buck, 38% on the 4 A PA LDO, and 20% on the 0.5 A LNA LDO. The cost the summary states is about +0.5 W at VSYS.
+- PA_5V enable is FW_PA_EN AND PGOOD_ALL. Schematic, layout, and bench results come after the coupon build. Whether the PA LDO can come off later waits on C1-12.

@@ -20,7 +20,7 @@ widgets:
   - buck-converter
   - ldo-vs-buck
 practicals:
-  - title: "RF supply for a 1 W 915 MHz transmitter and its LNA"
+  - title: "Feeding a 1 W PA and a low-noise LNA from a 3S pack"
     practical_type: design-walkthrough
     url: /ee/05-power-conversion/practical-rf-supply.html
   - title: "Measuring LDO heat and buck ripple"
@@ -361,7 +361,7 @@ PSRR in decibels converts to a voltage ratio by $$10^{(\mathrm{PSRR}/20)}$$. A d
 {% endcapture %}
 {% include go-deeper.html title="What a PSRR number actually does to ripple" body=deeper_psrr %}
 
-A real supply of this shape, a 1 W 915 MHz transmitter and its LNA from a 3S pack, is the [design-walkthrough practical](practical-rf-supply.html). The numbers there come from a design draft, not from this illustration.
+A real supply of this shape, a 1 W PA and a low-noise LNA from a 3S pack, is the [design-walkthrough practical](practical-rf-supply.html). The numbers there are from the camera-unit power note. They are not this illustration.
 
 ## Layout
 
@@ -452,7 +452,7 @@ On a 2S pack at the nominal 7.4 V, LDO heat is $$(7.4-3.3)\times 0.20 + 7.4\time
 
 These are recordings. The notes on each page stand on their own until the video is up.
 
-- [RF supply for a 1 W 915 MHz transmitter and its LNA](practical-rf-supply.html). A design walkthrough. Draft, for review. Not a finished build.
+- [Feeding a 1 W PA and a low-noise LNA from a 3S pack](practical-rf-supply.html). Design walkthrough of the camera-unit supply (decision D-38). Draft, for review. Schematic, layout, and bench results come after the coupon build.
 - [Measuring LDO heat and buck ripple](practical-lab.html). A lab session: temperature versus load, then a scope ground-lead comparison.
 
 ## Hands-on exercise
