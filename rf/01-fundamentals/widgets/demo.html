@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Module 1 widgets (draft)</title>
+<style>
+body{font-family:Inter,system-ui,sans-serif;max-width:820px;margin:2rem auto;padding:0 1rem;color:#2b2b2b;line-height:1.6}
+.widget{border:1px solid #eee;border-radius:10px;padding:1rem 1.25rem;margin:2rem 0}
+.widget h3{margin:.2rem 0 .8rem}
+label{display:block;font-size:.9rem;color:#555;margin:.5rem 0 .2rem}
+label.inline{display:inline-block;margin-right:1rem}
+input[type=range]{width:100%}
+select,input[type=number]{padding:.2rem}
+input[type=number]{width:6rem}
+button{font:inherit;font-size:.85rem;padding:.2rem .6rem;margin:.2rem .3rem .2rem 0;border:1px solid #cbd5e1;border-radius:6px;background:#fff;cursor:pointer}
+button:hover{background:#eff6ff}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:0 1.25rem}
+.readout{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.5rem;margin:.8rem 0}
+.readout div{background:#eff6ff;border-radius:8px;padding:.4rem .6rem;font-size:.9rem}
+.readout b{display:block;font-size:1.1rem;color:#1d4ed8}
+canvas{width:100%;border-radius:8px;background:#fafafa}
+.try{font-size:.9rem;background:#fffbeb;border-left:3px solid #f59e0b;padding:.5rem .75rem;margin-top:.8rem}
+.verdict{font-weight:600}
+.legend{font-size:.85rem;color:#555}
+.legend span{display:inline-block;width:14px;height:3px;vertical-align:middle;margin:0 .3rem 0 .8rem}
+</style></head><body>
+<h1>Module 1: interactive widgets (draft)</h1>
+
+<!-- ============ 1. standing waves ============ -->
+<div class="widget" id="sw">
+<h3>Standing waves and VSWR</h3>
+<p class="legend">A 50 Ω line runs from the source (left) to a load (right edge). Pick the load and watch the wave that goes in, the wave that bounces back, and their sum.</p>
+<div class="row">
+<div><label>Load resistance R: <span id="sw-rv"></span></label><input id="sw-r" type="range" min="0" max="1000" step="any" value="666.6667"></div>
+<div><label>Load reactance X: <span id="sw-xv"></span></label><input id="sw-x" type="range" min="0" max="1000" step="any" value="500"></div>
+</div>
+<div>Presets:
+<button data-r="0" data-x="0">Short (0 Ω)</button><button data-r="1e9" data-x="0">Open (∞)</button><button data-r="50" data-x="0">Matched (50 Ω)</button><button data-r="75" data-x="0">75 Ω</button><button data-r="100" data-x="0">100 Ω</button><button data-r="25" data-x="-25">25 − j25 Ω</button>
+</div>
+<div>
+<label class="inline"><input type="checkbox" id="sw-inc" checked> incident</label>
+<label class="inline"><input type="checkbox" id="sw-ref" checked> reflected</label>
+<label class="inline"><input type="checkbox" id="sw-tot" checked> total</label>
+<label class="inline"><input type="checkbox" id="sw-env" checked> envelope</label>
+<button id="sw-play">Pause</button>
+</div>
+<div class="readout">
+<div>Load Z<sub>L</sub><b id="sw-z"></b></div>
+<div>Reflection Γ<b id="sw-g"></b></div>
+<div>VSWR<b id="sw-vswr"></b></div>
+<div>Return loss<b id="sw-rl"></b></div>
+<div>Mismatch loss<b id="sw-ml"></b></div>
+<div>Power reaching load<b id="sw-pd"></b></div>
+</div>
+<p class="verdict" id="sw-verdict"></p>
+<canvas id="sw-c" width="760" height="280"></canvas>
+<p class="legend"><span style="background:#3b82f6"></span>incident (moving right) <span style="background:#ef4444"></span>reflected (moving left) <span style="background:#111"></span>total <span style="background:#f59e0b"></span>envelope (what a voltmeter sliding along the line would read)</p>
+<div class="try"><b>Try this:</b> start at Matched. The total is a clean traveling wave and the envelope is flat. Now pick Short, then Open. The envelope gets nodes (zero points) λ/2 apart. Where are the nodes for a short compared with an open? Finally pick 100 Ω and 25 Ω. They give the same VSWR. What's different about the pattern?</div>
+</div>
+
+<!-- ============ 2. TDR ============ -->
+<div class="widget" id="tdr">
+<h3>TDR simulator: see reflections in time, then in frequency</h3>
+<p class="legend">A fast voltage step is launched into a 50 Ω line. At some distance there is a discontinuity. The trace shows the voltage at the launch point over time, converted to impedance and distance.</p>
+<div class="row">
+<div><label>What's on the line
+<select id="tdr-type">
+<option value="open">Open end (line cut)</option>
+<option value="short">Short to ground</option>
+<option value="cap" selected>Capacitive bump (via pad / big component pad)</option>
+<option value="ind">Inductive bump (narrow neck / bond wire)</option>
+<option value="sec">Impedance section (wrong-width trace / connector)</option>
+</select></label></div>
+<div><label>Distance to it: <span id="tdr-dv"></span></label><input id="tdr-d" type="range" min="1" max="30" step="0.5" value="10"></div>
+</div>
+<div class="row">
+<div id="tdr-valbox"><label><span id="tdr-valname"></span>: <span id="tdr-vv"></span></label><input id="tdr-v" type="range" min="0" max="1000" value="400"></div>
+<div id="tdr-lenbox"><label>Section length: <span id="tdr-lv"></span></label><input id="tdr-l" type="range" min="0.5" max="10" step="0.1" value="3"></div>
+</div>
+<div class="row">
+<div><label>Effective dielectric constant ε<sub>eff</sub>: <span id="tdr-ev"></span></label><input id="tdr-e" type="range" min="1" max="10" step="0.05" value="3.4"></div>
+<div><label>TDR rise time (10–90%): <span id="tdr-tv"></span></label><input id="tdr-t" type="range" min="15" max="200" step="1" value="35"></div>
+</div>
+<div class="readout">
+<div>Wave speed v<sub>p</sub><b id="tdr-vp"></b></div>
+<div>Round-trip time to it<b id="tdr-rt"></b></div>
+<div>Ideal reflection<b id="tdr-gi"></b></div>
+<div>Biggest reflection seen<b id="tdr-gm"></b></div>
+<div>S<sub>11</sub> ripple period<b id="tdr-rip"></b></div>
+</div>
+<canvas id="tdr-c" width="760" height="260"></canvas>
+<canvas id="tdr-f" width="760" height="200" style="margin-top:.6rem"></canvas>
+<div class="try"><b>Try this:</b> (1) Pick Open end, then change ε<sub>eff</sub>. The cut stays at the same distance, but the time it takes the echo to come back (top axis) changes. A real TDR only measures time, so if you guess ε<sub>eff</sub> wrong you will look for the fault in the wrong place. (2) Pick the capacitive bump and slow the rise time to 200 ps. The dip gets shallower: a slow TDR can't see small things. (3) Pick Impedance section at 60 Ω and make it longer. In the lower plot the S<sub>11</sub> ripples get closer together: ripple period = v<sub>p</sub>/(2 × length).</div>
+</div>
+
+<!-- ============ 3. microstrip ============ -->
+<div class="widget" id="ms">
+<h3>Microstrip impedance calculator</h3>
+<div class="row">
+<div><label>Trace width w: <span id="ms-wv"></span></label><input id="ms-w" type="range" min="0.05" max="6" step="0.01" value="1.0"></div>
+<div><label>Dielectric height h: <span id="ms-hv"></span></label><input id="ms-h" type="range" min="0.1" max="3.2" step="0.01" value="1.6"></div>
+</div>
+<div class="row">
+<div><label>Material
+<select id="ms-mat">
+<option value="4.4" selected>FR-4 (ε<sub>r</sub> ≈ 4.4)</option>
+<option value="3.66">Rogers RO4350B (ε<sub>r</sub> = 3.66)</option>
+<option value="3.55">Rogers RO4003C (ε<sub>r</sub> = 3.55, design value)</option>
+<option value="2.2">PTFE / RT-duroid 5880 (ε<sub>r</sub> = 2.2)</option>
+<option value="1">Air (ε<sub>r</sub> = 1)</option>
+<option value="custom">Custom…</option>
+</select></label></div>
+<div><label>ε<sub>r</sub>: <span id="ms-ev"></span></label><input id="ms-e" type="range" min="1" max="12" step="0.01" value="4.4"></div>
+</div>
+<div>Target <input id="ms-tz" type="number" value="50" min="10" max="150"> Ω <button id="ms-solve">Find the width</button> &nbsp; Frequency for λ: <input id="ms-f" type="number" value="2400" min="1" max="100000"> MHz</div>
+<div class="readout">
+<div>Characteristic impedance Z<sub>0</sub><b id="ms-z"></b></div>
+<div>Effective ε<sub>eff</sub><b id="ms-ee"></b></div>
+<div>Wave speed<b id="ms-vp"></b></div>
+<div>Delay<b id="ms-dl"></b></div>
+<div>Wavelength on the trace<b id="ms-lam"></b></div>
+<div>w / h<b id="ms-u"></b></div>
+</div>
+<canvas id="ms-c" width="760" height="220"></canvas>
+<div class="try"><b>Try this:</b> on 1.6 mm FR-4, find the 50 Ω width (about 3 mm). Now switch the height to 0.2 mm, the thickness of a thin outer layer in a 4-layer board. How wide is a 50 Ω trace now? Why does a thin dielectric make RF layout so much easier? Then compare FR-4 with air: ε<sub>eff</sub> sits between 1 and ε<sub>r</sub> because part of the field is in the air above the trace.</div>
+</div>
+
+<!-- ============ 4. dB chain ============ -->
+<div class="widget" id="db">
+<h3>dB and dBm chain</h3>
+<p class="legend">Each block multiplies the power. In dB, multiplying becomes adding, so you can follow a signal down a chain with mental arithmetic.</p>
+<label>Source power: <span id="db-pv"></span></label><input id="db-p" type="range" min="-40" max="30" step="0.5" value="0">
+<div class="row" id="db-blocks"></div>
+<div class="readout">
+<div>Total gain<b id="db-g"></b></div>
+<div>Same as a power ratio of<b id="db-r"></b></div>
+<div>Output power<b id="db-o"></b></div>
+<div>Output in milliwatts<b id="db-mw"></b></div>
+</div>
+<canvas id="db-c" width="760" height="220"></canvas>
+<div class="try"><b>Try this:</b> set every block to 0 dB, then make one block −3 dB. The power halves. Two −3 dB blocks give a quarter. Now make the source −30 dBm (1 µW) and add a +30 dB amplifier: what comes out, in dBm and in mW?</div>
+</div>
+
+<!-- ============ 5. polarization ============ -->
+<div class="widget" id="pol">
+<h3>Polarization mismatch</h3>
+<div class="row">
+<div><label>Transmit antenna
+<select id="pol-tt"><option value="lin" selected>Linear</option><option value="rhcp">Circular, right-hand (RHCP)</option><option value="lhcp">Circular, left-hand (LHCP)</option></select></label>
+<label>Transmit tilt: <span id="pol-tav"></span></label><input id="pol-ta" type="range" min="0" max="180" value="0"></div>
+<div><label>Receive antenna
+<select id="pol-rt"><option value="lin" selected>Linear</option><option value="rhcp">Circular, right-hand (RHCP)</option><option value="lhcp">Circular, left-hand (LHCP)</option></select></label>
+<label>Receive tilt: <span id="pol-rav"></span></label><input id="pol-ra" type="range" min="0" max="180" value="45"></div>
+</div>
+<div class="readout">
+<div>Fraction of power received<b id="pol-f"></b></div>
+<div>Polarization loss<b id="pol-l"></b></div>
+</div>
+<p class="verdict" id="pol-verdict"></p>
+<canvas id="pol-c" width="760" height="220"></canvas>
+<div class="try"><b>Try this:</b> with two linear antennas, set the tilts 90° apart. In theory nothing gets through. Now make one of them circular: the loss is 3 dB at <i>every</i> tilt. That's why a spinning rocket often carries a circular antenna, or why the ground station uses one.</div>
+</div>
+
+<!-- ============ 6. Dk / Df loss ============ -->
+<div class="widget" id="ls">
+<h3>Where the loss comes from: copper vs dielectric</h3>
+<div class="row">
+<div><label>Board material
+<select id="ls-mat">
+<option value="4.4,0.020" selected>FR-4 (Dk 4.4, Df 0.020)</option>
+<option value="3.66,0.0037">Rogers RO4350B (Dk 3.66, Df 0.0037)</option>
+<option value="3.55,0.0027">Rogers RO4003C (Dk 3.55, Df 0.0027)</option>
+<option value="3.4,0.002">Megtron 6 class (Dk ≈ 3.4, Df ≈ 0.002)</option>
+<option value="2.2,0.0009">PTFE / RT-duroid 5880 (Dk 2.2, Df 0.0009)</option>
+</select></label></div>
+<div><label>Dielectric height (trace width set for 50 Ω): <span id="ls-hv"></span></label><input id="ls-h" type="range" min="0.1" max="1.6" step="0.01" value="0.5"></div>
+</div>
+<div class="row">
+<div><label>Frequency: <span id="ls-fv"></span></label><input id="ls-f" type="range" min="0" max="1000" value="620"></div>
+<div><label>Trace length: <span id="ls-lv"></span></label><input id="ls-l" type="range" min="1" max="100" value="10"></div>
+</div>
+<div class="readout">
+<div>50 Ω width<b id="ls-w"></b></div>
+<div>Copper loss<b id="ls-ac"></b></div>
+<div>Dielectric loss<b id="ls-ad"></b></div>
+<div>Loss over your trace<b id="ls-tot"></b></div>
+<div>Dielectric wins above<b id="ls-x"></b></div>
+</div>
+<canvas id="ls-c" width="760" height="240"></canvas>
+<p class="legend"><span style="background:#b87333"></span>copper (conductor) loss, grows like √f <span style="background:#16a34a"></span>dielectric loss, grows like f <span style="background:#111"></span>total</p>
+<div class="try"><b>Try this:</b> on FR-4, find where the green line crosses the copper line. Switch to RO4350B: the crossover moves up a lot. Then make the dielectric thinner. The trace gets narrower and the copper loss rises. (This model uses smooth copper. Real rough copper adds more, which Module 3 covers.)</div>
+</div>
+
+<script>
+const C=299792458, Z0=50;
+const q=id=>document.getElementById(id);
+// ---------- complex helpers: [re, im] ----------
+const cx=(a,b=0)=>[a,b], cadd=(a,b)=>[a[0]+b[0],a[1]+b[1]], csub=(a,b)=>[a[0]-b[0],a[1]-b[1]],
+ cmul=(a,b)=>[a[0]*b[0]-a[1]*b[1],a[0]*b[1]+a[1]*b[0]],
+ cdiv=(a,b)=>{const d=b[0]*b[0]+b[1]*b[1];return [(a[0]*b[0]+a[1]*b[1])/d,(a[1]*b[0]-a[0]*b[1])/d]},
+ cabs=a=>Math.hypot(a[0],a[1]), carg=a=>Math.atan2(a[1],a[0]), cexpj=t=>[Math.cos(t),Math.sin(t)];
+function logF(v,lo,hi){return lo*Math.pow(hi/lo,v/1000)}
+function fmtF(f){return f>=1e9?(f/1e9).toFixed(2)+' GHz':f>=1e6?(f/1e6).toFixed(f<1e7?2:0)+' MHz':f>=1e3?(f/1e3).toFixed(1)+' kHz':f.toFixed(0)+' Hz'}
+function fmtZ(R,X){if(!isFinite(R)||R>1e7)return '∞ (open)';const s=X<0?' − j':' + j';return R.toFixed(1)+(Math.abs(X)<0.05?'':s+Math.abs(X).toFixed(1))+' Ω'}
+// slider maps: R = 50*v/(1000-v) (0..∞, 50 Ω at the middle); X = 50*tan(...)
+const sR=v=>v>=1000?1e9:Z0*v/(1000-v), sRinv=R=>R>=1e8?1000:1000*R/(R+Z0);
+const sX=v=>Z0*Math.tan(Math.PI/2*0.995*(v-500)/500), sXinv=X=>500+500*Math.atan(X/Z0)/(Math.PI/2*0.995);
+// ---------- pure RF math (exported for tests) ----------
+function gammaOf(R,X,z0=Z0){if(R>=1e8)return cx(1,0);return cdiv(csub(cx(R,X),cx(z0)),cadd(cx(R,X),cx(z0)))}
+function vswr(g){return g>=1?Infinity:(1+g)/(1-g)}
+function retLoss(g){return g<=0?Infinity:-20*Math.log10(g)}
+function misLoss(g){return g>=1?Infinity:-10*Math.log10(1-g*g)}
+function microstrip(w,h,er){const u=w/h;let ee,z;
+ if(u<=1){ee=(er+1)/2+(er-1)/2*(Math.pow(1+12/u,-0.5)+0.04*(1-u)*(1-u));z=60/Math.sqrt(ee)*Math.log(8/u+u/4)}
+ else{ee=(er+1)/2+(er-1)/2*Math.pow(1+12/u,-0.5);z=120*Math.PI/(Math.sqrt(ee)*(u+1.393+0.667*Math.log(u+1.444)))}
+ return {z,ee}}
+function solveWidth(Zt,h,er){let lo=0.005*h,hi=30*h;for(let i=0;i<80;i++){const m=Math.sqrt(lo*hi);if(microstrip(m,h,er).z>Zt)lo=m;else hi=m}return Math.sqrt(lo*hi)}
+function msLoss(f,h,er,tand){const w=solveWidth(50,h,er),{z,ee}=microstrip(w,h,er),k0=2*Math.PI*f/C;
+ const ad=er>1?k0*er*(ee-1)*tand/(2*Math.sqrt(ee)*(er-1))*8.686:0;
+ const Rs=Math.sqrt(Math.PI*f*4e-7*Math.PI*1.68e-8), ac=8.686*Rs/(z*w*1e-3);return {w,ac,ad}}
+// FFT (in place, radix-2)
+function fft(re,im,inv){const n=re.length;for(let i=1,j=0;i<n;i++){let b=n>>1;for(;j&b;b>>=1)j^=b;j^=b;if(i<j){[re[i],re[j]]=[re[j],re[i]];[im[i],im[j]]=[im[j],im[i]]}}
+ for(let len=2;len<=n;len<<=1){const a=(inv?2:-2)*Math.PI/len,wr=Math.cos(a),wi=Math.sin(a);
+  for(let i=0;i<n;i+=len){let cr=1,ci=0;for(let k=0;k<len/2;k++){const ur=re[i+k],ui=im[i+k],xr=re[i+k+len/2]*cr-im[i+k+len/2]*ci,xi=re[i+k+len/2]*ci+im[i+k+len/2]*cr;
+   re[i+k]=ur+xr;im[i+k]=ui+xi;re[i+k+len/2]=ur-xr;im[i+k+len/2]=ui-xi;const t=cr*wr-ci*wi;ci=cr*wi+ci*wr;cr=t}}}
+ if(inv)for(let i=0;i<n;i++){re[i]/=n;im[i]/=n}}
+// Reflection seen at the discontinuity plane (rest of line is a matched 50 Ω)
+function gammaDisc(f,p){const w=2*Math.PI*f,vp=C/Math.sqrt(p.ee);
+ switch(p.type){case 'open':return cx(1);case 'short':return cx(-1);
+ case 'cap':{const Y=cadd(cx(1/Z0),cx(0,w*p.C));const Z=cdiv(cx(1),Y);return cdiv(csub(Z,cx(Z0)),cadd(Z,cx(Z0)))}
+ case 'ind':{const Z=cx(Z0,w*p.L);return cdiv(csub(Z,cx(Z0)),cadd(Z,cx(Z0)))}
+ case 'sec':{const bl=w/vp*p.len,t=Math.tan(bl);const Z=cmul(cx(p.Z2),cdiv(cx(Z0,p.Z2*t),cx(p.Z2,Z0*t)));return cdiv(csub(Z,cx(Z0)),cadd(Z,cx(Z0)))}}}
+function gammaIn(f,p){const bd=2*Math.PI*f*Math.sqrt(p.ee)/C*p.d;return cmul(gammaDisc(f,p),cexpj(-2*bd))}
+// TDR trace: returns {t:[s], v:[V/Vinc]}; incident step at t0
+function tdrTrace(p,tmax){const N=16384,t0=4*p.tr,T=2.5*(tmax+t0),dt=T/N,sig=p.tr/2.563;
+ const re=new Float64Array(N),im=new Float64Array(N);
+ for(let k=0;k<=N/2;k++){const f=k/T;const g=gammaIn(f,p);const G=Math.exp(-2*Math.pow(Math.PI*f*sig,2));
+  const H=cmul(cadd(cx(1),g),cexpj(-2*Math.PI*f*t0));re[k]=H[0]*G;im[k]=H[1]*G;if(k>0&&k<N/2){re[N-k]=re[k];im[N-k]=-im[k]}}
+ im[N/2]=0;fft(re,im,true);const t=[],v=[];let s=0;for(let n=0;n<N;n++){s+=re[n];const tn=n*dt-t0;if(tn>tmax)break;t.push(tn);v.push(s)}return {t,v}}
+window.RF1={gammaOf,vswr,retLoss,misLoss,microstrip,solveWidth,msLoss,gammaIn,tdrTrace};
+
+// ================= 1. standing waves =================
+let swT=0,swRun=true;
+function swState(){const R=sR(+q('sw-r').value),X=R>=1e8?0:sX(+q('sw-x').value);return {R,X,g:gammaOf(R,X)}}
+function swText(){const {R,X,g}=swState(),m=cabs(g),a=carg(g)*180/Math.PI;
+ q('sw-rv').textContent=R>=1e8?'∞':R.toFixed(1)+' Ω';q('sw-xv').textContent=(X>=0?'+':'−')+'j'+Math.abs(X).toFixed(1)+' Ω';
+ q('sw-z').textContent=fmtZ(R,X);q('sw-g').textContent=m.toFixed(3)+' ∠ '+a.toFixed(0)+'°';
+ const V=vswr(m);q('sw-vswr').textContent=isFinite(V)?V.toFixed(2)+' : 1':'∞';
+ const rl=retLoss(m);q('sw-rl').textContent=isFinite(rl)?rl.toFixed(1)+' dB':'∞ (perfect)';
+ const ml=misLoss(m);q('sw-ml').textContent=isFinite(ml)?ml.toFixed(2)+' dB':'all reflected';
+ q('sw-pd').textContent=(100*(1-m*m)).toFixed(1)+' %';
+ const v=q('sw-verdict');
+ if(m<0.01){v.textContent='✅ Matched: no reflection, all the power goes into the load.';v.style.color='#15803d'}
+ else if(V<=2.005){v.textContent='✅ VSWR ≤ 2:1: under 11% of the power reflects. Usually acceptable.';v.style.color='#15803d'}
+ else if(m<0.999){v.textContent='⚠️ VSWR above 2:1: a lot of power is bouncing back toward the source.';v.style.color='#b45309'}
+ else{v.textContent='🚨 Total reflection: a pure standing wave, no power delivered.';v.style.color='#b91c1c'}}
+function swDraw(){const {g}=swState(),cv=q('sw-c'),x=cv.getContext('2d'),W=cv.width,H=cv.height;x.clearRect(0,0,W,H);
+ const L=40,Rr=W-30,y0=H/2,A=55,span=2; // 2 wavelengths shown, z in [-2,0]
+ x.strokeStyle='#ddd';x.beginPath();x.moveTo(L,y0);x.lineTo(Rr,y0);x.stroke();
+ x.fillStyle='#555';x.font='12px Inter,sans-serif';
+ for(let k=0;k<=4;k++){const px=L+(Rr-L)*k/4;x.fillText((k===4?'load':'−'+((4-k)/2)+'λ'),px-12,H-6);x.strokeStyle='#eee';x.beginPath();x.moveTo(px,12);x.lineTo(px,H-20);x.stroke()}
+ x.fillStyle='#b87333';x.fillRect(Rr,y0-40,8,80);
+ const ph=2*Math.PI*swT, path=(fn,col,wid,dash)=>{x.strokeStyle=col;x.lineWidth=wid;x.setLineDash(dash||[]);x.beginPath();
+  for(let px=L;px<=Rr;px++){const z=-span*(Rr-px)/(Rr-L),y=y0-A*fn(z);px===L?x.moveTo(px,y):x.lineTo(px,y)}x.stroke();x.setLineDash([])};
+ const b=2*Math.PI;
+ const inc=z=>Math.cos(ph-b*z), ref=z=>{const c=cmul(g,cexpj(ph+b*z));return c[0]}, env=z=>cabs(cadd(cx(1),cmul(g,cexpj(2*b*z))));
+ if(q('sw-env').checked){path(env,'#f59e0b',2,[5,4]);path(z=>-env(z),'#f59e0b',2,[5,4])}
+ if(q('sw-inc').checked)path(inc,'#3b82f6',1.5);
+ if(q('sw-ref').checked)path(ref,'#ef4444',1.5);
+ if(q('sw-tot').checked)path(z=>inc(z)+ref(z),'#111',2.5);
+ const m=cabs(g);x.fillStyle='#b45309';x.fillText('Vmax = '+(1+m).toFixed(2)+' × V⁺',L+4,16);x.fillText('Vmin = '+(1-m).toFixed(2)+' × V⁺',L+150,16)}
+function swLoop(){if(swRun){swT+=0.006;swDraw()}requestAnimationFrame(swLoop)}
+['sw-r','sw-x'].forEach(i=>q(i).addEventListener('input',()=>{swText();swDraw()}));
+['sw-inc','sw-ref','sw-tot','sw-env'].forEach(i=>q(i).addEventListener('change',swDraw));
+q('sw-play').onclick=()=>{swRun=!swRun;q('sw-play').textContent=swRun?'Pause':'Play'};
+document.querySelectorAll('#sw button[data-r]').forEach(b=>b.onclick=()=>{q('sw-r').value=sRinv(+b.dataset.r);q('sw-x').value=sXinv(+b.dataset.x);swText();swDraw()});
+swText();swDraw();requestAnimationFrame(swLoop);
+
+// ================= 2. TDR =================
+function tdrParams(){const type=q('tdr-type').value,v=+q('tdr-v').value,p={type,d:+q('tdr-d').value/100,ee:+q('tdr-e').value,tr:+q('tdr-t').value*1e-12};
+ p.C=logF(v,0.05,5)*1e-12;p.L=logF(v,0.1,10)*1e-9;p.Z2=20+v*0.1;p.len=+q('tdr-l').value/100;return p}
+function tdr(){const p=tdrParams(),vp=C/Math.sqrt(p.ee),type=p.type;
+ q('tdr-valbox').style.visibility=(type==='cap'||type==='ind'||type==='sec')?'visible':'hidden';
+ q('tdr-lenbox').style.visibility=type==='sec'?'visible':'hidden';
+ q('tdr-valname').textContent=type==='cap'?'Extra capacitance':type==='ind'?'Extra inductance':'Section impedance';
+ q('tdr-vv').textContent=type==='cap'?(p.C*1e12).toFixed(2)+' pF':type==='ind'?(p.L*1e9).toFixed(2)+' nH':p.Z2.toFixed(0)+' Ω';
+ q('tdr-dv').textContent=(p.d*100).toFixed(1)+' cm';q('tdr-lv').textContent=(p.len*100).toFixed(1)+' cm';
+ q('tdr-ev').textContent=p.ee.toFixed(2);q('tdr-tv').textContent=(p.tr*1e12).toFixed(0)+' ps';
+ q('tdr-vp').textContent=(vp/1e8).toFixed(2)+'×10⁸ m/s ('+(100/Math.sqrt(p.ee)).toFixed(0)+'% of c)';
+ q('tdr-rt').textContent=(2*p.d/vp*1e9).toFixed(3)+' ns';
+ const gi={open:'+1 (open)',short:'−1 (short)',cap:'dip, time constant Z₀C/2 = '+(Z0*p.C/2*1e12).toFixed(1)+' ps',ind:'bump, time constant L/(2Z₀) = '+(p.L/(2*Z0)*1e12).toFixed(1)+' ps',sec:'Γ = '+((p.Z2-Z0)/(p.Z2+Z0)).toFixed(3)+' then '+((Z0-p.Z2)/(p.Z2+Z0)).toFixed(3)}[type];
+ q('tdr-gi').textContent=gi;
+ const xmax=Math.max(0.12,(p.d+(type==='sec'?p.len:0))*1.5+0.03), tmax=2*xmax/vp, tr=tdrTrace(p,tmax);
+ // biggest deviation after the incident edge
+ let dev=0;for(let i=0;i<tr.t.length;i++){if(tr.t[i]>2*p.tr){const e=tr.v[i]-1;if(Math.abs(e)>Math.abs(dev))dev=e}}
+ q('tdr-gm').textContent='ρ = '+(dev>=0?'+':'')+dev.toFixed(3)+'  ('+zOf(dev)+')';
+ q('tdr-rip').textContent=type==='sec'?(vp/(2*p.len)/1e6).toFixed(0)+' MHz':'—';
+ // plot
+ const cv=q('tdr-c'),x=cv.getContext('2d'),W=cv.width,H=cv.height;x.clearRect(0,0,W,H);
+ const L=60,R=W-50,T=36,B=H-34,xs=d=>L+(R-L)*(d+0.01)/(xmax+0.01),ys=v=>B-(B-T)*v/2.1;
+ x.font='12px Inter,sans-serif';
+ [[0,'0 Ω'],[2/3,'25 Ω'],[1,'50 Ω'],[4/3,'100 Ω'],[2,'∞']].forEach(([v,l])=>{x.strokeStyle='#e5e5e5';x.beginPath();x.moveTo(L,ys(v));x.lineTo(R,ys(v));x.stroke();x.fillStyle='#555';x.fillText(l,R+6,ys(v)+4);x.fillText(v.toFixed(2),L-34,ys(v)+4)});
+ const step=xmax>0.3?0.1:xmax>0.15?0.05:0.02;
+ for(let d=0;d<=xmax+1e-9;d+=step){x.strokeStyle='#eee';x.beginPath();x.moveTo(xs(d),T);x.lineTo(xs(d),B);x.stroke();x.fillStyle='#555';x.fillText((d*100).toFixed(0)+' cm',xs(d)-12,B+14);x.fillText((2*d/vp*1e9).toFixed(2)+' ns',xs(d)-14,T-8)}
+ x.fillText('V / V_incident',4,13);x.fillText('distance (top: round-trip time)',L+(R-L)/2-80,H-4);
+ x.strokeStyle='#f59e0b';x.setLineDash([4,4]);x.beginPath();x.moveTo(xs(p.d),T);x.lineTo(xs(p.d),B);x.stroke();
+ if(type==='sec'){x.beginPath();x.moveTo(xs(p.d+p.len),T);x.lineTo(xs(p.d+p.len),B);x.stroke()}x.setLineDash([]);
+ x.strokeStyle='#1d4ed8';x.lineWidth=2;x.beginPath();let first=true;
+ for(let i=0;i<tr.t.length;i++){const d=tr.t[i]*vp/2;if(d<-0.01)continue;const px=xs(d),py=ys(Math.max(-0.05,Math.min(2.08,tr.v[i])));first?x.moveTo(px,py):x.lineTo(px,py);first=false}x.stroke();x.lineWidth=1;
+ // frequency view
+ const fv=q('tdr-f'),y=fv.getContext('2d'),FW=fv.width,FH=fv.height;y.clearRect(0,0,FW,FH);
+ const fL=60,fR=FW-20,fT=14,fB=FH-30,fmax=10e9,dbmin=-40,fx=f=>fL+(fR-fL)*f/fmax,fy=db=>fT+(fB-fT)*(-db)/(-dbmin);
+ y.font='12px Inter,sans-serif';
+ for(let db=0;db>=dbmin;db-=10){y.strokeStyle='#e5e5e5';y.beginPath();y.moveTo(fL,fy(db));y.lineTo(fR,fy(db));y.stroke();y.fillStyle='#555';y.fillText(db+' dB',fL-44,fy(db)+4)}
+ for(let f=0;f<=fmax;f+=2e9){y.fillText((f/1e9)+' GHz',fx(f)-(f>=fmax?40:16),fB+16)}
+ y.fillText('|S₁₁| = |Γ_in| vs frequency',fL+4,fT+12);
+ y.strokeStyle='#ef4444';y.lineWidth=2;y.beginPath();
+ for(let i=0;i<=700;i++){const f=fmax*i/700+1e6,g=cabs(gammaIn(f,p)),db=Math.max(dbmin,20*Math.log10(Math.max(g,1e-6)));i?y.lineTo(fx(f),fy(db)):y.moveTo(fx(f),fy(db))}y.stroke();y.lineWidth=1}
+function zOf(rho){if(rho>=0.999)return '≈ open';if(rho<=-0.999)return '≈ short';return (Z0*(1+rho)/(1-rho)).toFixed(1)+' Ω'}
+['tdr-type','tdr-d','tdr-v','tdr-l','tdr-e','tdr-t'].forEach(i=>q(i).addEventListener('input',tdr));
+tdr();
+
+// ================= 3. microstrip =================
+function ms(){const w=+q('ms-w').value,h=+q('ms-h').value,er=+q('ms-e').value,f=+q('ms-f').value*1e6,{z,ee}=microstrip(w,h,er),vp=C/Math.sqrt(ee);
+ q('ms-wv').textContent=w.toFixed(2)+' mm';q('ms-hv').textContent=h.toFixed(2)+' mm';q('ms-ev').textContent=er.toFixed(2);
+ q('ms-z').textContent=z.toFixed(1)+' Ω';q('ms-ee').textContent=ee.toFixed(2);q('ms-vp').textContent=(100/Math.sqrt(ee)).toFixed(0)+'% of c';
+ q('ms-dl').textContent=(0.01/vp*1e12).toFixed(1)+' ps per cm';const lam=vp/f;q('ms-lam').textContent=lam>=0.01?(lam*100).toFixed(2)+' cm':(lam*1000).toFixed(2)+' mm';
+ q('ms-u').textContent=(w/h).toFixed(2);
+ const cv=q('ms-c'),x=cv.getContext('2d'),W=cv.width,H=cv.height;x.clearRect(0,0,W,H);
+ const span=Math.max(4*w,6*h,2),s=Math.min((W-80)/span,(H-70)/(h*1.9)),cxp=W/2,gy=H-30,hy=gy-h*s,tw=w*s,tt=Math.max(3,0.035*s);
+ x.fillStyle='#dcfce7';x.fillRect(40,hy,W-80,h*s);x.fillStyle='#b87333';x.fillRect(40,gy,W-80,8);x.fillRect(cxp-tw/2,hy-tt,tw,tt);
+ x.strokeStyle='rgba(29,78,216,.6)';x.lineWidth=1.2;
+ for(let k=-3;k<=3;k++){const sx=cxp+k*tw/6;x.beginPath();x.moveTo(sx,hy);x.lineTo(sx,gy);x.stroke()}
+ for(let k=1;k<=4;k++){[-1,1].forEach(sd=>{x.beginPath();const ex=cxp+sd*tw/2,r=k*h*s*0.45,ry=(gy-hy)+(k-1)*h*s*0.18;x.ellipse(ex,gy,r,ry,0,sd>0?-Math.PI/2:Math.PI,sd>0?0:-Math.PI/2);x.stroke()})}
+ x.fillStyle='#2b2b2b';x.font='13px Inter,sans-serif';x.fillText('trace w = '+w.toFixed(2)+' mm',cxp-tw/2,hy-tt-6);
+ x.fillText('dielectric h = '+h.toFixed(2)+' mm, εr = '+er.toFixed(2),44,hy+16);x.fillText('ground plane',44,H-6);
+ x.fillStyle='#1d4ed8';x.fillText('blue: electric field lines. Most sit in the dielectric; some fringe through the air',44,16)}
+q('ms-mat').addEventListener('input',()=>{const v=q('ms-mat').value;if(v!=='custom')q('ms-e').value=v;ms()});
+q('ms-e').addEventListener('input',()=>{q('ms-mat').value='custom';ms()});
+['ms-w','ms-h','ms-f'].forEach(i=>q(i).addEventListener('input',ms));
+q('ms-solve').onclick=()=>{const w=solveWidth(+q('ms-tz').value,+q('ms-h').value,+q('ms-e').value);q('ms-w').value=Math.min(6,Math.max(0.05,w));ms()};
+ms();
+
+// ================= 4. dB chain =================
+const dbBlocks=[['Cable','-1'],['Amplifier','15'],['Filter','-2'],['Attenuator','-6']];
+q('db-blocks').innerHTML=dbBlocks.map((b,i)=>`<div><label>${b[0]}: <span id="db-bv${i}"></span></label><input id="db-b${i}" type="range" min="-20" max="30" step="0.5" value="${b[1]}"></div>`).join('');
+function fmtP(dbm){const mw=Math.pow(10,dbm/10);return mw>=1000?(mw/1000).toFixed(2)+' W':mw>=1?mw.toFixed(2)+' mW':mw>=1e-3?(mw*1000).toFixed(2)+' µW':(mw*1e6).toFixed(2)+' nW'}
+function db(){const p0=+q('db-p').value;q('db-pv').textContent=p0.toFixed(1)+' dBm = '+fmtP(p0);
+ const pts=[p0];let g=0;dbBlocks.forEach((b,i)=>{const v=+q('db-b'+i).value;q('db-bv'+i).textContent=(v>0?'+':'')+v.toFixed(1)+' dB';g+=v;pts.push(p0+g)});
+ q('db-g').textContent=(g>0?'+':'')+g.toFixed(1)+' dB';const r=Math.pow(10,g/10);q('db-r').textContent='× '+(r>=100?r.toFixed(0):r>=1?r.toFixed(2):r.toFixed(4));
+ q('db-o').textContent=(p0+g).toFixed(1)+' dBm';q('db-mw').textContent=fmtP(p0+g);
+ const cv=q('db-c'),x=cv.getContext('2d'),W=cv.width,H=cv.height;x.clearRect(0,0,W,H);const lo=-50,hi=50,T=20,B=H-40,ys=v=>B-(B-T)*(v-lo)/(hi-lo);
+ x.font='12px Inter,sans-serif';for(let v=lo;v<=hi;v+=20){x.strokeStyle='#eee';x.beginPath();x.moveTo(50,ys(v));x.lineTo(W-10,ys(v));x.stroke();x.fillStyle='#555';x.fillText(v+' dBm',4,ys(v)+4)}
+ const names=['Source'].concat(dbBlocks.map(b=>'after '+b[0].toLowerCase())),bw=(W-80)/pts.length;
+ pts.forEach((p,i)=>{const px=60+i*bw;x.fillStyle=i===0?'#94a3b8':'#3b82f6';const yv=ys(Math.max(lo,Math.min(hi,p)));x.fillRect(px,Math.min(yv,ys(0)),bw*0.6,Math.abs(ys(0)-yv));x.fillStyle='#2b2b2b';x.fillText(p.toFixed(1),px,yv-4);x.fillText(names[i],px,H-22)});
+ x.strokeStyle='#999';x.beginPath();x.moveTo(50,ys(0));x.lineTo(W-10,ys(0));x.stroke();x.fillText('0 dBm = 1 mW',W-100,ys(0)+14)}
+['db-p',...dbBlocks.map((b,i)=>'db-b'+i)].forEach(i=>q(i).addEventListener('input',db));db();
+
+// ================= 5. polarization =================
+let polT=0;
+function polFrac(tt,ta,rt,ra){const lin=t=>t==='lin';
+ if(lin(tt)&&lin(rt)){const c=Math.cos((ta-ra)*Math.PI/180);return c*c}
+ if(lin(tt)!==lin(rt))return 0.5;return tt===rt?1:0}
+window.RF1.polFrac=polFrac;
+function pol(){const tt=q('pol-tt').value,rt=q('pol-rt').value,ta=+q('pol-ta').value,ra=+q('pol-ra').value;
+ q('pol-tav').textContent=ta+'°';q('pol-rav').textContent=ra+'°';
+ const f=polFrac(tt,ta,rt,ra);q('pol-f').textContent=(100*f).toFixed(1)+' %';
+ q('pol-l').textContent=f<1e-6?'∞ in theory (20–30 dB in practice)':(-10*Math.log10(f)).toFixed(2)+' dB';
+ const v=q('pol-verdict');v.style.color=f>0.9?'#15803d':f>=0.49?'#b45309':'#b91c1c';
+ v.textContent=f>0.9?'✅ Well matched.':f>=0.49?'⚠️ Up to half the power lost to polarization.':'🚨 Mostly cross-polarized: very little gets through.'}
+function polDraw(){const tt=q('pol-tt').value,rt=q('pol-rt').value,ta=+q('pol-ta').value,ra=+q('pol-ra').value,cv=q('pol-c'),x=cv.getContext('2d'),W=cv.width,H=cv.height;x.clearRect(0,0,W,H);
+ const draw=(cx0,type,ang,label,col)=>{const r=70,cy=H/2+5;x.strokeStyle='#ddd';x.beginPath();x.arc(cx0,cy,r,0,2*Math.PI);x.stroke();x.fillStyle='#2b2b2b';x.font='13px Inter,sans-serif';x.fillText(label,cx0-60,22);
+  x.strokeStyle=col;x.lineWidth=3;let ex,ey;
+  if(type==='lin'){const a=ang*Math.PI/180,amp=Math.cos(polT);x.globalAlpha=.25;x.beginPath();x.moveTo(cx0-r*Math.cos(a),cy+r*Math.sin(a));x.lineTo(cx0+r*Math.cos(a),cy-r*Math.sin(a));x.stroke();x.globalAlpha=1;ex=cx0+r*amp*Math.cos(a);ey=cy-r*amp*Math.sin(a)}
+  else{const s=type==='rhcp'?1:-1;x.globalAlpha=.25;x.beginPath();x.arc(cx0,cy,r,0,2*Math.PI);x.stroke();x.globalAlpha=1;ex=cx0+r*Math.cos(s*polT);ey=cy-r*Math.sin(s*polT)}
+  x.beginPath();x.moveTo(cx0,cy);x.lineTo(ex,ey);x.stroke();x.beginPath();x.arc(ex,ey,5,0,2*Math.PI);x.fillStyle=col;x.fill();x.lineWidth=1};
+ draw(W*0.25,tt,ta,'Transmitted E-field','#3b82f6');draw(W*0.72,rt,ra,'What the receive antenna wants','#ef4444');
+ x.fillStyle='#555';x.font='12px Inter,sans-serif';x.fillText('(looking along the direction the wave travels)',W/2-120,H-6)}
+function polLoop(){polT+=0.05;polDraw();requestAnimationFrame(polLoop)}
+['pol-tt','pol-rt','pol-ta','pol-ra'].forEach(i=>q(i).addEventListener('input',pol));pol();requestAnimationFrame(polLoop);
+
+// ================= 6. loss =================
+function ls(){const [er,td]=q('ls-mat').value.split(',').map(Number),h=+q('ls-h').value,f=logF(+q('ls-f').value,1e7,2e10),Lcm=+q('ls-l').value;
+ q('ls-hv').textContent=h.toFixed(2)+' mm';q('ls-fv').textContent=fmtF(f);q('ls-lv').textContent=Lcm+' cm';
+ const a=msLoss(f,h,er,td);q('ls-w').textContent=a.w.toFixed(2)+' mm';q('ls-ac').textContent=(a.ac/100).toFixed(3)+' dB/cm';q('ls-ad').textContent=(a.ad/100).toFixed(3)+' dB/cm';
+ q('ls-tot').textContent=((a.ac+a.ad)*Lcm/100).toFixed(2)+' dB';
+ // crossover: ac ∝ √f, ad ∝ f  → f_x = f*(ac/ad)^2
+ const fx=f*Math.pow(a.ac/a.ad,2);q('ls-x').textContent=fmtF(fx);
+ const cv=q('ls-c'),x=cv.getContext('2d'),W=cv.width,H=cv.height;x.clearRect(0,0,W,H);const L=60,R=W-20,T=14,B=H-34,f1=1e7,f2=2e10,a1=0.01,a2=1000;
+ const xs=v=>L+(R-L)*Math.log10(v/f1)/Math.log10(f2/f1),ys=v=>B-(B-T)*Math.log10(Math.max(a1,v)/a1)/Math.log10(a2/a1);
+ x.font='12px Inter,sans-serif';
+ [1e7,1e8,1e9,1e10].forEach(v=>{x.strokeStyle='#eee';x.beginPath();x.moveTo(xs(v),T);x.lineTo(xs(v),B);x.stroke();x.fillStyle='#555';x.fillText(fmtF(v),xs(v)-18,B+16)});
+ [0.01,0.1,1,10,100,1000].forEach(v=>{x.strokeStyle='#eee';x.beginPath();x.moveTo(L,ys(v));x.lineTo(R,ys(v));x.stroke();x.fillStyle='#555';x.fillText(v+'',L-40,ys(v)+4)});
+ x.fillText('dB per meter',L+4,T+10);
+ const curve=(fn,col,wid)=>{x.strokeStyle=col;x.lineWidth=wid;x.beginPath();for(let i=0;i<=300;i++){const ff=f1*Math.pow(f2/f1,i/300),y=ys(fn(msLoss(ff,h,er,td)));i?x.lineTo(xs(ff),y):x.moveTo(xs(ff),y)}x.stroke();x.lineWidth=1};
+ curve(o=>o.ac,'#b87333',2);curve(o=>o.ad,'#16a34a',2);curve(o=>o.ac+o.ad,'#111',2.5);
+ x.strokeStyle='#f59e0b';x.setLineDash([4,4]);x.beginPath();x.moveTo(xs(f),T);x.lineTo(xs(f),B);x.stroke();x.setLineDash([])}
+['ls-mat','ls-h','ls-f','ls-l'].forEach(i=>q(i).addEventListener('input',ls));ls();
+</script></body></html>

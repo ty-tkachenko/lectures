@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Module 2 widgets (draft)</title>
+<style>
+body{font-family:Inter,system-ui,sans-serif;max-width:820px;margin:2rem auto;padding:0 1rem;color:#2b2b2b;line-height:1.6}
+.widget{border:1px solid #eee;border-radius:10px;padding:1rem 1.25rem;margin:2rem 0}
+.widget h3{margin:.2rem 0 .8rem}
+label{display:block;font-size:.9rem;color:#555;margin:.5rem 0 .2rem}
+label.inline{display:inline-block;margin-right:1rem}
+input[type=range]{width:100%}
+select,input[type=number]{padding:.2rem}
+input[type=number]{width:6rem}
+button{font:inherit;font-size:.85rem;padding:.2rem .6rem;margin:.2rem .3rem .2rem 0;border:1px solid #cbd5e1;border-radius:6px;background:#fff;cursor:pointer}
+button:hover{background:#eff6ff}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:0 1.25rem}
+.readout{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.5rem;margin:.8rem 0}
+.readout div{background:#eff6ff;border-radius:8px;padding:.4rem .6rem;font-size:.9rem}
+.readout b{display:block;font-size:1.1rem;color:#1d4ed8}
+canvas{width:100%;border-radius:8px;background:#fafafa}
+.try{font-size:.9rem;background:#fffbeb;border-left:3px solid #f59e0b;padding:.5rem .75rem;margin-top:.8rem}
+.verdict{font-weight:600}
+.legend{font-size:.85rem;color:#555}
+.legend span{display:inline-block;width:14px;height:3px;vertical-align:middle;margin:0 .3rem 0 .8rem}
+</style></head><body>
+<h1>Module 2: interactive widgets (draft)</h1>
+
+<!-- ============ 1. Smith chart ============ -->
+<div class="widget" id="sc">
+<h3>Live Smith chart</h3>
+<p class="legend">Drag the red dot anywhere on the chart, or use the sliders. Every point on the chart is one load impedance, and its distance from the center is |Γ|.</p>
+<div class="row">
+<div><label>Load resistance R: <span id="sc-rv"></span></label><input id="sc-r" type="range" min="0" max="1000" step="any" value="666.6667"></div>
+<div><label>Load reactance X: <span id="sc-xv"></span></label><input id="sc-x" type="range" min="0" max="1000" step="any" value="500"></div>
+</div>
+<div class="row">
+<div><label>Line length between you and the load (toward generator): <span id="sc-lv"></span></label><input id="sc-l" type="range" min="0" max="0.5" step="0.001" value="0"></div>
+<div><label>Reference impedance Z<sub>0</sub>
+<select id="sc-z0"><option value="50" selected>50 Ω (RF standard)</option><option value="75">75 Ω (video / cable TV)</option></select></label>
+<label class="inline"><input type="checkbox" id="sc-adm"> show admittance grid (for shunt parts)</label></div>
+</div>
+<div>Presets:
+<button data-r="0" data-x="0">Short</button><button data-r="1e9" data-x="0">Open</button><button data-r="50" data-x="0">Matched</button><button data-r="100" data-x="0">100 Ω</button><button data-r="25" data-x="-25">25 − j25 Ω</button><button data-r="10" data-x="30">10 + j30 Ω</button><button id="sc-qw">Short, then λ/4 of line</button>
+</div>
+<div class="readout">
+<div>Load Z<sub>L</sub> (normalized z)<b id="sc-z"></b></div>
+<div>Γ at the load<b id="sc-g"></b></div>
+<div>VSWR / return loss<b id="sc-v"></b></div>
+<div>Line length (electrical)<b id="sc-el"></b></div>
+<div>Z<sub>in</sub> looking into the line<b id="sc-zin"></b></div>
+<div>Y<sub>in</sub> = 1/Z<sub>in</sub><b id="sc-yin"></b></div>
+</div>
+<canvas id="sc-c" width="760" height="560" style="touch-action:none;cursor:crosshair"></canvas>
+<p class="legend"><span style="background:#ef4444"></span>load <span style="background:#7c3aed"></span>after the line (Z<sub>in</sub>) <span style="background:#f59e0b"></span>constant-|Γ| (constant-VSWR) circle <span style="background:#16a34a"></span>admittance grid: read the <i>same</i> red dot on the green circles to get the normalized admittance y = g + jb</p>
+<div class="try"><b>Try this:</b> (1) Press "Short, then λ/4 of line". The dot travels half-way round the chart and ends at the open circuit on the right edge: a shorted quarter-wave line looks like an open. (2) Pick 100 Ω and slide the line length. The dot circles the center at a fixed distance: a lossless line never changes |Γ| or VSWR, only the angle. (3) Drag the dot into the top half: that's inductive. Bottom half is capacitive.</div>
+</div>
+
+<!-- ============ 2. L-network designer ============ -->
+<div class="widget" id="lm">
+<h3>L-network matching designer</h3>
+<p class="legend">Enter what your source wants to see and what the load actually is. The designer finds every two-part (one series, one shunt) match and draws its path on the Smith chart.</p>
+<div class="row">
+<div><label>Source / system resistance R<sub>S</sub> (Ω)</label><input id="lm-rs" type="number" value="50" min="1" step="any"></div>
+<div><label>Frequency (MHz)</label><input id="lm-f" type="number" value="900" min="1" step="any"></div>
+</div>
+<div class="row">
+<div><label>Load resistance R<sub>L</sub> (Ω)</label><input id="lm-rl" type="number" value="25" min="0.1" step="any"></div>
+<div><label>Load reactance X<sub>L</sub> (Ω, + is inductive)</label><input id="lm-xl" type="number" value="0" step="any"></div>
+</div>
+<div>Examples: <button data-l="50,900,25,0">25 Ω → 50 Ω at 900 MHz</button><button data-l="50,915,10,30">10 + j30 Ω antenna</button><button data-l="50,2400,200,-100">200 − j100 Ω</button><button data-l="50,915,2,0">2 Ω PA output (high Q)</button></div>
+<div id="lm-out" style="margin:.8rem 0"></div>
+<canvas id="lm-c" width="760" height="380"></canvas>
+<p class="legend" id="lm-leg"></p>
+<div class="try"><b>Try this:</b> start with the 25 Ω → 50 Ω example: two answers, one low-pass (series L, shunt C) and one high-pass (series C, shunt L). Then pick "2 Ω PA output". The node Q jumps to about 5 and the 10 dB-return-loss bandwidth collapses. That's why big impedance ratios are usually matched in two or more smaller steps.</div>
+</div>
+
+<!-- ============ 3. quarter-wave transformer ============ -->
+<div class="widget" id="qw">
+<h3>Quarter-wave transformer</h3>
+<div class="row">
+<div><label>Load resistance R<sub>L</sub>: <span id="qw-rv"></span></label><input id="qw-r" type="range" min="0" max="1000" step="any" value="650.515"></div>
+<div><label>Design frequency f<sub>0</sub> (MHz) and board ε<sub>eff</sub></label><input id="qw-f" type="number" value="915" min="1" step="any"> <input id="qw-e" type="number" value="3.4" min="1" max="12" step="0.1"></div>
+</div>
+<div class="readout">
+<div>One section: Z<sub>1</sub> = √(Z<sub>0</sub>R<sub>L</sub>)<b id="qw-z1"></b></div>
+<div>Two-section binomial: Z<sub>1</sub>, Z<sub>2</sub><b id="qw-z2"></b></div>
+<div>λ/4 on the board at f<sub>0</sub><b id="qw-len"></b></div>
+<div>Bandwidth with RL ≥ 20 dB<b id="qw-bw"></b></div>
+</div>
+<canvas id="qw-c" width="760" height="260"></canvas>
+<p class="legend"><span style="background:#94a3b8"></span>no matching <span style="background:#3b82f6"></span>one λ/4 section <span style="background:#16a34a"></span>two-section binomial</p>
+<div class="try"><b>Try this:</b> set R<sub>L</sub> = 100 Ω. One section gives a perfect match at f<sub>0</sub>, and also at 3f<sub>0</sub>, where the line is 3λ/4 long. Make R<sub>L</sub> = 10 Ω: the dip gets narrow. The two-section version trades a slightly longer line for a much wider band.</div>
+</div>
+
+<!-- ============ 4. S-parameters power split ============ -->
+<div class="widget" id="sp">
+<h3>What S<sub>11</sub> and S<sub>21</sub> say about power</h3>
+<div class="row">
+<div><label>S<sub>11</sub>: <span id="sp-av"></span></label><input id="sp-a" type="range" min="-40" max="0" step="0.1" value="-15"></div>
+<div><label>S<sub>21</sub>: <span id="sp-bv"></span></label><input id="sp-b" type="range" min="-30" max="0" step="0.1" value="-0.8"></div>
+</div>
+<div class="readout">
+<div>Return loss<b id="sp-rl"></b></div>
+<div>Insertion loss<b id="sp-il"></b></div>
+<div>Reflected<b id="sp-r"></b></div>
+<div>Transmitted<b id="sp-t"></b></div>
+<div>Lost inside (heat / radiation)<b id="sp-x"></b></div>
+</div>
+<p class="verdict" id="sp-verdict"></p>
+<canvas id="sp-c" width="760" height="90"></canvas>
+<div class="try"><b>Try this:</b> a filter datasheet says S<sub>11</sub> = −15 dB and S<sub>21</sub> = −0.8 dB. Where did the missing power go? Now set S<sub>11</sub> to −3 dB and S<sub>21</sub> to −1 dB: is that possible for a passive part?</div>
+</div>
+
+<script>
+const C=299792458;
+const q=id=>document.getElementById(id);
+const cx=(a,b=0)=>[a,b], cadd=(a,b)=>[a[0]+b[0],a[1]+b[1]], csub=(a,b)=>[a[0]-b[0],a[1]-b[1]],
+ cmul=(a,b)=>[a[0]*b[0]-a[1]*b[1],a[0]*b[1]+a[1]*b[0]],
+ cdiv=(a,b)=>{const d=b[0]*b[0]+b[1]*b[1];return [(a[0]*b[0]+a[1]*b[1])/d,(a[1]*b[0]-a[0]*b[1])/d]},
+ cabs=a=>Math.hypot(a[0],a[1]), carg=a=>Math.atan2(a[1],a[0]), cexpj=t=>[Math.cos(t),Math.sin(t)], cinv=a=>cdiv(cx(1),a);
+const zToG=z=>cdiv(csub(z,cx(1)),cadd(z,cx(1))), gToZ=g=>cdiv(cadd(cx(1),g),csub(cx(1),g));
+const sR=(v,z0)=>v>=1000?1e9:z0*v/(1000-v), sRinv=(R,z0)=>R>=1e8?1000:1000*R/(R+z0);
+const sX=(v,z0)=>z0*Math.tan(Math.PI/2*0.995*(v-500)/500), sXinv=(X,z0)=>500+500*Math.atan(X/z0)/(Math.PI/2*0.995);
+function fmtZ(R,X){if(!isFinite(R)||R>1e7)return '∞ (open)';const s=X<0?' − j':' + j';return R.toFixed(1)+(Math.abs(X)<0.05?'':s+Math.abs(X).toFixed(1))+' Ω'}
+function fmtz(z){if(!isFinite(z[0])||Math.abs(z[0])>1e6||Math.abs(z[1])>1e6)return '∞';const s=z[1]<0?' − j':' + j';return z[0].toFixed(2)+s+Math.abs(z[1]).toFixed(2)}
+function fmtL(H){return H>=1e-6?(H*1e6).toFixed(2)+' µH':(H*1e9).toFixed(2)+' nH'}
+function fmtC(F){return F>=1e-9?(F*1e9).toFixed(2)+' nF':(F*1e12).toFixed(2)+' pF'}
+// ---------- pure RF math (exported for tests) ----------
+function zin(ZL,Z0,bl){ // ZL complex [R,X], may be open (R>=1e8)
+ const t=Math.tan(bl); if(ZL[0]>=1e8) return cdiv(cx(0,-Z0),cx(t)); return cmul(cx(Z0),cdiv(cadd(ZL,cx(0,Z0*t)),cadd(cx(Z0),cmul(cx(0,t),ZL))))}
+function lmatch(RL,XL,Z0){const sols=[];
+ if(RL>0&&RL*RL+XL*XL-Z0*RL>=-1e-9){const r=Math.sqrt(Math.max(0,RL*RL+XL*XL-Z0*RL));
+  for(const s of [1,-1]){const B=(XL+s*Math.sqrt(RL/Z0)*r)/(RL*RL+XL*XL);const X=Math.abs(B)<1e-15?null:1/B+XL*Z0/RL-Z0/(B*RL);if(X!==null)sols.push({type:'shunt-at-load',X,B})}}
+ if(RL>0&&RL<=Z0+1e-9){for(const s of [1,-1]){const X=s*Math.sqrt(Math.max(0,RL*(Z0-RL)))-XL,B=s*Math.sqrt(Math.max(0,(Z0-RL)/RL))/Z0;sols.push({type:'series-at-load',X,B})}}
+ // remove duplicates (identical element values)
+ const out=[];for(const so of sols){if(!out.some(o=>Math.abs(o.X-so.X)<1e-6*Z0&&Math.abs(o.B-so.B)<1e-9/Z0))out.push(so)}return out}
+function lmZin(sol,ZL,fr){ // fr = f/f0; reactances scale with frequency
+ const X=Math.abs(sol.X)<1e-9?0:(sol.X>0?sol.X*fr:sol.X/fr), B=Math.abs(sol.B)<1e-15?0:(sol.B>0?sol.B*fr:sol.B/fr);
+ if(sol.type==='series-at-load'){const Z1=cadd(ZL,cx(0,X));return cinv(cadd(cinv(Z1),cx(0,B)))}
+ const Y1=cadd(cinv(ZL),cx(0,B));return cadd(cinv(Y1),cx(0,X))}
+function lmNodeQ(sol,ZL){const qL=Math.abs(ZL[1])/ZL[0];if(sol.type==='series-at-load'){const Z1=cadd(ZL,cx(0,sol.X));return Math.max(qL,Math.abs(Z1[1])/Z1[0])}const Y1=cadd(cinv(ZL),cx(0,sol.B));return Math.max(qL,Math.abs(Y1[1])/Y1[0])}
+function lmBW(sol,ZL,Z0,thrDb=-10){const thr=Math.pow(10,thrDb/20),gm=fr=>{const z=lmZin(sol,ZL,fr);return cabs(cdiv(csub(z,cx(Z0)),cadd(z,cx(Z0))))};
+ let lo=1,hi=1;const st=0.0005;while(lo>0.02&&gm(lo-st)<=thr)lo-=st;while(hi<5&&gm(hi+st)<=thr)hi+=st;return {lo,hi,frac:hi-lo}}
+function qwGamma(RL,Z0,secs,fr){let Z=cx(RL);for(let i=secs.length-1;i>=0;i--)Z=zin(Z,secs[i],Math.PI/2*fr);return cabs(cdiv(csub(Z,cx(Z0)),cadd(Z,cx(Z0))))}
+function qwBW(RL,Z0,secs,thr=0.1){let lo=1,hi=1;const st=0.0005;while(lo>st&&qwGamma(RL,Z0,secs,lo-st)<=thr)lo-=st;while(hi<2&&qwGamma(RL,Z0,secs,hi+st)<=thr)hi+=st;return hi-lo}
+window.RF2={zin,lmatch,lmZin,lmNodeQ,lmBW,qwGamma,qwBW};
+
+// ---------- Smith chart drawing ----------
+function smithGrid(x,ox,oy,R,adm){
+ x.save();x.beginPath();x.arc(ox,oy,R,0,2*Math.PI);x.clip();
+ const P=(gr,gi)=>[ox+R*gr,oy-R*gi];
+ const grid=(sgn,col,lw)=>{x.strokeStyle=col;x.lineWidth=lw;
+  [0.2,0.5,1,2,5].forEach(r=>{const c=P(sgn*r/(1+r),0);x.beginPath();x.arc(c[0],c[1],R/(1+r),0,2*Math.PI);x.stroke()});
+  [0.2,0.5,1,2,5].forEach(xv=>{[1,-1].forEach(s=>{const c=P(sgn*1,s/xv);x.beginPath();x.arc(c[0],c[1],R/xv,0,2*Math.PI);x.stroke()})});
+  x.beginPath();x.moveTo(ox-R,oy);x.lineTo(ox+R,oy);x.stroke()};
+ grid(1,'#cbd5e1',1);if(adm)grid(-1,'rgba(22,163,74,.45)',1);x.restore();
+ x.strokeStyle='#64748b';x.lineWidth=1.5;x.beginPath();x.arc(ox,oy,R,0,2*Math.PI);x.stroke();x.lineWidth=1;
+ x.fillStyle='#64748b';x.font='11px Inter,sans-serif';
+ [0.2,0.5,1,2,5].forEach(r=>{const px=ox+R*(r-1)/(r+1);x.fillText(r+'',px+2,oy-3)});
+ [0.2,0.5,1,2,5].forEach(xv=>{const g=zToG(cx(0,xv));x.fillText('+j'+xv,ox+R*g[0]*1.06-10,oy-R*g[1]*1.06);x.fillText('−j'+xv,ox+R*g[0]*1.06-10,oy+R*g[1]*1.06+8)})}
+const gp=(ox,oy,R,g)=>[ox+R*g[0],oy-R*g[1]];
+
+// ================= 1. Smith chart widget =================
+let scDrag=false;
+const scZ0=()=>+q('sc-z0').value;
+function scLoad(){const z0=scZ0(),R=sR(+q('sc-r').value,z0),X=R>=1e8?0:sX(+q('sc-x').value,z0);return {R,X,z0}}
+function sc(){const {R,X,z0}=scLoad(),l=+q('sc-l').value,adm=q('sc-adm').checked;
+ q('sc-rv').textContent=R>=1e8?'∞':R.toFixed(1)+' Ω';q('sc-xv').textContent=(X>=0?'+':'−')+'j'+Math.abs(X).toFixed(1)+' Ω';q('sc-lv').textContent=l.toFixed(3)+' λ';
+ const gL=R>=1e8?cx(1):zToG(cx(R/z0,X/z0)),m=cabs(gL);
+ q('sc-z').textContent=fmtZ(R,X)+'  (z = '+(R>=1e8?'∞':fmtz([R/z0,X/z0]))+')';
+ q('sc-g').textContent=m.toFixed(3)+' ∠ '+(carg(gL)*180/Math.PI).toFixed(0)+'°';
+ q('sc-v').textContent=(m>=0.9999?'∞':((1+m)/(1-m)).toFixed(2)+':1')+'  /  '+(m<1e-4?'∞':(-20*Math.log10(m)).toFixed(1)+' dB');
+ q('sc-el').textContent=(360*l).toFixed(1)+'° of line, rotates Γ by '+(720*l).toFixed(0)+'°';
+ const gin=cmul(gL,cexpj(-4*Math.PI*l));let Zin=cmul(gToZ(gin),cx(z0));
+ q('sc-zin').textContent=(Math.abs(1-gin[0])<1e-6&&Math.abs(gin[1])<1e-6)?'∞ (open)':fmtZ(Zin[0],Zin[1]);
+ const Y=cinv(Zin);q('sc-yin').textContent=(cabs(Zin)>1e7)?'0':((Y[0]*1e3).toFixed(2)+(Y[1]<0?' − j':' + j')+Math.abs(Y[1]*1e3).toFixed(2)+' mS');
+ const cv=q('sc-c'),x=cv.getContext('2d'),W=cv.width,H=cv.height;x.clearRect(0,0,W,H);const ox=270,oy=H/2,Rr=255;
+ smithGrid(x,ox,oy,Rr,adm);
+ x.strokeStyle='#f59e0b';x.setLineDash([5,4]);x.lineWidth=1.5;x.beginPath();x.arc(ox,oy,Rr*m,0,2*Math.PI);x.stroke();x.setLineDash([]);
+ if(l>0){x.strokeStyle='#7c3aed';x.lineWidth=3;x.beginPath();const a0=carg(gL);x.arc(ox,oy,Rr*m,-a0,-a0+4*Math.PI*l,false);x.stroke();x.lineWidth=1;
+  const pi=gp(ox,oy,Rr,gin);x.fillStyle='#7c3aed';x.beginPath();x.arc(pi[0],pi[1],7,0,2*Math.PI);x.fill()}
+ const pl=gp(ox,oy,Rr,gL);x.fillStyle='#ef4444';x.beginPath();x.arc(pl[0],pl[1],8,0,2*Math.PI);x.fill();
+
+ x.fillStyle='#2b2b2b';x.font='13px Inter,sans-serif';
+ const tx=ox+Rr+18;[['Reading the chart',1],['center: matched (z = 1, Γ = 0)'],['left edge: short (z = 0)'],['right edge: open (z = ∞)'],['top half: inductive (+jx)'],['bottom half: capacitive (−jx)'],['outer rim: |Γ| = 1 (pure L or C)'],[''],['Moving toward the generator'],['= clockwise.'],['One full turn = λ/2 of line.']].forEach((t,i)=>{x.font=(t[1]?'600 ':'')+'13px Inter,sans-serif';x.fillText(t[0],tx,40+i*20)});
+ x.font='13px Inter,sans-serif';x.fillStyle='#64748b';x.fillText('short',ox-Rr-4,oy+18);x.fillText('open',ox+Rr-30,oy+18)}
+function scSet(R,X){const z0=scZ0();q('sc-r').value=sRinv(R,z0);q('sc-x').value=sXinv(X,z0)}
+function scPointer(e){const cv=q('sc-c'),r=cv.getBoundingClientRect(),px=(e.clientX-r.left)*cv.width/r.width,py=(e.clientY-r.top)*cv.height/r.height;
+ let g=cx((px-270)/255,-(py-cv.height/2)/255);const m=cabs(g);if(m>0.995)g=cmul(g,cx(0.995/m));const z=gToZ(g),z0=scZ0();scSet(Math.max(0,z[0]*z0),z[1]*z0);sc()}
+q('sc-c').addEventListener('pointerdown',e=>{scDrag=true;q('sc-c').setPointerCapture(e.pointerId);scPointer(e)});
+q('sc-c').addEventListener('pointermove',e=>{if(scDrag)scPointer(e)});
+q('sc-c').addEventListener('pointerup',()=>scDrag=false);
+['sc-r','sc-x','sc-l','sc-adm'].forEach(i=>q(i).addEventListener('input',sc));
+q('sc-z0').addEventListener('input',sc);
+document.querySelectorAll('#sc button[data-r]').forEach(b=>b.onclick=()=>{scSet(+b.dataset.r,+b.dataset.x);sc()});
+let qwAnim=null;q('sc-qw').onclick=()=>{scSet(0,0);q('sc-l').value=0;cancelAnimationFrame(qwAnim);const t0=performance.now();
+ const step=t=>{const l=Math.min(0.25,(t-t0)/6000);q('sc-l').value=l;sc();if(l<0.25)qwAnim=requestAnimationFrame(step)};qwAnim=requestAnimationFrame(step)};
+sc();
+
+// ================= 2. L-network designer =================
+const lmCols=['#3b82f6','#ef4444','#16a34a','#a855f7'];
+function lmParts(sol,w){const ser=Math.abs(sol.X)<1e-9?'(no series part)':sol.X>0?'series L = '+fmtL(sol.X/w):'series C = '+fmtC(-1/(w*sol.X));
+ const sh=Math.abs(sol.B)<1e-15?'(no shunt part)':sol.B>0?'shunt C = '+fmtC(sol.B/w):'shunt L = '+fmtL(-1/(w*sol.B));return {ser,sh}}
+function lm(){const Rs=+q('lm-rs').value,f=+q('lm-f').value*1e6,RL=+q('lm-rl').value,XL=+q('lm-xl').value,w=2*Math.PI*f,ZL=cx(RL,XL),out=q('lm-out');
+ const cv=q('lm-c'),x=cv.getContext('2d'),W=cv.width,H=cv.height;x.clearRect(0,0,W,H);
+ if(!(Rs>0&&RL>0&&f>0)){out.innerHTML='<p class="verdict" style="color:#b91c1c">R<sub>S</sub>, R<sub>L</sub> and f must be positive.</p>';return}
+ const sols=lmatch(RL,XL,Rs);let html='';
+ if(Math.abs(RL-Rs)<1e-6*Rs&&Math.abs(XL)<1e-6*Rs)html='<p class="verdict" style="color:#15803d">✅ Already matched: no network needed.</p>';
+ html+='<div class="readout">';
+ sols.forEach((s,i)=>{const p=lmParts(s,w),Q=lmNodeQ(s,ZL),bw=lmBW(s,ZL,Rs);
+  const order=s.type==='series-at-load'?`Source → ${p.sh} → ${p.ser} → Load`:`Source → ${p.ser} → ${p.sh} → Load`;
+  html+=`<div style="border-left:4px solid ${lmCols[i]}">Solution ${i+1}<b style="font-size:.95rem">${order}</b>node Q ≈ ${Q.toFixed(2)} · RL ≥ 10 dB from ${(bw.lo*f/1e6).toFixed(0)} to ${bw.hi>=4.99?'> '+(5*f/1e6).toFixed(0):(bw.hi*f/1e6).toFixed(0)} MHz (${(100*bw.frac).toFixed(0)}%${bw.hi>=4.99||bw.lo<=0.021?', edge of sweep':''})</div>`});
+ html+='</div>';out.innerHTML=html;
+ // Smith chart, normalized to Rs
+ const ox=190,oy=H/2,Rr=170;smithGrid(x,ox,oy,Rr,true);
+ const toP=Z=>gp(ox,oy,Rr,zToG(cdiv(Z,cx(Rs))));
+ const pl=toP(ZL);
+ sols.forEach((s,i)=>{x.strokeStyle=lmCols[i];x.lineWidth=2.5;x.beginPath();let first=true;const add=Z=>{const p=toP(Z);first?x.moveTo(p[0],p[1]):x.lineTo(p[0],p[1]);first=false};
+  for(let k=0;k<=60;k++){const t=k/60;if(s.type==='series-at-load')add(cadd(ZL,cx(0,t*s.X)));else add(cinv(cadd(cinv(ZL),cx(0,t*s.B))))}
+  for(let k=0;k<=60;k++){const t=k/60;if(s.type==='series-at-load')add(cinv(cadd(cinv(cadd(ZL,cx(0,s.X))),cx(0,t*s.B))));else add(cadd(cinv(cadd(cinv(ZL),cx(0,s.B))),cx(0,t*s.X)))}
+  x.stroke();x.lineWidth=1});
+ x.fillStyle='#ef4444';x.beginPath();x.arc(pl[0],pl[1],6,0,2*Math.PI);x.fill();x.fillStyle='#2b2b2b';x.font='12px Inter,sans-serif';x.fillText('load',pl[0]+8,pl[1]-6);
+ x.fillText('Smith chart normalized to R_S = '+Rs+' Ω',20,16);
+ // return loss vs frequency
+ const L=420,R=W-15,T=24,B=H-34,fx=fr=>L+(R-L)*(fr-0.2)/1.8,fy=db=>T+(B-T)*Math.min(40,db)/40;
+ x.font='12px Inter,sans-serif';
+ [0,10,20,30,40].forEach(d=>{x.strokeStyle=d===10?'#f59e0b':'#e5e5e5';x.beginPath();x.moveTo(L,fy(d));x.lineTo(R,fy(d));x.stroke();x.fillStyle='#555';x.fillText(d+' dB',L-38,fy(d)+4)});
+ [0.2,0.6,1,1.4,1.8,2].forEach(fr=>{x.fillStyle='#555';x.fillText((fr*f/1e6).toFixed(0),fx(fr)-(fr>=2?30:12),B+20)});
+ x.fillText('return loss vs frequency (MHz)',L+60,T-8);
+ sols.forEach((s,i)=>{x.strokeStyle=lmCols[i];x.lineWidth=2;x.beginPath();for(let k=0;k<=400;k++){const fr=0.2+1.8*k/400,z=lmZin(s,ZL,fr),g=cabs(cdiv(csub(z,cx(Rs)),cadd(z,cx(Rs)))),rl=Math.min(40,-20*Math.log10(Math.max(g,1e-6)));k?x.lineTo(fx(fr),fy(rl)):x.moveTo(fx(fr),fy(rl))}x.stroke();x.lineWidth=1});
+ q('lm-leg').innerHTML='Each colored path starts at the load (red dot). Moving along a grey (impedance) circle = adding a series part; moving along a green (admittance) circle = adding a shunt part. Every path ends at the center. The load is treated as fixed with frequency; a real antenna would change too.'}
+['lm-rs','lm-f','lm-rl','lm-xl'].forEach(i=>q(i).addEventListener('input',lm));
+document.querySelectorAll('#lm button[data-l]').forEach(b=>b.onclick=()=>{const [a,f,r,xx]=b.dataset.l.split(',');q('lm-rs').value=a;q('lm-f').value=f;q('lm-rl').value=r;q('lm-xl').value=xx;lm()});
+lm();
+
+// ================= 3. quarter-wave transformer =================
+function qw(){const Z0=50,RL=5*Math.pow(100,+q('qw-r').value/1000),f0=+q('qw-f').value*1e6,ee=+q('qw-e').value;
+ q('qw-rv').textContent=RL.toFixed(1)+' Ω';const Z1=Math.sqrt(Z0*RL),b1=Math.pow(Z0,0.75)*Math.pow(RL,0.25),b2=Math.pow(Z0,0.25)*Math.pow(RL,0.75);
+ q('qw-z1').textContent=Z1.toFixed(1)+' Ω';q('qw-z2').textContent=b1.toFixed(1)+' Ω, '+b2.toFixed(1)+' Ω';
+ const l4=C/(f0*Math.sqrt(ee))/4;q('qw-len').textContent=(l4*1000).toFixed(1)+' mm';
+ const bw1=qwBW(RL,Z0,[Z1]),bw2=qwBW(RL,Z0,[b1,b2]);q('qw-bw').textContent=(Math.abs(RL-Z0)<0.5?'—':(100*bw1).toFixed(0)+'% vs '+(100*bw2).toFixed(0)+'%');
+ const cv=q('qw-c'),x=cv.getContext('2d'),W=cv.width,H=cv.height;x.clearRect(0,0,W,H);const L=60,R=W-15,T=20,B=H-34,fx=fr=>L+(R-L)*fr/3.2,fy=db=>T+(B-T)*Math.min(40,db)/40;
+ x.font='12px Inter,sans-serif';[0,10,20,30,40].forEach(d=>{x.strokeStyle=d===20?'#f59e0b':'#e5e5e5';x.beginPath();x.moveTo(L,fy(d));x.lineTo(R,fy(d));x.stroke();x.fillStyle='#555';x.fillText(d+' dB',L-40,fy(d)+4)});
+ [0,0.5,1,1.5,2,2.5,3].forEach(fr=>{x.fillStyle='#555';x.fillText(fr+' f₀',fx(fr)-10,B+16)});x.fillText('return loss (higher is better)',L+4,T-6);
+ const curve=(secs,col)=>{x.strokeStyle=col;x.lineWidth=2;x.beginPath();for(let k=0;k<=600;k++){const fr=0.001+3.2*k/600,g=secs?qwGamma(RL,Z0,secs,fr):Math.abs((RL-Z0)/(RL+Z0)),rl=Math.min(40,-20*Math.log10(Math.max(g,1e-6)));k?x.lineTo(fx(fr),fy(rl)):x.moveTo(fx(fr),fy(rl))}x.stroke();x.lineWidth=1};
+ curve(null,'#94a3b8');curve([Z1],'#3b82f6');curve([b1,b2],'#16a34a')}
+['qw-r','qw-f','qw-e'].forEach(i=>q(i).addEventListener('input',qw));qw();
+
+// ================= 4. S-parameter power split =================
+function sp(){const a=+q('sp-a').value,b=+q('sp-b').value,r=Math.pow(10,a/10),t=Math.pow(10,b/10),l=1-r-t;
+ q('sp-av').textContent=a.toFixed(1)+' dB';q('sp-bv').textContent=b.toFixed(1)+' dB';q('sp-rl').textContent=(-a).toFixed(1)+' dB';q('sp-il').textContent=(-b).toFixed(2)+' dB';
+ q('sp-r').textContent=(100*r).toFixed(1)+' %';q('sp-t').textContent=(100*t).toFixed(1)+' %';q('sp-x').textContent=l<0?'impossible':(100*l).toFixed(1)+' %';
+ const v=q('sp-verdict');if(l<-1e-9){v.textContent='🚨 Reflected + transmitted is more than 100%: a passive part can\'t do that. Something is wrong with the data (or it\'s an amplifier).';v.style.color='#b91c1c'}else{v.textContent='Energy check: |S₁₁|² + |S₂₁|² + loss = 100% (passive, matched output).';v.style.color='#15803d'}
+ const cv=q('sp-c'),x=cv.getContext('2d'),W=cv.width,H=cv.height;x.clearRect(0,0,W,H);const L=10,Wd=W-20;let px=L;
+ [[r,'#ef4444','reflected'],[t,'#3b82f6','transmitted'],[Math.max(0,l),'#f59e0b','lost']].forEach(([fr,col,name])=>{const w=Wd*Math.min(1,fr);x.fillStyle=col;x.fillRect(px,20,w,40);if(w>70){x.fillStyle='#fff';x.font='600 13px Inter,sans-serif';x.fillText(name,px+6,45)}px+=w});
+ x.strokeStyle='#999';x.strokeRect(L,20,Wd,40);x.fillStyle='#555';x.font='12px Inter,sans-serif';x.fillText('100% of the power arriving at port 1',L,H-8)}
+['sp-a','sp-b'].forEach(i=>q(i).addEventListener('input',sp));sp();
+</script></body></html>
