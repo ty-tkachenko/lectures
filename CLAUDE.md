@@ -13,7 +13,26 @@ This repo is its own GitHub Pages project site: `https://ty-tkachenko.github.io/
 
 It is separate from the main site repo `ty-tkachenko/ty-tkachenko.github.io`. Work only in this repo.
 
-Stack: Jekyll, the GitHub Pages gem only (no other plugins, no Actions, no CI). `_config.yml` sets `baseurl: /lectures`, `url: https://ty-tkachenko.github.io`, and kramdown. Local check: `bundle exec jekyll build` and `bundle exec jekyll serve`.
+Stack: Jekyll, the GitHub Pages gem only (no other plugins, no Actions, no CI). `_config.yml` sets `baseurl: /lectures`, `url: https://ty-tkachenko.github.io`, and kramdown.
+
+**Publishing.** Everyone pushes to `main`. That branch is the working copy, so a lesson can land before it is ready to show. The public site is served from the `published` branch. Tymur updates it by merging `main` into `published` when a batch of content is ready. Until that merge, the live site stays on the last published snapshot. Pages should build `published` at the repository root (`/`). Do not point Pages at `main`.
+
+## Preview locally
+
+`Gemfile` pins `github-pages` 232. `Gemfile.lock` is committed, so `bundle install` resolves the same set everywhere. `webrick` is included because Ruby 3 does not ship the server `jekyll serve` uses.
+
+From the repo root:
+
+```
+bundle install
+bundle exec jekyll serve
+```
+
+Open <http://localhost:4000/lectures/>. The `/lectures` prefix is `baseurl`. `http://localhost:4000/` alone will not show the site.
+
+**Windows.** Install [RubyInstaller](https://rubyinstaller.org/) with Devkit (Ruby 3.x, MSYS2 toolchain) so native gems can compile, and install Git for Windows. Then run the two commands above in PowerShell or Command Prompt from the repo. Do not pass `--without development`, or `webrick` will be skipped and `jekyll serve` will fail.
+
+**WSL.** In Ubuntu, `sudo apt install ruby-full build-essential`, then the same `bundle install` and `bundle exec jekyll serve`. Browse from Windows at <http://localhost:4000/lectures/>.
 
 ## How a module is taught
 
