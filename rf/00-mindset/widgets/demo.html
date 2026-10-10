@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Module 0 widgets (draft)</title>
+<style>
+body{font-family:Inter,system-ui,sans-serif;max-width:820px;margin:2rem auto;padding:0 1rem;color:#2b2b2b;line-height:1.6}
+.widget{border:1px solid #eee;border-radius:10px;padding:1rem 1.25rem;margin:2rem 0}
+.widget h3{margin:.2rem 0 .8rem}
+label{display:block;font-size:.9rem;color:#555;margin:.5rem 0 .2rem}
+input[type=range]{width:100%}
+select{padding:.2rem}
+.readout{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.5rem;margin:.8rem 0}
+.readout div{background:#eff6ff;border-radius:8px;padding:.4rem .6rem;font-size:.9rem}
+.readout b{display:block;font-size:1.1rem;color:#1d4ed8}
+canvas{width:100%;border-radius:8px;background:#fafafa}
+.try{font-size:.9rem;background:#fffbeb;border-left:3px solid #f59e0b;padding:.5rem .75rem;margin-top:.8rem}
+.verdict{font-weight:600}
+</style></head><body>
+<h1>Module 0: interactive widgets (draft)</h1>
+
+<div class="widget" id="wl">
+<h3>Wavelength explorer</h3>
+<label>Frequency: <span id="wl-fv"></span></label>
+<input id="wl-f" type="range" min="0" max="1000" value="600">
+<label>Board material
+<select id="wl-mat">
+<option value="1">Air / vacuum (ε_eff = 1.0)</option>
+<option value="3.4" selected>FR-4 microstrip (ε_eff ≈ 3.4)</option>
+<option value="2.7">Rogers 4350B microstrip (ε_eff ≈ 2.7)</option>
+<option value="4.4">FR-4 stripline, buried (ε_eff ≈ 4.4)</option>
+</select></label>
+<label>Your trace length: <span id="wl-lv"></span></label>
+<input id="wl-l" type="range" min="1" max="200" value="25">
+<div class="readout">
+<div>Wavelength λ<b id="wl-lam"></b></div>
+<div>λ/10 threshold<b id="wl-l10"></b></div>
+<div>Quarter wave λ/4<b id="wl-l4"></b></div>
+<div>Trace = <b id="wl-frac"></b></div>
+</div>
+<p class="verdict" id="wl-verdict"></p>
+<canvas id="wl-c" width="760" height="170"></canvas>
+<div class="try"><b>Try this:</b> set the trace to 25 mm and slide from 100 MHz up to 6 GHz. Where does it stop being "just a wire"? Then switch FR-4 to air: does the threshold move up or down, and why?</div>
+</div>
+
+<div class="widget" id="sd">
+<h3>Skin depth visualizer</h3>
+<label>Frequency: <span id="sd-fv"></span></label>
+<input id="sd-f" type="range" min="0" max="1000" value="700">
+<label>Copper thickness
+<select id="sd-t"><option value="17.5">½ oz (17.5 µm)</option><option value="35" selected>1 oz (35 µm)</option><option value="70">2 oz (70 µm)</option></select></label>
+<div class="readout">
+<div>Skin depth δ<b id="sd-d"></b></div>
+<div>Current within 1 δ of the surface<b id="sd-p"></b></div>
+<div>AC / DC resistance (≈)<b id="sd-r"></b></div>
+</div>
+<canvas id="sd-c" width="760" height="220"></canvas>
+<div class="try"><b>Try this:</b> start at 1 kHz, where the color is even all the way through. Slide up to 915 MHz. How much of the 35 µm copper is actually doing the work? Does buying 2 oz copper help at 2.4 GHz?</div>
+</div>
+
+<script>
+const C=3e8;
+function logF(v,lo,hi){return lo*Math.pow(hi/lo,v/1000)}
+function fmtF(f){return f>=1e9?(f/1e9).toFixed(2)+' GHz':f>=1e6?(f/1e6).toFixed(f<1e7?2:0)+' MHz':f>=1e3?(f/1e3).toFixed(1)+' kHz':f.toFixed(0)+' Hz'}
+function fmtL(m){return m>=1?m.toFixed(2)+' m':m>=0.01?(m*100).toFixed(1)+' cm':m>=1e-3?(m*1000).toFixed(1)+' mm':(m*1e6).toFixed(2)+' µm'}
+
+// ---- wavelength explorer ----
+function wl(){
+ const f=logF(+wlf.value,1e7,6e9), e=+wlm.value, Lmm=+wll.value, L=Lmm/1000;
+ const lam=C/(f*Math.sqrt(e)), frac=L/lam;
+ q('wl-fv').textContent=fmtF(f); q('wl-lv').textContent=Lmm+' mm';
+ q('wl-lam').textContent=fmtL(lam); q('wl-l10').textContent=fmtL(lam/10); q('wl-l4').textContent=fmtL(lam/4);
+ q('wl-frac').textContent=frac<0.01?(frac*1000).toFixed(1)+' thousandths of λ':frac.toFixed(3)+' λ';
+ const v=q('wl-verdict');
+ if(frac<0.1){v.textContent='✅ Short compared with λ: treating it as a plain wire is fine.';v.style.color='#15803d'}
+ else if(frac<0.25){v.textContent='⚠️ Longer than λ/10: treat it as a transmission line (controlled 50 Ω).';v.style.color='#b45309'}
+ else {v.textContent='🚨 Around λ/4 or longer: it can resonate and radiate like an antenna if it isn\'t designed as a line.';v.style.color='#b91c1c'}
+ const cv=q('wl-c'),x=cv.getContext('2d'),W=cv.width,H=cv.height;x.clearRect(0,0,W,H);
+ const span=Math.max(lam*1.2,L*1.3), s=(W-40)/span, y0=H/2-10;
+ x.strokeStyle='#3b82f6';x.lineWidth=2;x.beginPath();
+ for(let px=0;px<=W-40;px++){const d=px/s;const y=y0-35*Math.sin(2*Math.PI*d/lam);px?x.lineTo(20+px,y):x.moveTo(20+px,y)}x.stroke();
+ x.fillStyle='#b87333';x.fillRect(20,H-45,Math.max(2,L*s),10);
+ x.fillStyle='#2b2b2b';x.font='13px Inter,sans-serif';x.fillText('trace '+Lmm+' mm',20,H-52);
+ const m10=20+lam/10*s;x.strokeStyle='#f59e0b';x.setLineDash([4,4]);x.beginPath();x.moveTo(m10,15);x.lineTo(m10,H-20);x.stroke();x.setLineDash([]);
+ x.fillStyle='#b45309';x.fillText('λ/10',m10+4,24);
+ x.fillStyle='#555';x.fillText('one wavelength = '+fmtL(lam),20,H-8);
+}
+// ---- skin depth ----
+function sd(){
+ const f=logF(+sdf.value,1e3,6e9), t=+sdt.value*1e-6, rho=1.68e-8, mu=4*Math.PI*1e-7;
+ const d=Math.sqrt(2*rho/(2*Math.PI*f*mu));
+ q('sd-fv').textContent=fmtF(f); q('sd-d').textContent=fmtL(d);
+ // current in a slab conducting from both faces: J ~ cosh profile; fraction within 1 delta of surfaces
+ const N=400; let tot=0,near=0, prof=[];
+ for(let i=0;i<N;i++){const z=(i+0.5)/N*t; const a=Math.min(z,t-z); const J=Math.exp(-a/d); prof.push(J); tot+=J; if(a<=d) near+=J}
+ q('sd-p').textContent=Math.min(100,100*near/tot).toFixed(0)+' %';
+ q('sd-r').textContent=(t/(2*d)>1? (t/(2*d)).toFixed(1):'1.0')+'×';
+ const cv=q('sd-c'),x=cv.getContext('2d'),W=cv.width,H=cv.height;x.clearRect(0,0,W,H);
+ const top=30,h=H-80,left=40,w=W-80, mx=Math.max(...prof);
+ for(let i=0;i<N;i++){const J=prof[i]/mx; const r=Math.round(255-(255-184)*J),g=Math.round(255-(255-115)*J),b=Math.round(255-(255-51)*J);
+  x.fillStyle=`rgb(${r},${g},${b})`; x.fillRect(left, top+i*h/N, w, h/N+1)}
+ x.strokeStyle='#888';x.strokeRect(left,top,w,h);
+ x.fillStyle='#2b2b2b';x.font='13px Inter,sans-serif';
+ x.fillText('top surface',left,top-8);x.fillText('bottom surface',left,top+h+18);
+ x.fillText('isolated copper strip, '+(t*1e6).toFixed(1)+' µm thick. Darker = more current. Over a ground plane it crowds toward the bottom face',left,H-8);
+}
+const q=id=>document.getElementById(id);
+const wlf=q('wl-f'),wlm=q('wl-mat'),wll=q('wl-l'),sdf=q('sd-f'),sdt=q('sd-t');
+[wlf,wlm,wll].forEach(e=>e.addEventListener('input',wl));[sdf,sdt].forEach(e=>e.addEventListener('input',sd));
+wl();sd();
+</script></body></html>
