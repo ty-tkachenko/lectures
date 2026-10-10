@@ -10,12 +10,12 @@ Two series of short modules. A newcomer can start at any module. Each module is 
 
 ## [EE]({{ '/ee/' | relative_url }})
 
-Circuits, parts, power, and boards, up to the point where a trace is a controlled-impedance RF line. EE Design owns this series.
+Circuits, parts, power, and boards, up to the point where a trace is a controlled-impedance RF line.
 
 {% include module-list.html series="ee" %}
 
 ## [RF]({{ '/rf/' | relative_url }})
 
-From waves on a wire through to antennas, link budgets, and the radio. RF &amp; Antenna owns this series.
+From waves on a wire through to antennas, link budgets, and the radio.
 
 {% include module-list.html series="rf" %}

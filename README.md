@@ -1,6 +1,6 @@
 # Lectures
 
-Course site for the EE and RF series. Built with Jekyll. The public site is <https://ty-tkachenko.github.io/lectures/>. The site title is Fundamentals.
+Course site for the EE and RF series. Built with Jekyll. The public site is <https://ty-tkachenko.github.io/lectures/>. The site title is Hardware Engineering Fundamentals.
 
 How the repo is organized is in `CLAUDE.md`.
 

@@ -1,6 +1,6 @@
 # Lectures
 
-Persistent multi-media resource for EE and RF fundamentals. Two series of standalone modules. A newcomer can join at any module. The site title is **Fundamentals**. Do not brand pages, the header, or the footer for the rocket club. A rocket or a club project may appear as an example inside a lesson. It is not the name of the site.
+Persistent multi-media resource for EE and RF fundamentals. Two series of standalone modules. A newcomer can join at any module. The site title is **Hardware Engineering Fundamentals**. Do not brand pages, the header, or the footer for the rocket club. A rocket or a club project may appear as an example inside a lesson. It is not the name of the site.
 
 | Series | Path | Owner |
 | --- | --- | --- |
