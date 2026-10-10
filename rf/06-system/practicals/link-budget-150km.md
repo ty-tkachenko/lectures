@@ -3,7 +3,8 @@ title: "Practical: Will the Camera Reach the Ground from 150 km?"
 series: rf
 module: 6
 level: intermediate
-prereqs: [rf-01-db, rf-06-noise, rf-06-link-budget]
+prereqs: [rf-01-fundamentals]
+type: practical
 widgets: [link-budget-calculator]
 practicals: [link-budget-150km]
 draft: true

@@ -2,6 +2,7 @@
 title: "Module 0: Why RF Is Different"
 series: rf
 module: 0
+short_title: "Why RF"
 level: intro
 prereqs: []
 widgets: [wavelength-explorer, skin-depth]

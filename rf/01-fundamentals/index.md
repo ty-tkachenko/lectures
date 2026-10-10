@@ -2,6 +2,7 @@
 title: "Module 1: RF Fundamentals"
 series: rf
 module: 1
+short_title: "Fundamentals"
 level: intro
 prereqs: [rf-00-mindset]
 widgets: [standing-wave, tdr-simulator, microstrip-z0, db-chain, polarization, dk-df-loss]

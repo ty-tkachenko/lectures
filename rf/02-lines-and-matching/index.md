@@ -2,6 +2,7 @@
 title: "Module 2: Transmission Lines, Propagation & Matching"
 series: rf
 module: 2
+short_title: "Lines & Matching"
 level: intermediate
 prereqs: [rf-00-mindset, rf-01-fundamentals]
 widgets: [smith-chart, l-match-designer, quarter-wave-transformer, s-parameter-power]
