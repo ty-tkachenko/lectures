@@ -1,0 +1,24 @@
+{% comment %}
+  Lists series module pages. A module page is ee/<slug>/index.md or
+  rf/<slug>/index.md. Deeper files (practicals, widget demos) are not
+  modules. Missing title, module, or level must not break the loop.
+{% endcomment %}
+{% assign ordered = site.pages | sort: "path" %}
+{% capture items %}
+{% for p in ordered %}
+  {% assign segs = p.path | split: "/" %}
+  {% if segs.size == 3 and segs[0] == include.series %}
+    {% if segs[2] == "index.md" or segs[2] == "index.html" %}
+      <li>
+        <a href="{{ p.url | relative_url }}">{% assign title = p.title | default: segs[1] %}{% if p.module != nil %}{% assign module_word = "Module " | append: p.module %}{% unless title contains "Module" %}{{ module_word }}: {% endunless %}{% endif %}{{ title }}</a>
+        {% if p.level %}<span class="note">({{ p.level }})</span>{% endif %}
+      </li>
+    {% endif %}
+  {% endif %}
+{% endfor %}
+{% endcapture %}
+{% if items contains "<li>" %}
+<ul class="module-list">{{ items }}</ul>
+{% else %}
+<p>No module pages published yet.</p>
+{% endif %}

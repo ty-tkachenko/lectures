@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% if page.title %}{{ page.title }} · {% endif %}{{ site.title }}</title>
+  <meta name="description" content="{{ page.description | default: site.description }}">
+  <link rel="stylesheet" href="{{ '/css/style.css' | relative_url }}">
+  <link rel="stylesheet" href="{{ '/css/lectures.css' | relative_url }}">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css">
+</head>
+<body>
+  <a class="skip" href="#content">Skip to content</a>
+  <div class="page">
+    <header class="header">
+      <h1><a href="{{ '/' | relative_url }}">Rocket Club Lectures</a></h1>
+      <p class="subtitle">EE and RF fundamentals for rocket-club members</p>
+      <p class="nav">
+        <a href="{{ '/' | relative_url }}" {% if page.url == "/" or page.url == "/index.html" %}class="current"{% endif %}>Home</a>
+        ·
+        <a href="{{ '/ee/' | relative_url }}" {% if page.url contains "/ee/" %}class="current"{% endif %}>EE</a>
+        ·
+        <a href="{{ '/rf/' | relative_url }}" {% if page.url contains "/rf/" %}class="current"{% endif %}>RF</a>
+        ·
+        <a href="{{ '/glossary/' | relative_url }}" {% if page.url contains "/glossary" %}class="current"{% endif %}>Glossary</a>
+      </p>
+    </header>
+    <hr>
+    <main id="content">
+      {{ content }}
+    </main>
+    <hr>
+    <footer class="footer">
+      <p>Rocket Club lectures. The base stylesheet is a copy of the main site's <code>css/style.css</code>, kept in this repo so a restyle over there does not break these pages.</p>
+    </footer>
+  </div>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/contrib/auto-render.min.js"></script>
+  <script defer src="{{ '/assets/widgets.js' | relative_url }}"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      if (!window.renderMathInElement || !window.katex) return;
+      document.querySelectorAll(".kdmath").forEach(function (node) {
+        window.renderMathInElement(node, {
+          throwOnError: false,
+          strict: "ignore",
+          delimiters: [
+            { left: "$$", right: "$$", display: true },
+            { left: "$", right: "$", display: false }
+          ]
+        });
+      });
+      window.renderMathInElement(document.body, {
+        throwOnError: false,
+        strict: "ignore",
+        ignoredClasses: ["kdmath", "widget", "katex"],
+        delimiters: [
+          { left: "\\(", right: "\\)", display: false },
+          { left: "\\[", right: "\\]", display: true }
+        ]
+      });
+      repairParenMath(document.getElementById("content") || document.body);
+    });
+
+    /* Kramdown treats \( \) in source as escaped parentheses, so RF pages
+       that wrote inline TeX that way lose the backslash. $$ is unaffected.
+       Render a parenthetical group when it is doubled, as in ((V = IR)),
+       or when a TeX command survived inside it. */
+    function repairParenMath(root) {
+      var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+        acceptNode: function (node) {
+          var parent = node.parentNode;
+          if (!parent || parent.closest(".katex, .widget, script, style, code, pre, textarea")) {
+            return NodeFilter.FILTER_REJECT;
+          }
+          var tag = parent.nodeName;
+          if (tag === "SCRIPT" || tag === "STYLE" || tag === "TEXTAREA" || tag === "CODE" || tag === "PRE") {
+            return NodeFilter.FILTER_REJECT;
+          }
+          return NodeFilter.FILTER_ACCEPT;
+        }
+      });
+      var nodes = [];
+      while (walker.nextNode()) nodes.push(walker.currentNode);
+      var re = /\(\(([^()\n]{1,400})\)\)|\(([^()\n]*\\[A-Za-z][^()\n]*)\)/g;
+      nodes.forEach(function (node) {
+        var text = node.nodeValue;
+        if (!text || text.indexOf("(") === -1) return;
+        re.lastIndex = 0;
+        if (!re.test(text)) return;
+        re.lastIndex = 0;
+        var frag = document.createDocumentFragment();
+        var last = 0;
+        var match;
+        while ((match = re.exec(text))) {
+          var expr = match[1] != null ? match[1] : match[2];
+          if (match.index > last) frag.appendChild(document.createTextNode(text.slice(last, match.index)));
+          var span = document.createElement("span");
+          try {
+            window.katex.render(expr, span, { throwOnError: true, strict: "ignore" });
+          } catch (err) {
+            span.textContent = match[0];
+          }
+          frag.appendChild(span);
+          last = match.index + match[0].length;
+        }
+        if (last < text.length) frag.appendChild(document.createTextNode(text.slice(last)));
+        node.parentNode.replaceChild(frag, node);
+      });
+    }
+  </script>
+</body>
+</html>

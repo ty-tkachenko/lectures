@@ -1,0 +1,46 @@
+---
+layout: default
+---
+<article class="module">
+  <header class="module-head">
+    <p class="eyebrow">
+      {% if page.series == "ee" %}EE{% elsif page.series == "rf" %}RF{% else %}{{ page.series | default: "Lecture" }}{% endif %}
+      {% if page.module != nil %} · Module {{ page.module }}{% endif %}
+      {% if page.level %} · {{ page.level }}{% endif %}
+    </p>
+    <h1>{{ page.title | default: "Module" }}</h1>
+    {% if page.question %}
+    <div class="motivating-question">{{ page.question | markdownify }}</div>
+    {% endif %}
+    <p class="module-tools"><a href="slides.html">Open the slides</a></p>
+  </header>
+
+  {% if page.prereqs.first %}
+  <aside class="callout">
+    <h2>What you should already know</h2>
+    <ul>
+      {% for item in page.prereqs %}
+        <li>
+          {% if item.text %}
+            {% if item.url %}
+              {% if item.url contains "://" %}
+                <a href="{{ item.url }}">{{ item.text }}</a>
+              {% else %}
+                <a href="{{ item.url | relative_url }}">{{ item.text }}</a>
+              {% endif %}
+            {% else %}
+              {{ item.text }}
+            {% endif %}
+          {% else %}
+            {{ item }}
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  </aside>
+  {% endif %}
+
+  {% include video.html url=page.video label=page.title pending="A walkthrough of this module will be embedded here. The reading below stands on its own." %}
+
+  {{ content }}
+</article>

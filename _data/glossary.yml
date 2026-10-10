@@ -1,0 +1,121 @@
+- id: ohms-law
+  term: Ohm's law
+  definition: The relationship V = I R. V is voltage in volts, I is current in amperes, and R is resistance in ohms. It is the usual starting point for the circuits in these lectures.
+- id: power
+  term: Power
+  definition: The rate of energy flow. For a DC load, P = V × I, with P in watts when V is in volts and I is in amperes.
+  units: watt (W)
+- id: series-pack
+  term: Series pack (2S, 3S)
+  definition: Cells stacked so their voltages add. A lithium-ion cell is about 3.7 V nominal and 4.2 V full. Two in series (2S) are about 7.4 V nominal and 8.4 V full. Three in series (3S) are about 11.1 V nominal and 12.6 V full. The low end depends on how far the pack is allowed to discharge.
+- id: voltage-regulator
+  term: Voltage regulator
+  definition: A circuit that holds a supply rail near a chosen voltage while the battery voltage and the load current move.
+- id: linear-regulator
+  term: Linear regulator
+  definition: A regulator that drops the spare voltage in a series pass element. The drop times the load current becomes heat. It does not switch.
+- id: ldo
+  term: LDO
+  definition: Low-dropout regulator. A linear regulator that can still hold its output when the input is only a small voltage above the output. The exact dropout is a datasheet number and depends on load current.
+- id: dropout
+  term: Dropout voltage
+  definition: The smallest Vin − Vout at which a linear regulator still holds the set output. Below that, the output sags with the input.
+  units: volt (V)
+- id: quiescent-current
+  term: Quiescent current
+  definition: The current a regulator draws for itself, on top of the load current. Symbol Iq. In a simple linear regulator it comes from the input and is part of the heat.
+  units: ampere (A)
+- id: pass-element
+  term: Pass element
+  definition: The transistor inside a linear regulator that sits between input and output and drops the spare voltage.
+- id: dissipation
+  term: Dissipation
+  definition: Electrical power turned into heat. Symbol P_D for a regulator.
+  units: watt (W)
+- id: efficiency
+  term: Efficiency
+  definition: Useful output power divided by input power. A number between 0 and 1, often written as a percent. Symbol η.
+- id: junction-temperature
+  term: Junction temperature
+  definition: The temperature of the silicon die inside the package. Symbol T_J. This is the temperature the limit in the datasheet refers to, not the temperature of the plastic you can touch.
+  units: degree Celsius (°C)
+- id: thermal-resistance
+  term: Thermal resistance θJA
+  definition: How many degrees the junction rises above the surrounding air for each watt of heat. Symbol θJA. A datasheet value measured on a stated test board. A small rocket board with less copper usually runs hotter than that number predicts.
+  units: °C/W
+- id: ambient-temperature
+  term: Ambient temperature
+  definition: The air temperature around the board. Symbol T_A. Inside a closed airframe it can be well above the air outside the rocket.
+  units: degree Celsius (°C)
+- id: psrr
+  term: PSRR
+  definition: Power-supply rejection ratio. How much smaller a ripple on the output is than the same ripple on the input, usually in decibels. It gets worse as the ripple frequency rises, so an LDO does not by itself remove a fast switching spike.
+- id: buck-converter
+  term: Buck converter
+  definition: A switching regulator that makes an output voltage lower than its input. It chops the input with a switch and uses an inductor and a capacitor to average the result.
+- id: duty-cycle
+  term: Duty cycle
+  definition: The fraction of each switching period that the buck's high-side switch is closed. Symbol D. For an ideal buck in continuous conduction, D = Vout / Vin.
+- id: switching-frequency
+  term: Switching frequency
+  definition: How many times a second the buck switch opens and closes. Symbol f_sw.
+  units: hertz (Hz)
+- id: inductor
+  term: Inductor
+  definition: A component that resists a change in current. In a buck it is the part that smooths the chopped input into a nearly steady load current. Symbol L.
+  units: henry (H)
+- id: capacitor
+  term: Capacitor
+  definition: A component that resists a change in voltage. The buck's output capacitor absorbs the inductor's current ripple so the load sees a steady voltage.
+  units: farad (F)
+- id: current-ripple
+  term: Inductor current ripple
+  definition: The peak-to-peak rise and fall of the inductor current during one switching cycle. Symbol ΔI_L.
+  units: ampere (A)
+- id: voltage-ripple
+  term: Output voltage ripple
+  definition: The small peak-to-peak wiggle on the regulator output. For a buck it comes from the capacitor absorbing ΔI_L and from the capacitor's ESR.
+  units: volt (V)
+- id: esr
+  term: ESR
+  definition: Equivalent series resistance. The resistive part of a real capacitor. Inductor ripple through the ESR becomes a voltage ripple.
+  units: ohm (Ω)
+- id: ccm
+  term: Continuous conduction
+  definition: The inductor current never falls to zero during the switching cycle. The usual buck ripple formulas assume this.
+- id: dcm
+  term: Discontinuous conduction
+  definition: The inductor current falls to zero before the next cycle starts. It happens when the load is light compared with the ripple. The continuous-conduction ripple shape no longer applies.
+- id: hot-loop
+  term: Hot loop
+  definition: The smallest loop that carries the buck's chopped, high-di/dt current. For a buck it runs through the input capacitor and the two switches. A large hot loop radiates and makes the switch node noisy.
+- id: feedback-divider
+  term: Feedback divider
+  definition: The pair of resistors that samples the output and tells the regulator what the output voltage is. Noise picked up on this trace looks like a real output error.
+- id: post-regulation
+  term: Post-regulation
+  definition: A quiet linear regulator placed after a switching regulator. The switcher does the large voltage drop efficiently. The linear stage drops only a little, so it stays cool, and its rejection cleans up leftover ripple.
+- id: pi-filter
+  term: Pi filter
+  definition: A low-pass filter shaped like the letter π. A capacitor to ground, a series ferrite or inductor, and another capacitor to ground. On a supply it attenuates switching ripple before a sensitive load.
+- id: ferrite-bead
+  term: Ferrite bead
+  definition: A lossy inductor used in series on a supply to turn high-frequency ripple into a little heat. It is not a DC regulator.
+- id: sideband
+  term: Sideband
+  definition: An extra tone a transmitter produces above and below its carrier when something in the radio wobbles. Supply ripple at a frequency f_m shows up near the carrier f_c at f_c + f_m and f_c − f_m.
+- id: evm
+  term: EVM
+  definition: Error vector magnitude. How far a transmitted symbol lands from the ideal point on the constellation. Supply noise can make it worse. The RF series treats this properly. Here it is only a reason to keep a PA's supply quiet.
+- id: noise-figure
+  term: Noise figure
+  definition: How much a receiver stage, such as an LNA, degrades the signal-to-noise ratio. Supply ripple can modulate the LNA's gain and show up as extra noise. Defined properly in the RF series.
+- id: ground
+  term: Ground
+  definition: The 0 V node a circuit uses as its voltage reference. On a board it is a copper net, not a perfect zero everywhere. At DC it is a fine starting picture. The RF series explains where that picture breaks.
+- id: fccm
+  term: Forced continuous conduction
+  definition: A buck mode that keeps switching at the set frequency even when the load is light, instead of skipping pulses. The ripple frequency stays put, which makes supply spurs predictable. Light-load efficiency is worse than a pulse-skipping mode.
+- id: spread-spectrum
+  term: Spread spectrum
+  definition: A buck feature that dithers the switching frequency so the noise is smeared instead of sitting on one tone. Useful for some emissions tests. A nuisance when you want a spur at a known frequency that a filter or a measurement can aim at.

@@ -1,0 +1,24 @@
+---
+layout: default
+---
+<article class="practical-page">
+  {% if page.status == "draft" or page.draft %}
+  <p class="draft-banner"><strong>Draft — Tymur to review.</strong> This practical is a recording plan plus the notes that go with it. Schematic, layout, and measured results stay blank until they exist. Nothing on this page is a lab measurement unless it is marked as one.</p>
+  {% endif %}
+  <header class="module-head">
+    <p class="eyebrow">
+      Practical
+      {% if page.practical_type %} · {{ page.practical_type }}{% endif %}
+      {% if page.series == "ee" %} · EE{% elsif page.series == "rf" %} · RF{% endif %}
+      {% if page.module != nil %} · Module {{ page.module }}{% endif %}
+    </p>
+    <h1>{{ page.title | default: "Practical" }}</h1>
+    {% if page.reading %}
+    <p class="module-tools"><a href="{{ page.reading | relative_url }}">Back to the reading</a></p>
+    {% endif %}
+  </header>
+
+  {% include video.html url=page.practical_video chapters=page.chapters prominent="true" label=page.title pending="The recording is not up yet. The notes under this box are the companion: what the video will show, the numbers it walks through, and what to look for." %}
+
+  {{ content }}
+</article>

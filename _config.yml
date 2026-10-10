@@ -1,0 +1,47 @@
+title: Rocket Club Lectures
+# Primer is the GitHub Pages default. This site uses the copied stylesheet.
+theme: null
+description: EE and RF lectures for rocket-club members.
+url: https://ty-tkachenko.github.io
+baseurl: /lectures
+
+markdown: kramdown
+kramdown:
+  input: GFM
+  hard_wrap: false
+  # GitHub Pages forces math_engine mathjax, which turns $$...$$ into
+  # \(...\) and \[...\]. KaTeX auto-render typesets those. Kramdown
+  # still parses $$ so underscores inside math are not emphasis.
+  math_engine: mathjax
+  syntax_highlighter: rouge
+  smart_quotes: ["apos", "apos", "quot", "quot"]
+
+# Same plugin set GitHub Pages enables, with optional front matter off so
+# a module's slides.md stays raw Markdown for Reveal.js.
+plugins:
+  - jekyll-coffeescript
+  - jekyll-default-layout
+  - jekyll-gist
+  - jekyll-optional-front-matter
+  - jekyll-paginate
+  - jekyll-readme-index
+  - jekyll-titles-from-headings
+  - jekyll-relative-links
+
+optional_front_matter:
+  enabled: false
+
+defaults:
+  - scope:
+      path: ""
+    values:
+      layout: default
+
+exclude:
+  - vendor
+  - .bundle
+  - Gemfile
+  - Gemfile.lock
+  - CLAUDE.md
+  - README.md
+  - .gitignore

@@ -1,0 +1,195 @@
+/* Copied from ty-tkachenko/ty-tkachenko.github.io css/style.css (branch main, October 2026).
+   Re-copy this file deliberately when the main site stylesheet changes.
+   Do not link lecture pages at the main site's CSS. Additions belong in lectures.css.
+*/
+
+/*
+ * A deliberately plain, old-fashioned stylesheet.
+ * No web fonts, no JavaScript, no frameworks.
+ */
+
+body {
+  margin: 0;
+  padding: 1.5em 16px 2em;
+  background: #ffffff;
+  color: #000000;
+  font-family: Georgia, "Times New Roman", Times, serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+.page {
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+/* ---------- Links: classic blue / purple ---------- */
+a:link {
+  color: #0000cc;
+}
+
+a:visited {
+  color: #551a8b;
+}
+
+a:hover {
+  color: #cc0000;
+}
+
+/* ---------- Header ---------- */
+.header h1 {
+  font-size: 1.9em;
+  font-weight: normal;
+  margin: 0;
+}
+
+.header .subtitle {
+  margin: 0.2em 0 0;
+  font-style: italic;
+}
+
+.nav {
+  margin: 0.8em 0 0;
+}
+
+.nav .current {
+  font-weight: bold;
+}
+
+hr {
+  border: 0;
+  border-top: 1px solid #808080;
+  margin: 1em 0;
+}
+
+/* ---------- Content ---------- */
+h2 {
+  font-size: 1.3em;
+  font-weight: bold;
+  margin: 1.4em 0 0.4em;
+  border-bottom: 1px solid #c0c0c0;
+}
+
+h3 {
+  font-size: 1em;
+  font-weight: bold;
+  margin: 1em 0 0.1em;
+}
+
+p {
+  margin: 0 0 0.8em;
+}
+
+ul {
+  margin: 0.3em 0 0.8em;
+  padding-left: 1.5em;
+}
+
+li {
+  margin-bottom: 0.3em;
+}
+
+.contact {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.contact li {
+  margin: 0;
+}
+
+.note {
+  font-size: 0.9em;
+  font-style: italic;
+}
+
+/* ---------- Photos ---------- */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+.portrait {
+  float: right;
+  width: 200px;
+  margin: 0.3em 0 0.8em 1.2em;
+}
+
+.portrait img {
+  display: block;
+  border: 1px solid #808080;
+}
+
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.2em 1em;
+  clear: both;
+}
+
+.gallery figure {
+  margin: 0;
+}
+
+.gallery img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border: 1px solid #808080;
+}
+
+.gallery figcaption {
+  font-size: 0.85em;
+  margin-top: 0.3em;
+}
+
+/* An entry line: title on the left, dates on the right */
+.entry {
+  margin-top: 1em;
+}
+
+.entry .when {
+  float: right;
+  font-style: italic;
+  margin-left: 1em;
+}
+
+.entry .where {
+  font-style: italic;
+  margin: 0;
+}
+
+.entry::after {
+  content: "";
+  display: block;
+  clear: both;
+}
+
+/* ---------- Footer ---------- */
+.footer {
+  font-size: 0.85em;
+  color: #555555;
+}
+
+/* ---------- Small screens ---------- */
+@media (max-width: 500px) {
+  body {
+    font-size: 16px;
+  }
+
+  .portrait {
+    width: 130px;
+  }
+
+  .gallery {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .entry .when {
+    float: none;
+    display: block;
+    margin-left: 0;
+  }
+}

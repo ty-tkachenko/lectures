@@ -1,0 +1,51 @@
+{% comment %}
+  url: video URL or blank
+  chapters: list of {time, seconds, title} or blank
+  prominent: "true" for the large practical slot
+  pending: placeholder sentence
+{% endcomment %}
+{% assign video_url = include.url | default: "" %}
+<section class="video-slot{% if include.prominent == 'true' %} video-slot-prominent{% endif %}" aria-label="{% if include.prominent == 'true' %}Practical video{% else %}Video walkthrough{% endif %}">
+  {% if video_url != "" %}
+    {% if video_url contains "youtube.com/watch" or video_url contains "youtu.be/" or video_url contains "youtube.com/embed" %}
+      {% assign yt = video_url | split: "v=" | last | split: "&" | first | split: "/" | last %}
+      <div class="video-frame">
+        <iframe src="https://www.youtube.com/embed/{{ yt }}" title="{{ include.label | default: 'Video' }}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+      </div>
+    {% elsif video_url contains "vimeo.com" %}
+      {% assign vm = video_url | split: "/" | last %}
+      <div class="video-frame">
+        <iframe src="https://player.vimeo.com/video/{{ vm }}" title="{{ include.label | default: 'Video' }}" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>
+      </div>
+    {% elsif video_url contains ".mp4" %}
+      <video controls preload="metadata" src="{{ video_url }}">
+        <p><a href="{{ video_url }}">Watch the video</a></p>
+      </video>
+    {% else %}
+      <p><a href="{{ video_url }}">Watch the video</a></p>
+    {% endif %}
+  {% else %}
+    <div class="video-soon">
+      <p class="video-kicker">{% if include.prominent == "true" %}Recording coming soon{% else %}Video coming soon{% endif %}</p>
+      <p>{{ include.pending | default: "The reading page is the reference until the recording is ready." }}</p>
+    </div>
+  {% endif %}
+  {% if include.chapters and include.chapters.first %}
+    <h2 class="chapter-heading">Chapters</h2>
+    <ol class="chapters">
+      {% for c in include.chapters %}
+        <li>
+          {% if video_url contains "youtube.com" or video_url contains "youtu.be" %}
+            {% if c.seconds %}
+              <a href="{{ video_url }}{% if video_url contains '?' %}&{% else %}?{% endif %}t={{ c.seconds }}s"><span class="chapter-time">{{ c.time }}</span> {{ c.title }}</a>
+            {% else %}
+              <span class="chapter-time">{{ c.time }}</span> {{ c.title }}
+            {% endif %}
+          {% else %}
+            <span class="chapter-time">{{ c.time | default: "" }}</span> {{ c.title | default: c }}
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ol>
+  {% endif %}
+</section>

@@ -1,0 +1,142 @@
+/* Lecture-page additions. The shared look lives in style.css. */
+
+html { color-scheme: light; }
+
+.skip {
+  position: absolute;
+  left: -999px;
+  top: 0;
+  background: #fff;
+  color: #000;
+  padding: 0.4em 0.6em;
+  z-index: 10;
+}
+.skip:focus { left: 8px; top: 8px; outline: 3px solid #0000cc; }
+
+.header h1 a { text-decoration: none; }
+.header h1 a:hover { text-decoration: underline; }
+
+:focus-visible {
+  outline: 3px solid #0000cc;
+  outline-offset: 2px;
+}
+
+h1 { font-size: 1.6em; font-weight: normal; margin: 0 0 0.4em; }
+.eyebrow { margin: 0; font-style: italic; }
+.motivating-question { font-size: 1.12em; margin: 0.3em 0 0.8em; }
+.motivating-question p { margin: 0; }
+.outline-soon { font-style: italic; }
+.module-tools { margin: 0.4em 0 0; }
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 0.6em 0 1em;
+}
+th, td {
+  border: 1px solid #808080;
+  padding: 0.4em 0.5em;
+  text-align: left;
+  vertical-align: top;
+}
+th { background: #f2f2f2; }
+@media (max-width: 600px) {
+  table { display: block; overflow-x: auto; }
+}
+
+figure { margin: 1em 0 1.2em; }
+figure svg { width: 100%; height: auto; display: block; }
+figcaption { font-size: 0.9em; margin-top: 0.4em; }
+
+.callout, .video-soon, .draft-banner, .placeholder {
+  border: 1px solid #000;
+  padding: 0.7em 0.9em;
+  margin: 1em 0;
+  background: #f7f7f7;
+}
+.draft-banner { background: #fff8dc; }
+.placeholder { border-style: dashed; background: #fff; }
+.video-soon-large, .video-slot-prominent .video-soon {
+  padding: 1.4em 1em;
+  text-align: center;
+}
+.video-kicker {
+  font-weight: bold;
+  font-size: 1.15em;
+  margin-bottom: 0.3em;
+}
+.video-frame { position: relative; padding-top: 56.25%; margin: 0.6em 0; }
+.video-frame iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 1px solid #808080;
+}
+.chapters { padding-left: 1.4em; }
+.chapter-time {
+  display: inline-block;
+  min-width: 3.2em;
+  font-variant-numeric: tabular-nums;
+}
+
+.go-deeper, .check {
+  border-top: 1px solid #c0c0c0;
+  margin: 0.8em 0;
+  padding: 0.4em 0;
+}
+.go-deeper summary, .check summary {
+  cursor: pointer;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  font-weight: bold;
+}
+.check-q { margin-bottom: 0.2em; }
+.check-a { margin: 0.4em 0 0.2em 0.2em; }
+
+.katex-display { overflow-x: auto; overflow-y: hidden; }
+
+.widget {
+  border: 1px solid #808080;
+  padding: 0.8em;
+  margin: 1em 0 1.4em;
+  background: #fff;
+}
+.widget h3 { margin-top: 0; }
+.widget .try {
+  background: #f7f7f7;
+  border-left: 4px solid #000;
+  padding: 0.5em 0.7em;
+  margin: 0.6em 0;
+}
+.slider-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.15em 0.8em;
+  margin: 0 0 0.55em;
+}
+.slider-row input[type="range"] {
+  grid-column: 1 / -1;
+  width: 100%;
+  height: 44px;
+  margin: 0;
+}
+.slider-value { font-variant-numeric: tabular-nums; }
+.widget-readout { margin: 0.6em 0; }
+.widget-readout div { margin: 0.15em 0; }
+.widget-warn {
+  border: 1px solid #000;
+  background: #fff8dc;
+  padding: 0.45em 0.6em;
+  margin: 0.4em 0;
+}
+.widget svg { width: 100%; height: auto; display: block; margin: 0.4em 0; }
+.widget-plot-label { font-weight: bold; margin: 0.8em 0 0.2em; }
+.noscript-note { font-style: italic; }
+
+code { font-family: ui-monospace, "Cascadia Mono", Menlo, Consolas, monospace; font-size: 0.92em; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { scroll-behavior: auto !important; }
+}

@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 520" role="img" aria-labelledby="ripTitle ripDesc" font-family="Georgia, 'Times New Roman', serif">
+  <title id="ripTitle">Buck waveforms over two cycles</title>
+  <desc id="ripDesc">Three traces share one time axis. The switch node is a square wave between the input voltage and about zero. The inductor current is a triangle that rises while the switch is on and falls while it is off. The output voltage is a much smaller ripple on top of the DC output. The height of the current triangle is delta I, the inductor ripple.</desc>
+  <rect x="1" y="1" width="718" height="518" fill="#fff" stroke="#111"/>
+  <text x="20" y="34" font-size="22" fill="#111">What the scope should show, slowed down</text>
+  <text x="20" y="70" font-size="18" fill="#111">Switch node</text>
+  <line x1="150" y1="120" x2="680" y2="120" stroke="#c0c0c0"/>
+  <line x1="150" y1="60" x2="150" y2="120" stroke="#111"/>
+  <polyline points="150,110 230,110 230,70 390,70 390,110 550,110 550,70 680,70" fill="none" stroke="#111" stroke-width="3"/>
+  <text x="20" y="80" font-size="16" fill="#111">Vin</text>
+  <text x="20" y="116" font-size="16" fill="#111">0</text>
+  <text x="20" y="180" font-size="18" fill="#111">Inductor current</text>
+  <line x1="150" y1="280" x2="680" y2="280" stroke="#c0c0c0"/>
+  <polyline points="150,250 230,210 390,270 550,210 680,260" fill="none" stroke="#0000cc" stroke-width="3"/>
+  <line x1="600" y1="210" x2="600" y2="270" stroke="#111" stroke-width="2"/>
+  <text x="608" y="244" font-size="18" fill="#111">delta I</text>
+  <text x="20" y="230" font-size="16" fill="#111">peak</text>
+  <text x="20" y="276" font-size="16" fill="#111">valley</text>
+  <text x="20" y="330" font-size="18" fill="#111">Output voltage</text>
+  <line x1="150" y1="400" x2="680" y2="400" stroke="#c0c0c0"/>
+  <polyline points="150,392 230,378 390,396 550,378 680,392" fill="none" stroke="#111" stroke-width="3"/>
+  <text x="20" y="390" font-size="16" fill="#111">small</text>
+  <text x="20" y="414" font-size="16" fill="#111">ripple</text>
+  <text x="150" y="450" font-size="18" fill="#111">time, two cycles. Output ripple is tiny next to the current triangle</text>
+  <text x="150" y="478" font-size="18" fill="#111">because the capacitor absorbs most of delta I. A long scope ground lead can fake a bigger spike.</text>
+  <text x="150" y="506" font-size="18" fill="#111">If the valley hits zero before the next cycle, conduction is discontinuous.</text>
+</svg>
