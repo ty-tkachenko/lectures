@@ -1,0 +1,90 @@
+# Planned modules for the module bar. A row with no published module page
+# shows as "soon" and is not a link. A real module page (see CLAUDE.md)
+# replaces the matching number. Pages whose number is not listed here
+# still appear, so a series does not have to be listed before its pages.
+ee:
+  - module: 1
+    short_title: Circuits
+    title: Circuit Fundamentals
+    blurb: "Opens with: why does a circuit draw current, and what does a battery voltage actually promise?"
+  - module: 2
+    short_title: Capacitors
+    title: Capacitors and Inductors in Circuits
+    blurb: "Opens with: why does a rail dip when a radio keys up, and what stores the energy that fills the dip?"
+  - module: 3
+    short_title: Diodes
+    title: Diodes and Transistors
+    blurb: "Opens with: how do you block a backwards battery, or switch a load, without a mechanical relay?"
+  - module: 4
+    short_title: Op amps
+    title: Op Amps and Analog Building Blocks
+    blurb: "Opens with: how do you turn a tiny sensor voltage into a signal a flight computer can trust?"
+  - module: 5
+    short_title: Power
+    title: "Power Conversion: Linear vs Switching"
+    blurb: "Opens with: why does a 3.3 V flight computer get hot when it runs from a higher pack voltage, and when should the regulator switch instead of throwing the spare volts away as heat?"
+  - module: 6
+    short_title: Batteries
+    title: Batteries and Power Systems
+    blurb: "Opens with: how long will the pack last, and what changes as the cells sag from full to empty?"
+  - module: 7
+    short_title: Signals
+    title: Signals, Sampling and ADCs
+    blurb: "Opens with: when you sample a sensor, what did the conversion throw away?"
+  - module: 8
+    short_title: Digital
+    title: Digital Logic and Interfaces
+    blurb: "Opens with: how do chips on one board agree on a bit, and what fails when the wires get longer?"
+  - module: 9
+    short_title: Parts
+    title: Real Components
+    blurb: "Why parts are not ideal, how to read a datasheet, and how to source a part you can actually buy. Opens with: why doesn't the part on the board match the ideal symbol?"
+  - module: 10
+    short_title: Boards
+    title: From Schematic to Working Board
+    blurb: "Opens with: what has to happen between a finished schematic and a board that powers on?"
+  - module: 11
+    short_title: Schematic
+    title: Reading a Real Schematic
+    blurb: "A guided walkthrough. Opens with: can you read a real schematic and say what each block is doing?"
+  - module: 12
+    short_title: Layout
+    title: Reading a Real Layout
+    blurb: "A guided walkthrough. Opens with: can you look at a real layout and see where the current actually flows?"
+rf:
+  - module: 0
+    short_title: Mindset
+    title: "Why RF Is Different"
+  - module: 1
+    short_title: Fundamentals
+    title: RF Fundamentals
+  - module: 2
+    short_title: Lines
+    title: Transmission Lines, Propagation and Matching
+  - module: 3
+    short_title: Components
+    title: RF Components and Circuit Blocks
+  - module: 4
+    short_title: Layout
+    title: PCB Design and Layout Essentials
+  - module: 5
+    short_title: Measurements
+    title: Measurements and Lab Tools
+  - module: 6
+    short_title: System
+    title: System-Level Performance
+  - module: 7
+    short_title: EMC
+    title: EMI, EMC, Integrity and Regulations
+  - module: 8
+    short_title: Simulation
+    title: Simulation, Verification and Practical Layout
+  - module: 9
+    short_title: Antennas
+    title: Antennas
+  - module: 10
+    short_title: Modulation
+    title: Modulation and Protocols
+  - module: 11
+    short_title: Software
+    title: Software and Radio Control

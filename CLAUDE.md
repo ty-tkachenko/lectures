@@ -15,7 +15,7 @@ It is separate from the main site repo `ty-tkachenko/ty-tkachenko.github.io`. Wo
 
 Stack: Jekyll, the GitHub Pages gem only (no other plugins, no Actions, no CI). `_config.yml` sets `baseurl: /lectures`, `url: https://ty-tkachenko.github.io`, and kramdown.
 
-**Publishing.** Everyone pushes to `main`. That branch is the working copy, so a lesson can land before it is ready to show. The public site is served from the `published` branch. Tymur updates it by merging `main` into `published` when a batch of content is ready. Until that merge, the live site stays on the last published snapshot. Pages should build `published` at the repository root (`/`). Do not point Pages at `main`.
+**Publishing.** Everyone pushes to `main`. GitHub Pages serves that branch from the repository root, so a push to `main` is what goes live at `https://ty-tkachenko.github.io/lectures/`. There is no `published` branch.
 
 ## Preview locally
 
@@ -87,31 +87,43 @@ For Tymur, a shot list lives in `ee/<slug>/_recording-outline.md` (or the same n
 
 `case-study` sections: symptom, what was measured, root cause, fix, takeaway.
 
+## Navigation
+
+The header has two bars.
+
+1. **Series bar.** `_data/series.yml` entries: `id`, `title`, `path`, `order`. One entry adds a series. The current series is `page.series`, or the `/ee/` / `/rf/` path when that field is missing. The current series is highlighted.
+2. **Module bar.** A horizontally scrollable strip for the current series: module number plus `short_title` (else `title`). The module you are in is highlighted. Previous and Next sit at the top and bottom of a module page and move among published module pages in number order. On a narrow screen the strip is inside a `Modules` disclosure (open by default) so it can be collapsed. The strip and the disclosure are keyboard reachable.
+
+Unbuilt rows come from `_data/outline.yml` (module number, `short_title`, `title`, optional `blurb`). They render as “soon” and are not links. A real module page replaces the matching number. A module page whose number is not in the outline still shows up, so RF pages appear when they carry the schema. Do not edit `rf/` to add that schema.
+
+**What counts as a module page.** `series` and `module` are set, `draft` is not `true`, and `type` is omitted or `type: module`. Anything else with those two fields is not a module: `type: practical` and any other `type` are excluded, and so is `draft: true`. The module bar, Previous/Next, the home list, and the series index lists use that rule. A missing `title`, `short_title`, `module`, or `level` must not break the build.
+
+**Practicals on the module page.** A page with the same `series` and `module` and `type: practical` (or `layout: practical`) is listed automatically in a Practicals section on that module. Do not hand-maintain that list. `draft: true` keeps a practical out of the bars and the series index; the module page still lists it and marks it draft. `status: draft` is the review banner, separate from `draft: true`.
+
 ## Front matter
 
 Module page:
 
 ```yaml
 title: "Power Conversion: Linear vs Switching"
-series: ee          # ee or rf
-module: 5           # number
-level: intro        # intro, intermediate, ...
+short_title: Power   # module bar; falls back to title
+series: ee           # ee or rf
+module: 5            # number; 0 is allowed
+type: module         # omit or "module"; other values are not module pages
+draft: false         # true hides the page from the module bar, prev/next, and series indexes
+level: intro         # intro, intermediate, ...
 question: "Why does a 3.3 V flight computer get hot on a higher pack voltage?"
-video:              # optional URL; omit or leave empty for the placeholder
+video:               # optional URL; omit or leave empty for the placeholder
 prereqs:
   - text: "Ohm's law (V = IR)"
     url: "https://example.com/ohms-law"   # or a /glossary/#id path
 widgets:
   - ldo-dissipation
-practicals:
-  - title: "Short name"
-    practical_type: design-walkthrough
-    url: /ee/05-power-conversion/practical-rf-supply.html
 ```
 
-Practical page: `title`, `series`, `module`, `practical_type`, `practical_video`, `chapters`, `status`, `reading` (link back to the module).
+Practical page: `title`, `series`, `module`, `type: practical`, `practical_type`, `practical_video`, `chapters`, `status`, `draft`, `reading` (link back to the module). The module page finds it by `series` + `module`.
 
-Series index pages list a module only when `ee/<slug>/index.md` or `rf/<slug>/index.md` exists. Deeper files (practicals, widget demos) are not modules. Missing `title`, `module`, or `level` must not break that list. Pages already under `rf/` may not match this schema yet. Do not rewrite their front matter. RF will update it.
+Pages already under `rf/` may not match this schema yet. Do not rewrite their front matter. A page with `series` and `module` and no `type` already counts as a module page. `draft: true` keeps a draft practical off the module bar.
 
 ## Widgets
 
@@ -155,7 +167,7 @@ EE stops where a 50-ohm trace exists. Controlled impedance, matching, antennas, 
 
 General EE. YJSP is allowed only as an example or a practical (a worked supply, a schematic walkthrough, a layout walkthrough). It is not the theme of the series or of a module. Do not name the series after it, and do not organize a module around the project's architecture.
 
-`/ee/` is a hand-written outline of the twelve modules below. Unpublished rows say "coming soon" and are not links. When a reading page exists, replace that row with a link. The home page still auto-lists whatever `index.md` files exist.
+`/ee/` renders `_data/outline.yml`. A row is a link only when a module page with that number exists. The home page auto-lists module pages only.
 
 Each row opens with the motivating question in `question:`.
 
@@ -182,7 +194,7 @@ Module 05 is the one that is written. Modules 11 and 12 are guided walkthroughs 
 2. Add `slides.html` and a raw `slides.md` beside it.
 3. Add glossary terms, figures, and widget divs as the lesson needs them.
 4. Add a practical page if there is a recording, plus a `_recording-outline.md` for Tymur.
-5. On `/ee/`, change that module's "coming soon" row into a link. Do not link a module that has no reading page. The home page picks up `ee/<slug>/index.md` and `rf/<slug>/index.md` on its own.
+5. Give it `series`, `module`, and (usually) `type: module`. The home page, the series index, and the module bar pick it up. A matching row in `_data/outline.yml` changes from "soon" to a link. Do not add a hand-written practicals list; `type: practical` pages with the same `series` and `module` are listed on the module.
 
 ## RF series conventions
 

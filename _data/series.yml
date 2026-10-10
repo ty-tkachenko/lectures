@@ -1,0 +1,9 @@
+# Series switcher. One entry adds a series. `path` is the series index.
+- id: ee
+  title: EE Fundamentals
+  path: /ee/
+  order: 1
+- id: rf
+  title: RF
+  path: /rf/
+  order: 2

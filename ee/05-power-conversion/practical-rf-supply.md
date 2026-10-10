@@ -4,6 +4,7 @@ title: "Feeding a 1 W PA and a low-noise LNA from a 3S pack"
 description: "Draft PDR walkthrough of decision D-38: the EYE RF supply, buck plus pi filter plus two LDOs."
 series: ee
 module: 5
+type: practical
 level: intro
 status: draft
 practical_type: design-walkthrough

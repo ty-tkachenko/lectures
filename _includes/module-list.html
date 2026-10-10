@@ -1,24 +1,28 @@
-{% comment %}
-  Lists series module pages. A module page is ee/<slug>/index.md or
-  rf/<slug>/index.md. Deeper files (practicals, widget demos) are not
-  modules. Missing title, module, or level must not break the loop.
-{% endcomment %}
-{% assign ordered = site.pages | sort: "path" %}
-{% capture items %}
-{% for p in ordered %}
-  {% assign segs = p.path | split: "/" %}
-  {% if segs.size == 3 and segs[0] == include.series %}
-    {% if segs[2] == "index.md" or segs[2] == "index.html" %}
+{%- comment -%}
+  Series index and home lists. Only module main pages:
+  series matches, module is set, draft is not true, type is missing or "module".
+  Practicals, drafts, and other types are omitted. Missing title or level is fine.
+{%- endcomment -%}
+{%- assign series_pages = site.pages | where: "series", include.series | sort: "module" -%}
+{%- capture items -%}
+{%- for p in series_pages -%}
+  {%- if p.module != nil and p.draft != true -%}
+    {%- if p.type == nil or p.type == "" or p.type == "module" -%}
+      {%- assign title = p.short_title | default: p.title -%}
+      {%- if title == nil or title == "" -%}
+        {%- assign segs = p.path | split: "/" -%}
+        {%- assign title = segs[1] | default: "Module" -%}
+      {%- endif -%}
       <li>
-        <a href="{{ p.url | relative_url }}">{% assign title = p.title | default: segs[1] %}{% if p.module != nil %}{% assign module_word = "Module " | append: p.module %}{% unless title contains "Module" %}{{ module_word }}: {% endunless %}{% endif %}{{ title }}</a>
-        {% if p.level %}<span class="note">({{ p.level }})</span>{% endif %}
+        <a href="{{ p.url | relative_url }}">{%- if p.module != nil -%}{%- assign module_word = "Module " | append: p.module -%}{%- unless title contains "Module" -%}{{ module_word }}: {% endunless -%}{%- endif -%}{{ p.title | default: title }}</a>
+        {%- if p.level %} <span class="note">({{ p.level }})</span>{%- endif -%}
       </li>
-    {% endif %}
-  {% endif %}
-{% endfor %}
-{% endcapture %}
-{% if items contains "<li>" %}
+    {%- endif -%}
+  {%- endif -%}
+{%- endfor -%}
+{%- endcapture -%}
+{%- if items contains "<li>" -%}
 <ul class="module-list">{{ items }}</ul>
-{% else %}
+{%- else -%}
 <p>No module pages published yet.</p>
-{% endif %}
+{%- endif -%}

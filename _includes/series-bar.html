@@ -1,0 +1,18 @@
+{%- comment -%}
+  Top series switcher. Data: _data/series.yml (id, title, path, order).
+  Current series is page.series, else the /ee/ or /rf/ path.
+{%- endcomment -%}
+{%- assign current_series = page.series -%}
+{%- if current_series == nil or current_series == "" -%}
+  {%- if page.url contains "/ee/" or page.url == "/ee/" -%}
+    {%- assign current_series = "ee" -%}
+  {%- elsif page.url contains "/rf/" or page.url == "/rf/" -%}
+    {%- assign current_series = "rf" -%}
+  {%- endif -%}
+{%- endif -%}
+{%- assign series_list = site.data.series | sort: "order" -%}
+<nav class="series-bar" aria-label="Series">
+  {%- for s in series_list -%}
+    <a href="{{ s.path | relative_url }}"{% if s.id == current_series %} class="current"{% if page.url == s.path %} aria-current="page"{% else %} aria-current="true"{% endif %}{% endif %}>{{ s.title }}</a>
+  {%- endfor -%}
+</nav>

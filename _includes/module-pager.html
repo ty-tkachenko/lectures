@@ -1,0 +1,35 @@
+{%- comment -%}
+  Previous and next real module pages in this series, by module number.
+  Unbuilt outline rows are skipped. Practicals and drafts are skipped.
+{%- endcomment -%}
+{%- assign prev = nil -%}
+{%- assign nxt = nil -%}
+{%- assign seen = false -%}
+{%- assign series_pages = site.pages | where: "series", page.series | sort: "module" -%}
+{%- for p in series_pages -%}
+  {%- if p.module != nil and p.draft != true -%}
+    {%- if p.type == nil or p.type == "" or p.type == "module" -%}
+      {%- if p.url == page.url -%}
+        {%- assign seen = true -%}
+      {%- elsif seen == false -%}
+        {%- assign prev = p -%}
+      {%- elsif nxt == nil -%}
+        {%- assign nxt = p -%}
+      {%- endif -%}
+    {%- endif -%}
+  {%- endif -%}
+{%- endfor -%}
+<nav class="module-pager" aria-label="Adjacent modules">
+  {%- if prev -%}
+    {%- assign prev_short = prev.short_title | default: prev.title | default: "Module" -%}
+    <a rel="prev" href="{{ prev.url | relative_url }}">Previous<span class="pager-name">: {{ prev.module }} {{ prev_short }}</span></a>
+  {%- else -%}
+    <span class="pager-edge">Previous</span>
+  {%- endif -%}
+  {%- if nxt -%}
+    {%- assign next_short = nxt.short_title | default: nxt.title | default: "Module" -%}
+    <a rel="next" href="{{ nxt.url | relative_url }}">Next<span class="pager-name">: {{ nxt.module }} {{ next_short }}</span></a>
+  {%- else -%}
+    <span class="pager-edge">Next</span>
+  {%- endif -%}
+</nav>

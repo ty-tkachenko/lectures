@@ -1,9 +1,11 @@
 ---
 layout: module
 title: "Power Conversion: Linear vs Switching"
+short_title: Power
 description: "Why a rocket regulates its battery, how an LDO turns spare volts into heat, and how a buck avoids that heat."
 series: ee
 module: 5
+type: module
 level: intro
 question: "Why does a 3.3 V flight computer get hot when it runs from a higher pack voltage, and when should the regulator switch instead of throwing the spare volts away as heat?"
 prereqs:
@@ -447,13 +449,6 @@ On a 2S pack at the nominal 7.4 V, LDO heat is $$(7.4-3.3)\times 0.20 + 7.4\time
 - Full-charge pack voltage is the heat case. Nominal voltage is the optimistic one.
 {% endcapture %}
 {% include takeaways.html body=take %}
-
-## Practicals
-
-These are recordings. The notes on each page stand on their own until the video is up.
-
-- [Feeding a 1 W PA and a low-noise LNA from a 3S pack](practical-rf-supply.html). Design walkthrough of the camera-unit supply (decision D-38). Draft, for review. Schematic, layout, and bench results come after the coupon build.
-- [Measuring LDO heat and buck ripple](practical-lab.html). A lab session: temperature versus load, then a scope ground-lead comparison.
 
 ## Hands-on exercise
 

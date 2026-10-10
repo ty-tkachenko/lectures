@@ -1,0 +1,34 @@
+{%- comment -%}
+  Full planned outline for a series index. Links only a real module page.
+  Unbuilt rows are text, not links.
+{%- endcomment -%}
+{%- assign series_pages = site.pages | where: "series", include.series | sort: "module" -%}
+{%- assign outline = site.data.outline[include.series] -%}
+{%- if outline -%}
+<ol class="series-outline">
+  {%- for item in outline -%}
+    {%- assign hit_url = "" -%}
+    {%- assign hit_title = "" -%}
+    {%- assign num = item.module -%}
+    {%- if num < 10 -%}{%- assign num_label = "0" | append: num -%}{%- else -%}{%- assign num_label = num -%}{%- endif -%}
+    {%- for p in series_pages -%}
+      {%- if hit_url == "" and p.module == item.module and p.draft != true -%}
+        {%- if p.type == nil or p.type == "" or p.type == "module" -%}
+          {%- assign hit_url = p.url -%}
+          {%- assign hit_title = p.title | default: item.title -%}
+        {%- endif -%}
+      {%- endif -%}
+    {%- endfor -%}
+    <li>
+      {%- if hit_url != "" -%}
+        <a href="{{ hit_url | relative_url }}"><strong>{{ num_label }} {{ hit_title }}</strong></a>
+      {%- else -%}
+        <strong>{{ num_label }} {{ item.title }}</strong> <span class="outline-soon">Coming soon.</span>
+      {%- endif -%}
+      {%- if item.blurb %} {{ item.blurb }}{%- endif -%}
+    </li>
+  {%- endfor -%}
+</ol>
+{%- else -%}
+{% include module-list.html series=include.series %}
+{%- endif -%}

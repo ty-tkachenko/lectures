@@ -4,6 +4,7 @@ title: "Measuring LDO heat and buck ripple"
 description: "What the lab recording will show: temperature versus load, then a scope ground-lead comparison."
 series: ee
 module: 5
+type: practical
 level: intro
 status: draft
 practical_type: lab-measurement

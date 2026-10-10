@@ -2,6 +2,7 @@
 layout: default
 ---
 <article class="module">
+  {% include module-pager.html %}
   <header class="module-head">
     <p class="eyebrow">
       {% if page.series == "ee" %}EE{% elsif page.series == "rf" %}RF{% else %}{{ page.series | default: "Lecture" }}{% endif %}
@@ -43,4 +44,7 @@ layout: default
   {% include video.html url=page.video label=page.title pending="A walkthrough of this module will be embedded here. The reading below stands on its own." %}
 
   {{ content }}
+
+  {% include practical-list.html %}
+  {% include module-pager.html %}
 </article>

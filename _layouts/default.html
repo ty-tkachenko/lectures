@@ -18,12 +18,10 @@
       <p class="nav">
         <a href="{{ '/' | relative_url }}" {% if page.url == "/" or page.url == "/index.html" %}class="current"{% endif %}>Home</a>
         ·
-        <a href="{{ '/ee/' | relative_url }}" {% if page.url contains "/ee/" %}class="current"{% endif %}>EE</a>
-        ·
-        <a href="{{ '/rf/' | relative_url }}" {% if page.url contains "/rf/" %}class="current"{% endif %}>RF</a>
-        ·
         <a href="{{ '/glossary/' | relative_url }}" {% if page.url contains "/glossary" %}class="current"{% endif %}>Glossary</a>
       </p>
+      {% include series-bar.html %}
+      {% include module-bar.html %}
     </header>
     <hr>
     <main id="content">

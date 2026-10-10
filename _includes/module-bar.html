@@ -1,0 +1,63 @@
+{%- comment -%}
+  Module strip for the current series.
+  A module page has series + module, draft is not true, and type is
+  missing or "module". Practicals and other types are skipped.
+  Outline rows with no such page render as "soon" and are not links.
+{%- endcomment -%}
+{%- assign current_series = page.series -%}
+{%- if current_series == nil or current_series == "" -%}
+  {%- if page.url contains "/ee/" or page.url == "/ee/" -%}
+    {%- assign current_series = "ee" -%}
+  {%- elsif page.url contains "/rf/" or page.url == "/rf/" -%}
+    {%- assign current_series = "rf" -%}
+  {%- endif -%}
+{%- endif -%}
+{%- if current_series -%}
+  {%- assign series_pages = site.pages | where: "series", current_series | sort: "module" -%}
+  {%- assign outline = site.data.outline[current_series] -%}
+  {%- assign outlined = "|" -%}
+  {%- if outline -%}
+    {%- for item in outline -%}
+      {%- assign outlined = outlined | append: item.module | append: "|" -%}
+    {%- endfor -%}
+  {%- endif -%}
+  <details class="module-bar" open>
+    <summary>Modules</summary>
+    <div class="module-strip" tabindex="0" role="navigation" aria-label="Modules in this series">
+      {%- if outline -%}
+        {%- for item in outline -%}
+          {%- assign hit_url = "" -%}
+          {%- assign hit_short = "" -%}
+          {%- assign num = item.module -%}
+          {%- if num < 10 -%}{%- assign num_label = "0" | append: num -%}{%- else -%}{%- assign num_label = num -%}{%- endif -%}
+          {%- for p in series_pages -%}
+            {%- if hit_url == "" and p.module == item.module and p.draft != true -%}
+              {%- if p.type == nil or p.type == "" or p.type == "module" -%}
+                {%- assign hit_url = p.url -%}
+                {%- assign hit_short = p.short_title | default: item.short_title | default: p.title -%}
+              {%- endif -%}
+            {%- endif -%}
+          {%- endfor -%}
+          {%- if hit_url != "" -%}
+            <a href="{{ hit_url | relative_url }}"{% if page.module == item.module %} class="current"{% if page.url == hit_url %} aria-current="page"{% else %} aria-current="true"{% endif %}{% endif %}>{{ num_label }} {{ hit_short }}</a>
+          {%- else -%}
+            <span class="soon" aria-disabled="true">{{ num_label }} {{ item.short_title | default: item.title }} <span class="soon-word">soon</span></span>
+          {%- endif -%}
+        {%- endfor -%}
+      {%- endif -%}
+      {%- for p in series_pages -%}
+        {%- assign key = "|" | append: p.module | append: "|" -%}
+        {%- unless outlined contains key -%}
+          {%- if p.module != nil and p.draft != true -%}
+            {%- if p.type == nil or p.type == "" or p.type == "module" -%}
+              {%- assign num = p.module -%}
+              {%- if num < 10 -%}{%- assign num_label = "0" | append: num -%}{%- else -%}{%- assign num_label = num -%}{%- endif -%}
+              {%- assign hit_short = p.short_title | default: p.title | default: "Module" -%}
+              <a href="{{ p.url | relative_url }}"{% if page.module == p.module %} class="current"{% if page.url == p.url %} aria-current="page"{% else %} aria-current="true"{% endif %}{% endif %}>{{ num_label }} {{ hit_short }}</a>
+            {%- endif -%}
+          {%- endif -%}
+        {%- endunless -%}
+      {%- endfor -%}
+    </div>
+  </details>
+{%- endif -%}

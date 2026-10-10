@@ -6,7 +6,7 @@ How the repo is organized is in `CLAUDE.md`.
 
 ## Publishing
 
-Push work to `main`. GitHub Pages serves the `published` branch, not `main`. Tymur merges `main` into `published` when content is ready to go live.
+Push work to `main`. GitHub Pages serves `main` from the repository root, at <https://ty-tkachenko.github.io/lectures/>. There is no separate publish branch.
 
 ## Preview locally
 

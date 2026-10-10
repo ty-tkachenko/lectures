@@ -2,6 +2,7 @@
 layout: default
 title: RF series
 description: RF lectures for rocket-club members.
+series: rf
 permalink: /rf/
 ---
 

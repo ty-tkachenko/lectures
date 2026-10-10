@@ -1,0 +1,26 @@
+{%- comment -%}
+  Practicals for this module: same series and module, type practical
+  (or layout practical). Draft practicals stay listed here and are
+  marked draft. They are not module-bar or index entries.
+{%- endcomment -%}
+{%- assign series_pages = site.pages | where: "series", page.series | sort: "path" -%}
+{%- capture items -%}
+{%- for p in series_pages -%}
+  {%- if p.module == page.module -%}
+    {%- if p.type == "practical" or p.layout == "practical" -%}
+      <li>
+        <a href="{{ p.url | relative_url }}">{{ p.title | default: "Practical" }}</a>
+        {%- if p.draft == true or p.status == "draft" %} <span class="note">(draft)</span>{% endif -%}
+        {%- if p.practical_type %} <span class="note">{{ p.practical_type }}</span>{% endif -%}
+      </li>
+    {%- endif -%}
+  {%- endif -%}
+{%- endfor -%}
+{%- endcapture -%}
+{%- if items contains "<li>" -%}
+<section class="practicals-auto" aria-labelledby="practicals-heading">
+  <h2 id="practicals-heading">Practicals</h2>
+  <p>Recordings for this module. The notes on each page stand on their own until the video is up.</p>
+  <ul>{{ items }}</ul>
+</section>
+{%- endif -%}
