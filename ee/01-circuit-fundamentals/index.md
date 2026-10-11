@@ -434,7 +434,7 @@ The side-by-side of a 10 MΩ meter and a heavy load, on camera, is the [lab prac
 
 Each widget ends with a design card. The numbers below are the targets. The check, and a reference preset, live in the widget.
 
-- [Power playground]({{ '/ee/01-circuit-fundamentals/widgets/demo.html?w=ohms-power' | relative_url }}). Bleed a 12 V rail at about 10 mA and keep the resistor at or under 0.25 W.
-- [Two nodes]({{ '/ee/01-circuit-fundamentals/widgets/demo.html?w=kvl-kcl' | relative_url }}). Set node A to 6 V and node B to 3 V from 12 V, with every branch at or under 1 mA.
-- [Loaded divider]({{ '/ee/01-circuit-fundamentals/widgets/demo.html?w=voltage-divider' | relative_url }}). Make 3.3 V from 12.6 V and keep the sag under 1% with a 100 kΩ load.
-- [LED resistor]({{ '/ee/01-circuit-fundamentals/widgets/demo.html?w=led-limit' | relative_url }}). From 9 V into a 2.0 V LED at 10 mA, pick the next E24 value up and stay under 1/8 W.
+- [Power playground]({{ '/ee/01-circuit-fundamentals/widgets/demo.html?w=ohms-power' | relative_url }}#dc-ohms-power). Bleed a 12 V rail at about 10 mA and keep the resistor at or under 0.25 W.
+- [Two nodes]({{ '/ee/01-circuit-fundamentals/widgets/demo.html?w=kvl-kcl' | relative_url }}#dc-kvl-kcl). Set node A to 6 V and node B to 3 V from 12 V, with every branch at or under 1 mA.
+- [Loaded divider]({{ '/ee/01-circuit-fundamentals/widgets/demo.html?w=voltage-divider' | relative_url }}#dc-voltage-divider). Make 3.3 V from 12.6 V and keep the sag under 1% with a 100 kΩ load.
+- [LED resistor]({{ '/ee/01-circuit-fundamentals/widgets/demo.html?w=led-limit' | relative_url }}#dc-led-limit). From 9 V into a 2.0 V LED at 10 mA, pick the next E24 value up and stay under 1/8 W.

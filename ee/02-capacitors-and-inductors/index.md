@@ -329,7 +329,7 @@ The same three checks, on camera, are the [lab practical](practical-lab.html).
 
 Each widget ends with a design card. The numbers below are the targets. The check, and a reference preset, live in the widget.
 
-- [RC square wave]({{ '/ee/02-capacitors-and-inductors/widgets/demo.html?w=rc-scope' | relative_url }}). With 10 kΩ on a 10 Hz square wave, pick C so τ is 8–10 ms and five time constants still fit in a half-period.
-- [Kickback]({{ '/ee/02-capacitors-and-inductors/widgets/demo.html?w=rl-kickback' | relative_url }}). A 10 mH coil at 100 mA on 5 V opens in 1 µs. Turn the diode on and read the clamp instead of the kilovolt model.
-- [Reactance]({{ '/ee/02-capacitors-and-inductors/widgets/demo.html?w=impedance-plot' | relative_url }}). At 1 kHz, match Xc to 1.6 kΩ and keep XL under 100 Ω.
-- [RC filter]({{ '/ee/02-capacitors-and-inductors/widgets/demo.html?w=rc-filter' | relative_url }}). A low-pass near 1 kHz should be about −20 dB a decade above cutoff.
+- [RC square wave]({{ '/ee/02-capacitors-and-inductors/widgets/demo.html?w=rc-scope' | relative_url }}#dc-rc-scope). With 10 kΩ on a 10 Hz square wave, pick C so τ is 8–10 ms and five time constants still fit in a half-period.
+- [Kickback]({{ '/ee/02-capacitors-and-inductors/widgets/demo.html?w=rl-kickback' | relative_url }}#dc-rl-kickback). A 10 mH coil at 100 mA on 5 V opens in 1 µs. Turn the diode on and read the clamp instead of the kilovolt model.
+- [Reactance]({{ '/ee/02-capacitors-and-inductors/widgets/demo.html?w=impedance-plot' | relative_url }}#dc-impedance-plot). At 1 kHz, match Xc to 1.6 kΩ and keep XL under 100 Ω.
+- [RC filter]({{ '/ee/02-capacitors-and-inductors/widgets/demo.html?w=rc-filter' | relative_url }}#dc-rc-filter). A low-pass near 1 kHz should be about −20 dB a decade above cutoff.

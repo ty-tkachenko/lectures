@@ -134,6 +134,15 @@ body.widget-demo .design summary {
   color: #166534;
 }
 
+body.widget-demo .design .dc-status {
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin: 0.4rem 0;
+  color: #b45309;
+}
+
+body.widget-demo .design .dc-status.pass { color: #15803d; }
+
 body.widget-demo .legend { font-size: 0.85rem; color: #555; }
 
 body.widget-demo .legend span {
