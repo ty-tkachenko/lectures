@@ -215,11 +215,12 @@
 <h2>RL circuits and inductive kickback <a class="vjump" data-t="14:30"></a></h2>
 <p>An inductor in series with a resistor has a time constant too. Switch on a supply and the current can't jump, so it rises exponentially towards \(V/R\):</p>
 <div class="eq">$$i(t) = \frac{V}{R}\left(1 - e^{-t/\tau}\right) \qquad \tau = \frac{L}{R}$$</div>
-<p>Switching <em>off</em> is where the trouble is. A solenoid coil carries a steady current. A transistor or switch opens and tries to stop it in a microsecond. The inductor refuses: it generates \(v = L\,di/dt\) to keep the current going, and with a fast switch that's hundreds or thousands of volts. The voltage appears across the opening switch. A mechanical switch arcs, which erodes its contacts. A transistor breaks down, absorbs the coil's stored energy, and may fail on the spot or after a few hundred cycles.</p>
-<p>The fix is a <strong>flyback diode</strong> across the coil, pointing so it doesn't conduct in normal operation. When the switch opens, the coil's current switches over to the diode and circulates around the coil-and-diode loop, dying away with time constant L/R. The switch only ever sees the supply voltage plus the diode's 0.7 V drop. Module 5 covers diodes, and Module 6 the transistor that does the switching.</p>
+<p>Switching <em>off</em> is where the trouble is. Picture an inductor carrying a steady current when the switch in series with it opens and tries to stop that current in a microsecond. The inductor refuses: it generates \(v = L\,di/dt\) to keep the current going, and with a fast switch that's hundreds or thousands of volts. This is <strong>inductive kickback</strong>. The voltage appears across the opening switch. A mechanical switch arcs, which erodes its contacts. A transistor breaks down, absorbs the inductor's stored energy, and may fail on the spot or after a few hundred cycles.</p>
+<p>Any <strong>inductive load</strong>, meaning anything built around a coil of wire, kicks back like this. One common example is a solenoid valve: current through a coil pulls a plunger that opens the valve, and when you switch the current off, the coil kicks back. Relay coils, motors and loudspeakers do the same.</p>
+<p>The fix is a <strong>flyback diode</strong> across the inductor, pointing so it doesn't conduct in normal operation. When the switch opens, the inductor's current switches over to the diode and circulates around the inductor-and-diode loop, dying away with time constant L/R. The switch only ever sees the supply voltage plus the diode's 0.7 V drop. Module 5 covers diodes, and Module 6 the transistor that does the switching.</p>
 
 <div class="widget wide" id="w-kick">
-  <div class="wh"><span class="tag">Interactive</span><b>Switching off a 12 V solenoid</b></div>
+  <div class="wh"><span class="tag">Interactive</span><b>Switching off an inductive load</b></div>
   <div class="wb wcols">
     <div>
       <div class="ctrl"><label>Protection</label><div class="seg" id="kP"><button type="button" data-v="none" class="on">None</button><button type="button" data-v="diode">Flyback diode</button></div></div>
@@ -227,6 +228,7 @@
       <div class="ctrl"><label for="kR">Coil resistance <b id="kRv"></b></label><input id="kR" type="range" min="6" max="100" step="1" value="24"></div>
       <div class="ctrl"><label>How fast the switch turns off</label><div class="seg" id="kT"><button type="button" data-v="1e-7">100 ns</button><button type="button" data-v="1e-6" class="on">1 µs</button><button type="button" data-v="1e-5">10 µs</button></div></div>
       <div class="ctrl"><label>Switch voltage rating</label><div class="seg" id="kB"><button type="button" data-v="30">30 V</button><button type="button" data-v="60" class="on">60 V</button><button type="button" data-v="100">100 V</button></div></div>
+      <p class="small">A coil on a 12 V supply. The default values are typical of a small solenoid valve.</p>
     </div>
     <div>
       <canvas id="cvKick" style="height:330px" aria-label="Plots of coil current and the voltage across the switch, before and after the switch opens"></canvas>
