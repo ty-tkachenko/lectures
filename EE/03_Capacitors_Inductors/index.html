@@ -215,14 +215,74 @@
 <h2>RL circuits and inductive kickback <a class="vjump" data-t="14:30"></a></h2>
 <p>An inductor in series with a resistor has a time constant too. Switch on a supply and the current can't jump, so it rises exponentially towards \(V/R\):</p>
 <div class="eq">$$i(t) = \frac{V}{R}\left(1 - e^{-t/\tau}\right) \qquad \tau = \frac{L}{R}$$</div>
-<p>Switching <em>off</em> is the problem. Picture an inductor carrying a steady current when the switch in series with it opens and tries to stop that current in a microsecond. The inductor resists: it generates \(v = L\,di/dt\) to keep the current going, and with a fast switch that's hundreds or thousands of volts. This is <strong>inductive kickback</strong>. The voltage appears across the opening switch. A mechanical switch arcs, which erodes its contacts. A transistor breaks down, absorbs the inductor's stored energy, and may fail on the spot or after a few hundred cycles.</p>
+<p>Switching <em>off</em> is the problem. Picture an inductor carrying a steady current when the switch in series with it opens and tries to stop that current in a microsecond. The inductor resists: it generates \(v = L\,di/dt\) to keep the current going, and with a fast switch that's hundreds or thousands of volts. This is <strong>inductive kickback</strong>. Note the direction: while the switch is on, the supply end of the coil is positive with respect to the other end, and to keep the current flowing the coil's voltage <em>reverses</em>, a large negative spike. The coil's lower end flies far above the supply, and that end is connected to the opening switch. A mechanical switch arcs, which erodes its contacts. A transistor breaks down, absorbs the inductor's stored energy, and may fail on the spot or after a few hundred cycles.</p>
 <p>Any <strong>inductive load</strong>, meaning anything built around a coil of wire, kicks back like this. One common example is a solenoid valve: current through a coil pulls a plunger that opens the valve, and when you switch the current off, the coil kicks back. Relay coils, motors and loudspeakers do the same.</p>
 <p>The fix is a <strong>flyback diode</strong> across the inductor, pointing so it doesn't conduct in normal operation. When the switch opens, the inductor's current switches over to the diode and circulates around the inductor-and-diode loop, dying away with time constant L/R. The switch only ever sees the supply voltage plus the diode's 0.7 V drop. Module 5 covers diodes, and Module 6 the transistor that does the switching.</p>
+
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>A switched inductor with a flyback diode, and the coil voltage when the switch opens</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 320" role="img" aria-label="Left: a coil from +12 V to a switch to ground, with a flyback diode across the coil, cathode to +12 V. With the switch closed, current flows down through the coil and switch; when it opens, the current circulates through the coil and diode. Right: the coil voltage is +12 V while the switch is on; when it opens, it reverses. Without the diode it spikes to hundreds of volts negative; with the diode it is clamped at minus 0.7 volts and decays to zero.">
+    <defs>
+      <marker id="arK1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--c1)"/></marker>
+      <marker id="arK2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--c2)"/></marker>
+    </defs>
+    <!-- schematic -->
+    <g stroke="var(--ink)" stroke-width="2" fill="none" stroke-linejoin="round">
+      <path d="M150 40v30"/>
+      <path d="M150 70a10 10 0 0 1 0 20a10 10 0 0 1 0 20a10 10 0 0 1 0 20a10 10 0 0 1 0 20"/>
+      <path d="M150 150v52"/>
+      <path d="M150 55h80v50M230 125v40h-80"/>
+      <path d="M220 105h20"/>
+      <path d="M150 232v18M138 250h24M142 255h16M147 260h6"/>
+      <path d="M150 202l16 26"/>
+    </g>
+    <path d="M220 125h20l-10 -20z" fill="var(--ink)"/>
+    <circle cx="150" cy="40" r="4" fill="#fff" stroke="var(--ink)" stroke-width="2"/>
+    <circle cx="150" cy="55" r="3.5" fill="var(--ink)"/><circle cx="150" cy="165" r="3.5" fill="var(--ink)"/>
+    <circle cx="150" cy="202" r="3" fill="var(--ink)"/><circle cx="150" cy="232" r="3" fill="var(--ink)"/>
+    <text x="150" y="26" font-size="13" text-anchor="middle" font-weight="600">+12 V</text>
+    <text x="118" y="114" font-size="13" text-anchor="end">coil</text>
+    <text x="248" y="119" font-size="12">flyback</text><text x="248" y="134" font-size="12">diode</text>
+    <text x="176" y="220" font-size="12">switch</text>
+    <!-- coil polarity: blue while on, orange just after the switch opens -->
+    <g font-size="15" font-weight="700" text-anchor="middle">
+      <text x="128" y="80" fill="var(--c1)">+</text><text x="128" y="150" fill="var(--c1)">−</text>
+      <text x="176" y="82" fill="var(--c2)">−</text><text x="176" y="150" fill="var(--c2)">+</text>
+    </g>
+    <!-- current paths -->
+    <path d="M104 160v60" stroke="var(--c1)" stroke-width="1.6" fill="none" marker-end="url(#arK1)"/>
+    <text x="96" y="184" font-size="12" text-anchor="end" fill="var(--c1)">switch on:</text>
+    <text x="96" y="199" font-size="12" text-anchor="end" fill="var(--c1)">down through</text>
+    <text x="96" y="214" font-size="12" text-anchor="end" fill="var(--c1)">the switch</text>
+    <path d="M200 64H174a6 6 0 0 0 -6 6V150a6 6 0 0 0 6 6H206a6 6 0 0 0 6 -6V70a6 6 0 0 0 -6 -6H204" stroke="var(--c2)" stroke-width="1.6" stroke-dasharray="4 3" fill="none" marker-end="url(#arK2)"/>
+    <text x="40" y="286" font-size="12" fill="var(--c2)">switch off: the current keeps flowing,</text>
+    <text x="40" y="301" font-size="12" fill="var(--c2)">round the coil and diode, dying away</text>
+    <!-- coil voltage against time -->
+    <g stroke="var(--line2)" stroke-width="1" fill="none"><path d="M360 40v260"/><path d="M360 150h260"/></g>
+    <path d="M460 40v260" stroke="var(--line2)" stroke-width="1" stroke-dasharray="3 3" fill="none"/>
+    <text x="464" y="52" font-size="12" fill="var(--muted)">switch opens</text>
+    <text x="352" y="154" font-size="12" text-anchor="end" fill="var(--muted)">0</text>
+    <text x="352" y="94" font-size="12" text-anchor="end" fill="var(--muted)">+12 V</text>
+    <text x="490" y="30" font-size="13" text-anchor="middle">coil voltage</text>
+    <path d="M360 90H460" stroke="var(--c1)" stroke-width="2.2" fill="none"/>
+    <path d="M460 90V156C500 156 540 152 615 150" stroke="var(--c5)" stroke-width="2.2" fill="none"/>
+    <path d="M460 90L463 300M469 300L471 150" stroke="var(--bad)" stroke-width="2" stroke-dasharray="5 3" fill="none"/>
+    <text x="352" y="160" font-size="11" text-anchor="end" fill="var(--c5)" dy="8">−0.7 V</text>
+    <text x="484" y="178" font-size="12" fill="var(--c5)">with the diode: reverses,</text>
+    <text x="484" y="193" font-size="12" fill="var(--c5)">clamped at −0.7 V</text>
+    <text x="478" y="252" font-size="12" fill="var(--bad)">without it: a negative spike</text>
+    <text x="478" y="267" font-size="12" fill="var(--bad)">of hundreds of volts</text>
+    <text x="478" y="282" font-size="12" fill="var(--bad)">(off the scale)</text>
+  </svg>
+  </div>
+</div>
 
 <div class="widget wide" id="w-kick">
   <div class="wh"><span class="tag">Interactive</span><b>Switching off an inductive load</b></div>
   <div class="wb wcols">
     <div>
+      <div class="ctrl"><label>Plot</label><div class="seg" id="kS"><button type="button" data-v="coil" class="on">Coil voltage</button><button type="button" data-v="sw">Switch voltage</button></div></div>
       <div class="ctrl"><label>Protection</label><div class="seg" id="kP"><button type="button" data-v="none" class="on">None</button><button type="button" data-v="diode">Flyback diode</button></div></div>
       <div class="ctrl"><label for="kL">Coil inductance <b id="kLv"></b></label><input id="kL" type="range" min="1" max="100" step="1" value="30"></div>
       <div class="ctrl"><label for="kR">Coil resistance <b id="kRv"></b></label><input id="kR" type="range" min="6" max="100" step="1" value="24"></div>
@@ -231,7 +291,7 @@
       <p class="small">A coil on a 12 V supply. The default values are typical of a small solenoid valve.</p>
     </div>
     <div>
-      <canvas id="cvKick" style="height:330px" aria-label="Plots of coil current and the voltage across the switch, before and after the switch opens"></canvas>
+      <canvas id="cvKick" style="height:330px" aria-label="Plots of coil current and of the voltage across the coil or the switch, before and after the switch opens"></canvas>
       <div class="readout">
         <div class="stat"><div class="k">Coil current</div><div class="v" id="kI"></div></div>
         <div class="stat"><div class="k">Energy in the coil</div><div class="v" id="kE"></div></div>
@@ -242,7 +302,8 @@
     </div>
   </div>
   <div class="try"><b>Things to try</b><ol>
-    <li>With no protection, look at the voltage the coil <em>tries</em> to reach. Make the switch faster. What happens to it?</li>
+    <li>With no protection, look at the coil voltage: +12 V while the switch is on, then a large negative spike when it opens. Make the switch faster. What happens to the spike?</li>
+    <li>Switch the plot to the switch voltage. The same spike appears there as a positive voltage, added to the 12 V supply.</li>
     <li>Add the flyback diode. The switch is safe, but how long does the current now take to die away?</li>
     <li>A slower switch reduces the spike without a diode. Why isn't that a good fix? (Think about where the energy goes while it's half on.)</li>
   </ol></div>
@@ -625,7 +686,7 @@ function timeAxis(t0, t1, l, r){
 
 /* ============ 2. Inductive kickback ============ */
 (() => {
-  const prot = seg('#kP', upd), toff = seg('#kT', upd), vbr = seg('#kB', upd);
+  const prot = seg('#kP', upd), toff = seg('#kT', upd), vbr = seg('#kB', upd), plotSel = seg('#kS', upd);
   const VS = 12, VD = 0.7;
   let s = {};
   function upd(){
@@ -636,7 +697,7 @@ function timeAxis(t0, t1, l, r){
     if (p === 'diode'){ Vpk = VS + VD; Tend = 5*tau; }
     else if (Vtry <= Vbr){ Vpk = Vtry; Tend = tf; Esw = 0.5*I0*(Vtry)*tf; }
     else { clamped = true; Vpk = Vbr; Tend = L*I0/(Vbr - VS); Esw = E*Vbr/(Vbr - VS); }
-    s = {L, R, tf, Vbr, p, I0, tau, Vtry, Vpk, Tend, clamped};
+    s = {L, R, tf, Vbr, p, I0, tau, Vtry, Vpk, Tend, clamped, show: plotSel()};
     $('#kLv').textContent = fmt(L*1000, 3) + ' mH'; $('#kRv').textContent = R + ' Ω';
     $('#kI').textContent = si(I0, 'A'); $('#kE').textContent = si(E, 'J'); $('#kV').textContent = si(Vpk, 'V');
     $('#kD').textContent = si(Tend, 's');
@@ -648,37 +709,48 @@ function timeAxis(t0, t1, l, r){
     w.redraw();
   }
   const w = Plot.widget($('#cvKick'), (ctx, W, H) => {
-    const {L, R, p, I0, tau, Vtry, Vpk, Tend, clamped, tf, Vbr} = s; if (!I0) return;
+    const {L, R, p, I0, tau, Vtry, Vpk, Tend, clamped, tf, Vbr, show} = s; if (!I0) return;
     const t0 = -0.3*Tend, t1 = 1.4*Tend;
     const iAt = t => {
       if (t <= 0) return I0;
       if (p === 'diode') return Math.max(0, (I0 + VD/R)*Math.exp(-t/tau) - VD/R);
       return Math.max(0, I0*(1 - t/Tend));
     };
-    const vAt = t => {
+    // voltage across the switch, and across the coil (top minus bottom = 12 V minus the switch voltage)
+    const swAt = t => {
       if (t < 0) return 0.1;                                  // switch on: almost no voltage across it
-      if (p === 'diode') return VS + VD;
+      if (p === 'diode') return iAt(t) > 0 ? VS + VD : VS;
       return t <= Tend ? Vpk : VS;
     };
+    const coil = show === 'coil', vAt = t => coil ? VS - swAt(t) : swAt(t);
     const top = {l: 66, r: W - 14, t: 14, b: H*0.42}, bot = {l: 66, r: W - 14, t: H*0.53, b: H - 40};
     const X = Plot.lin(t0, t1, top.l, top.r);
-    const vmax = Math.max(Vpk, VS + VD)*1.15, Yi = Plot.lin(0, I0*1.2, top.b, top.t), Yv = Plot.lin(0, vmax, bot.b, bot.t);
+    const vlo = coil ? Math.min(VS - Vpk, -VD)*1.15 - 1 : 0, vhi = coil ? VS*1.35 : Math.max(Vpk, VS + VD)*1.15;
+    const Yi = Plot.lin(0, I0*1.2, top.b, top.t), Yv = Plot.lin(vlo, vhi, bot.b, bot.t);
     Plot.axes(ctx, top, X, Yi, {xt: [], yt: Plot.ticks(0, I0*1.2, 3), yl: 'coil current', yf: t => si(t, 'A').replace(' ', '')});
-    Plot.axes(ctx, bot, X, Yv, {xt: Plot.ticks(t0, t1, 5), yt: Plot.ticks(0, vmax, 4), xl: 'time after the switch opens', yl: 'switch (V)', xf: t => si(t, 's').replace(' ', ' '), yf: t => si(t, 'V').replace(' ', '')});
+    Plot.axes(ctx, bot, X, Yv, {xt: Plot.ticks(t0, t1, 5), yt: Plot.ticks(vlo, vhi, 4), xl: 'time after the switch opens', yl: coil ? 'coil (V)' : 'switch (V)', xf: t => si(t, 's').replace(' ', '\u2009'), yf: t => si(t, 'V').replace(' ', '')});
     Plot.line(ctx, [[X(0), top.t], [X(0), bot.b]], col.line2, 1, [3, 3]);
     Plot.text(ctx, 'switch opens', X(0) + 5, top.t + 4, {base: 'top', color: col.muted});
     const ip = [], vp = [];
     for (let i = 0; i <= 300; i++){ const t = t0 + (t1 - t0)*i/300; ip.push([X(t), Yi(iAt(t))]); }
-    // switch voltage drawn as steps
+    // voltage drawn as steps
     vp.push([X(t0), Yv(vAt(-1))], [X(0), Yv(vAt(-1))], [X(0), Yv(vAt(1e-15))]);
-    if (p !== 'diode'){ vp.push([X(Tend), Yv(Vpk)], [X(Tend), Yv(VS)]); }
+    const tz = p === 'diode' ? tau*Math.log(1 + I0*R/VD) : Tend;          // when the current reaches zero
+    if (tz < t1){ vp.push([X(tz), Yv(vAt(tz*0.999))], [X(tz), Yv(vAt(tz*1.001))]); }
     vp.push([X(t1), Yv(vAt(t1))]);
+    if (coil) Plot.line(ctx, [[bot.l, Yv(0)], [bot.r, Yv(0)]], col.line2, 1);
     Plot.line(ctx, ip, col.c1, 2.2);
     Plot.line(ctx, vp, p === 'diode' ? col.c5 : clamped ? col.bad : col.warn, 2.2);
-    if (p !== 'diode' && Vbr < vmax){ Plot.line(ctx, [[bot.l, Yv(Vbr)], [bot.r, Yv(Vbr)]], col.bad, 1, [5, 4]); Plot.text(ctx, 'switch rating ' + Vbr + ' V', bot.r - 4, Yv(Vbr) - 9, {align: 'right', color: col.bad}); }
-    if (clamped) Plot.text(ctx, 'coil wants ' + si(Vtry, 'V'), X(Tend*0.05) + 4, Yv(Vpk) + 12, {color: col.bad});
-    Plot.line(ctx, [[bot.l, Yv(VS)], [bot.r, Yv(VS)]], col.muted, 1, [2, 4]);
-    Plot.text(ctx, '12 V supply', bot.l + 6, Yv(VS) - 9, {color: col.muted});
+    if (coil){
+      Plot.text(ctx, '+12 V while on', bot.l + 6, Yv(VS) - 10, {color: col.muted});
+      if (p === 'diode') Plot.text(ctx, 'reverses, clamped at −0.7 V by the diode', X(0) + 8, Yv(-VD) - 12, {color: col.c5});
+      else Plot.text(ctx, (clamped ? 'coil wants ' + si(VS - Vtry, 'V') + '; switch limits it to ' : 'reverses to ') + si(VS - Vpk, 'V'), X(0) + 8, Yv((VS - Vpk)/2), {color: clamped ? col.bad : col.warn});
+    } else {
+      if (p !== 'diode' && Vbr < vhi){ Plot.line(ctx, [[bot.l, Yv(Vbr)], [bot.r, Yv(Vbr)]], col.bad, 1, [5, 4]); Plot.text(ctx, 'switch rating ' + Vbr + ' V', bot.r - 4, Yv(Vbr) - 9, {align: 'right', color: col.bad}); }
+      if (clamped) Plot.text(ctx, 'coil wants ' + si(Vtry, 'V'), X(Tend*0.05) + 4, Yv(Vpk) + 12, {color: col.bad});
+      Plot.line(ctx, [[bot.l, Yv(VS)], [bot.r, Yv(VS)]], col.muted, 1, [2, 4]);
+      Plot.text(ctx, '12 V supply', bot.l + 6, Yv(VS) - 9, {color: col.muted});
+    }
   });
   ['#kL', '#kR'].forEach(id => $(id).addEventListener('input', upd));
   upd();
