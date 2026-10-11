@@ -1,6 +1,6 @@
 # RF Engineering: PCB & Hardware Design
 
-Interactive notes on how radio-frequency hardware actually works and how to design it. It starts from the physics of waves on conductors and builds up to transmission lines, matching, components, PCB layout, measurement, system budgets, EMC, antennas, modulation and radio-control firmware. It ends with a design review of a real telemetry link.
+Interactive notes on how radio-frequency hardware works and how to design it. It starts from the physics of waves on conductors and builds up to transmission lines, matching, components, PCB layout, measurement, system budgets, EMC, antennas, modulation and radio-control firmware. It ends with a design review of a real telemetry link.
 
 **Who it's for:** avionics team members who want to work on the radio, GPS and high-speed parts of our hardware. The [EE notes](../EE/) modules 1–4 and 12 cover everything assumed here; no prior RF or electromagnetics background is needed.
 

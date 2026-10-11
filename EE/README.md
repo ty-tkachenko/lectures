@@ -1,6 +1,6 @@
 # EE Fundamentals for Avionics
 
-Interactive notes on the electronics behind the avionics team's hardware, going from "I've done some circuit theory" to "I can design, build and debug a board that flies or runs on the test stand". Every module is tied to things we actually build: flight computers, pressure-transducer front ends, solenoid valve drivers, igniter (pyro) channels, test-stand data acquisition, and the harnesses that connect it all.
+Interactive notes on the electronics behind the avionics team's hardware, from basic circuit theory to designing, building and debugging boards for flight and for the test stand. Every module is tied to things we actually build: flight computers, pressure-transducer front ends, solenoid valve drivers, igniter (pyro) channels, test-stand data acquisition, and the harnesses that connect it all.
 
 **Who it's for:** new team members with little or no hands-on EE experience, typically first to third year. Comfort with algebra is enough to start; no lab experience is assumed.
 
@@ -56,10 +56,10 @@ ADCs: resolution, reference and input range · sampling and aliasing · anti-ali
 ### Part IV: Building Hardware
 
 **[Module 12: Schematics & PCB Design](12_PCB_Design/)**
-The KiCad flow · symbols and footprints · stackups · trace width and current capacity · ground planes and return paths · decoupling placement · design rule checks · how to run (and survive) a design review
+The KiCad flow · symbols and footprints · stackups · trace width and current capacity · ground planes and return paths · decoupling placement · design rule checks · running a design review
 
 **[Module 13: Harnesses, Connectors & Ruggedization](13_Harnesses/)**
-Wire gauge and insulation · crimping done right · locking connectors · strain relief and vibration · conformal coating · noise from valves and pumps · ground loops on the test stand
+Wire gauge and insulation · crimping technique · locking connectors · strain relief and vibration · conformal coating · noise from valves and pumps · ground loops on the test stand
 
 **[Module 14: Test, Debug & Bring-Up](14_Test_and_Debug/)**
 Bring-up with a current-limited supply · advanced probing and logic analyzers · a debugging method that works · failure analysis · test reports and flight-readiness reviews

@@ -22,7 +22,7 @@
 <header class="hero">
   <div class="eyebrow">EE Fundamentals · Module 2</div>
   <h1>Circuit analysis</h1>
-  <p class="lede">Module 1 dealt with one battery and one resistor. Real boards have dozens of parts sharing supplies, grounds and signals. Two conservation laws and a handful of shortcuts let you work out what any of them is doing, and tell you why a battery monitor or a pressure reading can come out wrong.</p>
+  <p class="lede">Module 1 dealt with one battery and one resistor. Real boards have dozens of parts sharing supplies, grounds and signals. Two conservation laws and a few standard techniques are enough to analyse them, and they explain why a battery monitor or a pressure reading can come out wrong.</p>
   <p class="meta">Builds on: EE module 1. Bench: multimeter, bench supply, resistors from 1 kΩ to 1 MΩ.</p>
   <div class="resources" data-auto></div>
   <div class="objectives">
@@ -33,19 +33,19 @@
       <li>The voltage divider, designed as a battery-voltage monitor.</li>
       <li>Loading: why the divider reads wrong once you connect something to it.</li>
       <li>Thévenin equivalents and superposition, the two tools that make bigger circuits manageable.</li>
-      <li>Reading a schematic and a datasheet without being fooled by the word "typical".</li>
+      <li>Reading a schematic and a datasheet, including what "typical" values mean.</li>
     </ul>
   </div>
   <div class="video" data-video="lecture" id="lecture">
     <div class="plan">
       <p>Planned walkthrough of this page (≈ 30 min):</p>
       <ol>
-        <li data-t="0:00">Nodes, branches and loops: the vocabulary</li>
+        <li data-t="0:00">Nodes, branches and loops</li>
         <li data-t="2:30">Kirchhoff's current law at a junction</li>
-        <li data-t="5:30">Kirchhoff's voltage law, and the ground wire that isn't at 0 V</li>
+        <li data-t="5:30">Kirchhoff's voltage law and ground shift</li>
         <li data-t="9:30">Series, parallel and the current divider</li>
         <li data-t="13:00">Designing a battery-voltage monitor</li>
-        <li data-t="17:00">Loading: the divider that reads wrong</li>
+        <li data-t="17:00">Loading</li>
         <li data-t="20:30">Thévenin equivalents</li>
         <li data-t="24:00">Superposition: shifting a bipolar signal into the ADC</li>
         <li data-t="27:00">Reading schematics and datasheets</li>
@@ -57,9 +57,9 @@
 <!-- ================= 1 VOCABULARY ================= -->
 <section class="sec" id="nodes" data-short="Nodes, branches, loops">
 <h2>Nodes, branches and loops <a class="vjump" data-t="0:00"></a></h2>
-<p>Circuit analysis needs three words, and it's worth getting them exactly right:</p>
+<p>Circuit analysis uses three terms:</p>
 <ul>
-  <li>A <strong>node</strong> is a set of points connected by conductors: wires, PCB traces, copper pours, connector pins. Every point on a node is at the same voltage, because an ideal conductor drops no voltage. A node can be as small as one solder joint or as large as a board's whole ground plane (as long as you ignore the plane's resistance, which Section 3 won't).</li>
+  <li>A <strong>node</strong> is a set of points connected by conductors: wires, PCB traces, copper pours, connector pins. Every point on a node is at the same voltage, because an ideal conductor drops no voltage. A node can be as small as one solder joint or as large as a board's whole ground plane (when the plane's resistance is ignored; Section 3 looks at what happens when it isn't).</li>
   <li>A <strong>branch</strong> is a single path between two nodes: one component, or several in series. The same current flows all the way along a branch.</li>
   <li>A <strong>loop</strong> is any closed path you can trace through branches, starting and ending at the same node.</li>
 </ul>
@@ -116,7 +116,7 @@
 </div>
 
 <details class="exercise">
-  <summary><span class="ek">Design exercise</span><span class="et">How much is left on the fuse?</span></summary>
+  <summary><span class="ek">Design exercise</span><span class="et">Fuse headroom</span></summary>
   <div class="eb">
     <p>A battery feeds several loads through one 5 A fuse: a microcontroller board (180 mA), a radio module while transmitting (600 mA), a camera (900 mA) and two solenoid drivers that each draw 1.5 A when on. Everything can be on at once.</p>
     <div class="check" data-ans="0.32" data-tol="3%" data-unit="A"><p>How much current is left before the fuse's rating?</p>
@@ -161,17 +161,17 @@
   <div class="try"><b>Things to try</b><ol>
     <li>With the default loads, check KCL: does the battery current equal the sum of the branch currents?</li>
     <li>Switch on the heavy load. How far does the ground at the loads rise above the battery's negative terminal? Any signal at the loads that's measured against the battery's ground now reads off by that much.</li>
-    <li>With the heavy load on, make the battery cold and the wires 3 m long. Which part of the loop is eating the voltage?</li>
+    <li>With the heavy load on, make the battery cold and the wires 3 m long. Which part of the loop drops the most voltage?</li>
   </ol></div>
 </div>
 
 <div class="note">
   <span class="ni">i</span>
-  <div><span class="nt">The ground that isn't at 0 V</span>A shared return wire carries the sum of every load current, so when the heavy load switches on, the "ground" at the far end rises by \(I \times R_\text{return}\). A sensor that shares that ground, read by something at the battery end, reports a change that never happened. It looks like a sensor fault, but it's KVL. This is one reason power is often distributed in a star: each load gets its own feed and return from one central point, so a heavy load's current doesn't flow in anyone else's ground. Measuring sensors differentially is the other fix. Exercise 3 at the end works through the numbers; Module 13 covers grounding properly.</div>
+  <div><span class="nt">Ground shift</span>A shared return wire carries the sum of every load current, so when the heavy load switches on, the "ground" at the far end rises by \(I \times R_\text{return}\). A sensor that shares that ground, read by something at the battery end, reports a change that never happened. It looks like a sensor fault, but it's KVL. A common example on a test stand is a pressure transducer sharing a ground return with a solenoid valve: the logged pressure jumps every time the valve opens. This is one reason power is often distributed in a star: each load gets its own feed and return from one central point, so a heavy load's current doesn't flow in anyone else's ground. Measuring sensors differentially is the other fix. Exercise 3 at the end works through the numbers; Module 13 covers grounding in detail.</div>
 </div>
 
 <details class="exercise">
-  <summary><span class="ek">Design exercise</span><span class="et">Find the bad crimp</span></summary>
+  <summary><span class="ek">Design exercise</span><span class="et">Locating a bad crimp</span></summary>
   <div class="eb">
     <p>A solenoid valve opens sluggishly. Its supply is 12.0 V at the battery, and with the valve energised (2.0 A) you measure 10.9 V across the valve itself, 0.3 V along the feed wire and 0.3 V along the return wire. The only other thing in the loop is a connector.</p>
     <div class="check" data-ans="0.25" data-tol="3%" data-unit="Ω"><p>What's the connector's resistance?</p>
@@ -186,7 +186,7 @@
 <!-- ================= 4 SERIES / PARALLEL ================= -->
 <section class="sec" id="series" data-short="Series &amp; parallel">
 <h2>Series and parallel <a class="vjump" data-t="9:30"></a></h2>
-<p>Two shortcuts follow directly from Kirchhoff's laws, and you'll use them constantly.</p>
+<p>Two shortcuts follow directly from Kirchhoff's laws.</p>
 <p><strong>In series</strong>, components share one branch, so they carry the same current (KCL), and their voltages add up (KVL). The resistances add:</p>
 <div class="eq">$$R_\text{series} = R_1 + R_2 + \dots$$</div>
 <p><strong>In parallel</strong>, components connect between the same two nodes, so they have the same voltage across them, and their currents add up. The <em>conductances</em> (1/R) add:</p>
@@ -203,7 +203,7 @@
       <div class="ctrl"><label for="sV">Supply voltage <b id="sVv"></b></label><input id="sV" type="range" min="0" max="12" step="0.1" value="9"></div>
       <div class="ctrl"><label for="sR1">R1 <b id="sR1v"></b></label><input id="sR1" type="range" min="0" max="48" step="1" value="24"></div>
       <div class="ctrl"><label for="sR2">R2 <b id="sR2v"></b></label><input id="sR2" type="range" min="0" max="48" step="1" value="28"></div>
-      <p class="small">Resistor values step through the E12 series, the standard values you can actually buy.</p>
+      <p class="small">Resistor values step through the E12 series, the standard values parts are sold in.</p>
     </div>
     <div>
       <canvas id="cvSP" style="height:250px" aria-label="Schematic of a battery and two resistors in series or in parallel, labelled with the current through and the voltage across each"></canvas>
@@ -218,7 +218,7 @@
   <div class="try"><b>Things to try</b><ol>
     <li>In series, make R2 ten times R1. What share of the 9 V does each resistor get?</li>
     <li>Switch to parallel with the same values. Which resistor carries more current now, and which dissipates more power?</li>
-    <li>In parallel, set R1 = 10 Ω and R2 = 100 kΩ. What's the equivalent resistance? A huge resistor in parallel barely matters, a fact that comes back in Section 6.</li>
+    <li>In parallel, set R1 = 10 Ω and R2 = 100 kΩ. What's the equivalent resistance? A very large resistor in parallel has almost no effect, which matters again in Section 6.</li>
   </ol></div>
 </div>
 
@@ -239,7 +239,7 @@
 <!-- ================= 5 DIVIDER ================= -->
 <section class="sec" id="divider" data-short="The voltage divider">
 <h2>The voltage divider <a class="vjump" data-t="13:00"></a></h2>
-<p>Battery-powered boards usually measure their own battery voltage: to log it, to warn before the pack runs flat, or to refuse to start a high-current task on a weak pack. The measurement is made by an <strong>analog-to-digital converter</strong> (ADC): a circuit that reads the voltage on its input and turns it into a number that software can use. A typical ADC input accepts 0 to 3.3 V. A 2S LiPo reaches 8.4 V, and putting 8.4 V on the input damages it.</p>
+<p>Battery-powered boards usually measure their own battery voltage: to log it, to warn before the pack runs flat, or to refuse to start a high-current task on a weak pack. The measurement is made by an <strong>analog-to-digital converter</strong> (ADC): a circuit that reads the voltage on its input and turns it into a number that software can use. One common example is a flight computer checking its battery before it arms. A typical ADC input accepts 0 to 3.3 V. A 2S LiPo reaches 8.4 V, and putting 8.4 V on the input damages it.</p>
 <p>The fix is two resistors in series across the battery. The same current flows through both, so the voltage splits in proportion to their resistances, and the junction between them sits at a fixed fraction of the input:</p>
 <div class="eq">$$V_\text{out} = V_\text{in}\,\frac{R_2}{R_1 + R_2}$$<div class="n">R1 from the input to the output, R2 from the output to ground</div></div>
 <p>That fraction is the <strong>divider ratio</strong>. The software reads \(V_\text{out}\) and multiplies by \((R_1 + R_2)/R_2\) to get the battery voltage back.</p>
@@ -273,27 +273,27 @@
   </ol></div>
 </div>
 
-<p>Picking the ratio is easy. Picking the <em>size</em> of the resistors is the real design decision, because the divider is always connected, always drawing current from the battery:</p>
+<p>The ratio sets the scaling; the <em>size</em> of the resistors is the main design decision, because the divider is always connected, always drawing current from the battery:</p>
 <ul>
-  <li><strong>Too small</strong> (a few kΩ in total) and the divider is a constant load. A few milliamps doesn't sound like much, but over a week on the shelf it flattens a small pack, and LiPos are damaged by being run flat.</li>
-  <li><strong>Too large</strong> (megohms) and the divider becomes fragile: anything connected to its output disturbs it, which is the subject of the next section.</li>
+  <li><strong>Too small</strong> (a few kΩ in total) and the divider is a constant load. A few milliamps is small, but over a week in storage it flattens a small pack, and LiPos are damaged by being run flat.</li>
+  <li><strong>Too large</strong> (megohms) and the divider becomes sensitive to loading: anything connected to its output disturbs it, which is the subject of the next section.</li>
 </ul>
 <p>Tens of kilohms in total is the usual compromise for a battery monitor, often with a 100 nF capacitor from the output to ground to steady the voltage while the ADC samples it (Module 3 explains why that works).</p>
 
 <div class="example">
   <span class="xk">Worked example</span>
   <p>A 2S pack (8.4 V full) with R1 = 22 kΩ and R2 = 10 kΩ. The ratio is \(10 / 32 = 0.3125\), so at full charge the ADC sees \(8.4 \times 0.3125 = 2.63\ \text{V}\), comfortably below 3.3 V.</p>
-  <p>The divider draws \(8.4\ \text{V} / 32\ \text{k}\Omega = 0.26\ \text{mA}\). That's about 190 mAh a month, so a 2200 mAh pack left connected in a cupboard for a few months would be flat. Many designs switch the divider off with a small MOSFET when they aren't measuring (Module 6).</p>
+  <p>The divider draws \(8.4\ \text{V} / 32\ \text{k}\Omega = 0.26\ \text{mA}\). That's about 190 mAh a month, so a 2200 mAh pack left connected in storage for a few months would be flat. Many designs switch the divider off with a small MOSFET when they aren't measuring (Module 6).</p>
 </div>
 
 <details class="exercise">
-  <summary><span class="ek">Design exercise</span><span class="et">Read the battery back</span></summary>
+  <summary><span class="ek">Design exercise</span><span class="et">Reading the battery voltage</span></summary>
   <div class="eb">
     <p>A board uses the 22 kΩ / 10 kΩ divider above. The ADC reads 2.10 V.</p>
     <div class="check" data-ans="6.72" data-tol="1%" data-unit="V"><p>What's the battery voltage?</p>
       <div class="miss" data-val="4.62"><p>That's 2.10 × 22/10. The scale factor is the <em>total</em> resistance over R2: (22 + 10)/10.</p></div>
       <div class="miss" data-val="0.656"><p>You multiplied by the ratio instead of dividing by it. The battery is bigger than what the ADC sees.</p></div>
-      <div class="solution"><p>\(V_\text{bat} = 2.10 \times (22 + 10)/10 = 6.72\ \text{V}\), or 3.36 V per cell. That's close to empty: time to stop holding and swap the pack.</p></div>
+      <div class="solution"><p>\(V_\text{bat} = 2.10 \times (22 + 10)/10 = 6.72\ \text{V}\), or 3.36 V per cell. That's close to empty; the pack should be recharged or replaced.</p></div>
     </div>
   </div>
 </details>
@@ -302,9 +302,9 @@
 <!-- ================= 6 LOADING ================= -->
 <section class="sec" id="loading" data-short="Loading">
 <h2>Loading <a class="vjump" data-t="17:00"></a></h2>
-<p>The divider equation assumes nothing is connected to the output. In reality something always is: an ADC input, a multimeter, a data logger. Whatever you connect draws some current, and it sits <em>in parallel with R2</em>. That lowers the bottom half of the divider, so the output drops. This is called <strong>loading</strong>. For an ADC input on a 10 kΩ divider the effect is too small to notice, but with larger resistors or a hungrier instrument it isn't.</p>
+<p>The divider equation assumes nothing is connected to the output. In reality something always is: an ADC input, a multimeter, a data logger. Whatever you connect draws some current, and it sits <em>in parallel with R2</em>. That lowers the bottom half of the divider, so the output drops. This is called <strong>loading</strong>. For an ADC input on a 10 kΩ divider the effect is too small to notice, but with larger resistors or an instrument with a lower input resistance it isn't.</p>
 <div class="eq">$$V_\text{out} = V_\text{in}\,\frac{R_2 \parallel R_L}{R_1 + R_2 \parallel R_L}$$<div class="n">R<sub>L</sub> is the load: the input resistance of whatever reads the divider</div></div>
-<p>If \(R_L\) is huge compared with R2, then \(R_2 \parallel R_L \approx R_2\) and nothing changes. You saw that in the series and parallel figure: a big resistor in parallel barely matters. The trouble starts when the load is within a factor of a hundred or so of the divider's resistors.</p>
+<p>If \(R_L\) is huge compared with R2, then \(R_2 \parallel R_L \approx R_2\) and nothing changes. You saw that in the series and parallel figure: a very large resistor in parallel has almost no effect. Loading becomes significant when the load is within a factor of a hundred or so of the divider's resistors.</p>
 
 <div class="widget wide" id="w-load">
   <div class="wh"><span class="tag">Interactive</span><b>Loading a divider</b></div>
@@ -337,15 +337,15 @@
 
 <div class="note myth">
   <span class="ni">!</span>
-  <div><span class="nt">"The meter is lying"</span>When a high-value divider reads low on your multimeter, the meter is reporting the voltage correctly. It's the circuit that changed when you connected the meter. Every measurement loads the thing it measures a little; the skill is knowing when "a little" is too much. Probing a megohm node with a 10 MΩ meter, or a 1 MΩ scope probe, is a classic way to chase a fault that isn't there.</div>
+  <div><span class="nt">Misconception: "the meter is wrong"</span>When a high-value divider reads low on your multimeter, the meter is reporting the voltage correctly. It's the circuit that changed when you connected the meter. Every measurement loads the thing it measures a little; the skill is knowing when "a little" is too much. Probing a megohm node with a 10 MΩ meter, or a 1 MΩ scope probe, commonly produces readings that suggest a fault that isn't there.</div>
 </div>
 </section>
 
 <!-- ================= 7 THEVENIN ================= -->
 <section class="sec" id="thevenin" data-short="Thévenin equivalents">
 <h2>Thévenin equivalents <a class="vjump" data-t="20:30"></a></h2>
-<p>Loading problems get much easier with one of the most useful results in circuit theory. <strong>Thévenin's theorem</strong> says that any circuit made of voltage sources, current sources and resistors, looked at from two terminals, behaves exactly like one voltage source \(V_\text{th}\) in series with one resistor \(R_\text{th}\). Whatever you connect to those terminals can't tell the difference.</p>
-<p>You've already met one. Module 1's battery model, an ideal source with an internal resistance, is a Thévenin equivalent. Finding one takes two steps:</p>
+<p>Loading problems are much simpler with one of the most useful results in circuit theory. <strong>Thévenin's theorem</strong> says that any circuit made of voltage sources, current sources and resistors, looked at from two terminals, behaves exactly like one voltage source \(V_\text{th}\) in series with one resistor \(R_\text{th}\). Whatever you connect to those terminals can't tell the difference.</p>
+<p>Module 1's battery model, an ideal source with an internal resistance, is already a Thévenin equivalent. Finding one takes two steps:</p>
 <ol>
   <li><strong>\(V_\text{th}\)</strong> is the <em>open-circuit voltage</em>: what the terminals show with nothing connected.</li>
   <li><strong>\(R_\text{th}\)</strong> is the resistance you see looking back into the terminals with every source switched off. Switching a voltage source off means replacing it with a wire (0 V); a current source becomes an open circuit (0 A).</li>
@@ -402,9 +402,9 @@
 <p>Thévenin also works the other way round, as a measurement. Measure the open-circuit voltage, then connect a known load and measure again. The drop tells you \(R_\text{th}\) without opening the box. It's how you find a battery's internal resistance, or the output resistance of a sensor with no datasheet. Equivalently, \(R_\text{th} = V_\text{oc}/I_\text{sc}\), the open-circuit voltage over the short-circuit current, though deliberately shorting a source is rarely a good idea.</p>
 
 <details class="exercise">
-  <summary><span class="ek">Design exercise</span><span class="et">What's inside the sensor?</span></summary>
+  <summary><span class="ek">Design exercise</span><span class="et">Measuring a sensor's output resistance</span></summary>
   <div class="eb">
-    <p>A cheap temperature sensor board has an analog output and no useful datasheet. With nothing connected, the output reads 3.00 V on your meter. With a 10 kΩ resistor from the output to ground, it reads 2.50 V.</p>
+    <p>A temperature sensor board has an analog output, and its datasheet doesn't give the output resistance. With nothing connected, the output reads 3.00 V on your meter. With a 10 kΩ resistor from the output to ground, it reads 2.50 V.</p>
     <div class="check" data-ans="2000" data-tol="2%" data-unit="Ω"><p>What's the sensor's output (Thévenin) resistance?</p>
       <div class="miss" data-val="12000"><p>That's the total resistance in the loop. Subtract the 10 kΩ load.</p></div>
       <div class="hint">The 10 kΩ carries 2.50 V / 10 kΩ = 0.25 mA. The missing 0.50 V is dropped inside the sensor at that same current.</div>
@@ -418,7 +418,7 @@
 <section class="sec" id="superposition" data-short="Superposition">
 <h2>Superposition <a class="vjump" data-t="24:00"></a></h2>
 <p>Circuits made of resistors and sources are <strong>linear</strong>: double every source and every voltage and current doubles. That gives you <strong>superposition</strong>. With several sources, the voltage at any point is the sum of what each source would produce on its own, with all the others switched off (voltage sources replaced by wires, current sources by open circuits).</p>
-<p>A common use on the test stand: a load-cell amplifier puts out a signal between −2.5 V and +2.5 V, but the ADC only accepts 0 to 3.3 V. Two equal resistors, one from the signal and one from the 3.3 V supply, meet at the ADC input. Each source sees a simple divider when the other is switched off:</p>
+<p>One common application is on a test stand, where a load-cell amplifier puts out a signal between −2.5 V and +2.5 V, but the ADC only accepts 0 to 3.3 V. Two equal resistors, one from the signal and one from the 3.3 V supply, meet at the ADC input. Each source sees a simple divider when the other is switched off:</p>
 <div class="eq">$$V_\text{out} = \underbrace{V_\text{sig}\,\frac{R_2}{R_1 + R_2}}_\text{signal alone} + \underbrace{V_\text{ref}\,\frac{R_1}{R_1 + R_2}}_\text{reference alone} = \frac{V_\text{sig}}{2} + 1.65\ \text{V}$$<div class="n">with R1 = R2; each term is the other source switched off</div></div>
 <p>The signal is halved and shifted up by 1.65 V, so −2.5 to +2.5 V lands on 0.4 to 2.9 V, safely inside the ADC's range.</p>
 
@@ -468,7 +468,7 @@
 <!-- ================= 9 SCHEMATICS & DATASHEETS ================= -->
 <section class="sec" id="reading" data-short="Schematics &amp; datasheets">
 <h2>Reading schematics and datasheets <a class="vjump" data-t="27:00"></a></h2>
-<p>A schematic shows how parts are <em>connected</em>, not where they sit on the board. Here is the battery monitor from Section 5 as it would appear in a real schematic, with the conventions that trip people up most often marked:</p>
+<p>A schematic shows how parts are <em>connected</em>, not where they sit on the board. Here is the battery monitor from Section 5 as it would appear in a real schematic, with the conventions that most often cause mistakes marked:</p>
 
 <div class="widget">
   <div class="wh"><span class="tag">Diagram</span><b>The battery monitor as drawn in a real schematic</b></div>
@@ -545,14 +545,14 @@
 
 <div class="note tip">
   <span class="ni">✓</span>
-  <div><span class="nt">Where loading hides in a datasheet</span>ADC datasheets list a maximum <em>source impedance</em> (sometimes called external input impedance), often a few tens of kilohms for slow sampling and much less for fast. That's the 100× rule from the ADC's side: the Thévenin resistance of your divider has to stay below it, or the readings come out low. The 100 nF capacitor on the battery monitor gets around it by holding the voltage steady while the ADC samples, so slow signals like battery voltage can use larger resistors.</div>
+  <div><span class="nt">Where loading hides in a datasheet</span>ADC datasheets list a maximum <em>source impedance</em> (sometimes called external input impedance), often a few tens of kilohms for slow sampling and much less for fast. That's the 100× rule from the ADC's side: the Thévenin resistance of your divider has to stay below it, or the readings come out low. The 100 nF capacitor on the battery monitor avoids the problem by holding the voltage steady while the ADC samples, so slow signals like battery voltage can use larger resistors.</div>
 </div>
 </section>
 
 <!-- ================= DESIGN EXERCISES ================= -->
 <section class="sec" id="exercises" data-nonum data-short="Design exercises">
 <h2>Design exercises</h2>
-<p>Problems taken from the team's own hardware. Each takes a few steps. Enter numbers to check your reasoning as you go, or open the worked solutions and discussion. The figures above are useful for sanity-checking.</p>
+<p>Problems drawn from real hardware. Each takes a few steps. Enter numbers to check your reasoning as you go, or open the worked solutions and discussion. The figures above are useful for sanity-checking.</p>
 
 <div class="chal">
   <div class="ch"><span class="cn">Exercise 1</span><span class="cd">Design · ●●○</span><span class="ctitle">A battery monitor for a 3S pack</span></div>
@@ -577,7 +577,7 @@
 </div>
 
 <div class="chal">
-  <div class="ch"><span class="cn">Exercise 2</span><span class="cd">Analysis · ●●●</span><span class="ctitle">The pressure reading that's 7 % low</span></div>
+  <div class="ch"><span class="cn">Exercise 2</span><span class="cd">Analysis · ●●●</span><span class="ctitle">A pressure reading 7 % low</span></div>
   <div class="cbody">
     <p>A tank pressure transducer outputs 0.5 V at 0 psi and 4.5 V at 1000 psi. The test-stand data logger's channels accept 0 to 3.3 V, so a divider (R1 = 10 kΩ, R2 = 20 kΩ) scales the transducer down by 2/3. The logger software multiplies by 1.5 to undo it. On the first pressurisation the logged pressure is consistently low.</p>
     <div class="given"><b>Given</b>
@@ -595,12 +595,12 @@
     <div class="check" data-ans="930" data-tol="1%" data-unit="psi"><p>(c) What pressure does the logger report at a true 1000 psi?</p>
       <div class="miss" data-val="937.5"><p>Close, but the transducer's 0 psi point is at 0.5 V, not 0 V. Subtract the offset before scaling.</p></div>
       <div class="solution"><p>The software computes \(2.8125 \times 1.5 = 4.22\ \text{V}\), and converts: \((4.22 - 0.5)/4.0 \times 1000 = 930\ \text{psi}\). It reads 70 psi low at full scale, about 7 %, and the error grows with pressure.</p></div></div>
-    <details><summary>Discussion: three ways to fix it</summary><p>(1) Account for the loading in software: use the loaded ratio, \(R_2 \parallel R_L / (R_1 + R_2 \parallel R_L)\), instead of 2/3. Cheap, but the logger's input resistance varies from unit to unit. (2) Scale the divider down: 1 kΩ and 2 kΩ give R<sub>th</sub> = 667 Ω, 150× smaller than the logger, so the error drops below 1 %. The transducer then has to drive 1.5 mA; check that it can. (3) Put a unity-gain op-amp buffer between the divider and the logger (Module 10). Whatever you choose, calibrate the whole chain end to end with a reference gauge before trusting it.</p></details>
+    <details><summary>Discussion: three ways to fix it</summary><p>(1) Account for the loading in software: use the loaded ratio, \(R_2 \parallel R_L / (R_1 + R_2 \parallel R_L)\), instead of 2/3. Simple, but the logger's input resistance varies from unit to unit. (2) Scale the divider down: 1 kΩ and 2 kΩ give R<sub>th</sub> = 667 Ω, 150× smaller than the logger, so the error drops below 1 %. The transducer then has to drive 1.5 mA; check that it can. (3) Put a unity-gain op-amp buffer between the divider and the logger (Module 10). Whatever you choose, calibrate the whole chain end to end with a reference gauge before trusting it.</p></details>
   </div>
 </div>
 
 <div class="chal">
-  <div class="ch"><span class="cn">Exercise 3</span><span class="cd">Analysis · ●●○</span><span class="ctitle">The pressure spike that wasn't</span></div>
+  <div class="ch"><span class="cn">Exercise 3</span><span class="cd">Analysis · ●●○</span><span class="ctitle">A false pressure spike</span></div>
   <div class="cbody">
     <p>On the test stand, a pressure transducer and a solenoid valve sit next to each other, 5 m from the DAQ box. To save wire, they share one ground return back to the DAQ. Every time the valve opens, the logged pressure jumps, then drops back when the valve closes.</p>
     <div class="given"><b>Given</b>
@@ -615,7 +615,7 @@
     <div class="check" data-ans="78.8" data-tol="2%" data-unit="psi"><p>(b) How big is the false pressure jump?</p>
       <div class="hint">The transducer's output rides on top of its local ground, and the DAQ measures from its own ground. KVL around that path.</div>
       <div class="solution"><p>The DAQ sees the transducer's output plus 0.315 V. At 4 mV/psi that's \(0.315 / 0.004 \approx 79\ \text{psi}\) of pressure that doesn't exist, appearing exactly when the valve opens. If the sequence has a pressure-based abort, it could abort on this.</p></div></div>
-    <details><summary>Discussion: what would you change?</summary><p>Give the valve its own return wire, so no valve current flows in the sensor's ground. Better still, measure the transducer differentially: run both its signal and its ground back to a differential DAQ input, which measures the voltage between the two wires and ignores the common shift (Modules 10 and 13). And a habit worth building: when a sensor reading changes the moment an actuator switches, suspect the wiring before the sensor.</p></details>
+    <details><summary>Discussion: what would you change?</summary><p>Give the valve its own return wire, so no valve current flows in the sensor's ground. Better still, measure the transducer differentially: run both its signal and its ground back to a differential DAQ input, which measures the voltage between the two wires and ignores the common shift (Modules 10 and 13). As a general rule, when a sensor reading changes the moment an actuator switches, suspect the wiring before the sensor.</p></details>
   </div>
 </div>
 </section>
@@ -739,8 +739,8 @@ const node = (ctx, x, y) => Plot.dot(ctx, x, y, 3.4, col.ink);
       : 'No loads on: no current flows, so nothing drops anywhere and the loads see the full battery voltage.';
     const v = $('#kVerdict');
     if (Vbus < 6) setVerdict(v, 'bad', `<b>Brown-out.</b> Only ${si(Vbus, 'V')} reaches the loads, below the 6.0 V they need. ${si(dInt + 2*dW, 'V')} is lost before the current even gets there.`);
-    else if (dW > 0.05) setVerdict(v, 'warn', `<b>Powered, but the ground has moved.</b> The return wire carries all ${si(I, 'A')}, so the loads' ground sits ${si(dW, 'V')} above the battery's negative terminal. Any sensor measured against the battery end will read off by that much.`);
-    else setVerdict(v, 'ok', `<b>Healthy.</b> ${si(Vbus, 'V')} at the loads, and the ground shifts by only ${si(dW, 'V')}.`);
+    else if (dW > 0.05) setVerdict(v, 'warn', `<b>Powered, with ground shift.</b> The return wire carries all ${si(I, 'A')}, so the loads' ground sits ${si(dW, 'V')} above the battery's negative terminal. Any sensor measured against the battery end will read off by that much.`);
+    else setVerdict(v, 'ok', `<b>Within limits.</b> ${si(Vbus, 'V')} at the loads, and the ground shifts by only ${si(dW, 'V')}.`);
     w.redraw();
   }
   const w = Plot.widget($('#cvBus'), (ctx, W, H) => {
@@ -930,7 +930,7 @@ const node = (ctx, x, y) => Plot.dot(ctx, x, y, 3.4, col.ink);
     const ratio = RL/Rth, v = $('#lVerdict');
     if (Math.abs(err) <= 0.01) setVerdict(v, 'ok', `<b>Negligible loading.</b> The load is ${fmt(ratio, 3)}× the divider's R1 ∥ R2, so it reads within 1 % of the ideal.`);
     else if (Math.abs(err) <= 0.05) setVerdict(v, 'warn', `<b>Noticeable loading.</b> The load is only ${fmt(ratio, 3)}× R1 ∥ R2, so the output reads ${fmt(-err*100, 2)} % low.`);
-    else setVerdict(v, 'bad', `<b>Heavy loading.</b> The load is ${fmt(ratio, 3)}× R1 ∥ R2. It's pulling the output ${fmt(-err*100, 2)} % low: you're measuring a different circuit from the one you built.`);
+    else setVerdict(v, 'bad', `<b>Heavy loading.</b> The load is ${fmt(ratio, 3)}× R1 ∥ R2. It pulls the output ${fmt(-err*100, 2)} % low, so the measurement no longer reflects the unloaded circuit.`);
     w.redraw();
   }
   const w = Plot.widget($('#cvLoad'), (ctx, W, H) => {

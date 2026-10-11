@@ -22,17 +22,17 @@
 <header class="hero">
   <div class="eyebrow">EE Fundamentals · Module 1</div>
   <h1>Voltage, current, resistance &amp; power</h1>
-  <p class="lede">Every circuit, from a microcontroller board to a motor driver, runs on four quantities and one simple law. These notes aim to make them feel physical, so you can look at a circuit and predict what it does before you measure it.</p>
+  <p class="lede">Every circuit, from a microcontroller board to a motor driver, runs on four quantities and one simple law. This module builds an intuitive understanding of each, so that you can predict what a circuit does before measuring it.</p>
   <p class="meta">Start here: no background needed. Bench: multimeter, bench supply, a few resistors.</p>
   <div class="resources" data-auto></div>
   <div class="objectives">
     <h3>What's covered</h3>
     <ul>
       <li>What current and voltage physically are, and why voltage only means something between two points.</li>
-      <li>Ohm's law, power, and sizing a resistor so it doesn't burn up.</li>
+      <li>Ohm's law, power, and choosing a resistor's power rating.</li>
       <li>Why a long cable can starve a load of current.</li>
       <li>Battery capacity, internal resistance, and the sag that resets electronics.</li>
-      <li>Measuring voltage, current and resistance without blowing the meter's fuse.</li>
+      <li>Measuring voltage, current and resistance correctly and safely with a multimeter.</li>
     </ul>
   </div>
   <div class="video" data-video="lecture" id="lecture">
@@ -41,12 +41,12 @@
       <ol>
         <li data-t="0:00">Why it matters: the power paths in a typical battery-powered device</li>
         <li data-t="2:30">Current is a flow, and it isn't used up</li>
-        <li data-t="6:00">Voltage between two points, and what "ground" really means</li>
-        <li data-t="9:30">Ohm's law, live in the circuit simulator</li>
-        <li data-t="13:00">Power and the resistor that cooked itself</li>
+        <li data-t="6:00">Voltage between two points, and what "ground" means</li>
+        <li data-t="9:30">Ohm's law in the circuit simulator</li>
+        <li data-t="13:00">Power and resistor ratings</li>
         <li data-t="16:00">The long-cable problem</li>
         <li data-t="20:00">Battery sag and brown-outs</li>
-        <li data-t="23:00">How not to blow up your multimeter</li>
+        <li data-t="23:00">Using a multimeter safely</li>
       </ol>
     </div>
   </div>
@@ -57,7 +57,7 @@
 <h2>Current <a class="vjump" data-t="2:30"></a></h2>
 <p>Metal wires are full of electrons that are free to move. Connect a battery across a wire and they drift along it. <strong>Current</strong> is the rate at which charge flows past a point, measured in <strong>amperes</strong> (A). One amp is one coulomb of charge per second.</p>
 <div class="eq">$$I = \frac{Q}{t}$$<div class="n">current (A) = charge (C) ÷ time (s)</div></div>
-<p>Two habits will save you a lot of confusion:</p>
+<p>Two properties of current are worth keeping in mind:</p>
 <ul>
   <li><strong>Current flows in loops.</strong> Charge leaves one terminal of the battery, goes through the circuit and returns to the other terminal. If the loop is broken anywhere (a loose crimp, an open switch, a blown fuse), current stops <em>everywhere</em> in that loop at once.</li>
   <li><strong>Current isn't used up.</strong> Whatever goes into a component comes out the other side. Components use <em>energy</em>, not charge.</li>
@@ -106,11 +106,11 @@
   </div>
 </div>
 
-<p>A useful picture is a water system: voltage is like a <em>pressure difference</em>, current is the <em>flow rate</em>, and a resistor is a narrow pipe. Just as you can't talk about the pressure "at" a point without saying what it's relative to, you can't talk about voltage at a node without a reference. Don't push the analogy too far, though. Water can spill out of a pipe, but current can't leave a circuit, because it always returns home.</p>
+<p>A useful picture is a water system: voltage is like a <em>pressure difference</em>, current is the <em>flow rate</em>, and a resistor is a narrow pipe. Just as you can't talk about the pressure "at" a point without saying what it's relative to, you can't talk about voltage at a node without a reference. The analogy has limits: water can spill out of a pipe, but current can't leave a circuit; it always returns to its source.</p>
 
 <div class="note myth">
   <span class="ni">!</span>
-  <div><span class="nt">"Ground" is not the Earth, and it's not magic</span>In a real device, ground is just a copper net that every circuit agrees to measure from. It has resistance like any other wire. When large currents flow through it (a motor starting, for example), different points on "ground" can sit at different voltages. That's behind a whole family of hard-to-find bugs, and we'll come back to it in Modules 12 and 13.</div>
+  <div><span class="nt">"Ground" is a reference, not the Earth</span>In a real device, ground is a copper net that every circuit agrees to measure from. It has resistance like any other wire. When large currents flow through it (a motor starting or a solenoid valve opening, for example), different points on "ground" can sit at different voltages. This causes a whole class of hard-to-find faults, covered in Modules 12 and 13.</div>
 </div>
 
 <div class="example">
@@ -126,7 +126,7 @@
 <h2>Resistance and Ohm's law <a class="vjump" data-t="9:30"></a></h2>
 <p>A <strong>resistor</strong> opposes current. Push harder (more voltage) and more current flows. Make the path narrower (more resistance) and less current flows. For most conductors at a steady temperature, the relationship is a straight line:</p>
 <div class="eq">$$V = I\,R \qquad\Longleftrightarrow\qquad I = \frac{V}{R} \qquad\Longleftrightarrow\qquad R = \frac{V}{I}$$<div class="n">Ohm's law: volts = amps × ohms</div></div>
-<p>Resistance is measured in <strong>ohms</strong> (Ω). You'll see a huge range: milliohms for wires and current-sense shunts, ohms to tens of ohms for heaters and solenoid coils, kilohms for pull-up resistors and voltage dividers, and megohms for a multimeter's input.</p>
+<p>Resistance is measured in <strong>ohms</strong> (Ω). Values span a wide range: milliohms for wires and current-sense shunts, ohms to tens of ohms for heaters and solenoid coils, kilohms for pull-up resistors and voltage dividers, and megohms for a multimeter's input.</p>
 
 <p>The simulator below is a battery and one resistor. Change either one and watch the current respond: with the voltage fixed, doubling the resistance halves the current. The dots stand for packets of charge. They always move at the same speed, so more current shows up as more dots passing each point every second, not as faster ones.</p>
 
@@ -160,16 +160,16 @@
 <div class="example">
   <span class="xk">Worked example</span>
   <p>A 3.3 V microcontroller pin drives a 1 kΩ resistor to ground. The pin supplies \(I = V/R = 3.3\ \text{V} / 1000\ \Omega = 3.3\ \text{mA}\).</p>
-  <p>A shortcut worth memorising: <b>volts ÷ kilohms = milliamps</b>. Most signal-level circuits live in kΩ and mA, so you'll use it constantly.</p>
+  <p>A useful shortcut: <b>volts ÷ kilohms = milliamps</b>. Most signal-level circuits work in kΩ and mA.</p>
 </div>
 <details class="exercise">
   <summary><span class="ek">Design exercise</span><span class="et">A power indicator LED</span></summary>
   <div class="eb">
-    <p>A board needs an LED that lights when it's powered. It runs from 5 V. A red LED drops about 2 V across itself whenever it's on (you'll see why in Module 5), and you want 10 mA through it.</p>
+    <p>A board needs an LED that lights when it's powered. It runs from 5 V. A red LED drops about 2 V across itself whenever it's on (Module 5 explains why), and you want 10 mA through it.</p>
     <div class="check" data-ans="300" data-tol="3%" data-unit="Ω"><p>What series resistor sets 10 mA?</p>
       <div class="miss" data-val="500"><p>That would be right if the LED took no voltage. The resistor only sees what's left after the LED's 2 V.</p></div>
       <div class="hint">The resistor and LED share the 5 V. How much is left across the resistor?</div>
-      <div class="solution"><p>The resistor sees 5 − 2 = 3 V, so \(R = 3\ \text{V} / 10\ \text{mA} = 300\ \Omega\). The nearest standard value is 300 Ω (E24) or 330 Ω (E12), which gives about 9 mA. Plenty bright.</p></div>
+      <div class="solution"><p>The resistor sees 5 − 2 = 3 V, so \(R = 3\ \text{V} / 10\ \text{mA} = 300\ \Omega\). The nearest standard value is 300 Ω (E24) or 330 Ω (E12), which gives about 9 mA, bright enough for an indicator.</p></div>
     </div>
   </div>
 </details>
@@ -190,14 +190,14 @@
 <div class="example">
   <span class="xk">Worked example</span>
   <p>A 100 Ω resistor sits directly across a 5 V rail. It dissipates \(P = V^2/R = 25/100 = 0.25\ \text{W}\).</p>
-  <p>A ¼ W resistor would technically be "within rating", but it would run at its maximum temperature all the time, and the rating assumes cooler conditions than a sealed enclosure in the sun. Applying the 50 % rule, you'd pick a ½ W part. Better still, ask whether the circuit really needs to burn a quarter of a watt at all. (And don't reach for a smaller package: smaller parts have less area to shed heat, so their ratings are <em>lower</em>.)</p>
+  <p>A ¼ W resistor would technically be "within rating", but it would run at its maximum temperature all the time, and the rating assumes cooler conditions than a sealed enclosure in the sun. Applying the 50 % rule, you'd pick a ½ W part. It's also worth asking whether the circuit needs to dissipate a quarter of a watt at all. A smaller package doesn't help: smaller parts have less area to shed heat, so their ratings are <em>lower</em>.</p>
 </div>
 <details class="exercise">
   <summary><span class="ek">Design exercise</span><span class="et">Does the LED resistor fit in an 0402?</span></summary>
   <div class="eb">
     <p>Back to the 300 Ω resistor carrying 10 mA in the power indicator. The board is tight on space, and an 0402 resistor is rated 1/16 W (62.5 mW).</p>
     <div class="check" data-ans="30" data-tol="3%" data-unit="mW"><p>How much power does the resistor dissipate?</p>
-      <div class="miss" data-val="0.03"><p>Right number, but in watts. The box wants milliwatts.</p></div>
+      <div class="miss" data-val="0.03"><p>Correct value, but in watts. The answer is in milliwatts.</p></div>
       <div class="miss" data-val="50"><p>That's 5 V × 10 mA, the power of the whole circuit. The resistor only sees 3 V of it.</p></div>
       <div class="solution"><p>\(P = I^2R = (0.01)^2 \times 300 = 30\ \text{mW}\), or \(V I = 3\ \text{V} \times 10\ \text{mA}\). That's 48 % of the 0402's rating, just inside the 50 % rule, so it fits.</p></div>
     </div>
@@ -214,7 +214,7 @@
 
 <div class="note">
   <span class="ni">i</span>
-  <div><span class="nt">Why long cables matter</span>Picture a 12 V supply driving a solenoid (an electromagnet that pulls a plunger, as in a valve or a door latch) at the end of a long cable. The solenoid needs a minimum current to pull in reliably. Remember that current makes a round trip, out along one conductor and back along the other, so the cable's resistance counts <b>twice</b>. Too thin or too long a cable, and the solenoid just buzzes or sits there.</div>
+  <div><span class="nt">Why long cables matter</span>Picture a 12 V supply driving a solenoid (an electromagnet that pulls a plunger, as in a valve or a door latch) at the end of a long cable. The solenoid needs a minimum current to pull in reliably. Remember that current makes a round trip, out along one conductor and back along the other, so the cable's resistance counts <b>twice</b>. Too thin or too long a cable, and the solenoid doesn't pull in.</div>
 </div>
 
 <div class="widget wide" id="w-wire">
@@ -245,9 +245,10 @@
     <li>Halving the cable length helps. So does doubling the supply voltage. Which helps more, and why?</li>
   </ol></div>
 </div>
-<p>This is the first example of a pattern that comes up again and again: <strong>the "ideal" part of the schematic is often not where the voltage goes.</strong> A common fix is to put the switch, often a relay, next to the load. The long cable then carries only a small control signal, and the big load current travels a few metres of thick wire.</p>
+<p>This is the first example of a pattern that comes up again and again: <strong>the "ideal" part of the schematic is often not where the voltage goes.</strong> A common fix is to put the switch, often a relay, next to the load. The long cable then carries only a small control signal, and the large load current travels a few metres of thick wire.</p>
+<p>One common example in rocketry is firing an igniter. For safety, the igniter is fired from tens of metres away, and it needs a minimum current, its <em>all-fire current</em>, to light reliably. A launch cable that's too long or too thin leaves the igniter short of that current, exactly as in the figure above, which is why many launch systems put the firing relay at the pad.</p>
 <div class="example">
-  <span class="xk">Field story</span>
+  <span class="xk">Example</span>
   <p>A solenoid works every time on the bench with a 1 m lead, then fails to pull in once it's installed at the end of a 30 m cable. Same supply, same solenoid. The difference is the cable. A 1 m lead adds almost no resistance, but tens of metres of thin wire can add several ohms, more than the solenoid itself. The current falls below what it needs.</p>
   <p>Note what <em>didn't</em> happen: the voltage didn't "run out" along the cable. Voltage gets <em>divided</em> between every resistance in the loop, and a long cable simply takes a big share.</p>
 </div>
@@ -303,7 +304,7 @@
 </div>
 <div class="note">
   <span class="ni">i</span>
-  <div><span class="nt">A classic failure</span>A motor, heater or solenoid draws a big current spike, the shared battery sags, and the control electronics' supply dips below its brown-out threshold. The processor resets, data logging stops, and whatever it was doing restarts from the top. The fixes are separate batteries (or at least separate wiring) for high-current loads, a hold-up capacitor, and brown-out detection in firmware. You'll design these properly in Module 7.</div>
+  <div><span class="nt">A common failure</span>A motor, heater or solenoid draws a large current spike, the shared battery sags, and the control electronics' supply dips below its brown-out threshold. The processor resets, data logging stops, and whatever it was doing restarts from the top. The fixes are separate batteries (or at least separate wiring) for high-current loads, a hold-up capacitor, and brown-out detection in firmware. Module 7 covers these in detail. One common example is a flight computer that shares a battery with a solenoid valve: it can reset the moment the valve opens.</div>
 </div>
 <div class="grid2">
   <div class="example">
@@ -340,7 +341,7 @@
   <tr><td><b>Current</b></td><td><em>In series</em>: break the loop and put the meter in the gap</td><td>Current flows through the loop, so it has to flow through the meter</td><td>Very low resistance (a shunt), close to a wire</td></tr>
   <tr><td><b>Resistance</b></td><td>Across the part, with <b>power off</b></td><td>The meter pushes its own small test current</td><td>A tiny current source</td></tr>
 </table></div>
-<p>The dangerous combination is <strong>current mode connected across a voltage source</strong>. The meter is nearly a wire, so you've just shorted the source. Explore what happens in each case:</p>
+<p>The dangerous combination is <strong>current mode connected across a voltage source</strong>. The meter is nearly a wire, so it shorts the source. Explore what happens in each case:</p>
 
 <div class="widget wide" id="w-meter">
   <div class="wh"><span class="tag">Interactive</span><b>Where do the probes go?</b></div>
@@ -368,7 +369,7 @@
 <section class="sec" id="safety" data-short="Bench safety">
 <h2>Bench safety</h2>
 <ul>
-  <li><strong>Current is what hurts you, and voltage is what pushes it through you.</strong> Dry skin is a few tens of kilohms or more, so the 7.4 V of a 2S LiPo can't push a dangerous current through your body. Mains voltage and high-voltage supplies can, so treat them with respect.</li>
+  <li><strong>Current is what hurts you, and voltage is what pushes it through you.</strong> Dry skin is a few tens of kilohms or more, so the 7.4 V of a 2S LiPo can't push a dangerous current through your body. Mains voltage and high-voltage supplies can, and need proper precautions.</li>
   <li><strong>Lithium batteries are the real hazard on a low-voltage bench.</strong> As the battery simulator showed, a short can draw hundreds of amps. That melts wires, welds tools and can start a fire. Insulate exposed leads, charge in a LiPo bag, and never charge unattended.</li>
   <li><strong>Use a current-limited bench supply for first power-up.</strong> Set the current limit just above what you expect. If something's shorted, the supply limits the current instead of the board burning. (More on this in Module 14.)</li>
   <li><strong>ESD:</strong> static from your body can kill sensitive chips without you feeling anything. Use the wrist strap at the bench.</li>
@@ -381,7 +382,7 @@
 <p>Problems drawn from real hardware. Each takes a few steps. Enter numbers to check your reasoning as you go, or open the worked solutions and discussion. The simulators above are useful for sanity-checking.</p>
 
 <div class="chal">
-  <div class="ch"><span class="cn">Exercise 1</span><span class="cd">Sizing · ●●○</span><span class="ctitle">How big a battery?</span></div>
+  <div class="ch"><span class="cn">Exercise 1</span><span class="cd">Sizing · ●●○</span><span class="ctitle">Sizing a battery</span></div>
   <div class="cbody">
     <p>A remote sensor station runs a microcontroller board, a radio and a GPS receiver from one 2S LiPo. It has to run for 5 hours 10 minutes between charges.</p>
     <div class="given"><b>Given</b>
@@ -392,10 +393,10 @@
     </div>
     <div class="check" data-ans="330" data-tol="1%" data-unit="mA"><p>(a) Total current draw?</p><div class="solution"><p>180 + 120 + 30 = 330 mA. All three loads hang off the same pack, so their currents add.</p></div></div>
     <div class="check" data-ans="2130" data-tol="3%" data-unit="mAh"><p>(b) Minimum <em>rated</em> capacity, accounting for the 80 % usable fraction?</p>
-      <div class="miss" data-val="1705"><p>That's the capacity you'll actually <em>use</em>. The pack's rating has to be bigger, because only 80 % of it is usable.</p></div>
+      <div class="miss" data-val="1705"><p>That's the capacity actually <em>used</em>. The pack's rating has to be bigger, because only 80 % of it is usable.</p></div>
       <div class="hint">Total time = 5 h 10 min ≈ 5.17 h. Capacity used = current × time. Then divide by 0.8.</div>
       <div class="solution"><p>Used: 0.33 A × 5.17 h ≈ 1.71 Ah. Rated: 1.71 / 0.8 ≈ 2.13 Ah, so you'd pick a 2200 mAh pack, or a bigger one if the weight budget allows.</p></div></div>
-    <details><summary>Discussion: what did we leave out?</summary><p>Current isn't constant. The radio transmits in bursts at maybe 5× its average current, and those peaks cause sag (Section 6). Heaters, motors and solenoids add large short-term loads too. Low temperature cuts usable capacity further. A real power budget lists every load with its average and peak current, and that's exactly what you'll build in Module 7.</p></details>
+    <details><summary>Discussion: what this leaves out</summary><p>Current isn't constant. The radio transmits in bursts at maybe 5× its average current, and those peaks cause sag (Section 6). Heaters, motors and solenoids add large short-term loads too. Low temperature cuts usable capacity further. A real power budget lists every load with its average and peak current; Module 7 builds one.</p></details>
   </div>
 </div>
 
@@ -435,7 +436,7 @@
       <div class="solution"><p>\(R = V/I = 0.1 / 2 = 0.05\ \Omega = 50\ \text{m}\Omega\).</p></div></div>
     <div class="check" data-ans="0.2" data-tol="2%" data-unit="W"><p>(b) Power dissipated in the shunt at 2 A?</p>
       <div class="solution"><p>\(P = I^2R = 4 \times 0.05 = 0.2\ \text{W}\) (or \(V I = 0.1 \times 2\)). With 50 % derating, choose a part rated ≥ 0.4 W, for example a ½ W 1206 current-sense resistor.</p></div></div>
-    <details><summary>Discussion: why not make the shunt bigger, to get a bigger signal?</summary><p>A bigger shunt gives a bigger signal that's easier to measure, but it wastes more power, steals more voltage from the valve, and gets hotter. 100 mV is too small to feed straight into an ADC, so in Module 10 you'll amplify it with a current-sense amplifier. That's the standard trade-off: a small shunt plus gain.</p></details>
+    <details><summary>Discussion: why not make the shunt bigger, to get a bigger signal?</summary><p>A bigger shunt gives a bigger signal that's easier to measure, but it wastes more power, steals more voltage from the valve, and gets hotter. 100 mV is too small to feed straight into an ADC, so in Module 10 it's amplified with a current-sense amplifier. That's the standard trade-off: a small shunt plus gain.</p></details>
   </div>
 </div>
 </section>
@@ -451,7 +452,7 @@
       <li>Ohm's law on a bench supply: sweeping V and plotting I</li>
       <li>A ¼ W resistor at full power, under the thermal camera</li>
       <li>Measuring a battery's internal resistance with a load resistor</li>
-      <li>The "blown fuse" demo: current mode across a supply (with a current-limited supply!)</li>
+      <li>The "blown fuse" demo: current mode across a supply, using a current-limited supply</li>
     </ol>
   </div>
 </div>
@@ -461,9 +462,9 @@
   <ol>
     <li><b>Read and measure.</b> Read each resistor's colour code, then measure it with power off. Is it within the tolerance band (often ±1 % or ±5 %)?</li>
     <li><b>Verify Ohm's law.</b> Put the 1 kΩ across the supply. Step the voltage from 0 to 10 V in 2 V steps, measuring the current in series each time. Plot I against V. The slope should be 1/R.</li>
-    <li><b>Feel the derating rule.</b> Set the supply to 3.4 V across the 47 Ω ¼ W resistor (≈ 0.25 W). After a minute, check its temperature with an IR thermometer, or carefully with a fingertip. Hot.</li>
+    <li><b>Feel the derating rule.</b> Set the supply to 3.4 V across the 47 Ω ¼ W resistor (≈ 0.25 W). After a minute, check its temperature with an IR thermometer, or carefully with a fingertip. It will be hot.</li>
     <li><b>Measure internal resistance.</b> Measure the AA cell's open-circuit voltage. Connect the 10 Ω load and measure again. Calculate \(R_\text{int} = (V_\text{oc} - V_\text{load}) / I\).</li>
-    <li><b>The long-wire problem.</b> Pass 1 A through 5 m of thin wire (current-limit the supply!). Measure the voltage drop end to end and calculate the wire's resistance per metre. Compare it with the AWG table.</li>
+    <li><b>The long-wire problem.</b> Pass 1 A through 5 m of thin wire (current-limit the supply). Measure the voltage drop end to end and calculate the wire's resistance per metre. Compare it with the AWG table.</li>
   </ol>
   <div class="record"><b>What you should see:</b> a straight V–I line whose slope is 1/R, an AA cell with a few tenths of an ohm inside it, and a thin wire whose Ω/m matches the gauge table to within a few percent.</div>
 </div>
@@ -489,8 +490,8 @@
 </div>
 <h3>Further reading</h3>
 <ul class="small">
-  <li><em>The Art of Electronics</em> (Horowitz &amp; Hill), chapter 1.1: the classic, practical treatment.</li>
-  <li><em>Practical Electronics for Inventors</em> (Scherz &amp; Monk), chapter 2: gentler, with lots of pictures.</li>
+  <li><em>The Art of Electronics</em> (Horowitz &amp; Hill), chapter 1.1: a practical treatment.</li>
+  <li><em>Practical Electronics for Inventors</em> (Scherz &amp; Monk), chapter 2: a more introductory treatment, well illustrated.</li>
 </ul>
 </section>
 
@@ -527,10 +528,10 @@ function setVerdict(el, cls, html){ el.className = 'verdict ' + cls; el.innerHTM
     $('#oLoad').textContent = Math.round(load*100) + ' %';
     $('#oLoadS').className = 'stat ' + (load > 1 ? 'bad' : load > 0.5 ? 'warn' : 'ok');
     const v = $('#oVerdict');
-    if (load > 2) setVerdict(v, 'bad', '<b>Smoke.</b> At over twice its rating the resistor overheats badly. Expect discolouration, a burning smell, and a resistance that drifts or goes open.');
+    if (load > 2) setVerdict(v, 'bad', '<b>Far over rating.</b> At more than twice its rating the resistor overheats badly. Expect discolouration, a burning smell, and a resistance that drifts or goes open.');
     else if (load > 1) setVerdict(v, 'bad', '<b>Over rating.</b> The resistor runs hotter than it\'s designed for. It may survive a while, but it won\'t last.');
     else if (load > 0.5) setVerdict(v, 'warn', '<b>Within rating, but above the 50 % derating rule.</b> Fine on the bench, but pick a bigger part for anything that has to be reliable.');
-    else setVerdict(v, 'ok', '<b>Comfortable.</b> Below half the rating, so this part will run cool and last.');
+    else setVerdict(v, 'ok', '<b>Within the derating rule.</b> Below half the rating, so this part runs cool and lasts.');
   }
   ['#oV','#oR'].forEach(s => $(s).addEventListener('input', upd));
   upd();
@@ -648,8 +649,8 @@ function setVerdict(el, cls, html){ el.className = 'verdict ' + cls; el.innerHTM
     $('#bRun').textContent = hrs >= 1 ? fmt(hrs, 3) + ' h' : fmt(hrs*60, 3) + ' min';
     $('#bIsc').textContent = si(Isc, 'A');
     const v = $('#bVerdict');
-    if (Vt < Vth) setVerdict(v, 'bad', `<b>Brown-out!</b> The terminal voltage (${si(Vt,'V')}) is below what the electronics need (${fmt(Vth,3)} V). The microcontroller resets.`);
-    else if (Vt - Vth < 0.5) setVerdict(v, 'warn', `<b>Close call.</b> Only ${si(Vt - Vth,'V')} of headroom. A colder pack or a bigger current spike would push it over.`);
+    if (Vt < Vth) setVerdict(v, 'bad', `<b>Brown-out.</b> The terminal voltage (${si(Vt,'V')}) is below what the electronics need (${fmt(Vth,3)} V). The microcontroller resets.`);
+    else if (Vt - Vth < 0.5) setVerdict(v, 'warn', `<b>Little margin.</b> Only ${si(Vt - Vth,'V')} of headroom. A colder pack or a bigger current spike would push it over.`);
     else setVerdict(v, 'ok', `<b>OK.</b> ${si(Vt - Vth,'V')} of headroom above the brown-out threshold. The battery is losing ${si(I*I*R,'W')} as heat inside itself.`);
     w.redraw();
   }
@@ -743,10 +744,10 @@ function setVerdict(el, cls, html){ el.className = 'verdict ' + cls; el.innerHTM
     } else if (m === 'A'){
       if (!pw){ r = '0.00 mA'; cls = 'warn'; msg = '<b>Reads 0.</b> No source, no current.'; }
       else if (p === 'ser'){ r = '3.00 mA'; cls = 'ok'; msg = '<b>Good measurement.</b> All the loop current flows through the meter: 9 V ÷ 3 kΩ = 3 mA.'; }
-      else if (p === 'r2'){ r = '9.00 mA'; cls = 'bad'; msg = '<b>Wrong connection.</b> The near-zero-ohm ammeter shorts out R2, so the current triples to 9 V ÷ 1 kΩ. It\'s harmless here, but you\'re measuring a circuit you broke.'; bad = true; }
-      else { r = '0.00 A'; cls = 'bad'; msg = '<b>Short circuit.</b> In amps mode the meter is almost a wire, and here it\'s in parallel with the battery, so it shorts it. Amps flow, the meter\'s fuse blows (if you\'re lucky) and the display drops to zero. On a LiPo it can be hundreds of amps: melted probes, burns, fire.'; bad = true; }
+      else if (p === 'r2'){ r = '9.00 mA'; cls = 'bad'; msg = '<b>Wrong connection.</b> The near-zero-ohm ammeter shorts out R2, so the current triples to 9 V ÷ 1 kΩ. It\'s harmless here, but the meter has changed the circuit it\'s measuring.'; bad = true; }
+      else { r = '0.00 A'; cls = 'bad'; msg = '<b>Short circuit.</b> In amps mode the meter is almost a wire, and here it\'s in parallel with the battery, so it shorts it. Amps flow, the meter\'s fuse blows and the display drops to zero. On a LiPo it can be hundreds of amps: melted probes, burns, fire.'; bad = true; }
     } else {
-      if (pw){ r = '?.??'; cls = 'bad'; msg = '<b>Don\'t.</b> Resistance mode works by pushing its own small current. With the circuit powered the reading is meaningless, and you can damage the meter. Power off first.'; bad = true; }
+      if (pw){ r = '?.??'; cls = 'bad'; msg = '<b>Invalid measurement.</b> Resistance mode works by pushing its own small current. With the circuit powered the reading is meaningless, and you can damage the meter. Power off first.'; bad = true; }
       else if (p === 'r2'){ r = '2.00 kΩ'; cls = 'ok'; msg = '<b>Good measurement.</b> With the battery removed there\'s no other path around R2, so you read it directly. (In a real circuit, other paths in parallel can fool you.)'; }
       else if (p === 'bat'){ r = '3.00 kΩ'; cls = 'ok'; msg = '<b>Good measurement, and a useful one.</b> Across the empty battery terminals you see R1 + R2 in series = 3 kΩ. That\'s the total load the battery will see.'; }
       else { r = 'OL'; cls = 'warn'; msg = '<b>OL (open loop).</b> Across the break, the only other path goes through the missing battery, so there\'s no complete path.'; }

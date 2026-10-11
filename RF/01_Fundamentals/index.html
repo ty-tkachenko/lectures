@@ -55,9 +55,9 @@
 <!-- ============ 1 DECIBELS ============ -->
 <section class="sec" id="db" data-short="Decibels">
 <h2>Decibels <a class="vjump" data-t="2:00"></a></h2>
-<p>A telemetry radio transmits about 100 mW. By the time the signal reaches the ground station a few kilometres away, perhaps 0.000 000 000 01 mW arrives. Numbers spanning that many orders of magnitude are miserable to multiply, so RF engineers use a logarithmic scale, the <strong>decibel</strong>:</p>
+<p>A telemetry radio transmits about 100 mW. By the time the signal reaches the ground station a few kilometres away, perhaps 0.000 000 000 01 mW arrives. Numbers spanning that many orders of magnitude are awkward to multiply, so RF engineers use a logarithmic scale, the <strong>decibel</strong>:</p>
 <div class="eq">$$\text{ratio in dB} = 10\log_{10}\frac{P_2}{P_1} \qquad\qquad P\ \text{in dBm} = 10\log_{10}\frac{P}{1\ \text{mW}}$$<div class="n">dB is a ratio (gain or loss). dBm is an absolute power referenced to 1 mW.</div></div>
-<p>The payoff: <strong>multiplying becomes adding</strong>. An amplifier with 20 dB of gain followed by a cable with 3 dB of loss gives 17 dB overall. Most of RF system design, from transmit chains to link budgets, is adding and subtracting dB.</p>
+<p>The advantage: <strong>multiplying becomes adding</strong>. An amplifier with 20 dB of gain followed by a cable with 3 dB of loss gives 17 dB overall. Most of RF system design, from transmit chains to link budgets, is adding and subtracting dB.</p>
 
 <div class="grid2">
 <div class="tablewrap"><table>
@@ -109,7 +109,7 @@
 </div>
 <div class="example">
   <span class="xk">Mental math</span>
-  <p>Break any dB value into 10s and 3s. 13 dB = 10 + 3, so ×10 × 2 = ×20. 27 dBm = 30 − 3, so 1 W ÷ 2 = 500 mW. With a little practice you'll never reach for a calculator for this.</p>
+  <p>Break any dB value into 10s and 3s. 13 dB = 10 + 3, so ×10 × 2 = ×20. 27 dBm = 30 − 3, so 1 W ÷ 2 = 500 mW. With practice this needs no calculator.</p>
 </div>
 <details class="exercise">
   <summary><span class="ek">Design exercise</span><span class="et">Signal level at the ground receiver</span></summary>
@@ -165,7 +165,7 @@
 <h3>Phase is just time delay, measured in cycles</h3>
 <p>The <strong>electrical length</strong> of a line is its delay expressed as a fraction of one cycle, in degrees:</p>
 <div class="eq">$$\theta = 360^\circ \cdot \frac{\ell}{\lambda} = 360^\circ \cdot f \cdot t_\text{delay}$$</div>
-<p>A line that delays the signal by a quarter of a period has an electrical length of 90°, whatever its physical length. That's why the same 2 cm trace is "electrically short" for a 10 MHz clock and a substantial 40° at 2.4 GHz. Matching networks, power splitters and antenna feeds are all built from lines of precise electrical length, so you'll use this idea constantly in Module 2. (A related idea, <em>group delay</em>, describes how long the information in a modulated signal takes to get through, and comes back with filters in Module 3.)</p>
+<p>A line that delays the signal by a quarter of a period has an electrical length of 90°, whatever its physical length. That's why the same 2 cm trace is "electrically short" for a 10 MHz clock and a substantial 40° at 2.4 GHz. Matching networks, power splitters and antenna feeds are all built from lines of precise electrical length, and Module 2 relies on this idea throughout. (A related idea, <em>group delay</em>, describes how long the information in a modulated signal takes to get through, and comes back with filters in Module 3.)</p>
 <div class="note">
   <span class="ni">↯</span>
   <div><span class="nt">It isn't only radios: fast digital edges count too</span>A digital edge with rise time \(t_r\) contains significant energy up to roughly \(0.35/t_r\). A 1 ns edge on an SPI or Ethernet line behaves like a 350 MHz signal, so a long trace or ribbon cable starts acting like a transmission line, ringing and all. This is where RF and high-speed digital design meet.</div>
@@ -174,7 +174,7 @@
   <summary><span class="ek">Design exercise</span><span class="et">The longest "lumped" trace at 2.4 GHz</span></summary>
   <div class="eb">
     <p>A 2.4 GHz video transmitter sits on an FR-4 board (ε<sub>eff</sub> ≈ 3.3). You'd like to route its output without impedance control.</p>
-    <div class="check" data-ans="6.9" data-tol="3%" data-unit="mm"><p>Up to what trace length can you get away with it, by the λ/10 rule?</p>
+    <div class="check" data-ans="6.9" data-tol="3%" data-unit="mm"><p>Up to what trace length is that acceptable, by the λ/10 rule?</p>
       <div class="miss" data-val="12.5"><p>That uses the free-space wavelength. On FR-4 it's shorter by √3.3.</p></div>
       <div class="solution"><p>\(\lambda = c/(f\sqrt{\varepsilon_\text{eff}}) = 3\times10^8/(2.4\times10^9 \times 1.817) \approx 68.8\ \text{mm}\), so λ/10 ≈ 6.9 mm. Anything longer, which is nearly any real route, should be a 50 Ω line.</p></div>
     </div>
@@ -187,7 +187,7 @@
 <h2>Characteristic impedance <a class="vjump" data-t="12:00"></a></h2>
 <p>Every pair of conductors has inductance along its length and capacitance between them, spread evenly per metre. A wave travelling down the line has to charge that capacitance through that inductance, and the ratio of voltage to current in the travelling wave settles at a fixed value, the <strong>characteristic impedance</strong>:</p>
 <div class="eq">$$Z_0 = \sqrt{\frac{L'}{C'}} \qquad\qquad Z_0^\text{coax} = \frac{60}{\sqrt{\varepsilon_r}}\ln\frac{D}{d}$$<div class="n">L′ and C′ are inductance and capacitance per metre. For coax, D is the dielectric (shield) diameter and d the centre conductor diameter.</div></div>
-<p>Two facts surprise almost everyone:</p>
+<p>Two properties of Z₀ are often misunderstood:</p>
 <ul>
   <li><strong>Z₀ doesn't depend on length.</strong> A 50 Ω cable is 50 Ω whether it's 1 cm or 100 m long. Z₀ is set by the cross-section: the conductor sizes, their spacing, and the dielectric.</li>
   <li><strong>You can't measure it with an ohmmeter.</strong> Put a multimeter across an unterminated 50 Ω cable and it reads open circuit. Z₀ is the ratio a <em>travelling wave</em> sees, not a DC resistance.</li>
@@ -216,7 +216,7 @@
   </div>
 </div>
 <h3>Why 50 Ω?</h3>
-<p>For air-filled coax of a given outer size, loss is lowest near 77 Ω and power handling is highest near 30 Ω. 50 Ω is a compromise between the two that stuck in the 1930s, and today nearly every RF connector, cable, amplifier and instrument is built for it. (Video and TV systems standardised on 75 Ω, which is why that coax is different.) On our PCBs, a 50 Ω microstrip is a trace of a particular width over a ground plane; you'll calculate it in Modules 2 and 4.</p>
+<p>For air-filled coax of a given outer size, loss is lowest near 77 Ω and power handling is highest near 30 Ω. 50 Ω is a compromise between the two that stuck in the 1930s, and today nearly every RF connector, cable, amplifier and instrument is built for it. (Video and TV systems standardised on 75 Ω, which is why that coax is different.) On our PCBs, a 50 Ω microstrip is a trace of a particular width over a ground plane; Modules 2 and 4 show how to calculate its width.</p>
 <details class="exercise">
   <summary><span class="ek">Design exercise</span><span class="et">Design a 50 Ω PTFE coax</span></summary>
   <div class="eb">
@@ -233,7 +233,7 @@
 <!-- ============ 4 REFLECTIONS ============ -->
 <section class="sec" id="refl" data-short="Reflections &amp; VSWR">
 <h2>Reflections, VSWR and return loss <a class="vjump" data-t="16:00"></a></h2>
-<p>A wave travelling down a 50 Ω line has \(V/I = 50\ \Omega\). When it reaches a load that isn't 50 Ω, it can't keep that ratio and match the load at the same time. Nature resolves the conflict by sending part of the wave back. The fraction of the voltage that reflects is the <strong>reflection coefficient</strong> Γ (gamma):</p>
+<p>A wave travelling down a 50 Ω line has \(V/I = 50\ \Omega\). When it reaches a load that isn't 50 Ω, it can't keep that ratio and match the load at the same time. Part of the wave reflects back as a result. The fraction of the voltage that reflects is the <strong>reflection coefficient</strong> Γ (gamma):</p>
 <div class="eq">$$\Gamma = \frac{Z_L - Z_0}{Z_L + Z_0} \qquad\qquad T = 1 + \Gamma$$<div class="n">Γ for the reflected voltage, T for the voltage passed into the load</div></div>
 <p>Three special cases are worth memorising: a <strong>matched</strong> load (Γ = 0) absorbs everything; an <strong>open</strong> (Γ = +1) reflects everything with the same sign, so the voltage at the end doubles; a <strong>short</strong> (Γ = −1) reflects everything inverted, so the voltage there is zero.</p>
 <p>Power splits cleanly: the fraction \(|\Gamma|^2\) reflects and \(1 - |\Gamma|^2\) is delivered. (T can exceed 1 for a high-impedance load, but that's voltage, not power. No energy is created.) The incident and reflected waves interfere to form a <strong>standing wave</strong> whose peaks and dips stay fixed in place. Engineers describe mismatch in three equivalent ways:</p>
@@ -282,10 +282,10 @@
 <details class="exercise">
   <summary><span class="ek">Design exercise</span><span class="et">A 75 Ω antenna on a 50 Ω radio</span></summary>
   <div class="eb">
-    <p>Someone salvaged a 75 Ω antenna and connected it straight to the 50 Ω telemetry radio.</p>
+    <p>A 75 Ω antenna is connected directly to the 50 Ω telemetry radio.</p>
     <div class="check" data-ans="13.98" data-tol="0.15" data-unit="dB"><p>What return loss will you measure?</p>
       <div class="miss" data-val="0.2"><p>That's |Γ|. Return loss is \(-20\log_{10}|\Gamma|\) in dB.</p></div>
-      <div class="solution"><p>\(\Gamma = (75-50)/(75+50) = 0.2\), so return loss = \(-20\log_{10}(0.2) \approx 14\ \text{dB}\), and VSWR = 1.5:1. Only 4 % of the power reflects (0.18 dB), which is honestly fine. A 75/50 mismatch isn't the disaster people assume.</p></div>
+      <div class="solution"><p>\(\Gamma = (75-50)/(75+50) = 0.2\), so return loss = \(-20\log_{10}(0.2) \approx 14\ \text{dB}\), and VSWR = 1.5:1. Only 4 % of the power reflects (0.18 dB), which is acceptable for most links. A 75/50 mismatch is much less serious than often assumed.</p></div>
     </div>
   </div>
 </details>
@@ -360,7 +360,7 @@
     <p>A VNA sweep of the rocket's GPS cable assembly shows a return-loss ripple repeating every 125 MHz. The cable is PTFE, velocity factor 0.70.</p>
     <div class="check" data-ans="84" data-tol="2%" data-unit="cm"><p>How far apart are the two discontinuities causing it?</p>
       <div class="miss" data-val="168"><p>That's the round-trip distance. The ripple period is set by \(2\tau\), so halve it.</p></div>
-      <div class="solution"><p>\(\tau = 1/(2\Delta f) = 4\ \text{ns}\), so the distance is \(0.70 \times 3\times10^8 \times 4\ \text{ns} \approx 0.84\ \text{m}\). If the assembly is 84 cm long, the two culprits are the connectors at each end.</p></div>
+      <div class="solution"><p>\(\tau = 1/(2\Delta f) = 4\ \text{ns}\), so the distance is \(0.70 \times 3\times10^8 \times 4\ \text{ns} \approx 0.84\ \text{m}\). If the assembly is 84 cm long, the two discontinuities are the connectors at each end.</p></div>
     </div>
   </div>
 </details>
@@ -397,7 +397,7 @@
     </div>
   </div>
 </div>
-<p>For a 915 MHz telemetry board with short traces, FR-4 is perfectly fine: a few centimetres of trace cost around a tenth of a dB. The material choice starts to matter for long runs, higher frequencies (5.8 GHz video links) and filters, where Dk's tolerance and stability over temperature also come into play. Module 4 covers stackups and material selection in detail.</p>
+<p>For a 915 MHz telemetry board with short traces, FR-4 is adequate: a few centimetres of trace cost around a tenth of a dB. The material choice starts to matter for long runs, higher frequencies (5.8 GHz video links) and filters, where Dk's tolerance and stability over temperature also come into play. Module 4 covers stackups and material selection in detail.</p>
 </section>
 
 <!-- ============ 8 POLARIZATION ============ -->
@@ -425,7 +425,7 @@
 </div>
 <div class="note rocket">
   <span class="ni">🚀</span>
-  <div><span class="nt">Why this matters on a rocket</span>The rocket pitches over after launch, may roll, and swings under the parachute during descent. A linear antenna on the airframe and a linear antenna at the ground station will drift in and out of alignment, and the link fades. A circularly polarized ground antenna trades a constant 3 dB for never hitting that deep null, which is usually a good deal. Antenna patterns and choices are covered in Module 9.</div>
+  <div><span class="nt">Why this matters on a rocket</span>The rocket pitches over after launch, may roll, and swings under the parachute during descent. A linear antenna on the airframe and a linear antenna at the ground station will drift in and out of alignment, and the link fades. A circularly polarized ground antenna trades a constant 3 dB for never hitting that deep null, which is usually a worthwhile trade. Antenna patterns and choices are covered in Module 9.</div>
 </div>
 <details class="exercise">
   <summary><span class="ek">Design exercise</span><span class="et">When does a linear ground antenna lose 6 dB?</span></summary>
@@ -462,7 +462,7 @@
       <div class="solution"><p>27 − 0.9 (cable) − 0.2 (connectors) − 0.46 (mismatch) + 2 (antenna) = <b>27.44 dBm</b>.</p></div></div>
     <div class="check" data-ans="555" data-tol="3%" data-unit="mW"><p>(c) …and in milliwatts?</p>
       <div class="solution"><p>\(10^{27.44/10} \approx 555\ \text{mW}\). Without the antenna gain and losses it would be the radio's 500 mW. The 2 dBi of gain more than makes up for 1.56 dB of losses.</p></div></div>
-    <details><summary>Discussion: where would you look to improve it?</summary><p>The cable is the biggest loss. Moving the radio closer to the antenna, or using a lower-loss cable, buys back most of a dB. Re-tuning the antenna in the real nosecone to 15 dB return loss cuts the mismatch loss from 0.46 to 0.14 dB. Neither is huge on its own, but each dB is about 12 % more range in free space, and the margins add up across the whole link budget (Module 6).</p></details>
+    <details><summary>Discussion: where would you look to improve it?</summary><p>The cable is the biggest loss. Moving the radio closer to the antenna, or using a lower-loss cable, buys back most of a dB. Re-tuning the antenna in the real nosecone to 15 dB return loss cuts the mismatch loss from 0.46 to 0.14 dB. Neither is large on its own, but each dB is about 12 % more range in free space, and the margins add up across the whole link budget (Module 6).</p></details>
   </div>
 </div>
 
@@ -520,13 +520,13 @@
   </div>
 </div>
 <div class="lab">
-  <h3>Seeing reflections for real</h3>
-  <div class="parts"><span>NanoVNA (or any VNA)</span><span>SOL calibration kit</span><span>Two SMA cables of different lengths</span><span>SMA barrel and a cheap adapter</span><span>The telemetry antenna</span></div>
+  <h3>Measuring reflections</h3>
+  <div class="parts"><span>NanoVNA (or any VNA)</span><span>SOL calibration kit</span><span>Two SMA cables of different lengths</span><span>SMA barrel and a low-quality adapter</span><span>The telemetry antenna</span></div>
   <ol>
     <li><b>Calibrate</b> at the end of a cable with the open, short and load standards.</li>
     <li><b>Look at the three standards</b> as return loss and as a Smith chart. Open and short reflect everything (0 dB return loss); the load reflects almost nothing.</li>
     <li><b>Measure a cable's length with TDR.</b> Leave the far end open, switch to time-domain mode, set the velocity factor, and read off the length. Compare with a tape measure.</li>
-    <li><b>Find a bad adapter.</b> Insert a cheap adapter partway along a cable run. Spot it in the TDR, then look for the matching ripple in the return loss and check its period against \(1/(2\tau)\).</li>
+    <li><b>Find a bad adapter.</b> Insert the low-quality adapter partway along a cable run. Spot it in the TDR, then look for the matching ripple in the return loss and check its period against \(1/(2\tau)\).</li>
     <li><b>Antenna in situ.</b> Measure the antenna's return loss on the bench, then installed in the nosecone section. Note how far the best match shifts.</li>
   </ol>
   <div class="record"><b>What you should see:</b> cable lengths within a centimetre or two, a ripple whose spacing matches the adapter's distance, and an antenna whose resonance moves noticeably once installed.</div>
@@ -555,7 +555,7 @@
 <h3>Go deeper</h3>
 <p class="small">The full treatment, with derivations and harder problems, is in the advanced theory pages:</p>
 <div class="deeper">
-  <a data-deep="signals_theory.html#db">Decibels, done right<small>Every dB unit, a converter, and the common pitfalls</small></a>
+  <a data-deep="signals_theory.html#db">Decibels in detail<small>Every dB unit, a converter, and the common pitfalls</small></a>
   <a data-deep="matching_theory.html#wire">When does a wire become a transmission line?<small>Plus the distributed RLGC model and telegrapher's equations</small></a>
   <a data-deep="matching_theory.html#refl">Reflections and standing waves<small>Complex loads, mismatch loss and the full VSWR table</small></a>
   <a data-deep="matching_theory.html#tdr">Time-domain reflectometry<small>Interpreting real TDR traces, including vias and bond wires</small></a>
