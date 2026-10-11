@@ -101,6 +101,40 @@ function mix(a, b, f){
 }
 function isDark(){ return false; }   // the site is light-only
 
+/* schematic symbols, drawn in the same thin-line style as the plots */
+function wire(ctx, pts, color, w=1.6){ line(ctx, pts, color || col.ink, w); }
+function resistor(ctx, x0, y0, x1, y1, o={}){
+  // zigzag centred between (x0,y0) and (x1,y1), with leads to both ends
+  const dx = x1 - x0, dy = y1 - y0, L = Math.hypot(dx, dy), ux = dx/L, uy = dy/L, nx = -uy, ny = ux;
+  const body = Math.min(o.len || 48, L*0.8), a = (L - body)/2, amp = o.amp || 6, n = 6;
+  const P = (s, k) => [x0 + ux*s + nx*k, y0 + uy*s + ny*k];
+  const pts = [P(0,0), P(a,0)];
+  for (let i = 0; i < n; i++) pts.push(P(a + (i + .5)*body/n, i % 2 ? -amp : amp));
+  pts.push(P(a + body, 0), P(L, 0));
+  line(ctx, pts, o.color || col.ink, o.w || 1.6);
+}
+function battery(ctx, x, y, o={}){
+  // vertical cell centred at (x,y): long plate (+) on top, short thick plate below; leads are the caller's
+  const g = o.gap || 5, c = o.color || col.ink;
+  line(ctx, [[x - 14, y - g], [x + 14, y - g]], c, 1.6);
+  line(ctx, [[x - 7, y + g], [x + 7, y + g]], c, 3.5);
+  text(ctx, '+', x + 18, y - g - 7, {color: col.ink2});
+}
+function meter(ctx, x, y, letter, o={}){
+  ctx.save(); ctx.fillStyle = '#fff'; ctx.strokeStyle = o.color || col.ink; ctx.lineWidth = o.w || 1.6;
+  ctx.beginPath(); ctx.arc(x, y, o.r || 16, 0, 2*Math.PI); ctx.fill(); ctx.stroke(); ctx.restore();
+  text(ctx, letter, x, y + 1, {align:'center', bold:true, color: o.color || col.ink});
+}
+function arrow(ctx, x0, y0, x1, y1, color, w=1.4){
+  const a = Math.atan2(y1 - y0, x1 - x0), h = 7;
+  line(ctx, [[x0, y0], [x1, y1]], color, w);
+  line(ctx, [[x1 - h*Math.cos(a - .4), y1 - h*Math.sin(a - .4)], [x1, y1], [x1 - h*Math.cos(a + .4), y1 - h*Math.sin(a + .4)]], color, w);
+}
+function dashedBox(ctx, x, y, w, h, label){
+  ctx.save(); ctx.setLineDash([4, 4]); ctx.strokeStyle = col.line2; ctx.lineWidth = 1; ctx.strokeRect(x + .5, y + .5, w, h); ctx.restore();
+  if (label) text(ctx, label, x + 6, y + 10, {color: col.muted});
+}
+
 /* number formatting */
 function si(v, unit, digits=3){
   const a = Math.abs(v);
@@ -129,7 +163,7 @@ function verdict(el, cls, html){ if (typeof el === 'string') el = document.query
 
 const dB = x => 10*Math.log10(x), undB = d => Math.pow(10, d/10);
 
-window.Plot = {col, readCols, fit, widget, animate, redrawAll, lin, log, ticks, logTicks, axes, clip, line, text, dot, rrect, rgba, mix, isDark, si, fmt, dB, undB, seg, verdict, reduced, FONT, MONO};
+window.Plot = {col, readCols, fit, widget, animate, redrawAll, lin, log, ticks, logTicks, axes, clip, line, text, dot, rrect, rgba, mix, isDark, wire, resistor, battery, meter, arrow, dashedBox, si, fmt, dB, undB, seg, verdict, reduced, FONT, MONO};
 
 readCols();
 window.addEventListener('themechange', redrawAll);

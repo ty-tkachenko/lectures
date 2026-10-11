@@ -87,8 +87,8 @@
     <g stroke="var(--ink)" stroke-width="2" fill="none">
       <path d="M60 60v90"/><path d="M40 98h40M48 108h24" />
       <path d="M60 60h120M260 60h90M430 60h90"/>
-      <rect x="180" y="40" width="80" height="40" rx="8" fill="var(--panel)"/>
-      <rect x="350" y="40" width="80" height="40" rx="8" fill="var(--panel)"/>
+      <rect x="180" y="40" width="80" height="40" fill="#fff"/>
+      <rect x="350" y="40" width="80" height="40" fill="#fff"/>
       <path d="M220 80v70M390 80v70M60 150h500"/>
       <path d="M560 150v8M550 158h20M554 163h12M558 168h4"/>
     </g>
@@ -141,7 +141,7 @@
       </div>
     </div>
     <div>
-      <canvas id="cvOhm" style="height:250px" aria-label="Animated circuit: dots show current flowing around the loop; the resistor glows as it heats"></canvas>
+      <canvas id="cvOhm" style="height:250px" aria-label="Schematic of a cell and a resistor; dots show current flowing around the loop"></canvas>
       <div class="readout">
         <div class="stat"><div class="k">Current</div><div class="v" id="oI"></div></div>
         <div class="stat"><div class="k">Power in R</div><div class="v" id="oPw"></div></div>
@@ -356,7 +356,7 @@
       <p class="small">Circuit: a 9 V battery, R1 = 1 kΩ and R2 = 2 kΩ in series, so 3 mA flows.</p>
     </div>
     <div>
-      <svg id="svMeter" viewBox="0 0 560 290" role="img" aria-label="Schematic with meter connection"></svg>
+      <canvas id="cvMeter" style="height:290px" aria-label="Schematic showing where the meter is connected and what it reads"></canvas>
       <div class="verdict" id="mVerdict"></div>
     </div>
   </div>
@@ -539,34 +539,21 @@ function setVerdict(el, cls, html){ el.className = 'verdict ' + cls; el.innerHTM
   }
   ['#oV','#oR'].forEach(s => $(s).addEventListener('input', upd));
   upd();
-  // ---- drawing: a stylised cell on the left, a real-looking resistor (with its colour code) on the right ----
-  const BAND = ['#1d1d1f','#7b4a2b','#d0392b','#ec7a1c','#f0c22e','#2f9a4a','#2f6fd6','#8a4fc8','#8e8e93','#f2f2f2'];
-  const GOLD = '#c9a23a', SILVER = '#b8bcc4';
-  function bands(R){
-    let e = Math.floor(Math.log10(R)) - 1, m = Math.round(R / Math.pow(10, e));
-    if (m >= 100){ m = Math.round(m/10); e++; }
-    return [BAND[Math.floor(m/10)], BAND[m % 10], e >= 0 ? BAND[e] : e === -1 ? GOLD : SILVER, GOLD];
-  }
+  // ---- drawing: a plain schematic, cell on the left, resistor on the right, current dots around the loop ----
   let phase = 0;
   Plot.animate($('#cvOhm'), (ctx, W, H, t, dt) => {
-    const x0 = Math.max(70, W*0.15), x1 = W - Math.max(118, W*0.24), y0 = 46, y1 = H - 48, yc = (y0+y1)/2;
-    const heat = Math.min(1, load / 2);
-    const bw = 44, bh = 104, rw = 28, rh = 92;
-    // wire loop: a soft copper-coloured track with a thin highlight
-    ctx.save();
-    ctx.lineJoin = 'round';
-    ctx.lineWidth = 6; ctx.strokeStyle = Plot.mix(col.line2, col.c4, .25);
-    Plot.rrect(ctx, x0, y0, x1 - x0, y1 - y0, 18); ctx.stroke();
-    ctx.lineWidth = 1.5; ctx.strokeStyle = Plot.rgba('#ffffff', .35);
-    Plot.rrect(ctx, x0, y0 - 1.5, x1 - x0, y1 - y0 + 3, 18); ctx.stroke();
-    ctx.restore();
-    // resistor heat glow (behind the part)
-    if (heat > 0.03){
-      const g = ctx.createRadialGradient(x1, yc, 8, x1, yc, 46 + 56*heat);
-      g.addColorStop(0, Plot.rgba(col.flame, 0.5*heat)); g.addColorStop(1, Plot.rgba(col.flame, 0));
-      ctx.fillStyle = g; ctx.fillRect(x1 - 110, yc - 110, 220, 220);
-    }
-    // current dots: conventional current leaves + (top of the cell) and goes clockwise
+    const x0 = Math.max(90, W*0.2), x1 = W - Math.max(150, W*0.3), y0 = 42, y1 = H - 46, yc = (y0 + y1)/2;
+    const rc = load > 1 ? col.bad : load > 0.5 ? col.warn : col.ink;
+    // loop, with a gap on the left for the cell
+    Plot.wire(ctx, [[x0, yc - 5], [x0, y0], [x1, y0]]);
+    Plot.wire(ctx, [[x1, y1], [x0, y1], [x0, yc + 5]]);
+    Plot.battery(ctx, x0, yc);
+    Plot.resistor(ctx, x1, y0, x1, y1, {color: rc, len: 64, amp: 8, w: load > 1 ? 2.2 : 1.6});
+    Plot.text(ctx, 'V = ' + fmt(V,3) + ' V', x0 - 24, yc, {align:'right', mono:true});
+    Plot.text(ctx, 'R = ' + si(R, 'Ω'), x1 + 18, yc - 18, {mono:true});
+    Plot.text(ctx, 'P = ' + si(P, 'W'), x1 + 18, yc, {mono:true, color: rc});
+    Plot.text(ctx, Math.round(load*100) + ' % of rating', x1 + 18, yc + 18, {color: rc});
+    // current: dots travel clockwise from the + plate (conventional current)
     if (I > 0){
       const w = x1 - x0, h = y1 - y0, L = 2*(w + h);
       const at = d => {
@@ -578,58 +565,17 @@ function setVerdict(el, cls, html){ el.className = 'verdict ' + cls; el.innerHTM
       };
       const speed = 25 + 180 * Math.min(1, Math.log10(1 + I*1e4) / Math.log10(1 + 2.4e4));
       phase += speed * dt;
-      ctx.save(); ctx.shadowColor = col.c1; ctx.shadowBlur = 7;
-      for (let d = 0; d < L; d += 24){
-        const [x, y] = at(d + phase);
-        if (Math.abs(x - x0) < bw/2 + 2 && Math.abs(y - yc) < bh/2 + 12) continue;
-        if (Math.abs(x - x1) < rw/2 + 2 && Math.abs(y - yc) < rh/2 + 4) continue;
-        Plot.dot(ctx, x, y, 3.3, col.c1);
-      }
-      ctx.restore();
-    }
-    // the cell: shaded cylinder, darker base, + terminal nub
-    ctx.save();
-    ctx.shadowColor = 'rgba(0,0,0,.2)'; ctx.shadowBlur = 12; ctx.shadowOffsetY = 4;
-    const gb = ctx.createLinearGradient(x0 - bw/2, 0, x0 + bw/2, 0);
-    gb.addColorStop(0, Plot.mix('#4d535c', '#000000', .3)); gb.addColorStop(.42, Plot.mix('#4d535c', '#ffffff', .12)); gb.addColorStop(1, Plot.mix('#4d535c', '#000000', .4));
-    ctx.fillStyle = gb; Plot.rrect(ctx, x0 - bw/2, yc - bh/2, bw, bh, 10); ctx.fill();
-    ctx.restore();
-    ctx.save(); Plot.rrect(ctx, x0 - bw/2, yc - bh/2, bw, bh, 10); ctx.clip();
-    ctx.fillStyle = 'rgba(0,0,0,.3)'; ctx.fillRect(x0 - bw/2, yc + bh/2 - 30, bw, 30);
-    ctx.restore();
-    ctx.fillStyle = Plot.mix(col.line2, '#ffffff', .2); Plot.rrect(ctx, x0 - 9, yc - bh/2 - 7, 18, 9, 3); ctx.fill();
-    Plot.text(ctx, '+', x0, yc - bh/2 + 17, {align:'center', color:'#fff', bold:true});
-    Plot.text(ctx, '−', x0, yc + bh/2 - 15, {align:'center', color:'#fff', bold:true});
-    Plot.text(ctx, fmt(V,3) + ' V', x0 - bw/2 - 12, yc, {align:'right', mono:true});
-    // the resistor: beige body that reddens as it heats, with its colour bands
-    ctx.save();
-    ctx.shadowColor = 'rgba(0,0,0,.2)'; ctx.shadowBlur = 8; ctx.shadowOffsetY = 3;
-    const base = Plot.isDark() ? '#b7a17b' : '#d9c39a';
-    const body = Plot.mix(base, '#e0451f', Math.min(1, heat*1.1));
-    const gr = ctx.createLinearGradient(x1 - rw/2, 0, x1 + rw/2, 0);
-    gr.addColorStop(0, Plot.mix(body, '#000000', .18)); gr.addColorStop(.38, Plot.mix(body, '#ffffff', .3)); gr.addColorStop(1, Plot.mix(body, '#000000', .25));
-    ctx.fillStyle = gr; Plot.rrect(ctx, x1 - rw/2, yc - rh/2, rw, rh, 12); ctx.fill();
-    ctx.restore();
-    ctx.save(); Plot.rrect(ctx, x1 - rw/2, yc - rh/2, rw, rh, 12); ctx.clip();
-    const bs = bands(R), by = [yc - rh/2 + 17, yc - rh/2 + 31, yc - rh/2 + 45, yc + rh/2 - 19];
-    bs.forEach((c, k) => { ctx.fillStyle = c; ctx.fillRect(x1 - rw/2, by[k] - 4, rw, 8); });
-    ctx.restore();
-    Plot.text(ctx, si(R, 'Ω'), x1 + rw/2 + 12, yc - 9, {mono:true});
-    Plot.text(ctx, si(P, 'W') + ' of heat', x1 + rw/2 + 12, yc + 10, {color: heat > .5 ? col.flame : col.muted});
-    // smoke above an overloaded resistor
-    if (load > 2){
-      for (let k = 0; k < 6; k++){
-        const s = (t*0.5 + k/6) % 1;
-        Plot.dot(ctx, x1 + Math.sin((t + k)*2.6)*8, yc - rh/2 - 14 - s*70, 5 + s*14, Plot.rgba(col.muted, 0.32*(1 - s)));
+      for (let d = 0; d < L; d += 22){
+        const [x, y] = at(d + phase - (yc - y0) + 2*w + h);
+        if (x === x0 && Math.abs(y - yc) < 9) continue;
+        if (x === x1 && Math.abs(y - yc) < 36) continue;
+        Plot.dot(ctx, x, y, 2.4, col.c1);
       }
     }
-    // current label on the top wire
-    const lbl = 'I = ' + si(I, 'A');
-    ctx.font = Plot.MONO; const tw = ctx.measureText(lbl).width + 22;
-    ctx.fillStyle = col.raise; ctx.strokeStyle = col.c1; ctx.lineWidth = 1.5;
-    Plot.rrect(ctx, (x0+x1)/2 - tw/2, y0 - 13, tw, 26, 13); ctx.fill(); ctx.stroke();
-    Plot.text(ctx, lbl, (x0+x1)/2, y0, {align:'center', mono:true, color: col.c1});
-    Plot.text(ctx, 'dots: conventional current, + to − (speed not to scale)', W/2, H - 14, {align:'center', color: col.muted});
+    const xm = (x0 + x1)/2;
+    Plot.arrow(ctx, xm - 22, y0 - 14, xm + 22, y0 - 14, col.c1);
+    Plot.text(ctx, 'I = ' + si(I, 'A'), xm + 30, y0 - 14, {mono:true, color: col.c1});
+    Plot.text(ctx, 'dots: conventional current, + to −, speed not to scale', W/2, H - 12, {align:'center', color: col.muted});
   });
 })();
 
@@ -655,59 +601,36 @@ function setVerdict(el, cls, html){ el.className = 'verdict ' + cls; el.innerHTM
   const w = Plot.widget($('#cvWire'), (ctx, W, H) => {
     const {V, Rw, Ri, I, m} = s; if (!V) return;
     const g = +$('#wG').value, L = +$('#wL').value;
-    // --- illustration: firing box, twin cable, igniter ---
-    const bx = 18, by = 22, bwid = 92, bht = 74;
-    const ix = W - 70, iy = by + bht/2;
-    ctx.save();
-    ctx.shadowColor = 'rgba(0,0,0,.18)'; ctx.shadowBlur = 10; ctx.shadowOffsetY = 3;
-    ctx.fillStyle = Plot.isDark() ? '#2b3038' : '#3a4250';
-    Plot.rrect(ctx, bx, by, bwid, bht, 12); ctx.fill();
-    ctx.restore();
-    ctx.fillStyle = 'rgba(255,255,255,.08)'; Plot.rrect(ctx, bx + 8, by + 8, bwid - 16, 22, 6); ctx.fill();
-    Plot.text(ctx, fmt(V,3) + ' V', bx + bwid/2, by + 19, {align:'center', mono:true, color:'#e9f3f3'});
-    Plot.text(ctx, 'FIRING BOX', bx + bwid/2, by + bht - 14, {align:'center', color:'rgba(255,255,255,.55)', bold:true});
-    Plot.dot(ctx, bx + bwid/2, by + 45, 8, col.flame); Plot.dot(ctx, bx + bwid/2, by + 45, 3, '#fff');
-    // cable: two insulated conductors, thickness follows the gauge
-    const lw = Math.max(2, 8 - (g - 14) * 0.42);
-    const x0 = bx + bwid, x1 = ix - 18, sag = 14;
-    const cable = (dy, c) => {
-      ctx.save(); ctx.lineCap = 'round'; ctx.strokeStyle = c; ctx.lineWidth = lw;
-      ctx.beginPath(); ctx.moveTo(x0, iy + dy); ctx.bezierCurveTo(x0 + (x1-x0)*0.3, iy + dy + sag, x0 + (x1-x0)*0.7, iy + dy + sag, x1, iy + dy); ctx.stroke();
-      ctx.strokeStyle = 'rgba(255,255,255,.25)'; ctx.lineWidth = Math.max(1, lw/3);
-      ctx.beginPath(); ctx.moveTo(x0, iy + dy - lw/4); ctx.bezierCurveTo(x0 + (x1-x0)*0.3, iy + dy + sag - lw/4, x0 + (x1-x0)*0.7, iy + dy + sag - lw/4, x1, iy + dy - lw/4); ctx.stroke();
-      ctx.restore();
-    };
-    cable(-7, '#d0392b'); cable(7, Plot.isDark() ? '#5b616d' : '#2a2e36');
-    Plot.text(ctx, `${L} m · ${g} AWG · ${si(2*Rw,'Ω')} round trip`, (x0 + x1)/2, iy + sag + 22, {align:'center', color: col.ink2});
-    // igniter: two leads into a bead; glows if the current clears all-fire
-    const glow = Math.max(0, Math.min(1, (m - 0.6) / 1.4));
-    if (glow > 0){
-      const gr = ctx.createRadialGradient(ix + 22, iy, 2, ix + 22, iy, 18 + 34*glow);
-      gr.addColorStop(0, Plot.rgba(col.flame, .75*glow)); gr.addColorStop(1, Plot.rgba(col.flame, 0));
-      ctx.fillStyle = gr; ctx.fillRect(ix - 40, iy - 60, 130, 120);
-    }
-    ctx.strokeStyle = col.ink2; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.moveTo(x1, iy - 7); ctx.lineTo(ix + 14, iy - 3); ctx.moveTo(x1, iy + 7); ctx.lineTo(ix + 14, iy + 3); ctx.stroke();
-    ctx.fillStyle = m >= 1 ? col.flame : Plot.mix(col.line2, col.flame, .25);
-    ctx.beginPath(); ctx.ellipse(ix + 22, iy, 11, 8, 0, 0, 2*Math.PI); ctx.fill();
-    Plot.text(ctx, 'igniter ' + fmt(Ri,2) + ' Ω', ix + 22, by + bht + 6, {align:'center', color: col.ink2});
-    // --- stacked bar: where the supply voltage goes ---
-    const l = 18, r = W - 18, yb = H - 66, bh = 40;
-    Plot.text(ctx, 'Where the ' + fmt(V,3) + ' V goes', l, yb - 16, {bold:true});
-    const parts = [['cable out', I*Rw, Plot.mix(col.c4, col.panel, .35), col.ink], ['igniter', I*Ri, col.c2, '#fff'], ['cable back', I*Rw, Plot.mix(col.c4, col.panel, .35), col.ink]];
+    // --- schematic: firing box (cell), cable out, igniter, cable back ---
+    const xL = 70, xR = W - 120, yT = 34, yB = 128, yc = (yT + yB)/2;
+    const ic = m >= 2 ? col.good : m >= 1 ? col.warn : col.bad;
+    Plot.dashedBox(ctx, xL - 52, yT - 22, 96, yB - yT + 44, 'firing box');
+    Plot.dashedBox(ctx, xR - 44, yT - 22, 110, yB - yT + 44, 'pad');
+    Plot.wire(ctx, [[xL, yc - 5], [xL, yT]]);
+    Plot.wire(ctx, [[xL, yB], [xL, yc + 5]]);
+    Plot.battery(ctx, xL, yc);
+    Plot.text(ctx, fmt(V,3) + ' V', xL - 22, yc, {align:'right', mono:true});
+    Plot.resistor(ctx, xL, yT, xR, yT, {len: 70, color: col.c4});
+    Plot.resistor(ctx, xR, yB, xL, yB, {len: 70, color: col.c4});
+    Plot.resistor(ctx, xR, yT, xR, yB, {len: 46, color: col.c2, w: 2});
+    Plot.text(ctx, `out: ${L} m of ${g} AWG, ${si(Rw, 'Ω')}`, (xL + xR)/2, yT - 14, {align:'center', color: col.ink2});
+    Plot.text(ctx, `back: ${L} m of ${g} AWG, ${si(Rw, 'Ω')}`, (xL + xR)/2, yB + 15, {align:'center', color: col.ink2});
+    Plot.text(ctx, 'igniter', xR + 16, yc - 9, {color: col.ink2});
+    Plot.text(ctx, si(Ri, 'Ω'), xR + 16, yc + 8, {mono:true});
+    Plot.arrow(ctx, xL + 30, yT + 14, xL + 70, yT + 14, ic);
+    Plot.text(ctx, 'I = ' + si(I, 'A'), xL + 78, yT + 14, {mono:true, color: ic});
+    // --- where the supply voltage goes: one flat stacked bar ---
+    const l = 18, r = W - 18, yb = H - 62, bh = 30;
+    Plot.text(ctx, 'Where the ' + fmt(V,3) + ' V goes', l, yb - 14, {color: col.ink2});
+    const parts = [['cable out', I*Rw, Plot.mix(col.c4, '#ffffff', .65)], ['igniter', I*Ri, Plot.mix(col.c2, '#ffffff', .45)], ['cable back', I*Rw, Plot.mix(col.c4, '#ffffff', .65)]];
     let x = l;
-    ctx.save(); Plot.rrect(ctx, l, yb, r - l, bh, 10); ctx.clip();
-    parts.forEach(([name, v, c, tc]) => {
+    parts.forEach(([name, v, c]) => {
       const w2 = (r - l) * v / V;
       ctx.fillStyle = c; ctx.fillRect(x, yb, w2, bh);
-      ctx.fillStyle = col.panel; ctx.fillRect(x + w2 - 1, yb, 2, bh);
-      if (w2 > 74){
-        Plot.text(ctx, name, x + w2/2, yb + 13, {align:'center', color: tc, bold:true});
-        Plot.text(ctx, si(v, 'V'), x + w2/2, yb + 29, {align:'center', color: tc, mono:true});
-      }
+      ctx.strokeStyle = '#000'; ctx.lineWidth = 1; ctx.strokeRect(x + .5, yb + .5, w2, bh - 1);
+      if (w2 > 92) Plot.text(ctx, `${name}  ${si(v, 'V')}`, x + w2/2, yb + bh/2, {align:'center', color:'#000'});
       x += w2;
     });
-    ctx.restore();
     Plot.text(ctx, `the cable takes ${Math.round(100*2*Rw/(2*Rw + Ri))} % of the supply`, r, yb + bh + 14, {align:'right', color: col.muted});
   });
   ['#wV','#wL','#wG','#wR','#wA'].forEach(id => $(id).addEventListener('input', upd));
@@ -757,74 +680,51 @@ function setVerdict(el, cls, html){ el.className = 'verdict ' + cls; el.innerHTM
 /* ============ 4. Multimeter placement ============ */
 (() => {
   const mode = seg('#mM', upd), place = seg('#mP', upd), on = seg('#mOn', upd);
-  const sv = $('#svMeter');
-  // Circuit: battery left (x=70), R1 along the top, R2 down the right (x=450), return along the bottom (y=250).
-  // The meter sits in the middle; its probe leads run to the chosen points.
-  const BAND = {brown:'#7b4a2b', black:'#1d1d1f', red:'#d0392b'};
-  function resistorH(x, y, len, bands, label){
-    return `<g><rect x="${x}" y="${y-11}" width="${len}" height="22" rx="10" fill="url(#rbody)" filter="url(#sh)"/>` +
-      bands.map((c, k) => `<rect x="${x + 14 + k*11}" y="${y-11}" width="6" height="22" fill="${c}"/>`).join('') +
-      `<rect x="${x + len - 20}" y="${y-11}" width="6" height="22" fill="#c9a23a"/>` +
-      `<text x="${x + len/2}" y="${y - 20}" text-anchor="middle" font-size="13" font-weight="600">${label}</text></g>`;
-  }
-  function resistorV(x, y, len, bands, label){
-    return `<g><rect x="${x-11}" y="${y}" width="22" height="${len}" rx="10" fill="url(#rbodyV)" filter="url(#sh)"/>` +
-      bands.map((c, k) => `<rect x="${x-11}" y="${y + 14 + k*11}" width="22" height="6" fill="${c}"/>`).join('') +
-      `<rect x="${x-11}" y="${y + len - 20}" width="22" height="6" fill="#c9a23a"/>` +
-      `<text x="${x + 20}" y="${y + len/2 + 4}" font-size="13" font-weight="600">${label}</text></g>`;
-  }
-  function draw(m, p, pw, reading, bad){
-    const ser = p === 'ser';
-    const dark = Plot.isDark();
-    const wireC = Plot.mix(col.line2, col.c4, .25);
-    let g = `<defs>
-      <linearGradient id="rbody" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${dark ? '#c9b48c' : '#e9d8b4'}"/><stop offset="1" stop-color="${dark ? '#9c8862' : '#c7ae80'}"/></linearGradient>
-      <linearGradient id="rbodyV" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="${dark ? '#c9b48c' : '#e9d8b4'}"/><stop offset="1" stop-color="${dark ? '#9c8862' : '#c7ae80'}"/></linearGradient>
-      <linearGradient id="cell" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="${Plot.mix('#4d535c','#000000',.3)}"/><stop offset=".45" stop-color="${Plot.mix('#4d535c','#ffffff',.12)}"/><stop offset="1" stop-color="${Plot.mix('#4d535c','#000000',.4)}"/></linearGradient>
-      <filter id="sh" x="-20%" y="-20%" width="140%" height="160%"><feDropShadow dx="0" dy="2" stdDeviation="2" flood-opacity=".2"/></filter>
-    </defs>`;
-    // wires
-    const wire = `stroke="${wireC}" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"`;
-    g += `<path d="M70 92V40H450V250${ser ? 'H300M220 250' : ''}H70V168" ${wire}/>`;
-    // battery (or empty holder)
-    if (pw){
-      g += `<rect x="50" y="88" width="40" height="84" rx="9" fill="url(#cell)" filter="url(#sh)"/><rect x="62" y="82" width="16" height="8" rx="3" fill="${col.line2}"/>` +
-           `<text x="70" y="106" text-anchor="middle" font-size="14" font-weight="700" fill="#fff">+</text><text x="70" y="162" text-anchor="middle" font-size="14" font-weight="700" fill="#fff">−</text>` +
-           `<text x="38" y="134" text-anchor="end" font-size="13" font-family="JetBrains Mono, monospace">9 V</text>`;
-    } else {
-      g += `<rect x="50" y="88" width="40" height="84" rx="9" fill="none" stroke="${col.line2}" stroke-width="2" stroke-dasharray="5 4"/><text x="70" y="134" text-anchor="middle" font-size="10" fill="${col.muted}">removed</text>`;
+  // Schematic: cell on the left, R1 along the top, R2 down the right, return along the bottom.
+  // The meter is the standard circle symbol; its red and black leads go to the chosen points.
+  let st = null;
+  function draw(m, p, pw, reading, bad){ st = {m, p, pw, reading, bad}; fig.redraw(); }
+  const fig = Plot.widget($('#cvMeter'), (ctx, W, H) => {
+    if (!st) return;
+    const {m, p, pw, reading, bad} = st;
+    const xL = Math.max(70, W*0.14), xR = W - Math.max(110, W*0.22), yT = 40, yB = H - 50, yc = (yT + yB)/2, xm = (xL + xR)/2;
+    const ser = p === 'ser', gap = 34;
+    // loop wiring (gap on the bottom wire when the loop is broken for a series measurement)
+    Plot.wire(ctx, [[xL, yc - 5], [xL, yT], [xR, yT]]);
+    Plot.resistor(ctx, xL, yT, xR, yT, {len: 58});
+    Plot.resistor(ctx, xR, yT, xR, yB, {len: 58});
+    if (ser){ Plot.wire(ctx, [[xR, yB], [xm + gap, yB]]); Plot.wire(ctx, [[xm - gap, yB], [xL, yB], [xL, yc + 5]]); }
+    else Plot.wire(ctx, [[xR, yB], [xL, yB], [xL, yc + 5]]);
+    Plot.text(ctx, 'R1 = 1 kΩ', xm, yT - 16, {align:'center', mono:true});
+    Plot.text(ctx, 'R2 = 2 kΩ', xR + 16, yc, {mono:true});
+    if (pw){ Plot.battery(ctx, xL, yc); Plot.text(ctx, '9 V', xL - 22, yc, {align:'right', mono:true}); }
+    else {
+      Plot.wire(ctx, [[xL, yc - 5], [xL, yc - 9]]); Plot.wire(ctx, [[xL, yc + 5], [xL, yc + 9]]);
+      Plot.dot(ctx, xL, yc - 10, 3, col.ink); Plot.dot(ctx, xL, yc + 10, 3, col.ink);
+      Plot.text(ctx, 'cell removed', xL - 12, yc, {align:'right', color: col.muted});
     }
-    g += resistorH(200, 40, 120, [BAND.brown, BAND.black, BAND.red], 'R1 = 1 kΩ');
-    g += resistorV(450, 85, 120, [BAND.red, BAND.black, BAND.red], 'R2 = 2 kΩ');
-    if (ser) g += `<text x="260" y="276" text-anchor="middle" font-size="11" fill="${col.muted}">loop broken here</text>`;
-    // the meter: holster, face, LCD, rotary dial, jacks
-    const mx = 190, my = 82, mw = 140, mh = 150;
-    g += `<rect x="${mx}" y="${my}" width="${mw}" height="${mh}" rx="16" fill="${bad ? col.bad : '#e2a72e'}" filter="url(#sh)"/>`;
-    g += `<rect x="${mx+8}" y="${my+8}" width="${mw-16}" height="${mh-16}" rx="11" fill="#2b2f37"/>`;
-    g += `<rect x="${mx+18}" y="${my+16}" width="${mw-36}" height="36" rx="5" fill="#c8d5bd"/>`;
-    g += `<text x="${mx+mw/2}" y="${my+41}" text-anchor="middle" font-size="18" font-family="JetBrains Mono, monospace" font-weight="500" fill="${bad ? '#a32018' : '#1f2a1c'}">${reading}</text>`;
-    const cx = mx + mw/2, cy = my + 88, ang = {V:-50, A:0, R:50}[m];
-    [['V',-50],['A',0],['Ω',50]].forEach(([lbl, a]) => {
-      const rad = (a - 90) * Math.PI/180;
-      g += `<text x="${cx + 30*Math.cos(rad)}" y="${cy + 30*Math.sin(rad) + 4}" text-anchor="middle" font-size="11" font-weight="700" fill="${lbl === (m === 'R' ? 'Ω' : m) ? '#ffd27a' : '#8a909c'}">${lbl}</text>`;
-    });
-    g += `<circle cx="${cx}" cy="${cy}" r="17" fill="#4a505c" stroke="#1b1e24" stroke-width="2"/><g transform="rotate(${ang} ${cx} ${cy})"><rect x="${cx-3}" y="${cy-17}" width="6" height="16" rx="3" fill="#e9ecf1"/></g>`;
-    const jl = [mx + 42, my + mh - 18], jr = [mx + mw - 42, my + mh - 18];
-    g += `<circle cx="${jl[0]}" cy="${jl[1]}" r="6" fill="#1b1e24" stroke="#d0392b" stroke-width="2.5"/><circle cx="${jr[0]}" cy="${jr[1]}" r="6" fill="#1b1e24" stroke="#8a909c" stroke-width="2.5"/>`;
-    // probe leads
-    let a, b;
-    if (p === 'r2'){ a = [450, 72]; b = [450, 226]; }
-    else if (p === 'bat'){ a = [70, 64]; b = [70, 196]; }
-    else { a = [220, 250]; b = [300, 250]; }
+    // probe points and meter position
+    let a, b, mx, my;
+    if (p === 'r2'){ a = [xR, yT + 18]; b = [xR, yB - 18]; mx = xR - 70; my = yc; }
+    else if (p === 'bat'){ a = [xL, yT + 18]; b = [xL, yB - 18]; mx = xL + 70; my = yc; }
+    else { a = [xm - gap, yB]; b = [xm + gap, yB]; mx = xm; my = yB - 48; }
+    const mc = bad ? col.bad : col.ink, letter = m === 'R' ? 'Ω' : m;
+    // leads: red from the meter's + terminal, black from its common terminal
     const lead = (from, to, c) => {
-      const mid = [(from[0] + to[0])/2, Math.max(from[1], to[1]) + 34];
-      return `<path d="M${from[0]} ${from[1]}Q${mid[0]} ${mid[1]} ${to[0]} ${to[1]}" stroke="${c}" stroke-width="3.5" fill="none" stroke-linecap="round" opacity=".92"/>` +
-             `<circle cx="${to[0]}" cy="${to[1]}" r="6.5" fill="${c}" stroke="${col.panel}" stroke-width="2"/>`;
+      Plot.line(ctx, [from, [from[0], (from[1] + to[1])/2], [to[0], (from[1] + to[1])/2], to], c, 1.4);
+      Plot.dot(ctx, to[0], to[1], 3.5, c);
     };
-    g += lead(jl, a, '#d0392b');
-    g += lead(jr, b, dark ? '#9aa0ab' : '#2b2f37');
-    sv.innerHTML = g;
-  }
+    lead([mx - 8, my + 14], a, '#cc0000');
+    lead([mx + 8, my + 14], b, '#000000');
+    Plot.meter(ctx, mx, my, letter, {color: mc, w: bad ? 2.4 : 1.6});
+    // the reading, as the meter's display would show it
+    ctx.font = Plot.MONO; const tw = Math.max(64, ctx.measureText(reading).width + 18);
+    const bx = mx - tw/2, by = my - 46;
+    ctx.fillStyle = '#fff'; ctx.fillRect(bx, by, tw, 22);
+    ctx.strokeStyle = mc; ctx.lineWidth = 1; ctx.strokeRect(bx + .5, by + .5, tw, 22);
+    Plot.text(ctx, reading, mx, by + 11, {align:'center', mono:true, color: mc});
+    if (ser) Plot.text(ctx, 'loop broken here', xm, yB + 16, {align:'center', color: col.muted});
+  });
   function upd(){
     const m = mode(), p = place(), pw = on() === '1';
     let r, cls, msg, bad = false;
@@ -837,7 +737,7 @@ function setVerdict(el, cls, html){ el.className = 'verdict ' + cls; el.innerHTM
       if (!pw){ r = '0.00 mA'; cls = 'warn'; msg = '<b>Reads 0.</b> No source, no current.'; }
       else if (p === 'ser'){ r = '3.00 mA'; cls = 'ok'; msg = '<b>Good measurement.</b> All the loop current flows through the meter: 9 V ÷ 3 kΩ = 3 mA.'; }
       else if (p === 'r2'){ r = '9.00 mA'; cls = 'bad'; msg = '<b>Wrong connection.</b> The near-zero-ohm ammeter shorts out R2, so the current triples to 9 V ÷ 1 kΩ. It\'s harmless here, but you\'re measuring a circuit you broke.'; bad = true; }
-      else { r = 'FUSE'; cls = 'bad'; msg = '<b>💥 You shorted the battery through the meter.</b> Amps flow, and the meter\'s fuse blows (if you\'re lucky). On a LiPo it can be hundreds of amps: melted probes, burns, fire.'; bad = true; }
+      else { r = 'FUSE'; cls = 'bad'; msg = '<b>Short circuit.</b> You shorted the battery through the meter. Amps flow, and the meter\'s fuse blows (if you\'re lucky). On a LiPo it can be hundreds of amps: melted probes, burns, fire.'; bad = true; }
     } else {
       if (pw){ r = '?.??'; cls = 'bad'; msg = '<b>Don\'t.</b> Resistance mode works by pushing its own small current. With the circuit powered the reading is meaningless, and you can damage the meter. Power off first.'; bad = true; }
       else if (p === 'r2'){ r = '2.00 kΩ'; cls = 'ok'; msg = '<b>Good measurement.</b> With the battery removed there\'s no other path around R2, so you read it directly. (In a real circuit, other paths in parallel can fool you.)'; }

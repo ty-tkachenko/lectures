@@ -168,7 +168,8 @@ details.exercise>summary{cursor:pointer;list-style:none}
 details.exercise>summary::-webkit-details-marker{display:none}
 details.exercise .ek{font-weight:bold}
 details.exercise .ek::after{content:" " counter(exr) ".";}
-details.exercise .eo{font-style:italic;color:#666}
+details.exercise .eo{font-style:italic;color:#666;margin-left:.35em}
+details.exercise .et{margin-left:.35em}
 details.exercise .eo::before{content:"("} details.exercise .eo::after{content:")"}
 details.exercise>summary::after{content:" ▸";color:#666}
 details.exercise[open]>summary::after{content:" ▾"}
