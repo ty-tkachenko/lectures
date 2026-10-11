@@ -188,7 +188,7 @@ A module's interactive page is `widgets/demo.html` next to `index.md`. It accept
 
 The include renders `<figure class="widget-embed">`: a lazy iframe, an "Open full screen" link (`target="_blank"`, `rel="noopener"`) to the same URL, and a plain link inside `<noscript>`. `figure.widget-embed` is styled in `assets/css/pages.css`.
 
-EE `widgets/demo.html` files must honor `?w=` the same way. Link `assets/css/widgets.css` and keep a short inline copy of the widget rules so the file still works when double-clicked. Do not remove the inline CSS from `rf/` demos.
+On a reading page, the `<div class="widget">` lives in `widgets/demo.html`, not in `index.md`. The reading page embeds it with the include. `assets/css/widgets.css` is linked from the layout when `series: ee`, and each EE demo links that sheet plus a short inline copy of the same rules so a double-click still looks right. Do not remove the inline CSS from `rf/` demos.
 
 ## Rules
 

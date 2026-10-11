@@ -32,15 +32,15 @@ practicals:
 
 A [voltage regulator]({{ '/glossary/#voltage-regulator' | relative_url }}) holds one rail of a rocket at a steady voltage while the pack sags and the load wakes up. This module is about the two common ways to do that, and about the heat you get if you pick the wrong one.
 
-## Why a rocket bothers to regulate
+## 1. Why a rocket bothers to regulate
 
-### In words
+### The idea
 
 A lithium-ion pack is not a fixed supply. A [series pack]({{ '/glossary/#series-pack' | relative_url }}) of two cells (2S) is about 8.4 V when full and about 7.4 V at the usual nominal point. Three cells (3S) are about 12.6 V full and 11.1 V nominal. A flight computer, a sensor, or a radio often wants 3.3 V or 5 V and will misbehave if the rail wanders.
 
 The regulator's job is to stand between the pack and that circuit. Two families do it. A [linear regulator]({{ '/glossary/#linear-regulator' | relative_url }}) throws the spare voltage away as heat. A [buck converter]({{ '/glossary/#buck-converter' | relative_url }}) chops the input and averages it, so most of the pack's power reaches the load.
 
-### The formula
+### The math
 
 There is no single formula yet. The picture to keep is [power]({{ '/glossary/#power' | relative_url }}):
 
@@ -58,18 +58,17 @@ $$
 
 from the rail. That 0.66 W is what the load wants. A linear regulator fed from a higher pack voltage will pull *more* than 0.66 W from the pack. The difference is heat.
 
-## Linear regulators and LDOs
+## 2. Linear regulators and LDOs
 
-### In words
+### The idea
 
 A linear regulator is a controlled resistor in series with the load. The series transistor is the [pass element]({{ '/glossary/#pass-element' | relative_url }}). A feedback divider watches the output and the chip drives the pass element until the output sits at the set voltage.
 
 An [LDO]({{ '/glossary/#ldo' | relative_url }}), a low-dropout regulator, is a linear regulator that can still do this when the input is only a little above the output. That "little" is the [dropout voltage]({{ '/glossary/#dropout' | relative_url }}). If the pack falls closer than that, the output sags and the part is no longer regulating.
 
-<figure>
-<img src="figures/ldo-pass.svg" alt="Diagram of a linear regulator. A pass element sits between Vin and Vout. An error amplifier compares a feedback divider with a reference and drives the pass element. The load returns to 0 V. Heat is the voltage dropped in the pass element times the load current.">
-<figcaption>The pass element is in series with the load. Feedback tells it how hard to conduct. Whatever voltage it drops, at the load current, becomes heat in the package.</figcaption>
-</figure>
+![Diagram of a linear regulator. A pass element sits between Vin and Vout. An error amplifier compares a feedback divider with a reference and drives the pass element. The load returns to 0 V. Heat is the voltage dropped in the pass element times the load current.](img/ldo-pass.svg){: .figure}
+
+*The pass element is in series with the load. Feedback tells it how hard to conduct. Whatever voltage it drops, at the load current, becomes heat in the package.*
 
 Dropout is why a single cell is a bad way to make 3.3 V with an ordinary LDO, and why a 2S pack usually is not. Suppose the dropout at this current is 1.0 V, a round number for an older 1117-style part. Read the real number from the datasheet. The input must stay at or above
 
@@ -79,7 +78,7 @@ $$
 
 A single cell from 4.2 V full down toward 3.6 V is already under 4.3 V for much of the flight, so a 3.3 V LDO drops out. A 2S pack, even near empty around 6 V, still has $$6.0 - 3.3 = 2.7\,\mathrm{V}$$ of headroom, which is more than 1.0 V. Dropout is not the 2S problem. Heat is.
 
-### The formula
+### The math
 
 The [dissipation]({{ '/glossary/#dissipation' | relative_url }}), the heat in the regulator, is
 
@@ -153,20 +152,20 @@ $$
 
 The load did not change. The pack being fuller, or having another cell, made the regulator hotter.
 
-<div class="widget" data-widget="ldo-dissipation" data-prompt="Raise the input to 12 V and watch the heat take over the bar. Then drag the input down toward the output until the shaded dropout region covers the operating point. The defaults match the 8.4 V, 3.3 V, 200 mA example above."></div>
+{% include widget.html widget="ldo-dissipation" height=1650 title="LDO heat and junction temperature" %}
 
 {% capture deeper_iq %}
 Change only $$I_q$$, from 5 mA to 0.05 mA, a modern LDO. The quiescent heat at 8.4 V becomes $$8.4 \times 0.00005 = 0.0004\,\mathrm{W}$$. Total heat falls from 1.062 W to 1.020 W. At a 200 mA load you cannot save the board by shopping for a lower $$I_q$$. $$I_q$$ matters when the rocket is asleep and the load is microamps, because then the quiescent current *is* the battery drain.
 {% endcapture %}
 {% include go-deeper.html title="When quiescent current actually matters" body=deeper_iq %}
 
-## Junction temperature
+## 3. Junction temperature
 
-### In words
+### The idea
 
 The heat has to leave the silicon and reach the air. The [junction temperature]({{ '/glossary/#junction-temperature' | relative_url }}) $$T_J$$ is the die temperature. The datasheet limit (often 125 °C or 150 °C) is a junction limit. A finger on the package, or a thermal camera, reads something cooler than $$T_J$$.
 
-### The formula
+### The math
 
 $$
 T_J = T_A + P_D \, \theta_{JA}
@@ -198,18 +197,17 @@ Datasheet $$\theta_{JA}$$ is measured on a specified board, often a large JEDEC 
 {% endcapture %}
 {% include go-deeper.html title="Why the datasheet θJA is optimistic on a rocket board" body=deeper_theta %}
 
-## Buck converters
+## 4. Buck converters
 
-### In words
+### The idea
 
 A buck does not drop the spare volts in a transistor that stays partly on. A switch connects the inductor to the pack for part of each cycle, then lets the inductor finish the cycle through a diode or a second transistor. The inductor current rises, then falls. The output [capacitor]({{ '/glossary/#capacitor' | relative_url }}) averages that into a steady voltage. The [duty cycle]({{ '/glossary/#duty-cycle' | relative_url }}) $$D$$ is the fraction of the cycle the high-side switch is on.
 
-<figure>
-<img src="figures/buck-cycle.svg" alt="Two panels of a buck converter. Left, switch closed: current flows from Vin through the inductor to the output capacitor and the inductor current rises. Right, switch open: the low side conducts, the inductor current falls, and the capacitor holds the output.">
-<figcaption>Left: switch closed, inductor current rising, input feeding the output. Right: switch open, inductor current still flowing through the low side and falling. The capacitor is what the load actually drinks from.</figcaption>
-</figure>
+![Two panels of a buck converter. Left, switch closed: current flows from Vin through the inductor to the output capacitor and the inductor current rises. Right, switch open: the low side conducts, the inductor current falls, and the capacitor holds the output.](img/buck-cycle.svg){: .figure}
 
-### The formula
+*Left: switch closed, inductor current rising, input feeding the output. Right: switch open, inductor current still flowing through the low side and falling. The capacitor is what the load actually drinks from.*
+
+### The math
 
 For an ideal buck in [continuous conduction]({{ '/glossary/#ccm' | relative_url }}), the output is the input times the duty cycle:
 
@@ -261,10 +259,9 @@ $$
 
 The valley is still positive, so the assumption holds.
 
-<figure>
-<img src="figures/ripple-wave.svg" alt="Three aligned traces. The switch node is a square wave. The inductor current is a triangle labeled delta I from valley to peak. The output voltage shows a much smaller ripple. A note says a long scope ground lead can fake a bigger spike, and that a valley of zero means discontinuous conduction.">
-<figcaption>Switch node, inductor current, and the much smaller output ripple, drawn for continuous conduction. Delta I is the height of the current triangle.</figcaption>
-</figure>
+![Three aligned traces. The switch node is a square wave. The inductor current is a triangle labeled delta I from valley to peak. The output voltage shows a much smaller ripple. A note says a long scope ground lead can fake a bigger spike, and that a valley of zero means discontinuous conduction.](img/ripple-wave.svg){: .figure}
+
+*Switch node, inductor current, and the much smaller output ripple, drawn for continuous conduction. Delta I is the height of the current triangle.*
 
 If the valley would have to go negative, the current hits zero and waits. That is [discontinuous conduction]({{ '/glossary/#dcm' | relative_url }}). The triangle formula still tells you that you have left continuous conduction. It does not draw the real shape anymore. The widget switches to the discontinuous shape when $$\Delta I_L / 2 > I_{\mathrm{out}}$$.
 
@@ -313,7 +310,7 @@ $$
 
 Compare with the linear regulator on the same 2S pack: 1.062 W of heat versus 0.116 W. $$1.062 / 0.116 \approx 9$$. About nine times less heat in the converter, at this guess of efficiency. On the 3S pack the linear regulator was at 1.923 W and this buck estimate is still 0.116 W, because the estimate depends on efficiency and output power, not on how large $$V_{\mathrm{in}}$$ is.
 
-<div class="widget" data-widget="buck-converter" data-prompt="Shrink the inductor or the switching frequency and watch the current triangle grow. Keep going until the hint says the current falls to zero. That is discontinuous conduction. The defaults start in continuous conduction, near the 8.4 V to 3.3 V example."></div>
+{% include widget.html widget="buck-converter" height=1320 title="Buck switch node and inductor current" %}
 
 {% capture deeper_dcm %}
 Volt-second balance is why $$D = V_{\mathrm{out}}/V_{\mathrm{in}}$$ in continuous conduction. Over one cycle the inductor current has to end where it started, so the up-ramp and the down-ramp cancel. Up-ramp: $$(V_{\mathrm{in}}-V_{\mathrm{out}}) D / f_{\mathrm{sw}}$$. Down-ramp: $$V_{\mathrm{out}}(1-D)/f_{\mathrm{sw}}$$. Set them equal and $$D$$ falls out as $$V_{\mathrm{out}}/V_{\mathrm{in}}$$. Losses make the real duty a bit higher. A rough correction is $$D \approx V_{\mathrm{out}}/(\eta V_{\mathrm{in}})$$. The ripple formula on this page keeps the ideal $$D$$, so the up-ramp and down-ramp still match.
@@ -327,9 +324,9 @@ A 22 µF ceramic capacitor at a few volts of DC bias is often well under 22 µF.
 {% endcapture %}
 {% include go-deeper.html title="The capacitor on the board is smaller than the label" body=deeper_mlcc %}
 
-## Which one to pick
+## 5. Which one to pick
 
-### In words
+### The idea
 
 Use a linear regulator when the drop is small or the current is small, so the heat $$P_D \approx (V_{\mathrm{in}}-V_{\mathrm{out}})I_{\mathrm{out}}$$ is a fraction of a watt, and you want a quiet rail with almost no parts. Use a buck when the pack is a 2S or 3S and the load is more than a few tens of milliamps. Use a buck *and then* an LDO when something on the rail hates ripple.
 
@@ -340,15 +337,15 @@ Use a linear regulator when the drop is small or the current is small, so the he
 | A radio, LNA, or ADC that hates ripple | Buck, then LDO | The buck does the big drop. The LDO drops a little and cleans up. |
 | Load current that sometimes almost disappears | Check continuous vs discontinuous | A small inductor can make the current hit zero. Ripple and noise change. |
 
-<div class="widget" data-widget="ldo-vs-buck" data-prompt="Sweep the input from 12 V down toward 3.3 V at 200 mA. The linear regulator's heat falls as the drop shrinks. The buck line stays nearly flat. That flat line is the point of a switcher on a 2S or 3S pack."></div>
+{% include widget.html widget="ldo-vs-buck" height=1020 title="LDO versus buck: heat as input voltage changes" %}
 
-## A buck followed by an LDO
+## 6. A buck followed by an LDO
 
-### In words
+### The idea
 
 [Post-regulation]({{ '/glossary/#post-regulation' | relative_url }}) means the buck makes a voltage a little above the final rail, and an LDO finishes the job. The LDO's [PSRR]({{ '/glossary/#psrr' | relative_url }}) knocks down ripple that is not too fast. A [pi filter]({{ '/glossary/#pi-filter' | relative_url }}) (capacitor, series [ferrite bead]({{ '/glossary/#ferrite-bead' | relative_url }} or inductor, capacitor) can knock the switching frequency down before the LDO, because PSRR is weaker at high frequency.
 
-### The formula
+### The math
 
 Same heat formula, with a small drop. Illustration only, not a board from the shop: buck to 3.8 V, LDO to 3.3 V, load 0.050 A, ignore $$I_q$$.
 
@@ -365,19 +362,19 @@ PSRR in decibels converts to a voltage ratio by $$10^{(\mathrm{PSRR}/20)}$$. A d
 
 A real supply of this shape, a 1 W PA and a low-noise LNA from a 3S pack, is the [design-walkthrough practical](practical-rf-supply.html). The numbers there are from the camera-unit power note. They are not this illustration.
 
-## Layout
+## 7. Layout
 
-### In words
+### The idea
 
 For an LDO, the heat needs copper. Pour copper on the tab pin, and stitch it with vias to a plane if you have one. Put the input and output capacitors on the pins the datasheet shows, close, with short [ground]({{ '/glossary/#ground' | relative_url }}) returns. Some older LDOs (the 1117 family is the usual example) need the output capacitor's ESR inside a window. A ceramic can be too good, and the output oscillates. Read the stability curve.
 
 For a buck, the [hot loop]({{ '/glossary/#hot-loop' | relative_url }}) is the loop through the input capacitor and the two switches. That current is chopped every cycle. Keep the loop tiny: input capacitor against the IC's input and ground pins. Route the [feedback divider]({{ '/glossary/#feedback-divider' | relative_url }}) away from the inductor and the switch node, and sense the output at the capacitor the load uses.
 
-### The formula
+### The math
 
 There is no new formula. The layout either lets the $$P_D$$ and $$\Delta V$$ numbers above happen, or it adds oscillation and extra spikes the formulas do not include.
 
-## Mistakes that show up on rocket boards
+## 8. Mistakes that show up on rocket boards
 
 - Sizing the LDO at the 3.7 V-per-cell nominal voltage and forgetting full charge is 4.2 V per cell. Heat is worst at full charge. Use 8.4 V and 12.6 V in the check.
 - No input capacitor, or the capacitor is a centimeter away. Linear parts and bucks both oscillate or ring.
@@ -387,7 +384,7 @@ There is no new formula. The layout either lets the $$P_D$$ and $$\Delta V$$ num
 - An inductor so small that a quiet moment (sensors asleep) pushes the converter into discontinuous conduction, and the radio hears it.
 - One switching rail shared with a receiver or an LNA.
 
-## Worked example: a 3.3 V computer from 2S and from 3S
+## 9. Worked example: a 3.3 V computer from 2S and from 3S
 
 Assumptions, all stated, none of them a flight measurement:
 

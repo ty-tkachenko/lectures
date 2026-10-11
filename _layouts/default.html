@@ -8,6 +8,9 @@
   <link rel="stylesheet" href="{{ '/css/style.css' | relative_url }}">
   <link rel="stylesheet" href="{{ '/css/lectures.css' | relative_url }}">
   <link rel="stylesheet" href="{{ '/assets/css/pages.css' | relative_url }}">
+  {% if page.series == "ee" %}
+  <link rel="stylesheet" href="{{ '/assets/css/widgets.css' | relative_url }}">
+  {% endif %}
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css">
 </head>
 <body>

@@ -21,9 +21,9 @@ widgets:
 
 The short answer: the LED that dies had no resistor, so the battery decided the current. The LED that lives had a resistor that set the current near the datasheet value. The rest of this module is the set of tools behind that sentence: [charge]({{ '/glossary/#charge' | relative_url }}), [current]({{ '/glossary/#current' | relative_url }}), [voltage]({{ '/glossary/#voltage' | relative_url }}), [resistance]({{ '/glossary/#resistance' | relative_url }}), [power]({{ '/glossary/#power' | relative_url }}), and what a meter actually connects to.
 
-## Charge, current, voltage, resistance
+## 1. Charge, current, voltage, resistance
 
-### In words
+### The idea
 
 Charge is a quantity, in coulombs. Current is how fast charge moves. One ampere is one coulomb passing a point in one second:
 
@@ -49,7 +49,7 @@ $$
 
 Twenty milliamperes is a small indicator-LED current. A fifth of a coulomb is still a huge number of electrons, and you do not need that count to design the resistor.
 
-## Ohm's law
+## 2. Ohm's law
 
 [Ohm's law]({{ '/glossary/#ohms-law' | relative_url }}) is the working relation for a resistor:
 
@@ -71,7 +71,7 @@ $$
 
 The voltage has to be the voltage across the resistor you are using. The battery voltage is that number only if the resistor is the only thing across the battery.
 
-## Power, and the rating printed on the resistor
+## 3. Power, and the rating printed on the resistor
 
 Power is the rate of energy. For a DC resistor the three forms are the same number:
 
@@ -97,9 +97,9 @@ $$
 
 A resistor turns that power into heat. The rating is how much heat it was built to shed. Common ratings are 1/8 W (0.125 W), 1/4 W (0.25 W), 1/2 W (0.5 W), 1 W, and 2 W. This 0.250 W example sits exactly on a 1/4 W part. A 1/2 W part has margin. Running at half the rating, so the part stays cooler, is a common practice. It is not a law.
 
-<div class="widget" data-widget="ohms-power" data-prompt="The defaults are the 5 V, 100 ohm, 0.25 W example. Drop the resistance or raise the voltage until the body is marked above its rating. Then raise the rating and see the warning clear."></div>
+{% include widget.html widget="ohms-power" height=1060 title="Ohm's law and resistor heat" %}
 
-## Series and parallel
+## 4. Series and parallel
 
 [Series]({{ '/glossary/#series-circuit' | relative_url }}): one path, so one current. Resistances add.
 
@@ -119,10 +119,9 @@ $$
 \frac{1}{R} = \frac{1}{R_1} + \frac{1}{R_2} + \frac{1}{R_3}
 $$
 
-<figure>
-<img src="figures/series-parallel.svg" alt="Left: three resistors in one series path. Right: two resistors in parallel across the same voltage.">
-<figcaption>Series shares the current and adds the voltages. Parallel shares the voltage and adds the currents.</figcaption>
-</figure>
+![Left: three resistors in one series path. Right: two resistors in parallel across the same voltage.](img/series-parallel.svg){: .figure}
+
+*Series shares the current and adds the voltages. Parallel shares the voltage and adds the currents.*
 
 Worked series. $$100\,\Omega$$, $$220\,\Omega$$, and $$180\,\Omega$$ on a 12 V source.
 
@@ -162,7 +161,7 @@ $$
 
 The combination is smaller than either resistor. A second path makes current easier, not harder.
 
-## Two nodes, KCL and KVL
+## 5. Two nodes, KCL and KVL
 
 [KCL]({{ '/glossary/#kcl' | relative_url }}), Kirchhoff's current law: at a node, current in equals current out. Charge does not accumulate at a junction of wires.
 
@@ -212,7 +211,7 @@ $$
 
 Check KCL at A: $$5.143 = 3.429 + 1.714$$. Check KCL at B: $$I_2 = I_4$$. Check KVL from the source through $$R_1$$ to A: $$5.143\,\mathrm{mA} \times 1\,\mathrm{k}\Omega + 6.857\,\mathrm{V} = 12.00\,\mathrm{V}$$.
 
-<div class="widget" data-widget="kvl-kcl" data-prompt="Leave the source at 12 V and change only R3. Both node voltages and every branch current should move, and the current into each node should still match the current out."></div>
+{% include widget.html widget="kvl-kcl" height=960 title="Two nodes: KCL and KVL" %}
 
 {% capture deeper_nodes %}
 The two-node solve above used a shortcut, because $$R_2$$ and $$R_4$$ were equal. The general step is the same idea with conductances $$G = 1/R$$.
@@ -229,7 +228,7 @@ The widget solves that pair. You do not need the matrix for a series string or a
 {% endcapture %}
 {% include go-deeper.html title="The same circuit when the resistors are not equal" body=deeper_nodes %}
 
-## Voltage dividers, and the load that ruins them
+## 6. Voltage dividers, and the load that ruins them
 
 A [voltage divider]({{ '/glossary/#voltage-divider' | relative_url }}) is two resistors in series. The output is the bottom one, **if nothing else draws current**:
 
@@ -255,10 +254,9 @@ $$
 
 The unloaded formula was wrong by $$2.500 - 1.667 = 0.833\,\mathrm{V}$$, a third of the voltage you wanted. The rule of thumb: if the load is not much larger than $$R_2$$, put the load in the formula.
 
-<figure>
-<img src="figures/divider-load.svg" alt="Divider of R1 over R2, with a load resistor from the output node to 0 V, in parallel with R2.">
-<figcaption>Rload is in parallel with R2. Ignore it and the unloaded formula overstates the voltage.</figcaption>
-</figure>
+![Divider of R1 over R2, with a load resistor from the output node to 0 V, in parallel with R2.](img/divider-load.svg){: .figure}
+
+*Rload is in parallel with R2. Ignore it and the unloaded formula overstates the voltage.*
 
 A digital multimeter on a DC voltage range is often about $$10\,\mathrm{M}\Omega$$ from lead to lead. That number is typical of a class of meter. Read the manual for the one in your hand. Same divider, meter as the load:
 
@@ -274,9 +272,9 @@ The sag is $$1.25\,\mathrm{mV}$$. A 10 MΩ meter does not bother a 10 kΩ divide
 
 The resistance the load "sees" looking back into the divider, with the source replaced by a short, is $$R_1 \parallel R_2$$. Here that is $$5\,\mathrm{k}\Omega$$. A stiff divider uses small resistors, draws more idle current, and sags less. A gentle divider does the opposite.
 
-<div class="widget" data-widget="voltage-divider" data-prompt="Start with R1, R2, and the load all at 10 kilohms and read the sag against the dashed unloaded line. Then move the load up toward 10 megohms and watch the output climb back to 2.5 V."></div>
+{% include widget.html widget="voltage-divider" height=960 title="Voltage divider and the load that sags it" %}
 
-## Why one LED lives and the other dies
+## 7. Why one LED lives and the other dies
 
 An LED is a diode. Once it conducts, the voltage across it stays near a [forward voltage]({{ '/glossary/#forward-voltage' | relative_url }}) $$V_f$$ from the datasheet. $$V_f$$ depends on current and on the LED. It is not $$I R$$.
 
@@ -288,10 +286,9 @@ $$
 
 $$V_s$$ is the supply, $$I_f$$ is the current you want, and $$P$$ is heat in the resistor.
 
-<figure>
-<img src="figures/led-resistor.svg" alt="A battery, a series resistor, and an LED in one loop. The resistor drops Vs minus Vf.">
-<figcaption>One loop. The resistor sets the current. The LED does not.</figcaption>
-</figure>
+![A battery, a series resistor, and an LED in one loop. The resistor drops Vs minus Vf.](img/led-resistor.svg){: .figure}
+
+*One loop. The resistor sets the current. The LED does not.*
 
 Worked example, labeled as a round datasheet-style pair for a small red indicator, not a measurement of a particular lamp. Use the LED you actually have when you build one. $$V_s = 9\,\mathrm{V}$$, $$V_f = 2.0\,\mathrm{V}$$, $$I_f = 20\,\mathrm{mA}$$.
 
@@ -329,14 +326,14 @@ $$
 
 A small indicator cannot survive amperes. The same battery, same LED, plus $$360\,\Omega$$, gives 19 mA. The resistor is the whole difference.
 
-<div class="widget" data-widget="led-limit" data-prompt="Set 9 V, a forward drop of 2.0 V, and 20 mA. Compare the ideal resistance with the E24 value at or above it, and with the E12 nearest value, which lets the current go over the target. Then check the resistor power against a 1/8 W rating."></div>
+{% include widget.html widget="led-limit" height=860 title="LED current-limit resistor" %}
 
 {% capture deeper_eseries %}
 E12 and E24 are standard ratio series. Within a decade the values are spaced by a roughly constant percentage, which is why 330, 360, and 390 show up instead of 340 or 350. E12 is the 10% series. E24 is the 5% series. A 5% band on $$360\,\Omega$$ is $$\pm 18\,\Omega$$, so a real part can sit from about $$342\,\Omega$$ to $$378\,\Omega$$. At $$342\,\Omega$$ the example LED would take $$7.0 / 342 = 20.5\,\mathrm{mA}$$. If the datasheet maximum is 20 mA and you are unwilling to cross it, step up again or use a 1% value. The widget's "next up" is the starting pick, not the last word once tolerance is in the picture.
 {% endcapture %}
 {% include go-deeper.html title="Why 350 ohms is not a value you can buy" body=deeper_eseries %}
 
-## A real source sags
+## 8. A real source sags
 
 An ideal source holds its voltage at any current. A battery does not. It has [internal resistance]({{ '/glossary/#internal-resistance' | relative_url }}). The load and that resistance form a divider:
 
@@ -352,11 +349,11 @@ $$
 
 Heat inside the source: $$I^{2} R_{\mathrm{int}} = 1.0\,\mathrm{W}$$. The terminal voltage fell by a volt because the source spent a volt on itself. A shared battery that also feeds something which suddenly draws current will dip for everything else on that battery. The dip is this divider, not a mystery.
 
-## Ground is a label for 0 V
+## 9. Ground is a label for 0 V
 
 [Ground]({{ '/glossary/#ground' | relative_url }}) is the node you choose to call 0 V. Every other voltage on the page is a difference from that node, or between two named nodes. Two nets both called ground are the same node only where a wire or a pour actually joins them. A meter between two points does not care what you named them. It reads the difference.
 
-## What the meter is doing
+## 10. What the meter is doing
 
 Three measurements, three different circuits.
 

@@ -22,7 +22,7 @@ widgets:
 
 A resistor's current changes the moment the voltage does. A [capacitor]({{ '/glossary/#capacitor' | relative_url }}) and an [inductor]({{ '/glossary/#inductor' | relative_url }}) do not. The capacitor's voltage cannot jump, which is why a supply rail sags over microseconds instead of disappearing in an instant, and why a reset pin can wait a millisecond on purpose. The inductor's current cannot jump, which is why opening a switch on a coil produces a voltage spike. This module stays at that idea. The ways real parts miss the ideal formulas are module 09.
 
-## What they store
+## 1. What they store
 
 A capacitor stores energy in an electric field. An inductor stores energy in a magnetic field.
 
@@ -46,7 +46,7 @@ $$
 
 Those are small next to a battery, and they are large next to a logic edge. The capacitor can cover a short gap in the supply. The inductor can produce a large voltage if you try to stop its current quickly, because that stored energy has to go somewhere.
 
-## The two laws
+## 2. The two laws
 
 Ideal capacitor:
 
@@ -80,7 +80,7 @@ That is the hold-up of an ideal capacitor at a constant current. A real capacito
 
 A load that steps on, a motor starting or a radio beginning to transmit, is one place this shows up. The capacitor is the part that covers the first moments, before anything slower can react.
 
-## RC charge and discharge
+## 3. RC charge and discharge
 
 A resistor and a capacitor in series have one [time constant]({{ '/glossary/#time-constant' | relative_url }}):
 
@@ -96,10 +96,9 @@ $$
 
 At $$t = \tau$$, $$e^{-1} = 0.368$$, so the voltage has covered $$1 - 0.368 = 0.632$$ of the step. Call that 63%. At $$t = 5\tau$$, $$e^{-5} = 0.00674$$, so 99.3% of the step is done. Discharging from $$V$$ toward 0 is $$v(t) = V e^{-t / \tau}$$: 37% left after one $$\tau$$, under 1% left after five.
 
-<figure>
-<img src="figures/rc-step.svg" alt="A resistor in series with a capacitor to ground, and a curve of capacitor voltage that reaches about 63 percent at one time constant.">
-<figcaption>The voltage on the capacitor approaches the step. It does not jump to it. One time constant is 63% of the way. Five is close enough for most resets and debounces.</figcaption>
-</figure>
+![A resistor in series with a capacitor to ground, and a curve of capacitor voltage that reaches about 63 percent at one time constant.](img/rc-step.svg){: .figure}
+
+*The voltage on the capacitor approaches the step. It does not jump to it. One time constant is 63% of the way. Five is close enough for most resets and debounces.*
 
 Worked debounce, or a crude reset delay. $$R = 10\,\mathrm{k}\Omega$$, $$C = 100\,\mathrm{nF}$$.
 
@@ -129,9 +128,9 @@ $$
 
 Worked. $$L = 1\,\mathrm{mH}$$, $$R = 10\,\Omega$$, source $$5\,\mathrm{V}$$. The final current is $$5 / 10 = 0.50\,\mathrm{A}$$. The time constant is $$0.001 / 10 = 0.10\,\mathrm{ms}$$. At one time constant the current is $$0.50 \times 0.632 = 0.316\,\mathrm{A}$$.
 
-<div class="widget" data-widget="rc-scope" data-prompt="The defaults are 10 kilohms and 100 nanofarads, so tau is 1 ms, on a 100 Hz square wave. Raise the frequency until half a period is shorter than tau. The capacitor stops reaching the rails. That rounding is the circuit refusing to jump."></div>
+{% include widget.html widget="rc-scope" height=960 title="RC charge and discharge on a square wave" %}
 
-## Kickback, and the diode that catches it
+## 4. Kickback, and the diode that catches it
 
 An inductor will make whatever voltage it needs in order to keep its current continuous. Opening a switch tries to make the current zero. The inductor answers with $$V = L\,\Delta I / \Delta t$$.
 
@@ -153,14 +152,13 @@ $$
 
 On a 5 V supply the switch node sits near $$5.0 + 0.7 = 5.7\,\mathrm{V}$$ while that happens, instead of the 200 V model.
 
-<figure>
-<img src="figures/flyback.svg" alt="A coil from the supply to a low-side switch, with a diode across the coil, cathode toward the supply.">
-<figcaption>The diode is backwards while the switch is on. When the switch opens, coil current circulates through the diode and the switch node only rises by about one forward drop above the supply.</figcaption>
-</figure>
+![A coil from the supply to a low-side switch, with a diode across the coil, cathode toward the supply.](img/flyback.svg){: .figure}
 
-<div class="widget" data-widget="rl-kickback" data-prompt="Leave the coil at 1 mH and the current at 200 mA. Turn the diode off and read the model spike for a 1 microsecond turn-off. Turn the diode on and compare that spike with supply plus one diode drop."></div>
+*The diode is backwards while the switch is on. When the switch opens, coil current circulates through the diode and the switch node only rises by about one forward drop above the supply.*
 
-## Reactance: ohms that depend on frequency
+{% include widget.html widget="rl-kickback" height=1100 title="Inductive kickback, with and without a diode" %}
+
+## 5. Reactance: ohms that depend on frequency
 
 A sine wave at frequency $$f$$ hertz sees a [reactance]({{ '/glossary/#reactance' | relative_url }}), in ohms:
 
@@ -182,9 +180,9 @@ $$
 X_L = 2 \pi \times 1000 \times 0.010 = 62.8\,\Omega
 $$
 
-<div class="widget" data-widget="impedance-plot" data-prompt="Set R to 1.6 kilohms and C to 100 nanofarads. The frequency where the capacitor curve crosses the flat resistor line is the cutoff of the low-pass in the next section. The inductor rises the other way."></div>
+{% include widget.html widget="impedance-plot" height=960 title="Impedance of R, C, and L versus frequency" %}
 
-## RC low-pass and high-pass
+## 6. RC low-pass and high-pass
 
 A series resistor and a capacitor to ground, output taken on the capacitor, is a [low-pass filter]({{ '/glossary/#low-pass' | relative_url }}). Swap the parts, output on the resistor, and it is a [high-pass filter]({{ '/glossary/#high-pass' | relative_url }}). Both have the same [cutoff]({{ '/glossary/#cutoff' | relative_url }}):
 
@@ -194,10 +192,9 @@ $$
 
 At $$f_c$$ the magnitude is $$1/\sqrt{2} = 0.707$$, which is $$-3.01\,\mathrm{dB}$$. A decade above $$f_c$$, a low-pass is down about 20 dB. The phase of the low-pass at $$f_c$$ is $$-45^\circ$$.
 
-<figure>
-<img src="figures/rc-filters.svg" alt="Low-pass: series R, capacitor to ground, output on the capacitor. High-pass: series capacitor, resistor to ground, output on the resistor.">
-<figcaption>Same R and C. The low-pass takes its output on the capacitor. The high-pass takes its output on the resistor.</figcaption>
-</figure>
+![Low-pass: series R, capacitor to ground, output on the capacitor. High-pass: series capacitor, resistor to ground, output on the resistor.](img/rc-filters.svg){: .figure}
+
+*Same R and C. The low-pass takes its output on the capacitor. The high-pass takes its output on the resistor.*
 
 Worked. $$R = 1.6\,\mathrm{k}\Omega$$, $$C = 100\,\mathrm{nF}$$.
 
@@ -221,9 +218,9 @@ $$
 
 The high-pass does the mirror image: about $$-20\,\mathrm{dB}$$ at a tenth of $$f_c$$, and it passes the fast tone.
 
-<div class="widget" data-widget="rc-filter" data-prompt="The defaults are 1.6 kilohms and 100 nanofarads, cutoff near 1 kHz. Read the minus 3 dB line. Then switch to high-pass and watch the time plot keep the fast wiggle and lose the slow one."></div>
+{% include widget.html widget="rc-filter" height=1280 title="RC low-pass and high-pass" %}
 
-## Combining capacitors and inductors
+## 7. Combining capacitors and inductors
 
 Capacitors in parallel add, because each one stores charge at the same voltage. Capacitors in series combine like parallel resistors. Inductors do the opposite: series inductors add, parallel inductors combine like parallel resistors.
 

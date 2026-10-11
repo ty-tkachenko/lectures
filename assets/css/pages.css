@@ -52,3 +52,68 @@ figure.widget-embed figcaption {
 figure.widget-embed figcaption a {
   color: #1d4ed8;
 }
+
+/* Reading-page chrome. Scoped so RF pages, which do not use these layouts, stay as they are. */
+
+article.module .motivating-question,
+article.practical-page .motivating-question {
+  font-size: 1.15em;
+  line-height: 1.45;
+}
+
+article.module .callout,
+article.practical-page .callout,
+article.practical-page .draft-banner {
+  border: 1px solid #eee;
+  border-left: 3px solid #1d4ed8;
+  border-radius: 10px;
+  background: #f8fafc;
+  padding: 0.8rem 1rem;
+}
+
+article.module .callout h2,
+article.practical-page .callout h2 {
+  border: 0;
+  margin-top: 0;
+  font-size: 1.05em;
+}
+
+article.module figure:not(.widget-embed),
+article.practical-page figure:not(.widget-embed) {
+  background: #fafafa;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 0.7rem 0.8rem 0.4rem;
+  margin: 1.2em 0;
+}
+
+article.module figcaption,
+article.practical-page figcaption {
+  color: #555;
+  font-size: 0.9rem;
+}
+
+article.module .katex-display,
+article.practical-page .katex-display {
+  background: #fafafa;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 0.7rem 0.9rem;
+  margin: 0.8em 0;
+}
+
+article.module .go-deeper,
+article.module .check,
+article.practical-page .go-deeper,
+article.practical-page .check {
+  border: 1px solid #eee;
+  border-radius: 10px;
+  padding: 0.2rem 0.9rem 0.6rem;
+  margin: 0.8rem 0;
+  background: #fff;
+}
+
+article.module h2,
+article.practical-page h2 {
+  border-bottom-color: #eee;
+}

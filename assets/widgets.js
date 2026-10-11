@@ -235,7 +235,7 @@
       svg.appendChild(svgEl("path", {
         d: d,
         fill: "none",
-        stroke: index === 0 ? "#111" : "#0000cc",
+        stroke: index === 0 ? "#111" : "#1d4ed8",
         "stroke-width": "2.5",
         "stroke-dasharray": series.dash || index === 1 ? "7 4" : "none"
       }));
@@ -560,8 +560,10 @@
       ["tjmax", "Junction limit", 60, 175, 5, 125, function (n) { return fixed(n, 0) + " °C"; }]
     ];
     function redraw() { paint(); }
+    var controls = el("div", { class: "row controls" });
+    root.appendChild(controls);
     specs.forEach(function (spec) {
-      fields[spec[0]] = mountSlider(root, {
+      fields[spec[0]] = mountSlider(controls, {
         label: spec[1], min: spec[2], max: spec[3], step: spec[4], value: spec[5],
         format: spec[6], onInput: redraw
       });
@@ -575,7 +577,7 @@
     root.appendChild(tjHost);
     root.appendChild(el("p", { class: "widget-plot-label" }, "Dropout region on the input voltage"));
     root.appendChild(vinHost);
-    var live = el("div", { class: "widget-readout", "aria-live": "polite" });
+    var live = el("div", { class: "readout", "aria-live": "polite" });
     root.appendChild(live);
     root.appendChild(el("p", { class: "noscript-note" }, "White is power delivered to the load. Black is heat in the regulator. The hatched band is dropout: the input is too close to the output for the part to regulate. The dashed line is your junction-temperature limit."));
 
@@ -673,15 +675,17 @@
     ];
     var state = { phase: 0 };
     function redraw() { paint(false); }
+    var controls = el("div", { class: "row controls" });
+    root.appendChild(controls);
     specs.forEach(function (spec) {
-      fields[spec[0]] = mountSlider(root, {
+      fields[spec[0]] = mountSlider(controls, {
         label: spec[1], min: spec[2], max: spec[3], step: spec[4], value: spec[5],
         format: spec[6], onInput: redraw
       });
     });
     var plotHost = el("div", null);
     root.appendChild(plotHost);
-    var live = el("div", { class: "widget-readout", "aria-live": "polite" });
+    var live = el("div", { class: "readout", "aria-live": "polite" });
     root.appendChild(live);
     root.appendChild(el("p", { class: "noscript-note" }, "The drawing is slowed down. A real cycle lasts 1/fsw. Solid square: switch node. Triangle: inductor current. The time axis covers three cycles."));
 
@@ -743,7 +747,7 @@
         dI += (n === 0 ? "M" : "L") + x + " " + syI(sample.i) + " ";
       }
       svg.appendChild(svgEl("path", { d: dSw, fill: "none", stroke: "#111", "stroke-width": "2" }));
-      svg.appendChild(svgEl("path", { d: dI, fill: "none", stroke: "#0000cc", "stroke-width": "2.5" }));
+      svg.appendChild(svgEl("path", { d: dI, fill: "none", stroke: "#1d4ed8", "stroke-width": "2.5" }));
       var yPeak = syI(s.peak);
       var yVal = syI(s.valley);
       var xAnn = sx(0.15);
@@ -758,7 +762,7 @@
       var cap1 = svgEl("text", { x: String(pad.l), y: "14", "font-size": "13", fill: "#111" });
       cap1.textContent = "Switch node (black)";
       svg.appendChild(cap1);
-      var cap2 = svgEl("text", { x: String(pad.l), y: "168", "font-size": "13", fill: "#0000cc" });
+      var cap2 = svgEl("text", { x: String(pad.l), y: "168", "font-size": "13", fill: "#1d4ed8" });
       cap2.textContent = "Inductor current (blue)";
       svg.appendChild(cap2);
     }
@@ -822,15 +826,17 @@
       ["eta", "Buck efficiency estimate", 50, 98, 1, 85, function (n) { return fixed(n, 0) + "%"; }]
     ];
     function redraw() { paint(); }
+    var controls = el("div", { class: "row controls" });
+    root.appendChild(controls);
     specs.forEach(function (spec) {
-      fields[spec[0]] = mountSlider(root, {
+      fields[spec[0]] = mountSlider(controls, {
         label: spec[1], min: spec[2], max: spec[3], step: spec[4], value: spec[5],
         format: spec[6], onInput: redraw
       });
     });
     var host = el("div", null);
     root.appendChild(host);
-    var live = el("div", { class: "widget-readout", "aria-live": "polite" });
+    var live = el("div", { class: "readout", "aria-live": "polite" });
     root.appendChild(live);
     root.appendChild(el("p", { class: "noscript-note" }, "Solid black: linear regulator heat. Dashed blue: buck heat at the efficiency you set, drawn flat because this estimate does not change with input voltage. Hatched: input below the output, where neither a buck nor an LDO can make that rail."));
 
@@ -927,9 +933,11 @@
   var RATINGS = [0.125, 0.25, 0.5, 1, 2];
 
   function addSliders(root, specs, onInput) {
+    var box = el("div", { class: "row controls" });
+    root.appendChild(box);
     var fields = {};
     specs.forEach(function (spec) {
-      fields[spec.key] = mountSlider(root, {
+      fields[spec.key] = mountSlider(box, {
         label: spec.label,
         min: spec.min,
         max: spec.max,
@@ -1005,7 +1013,7 @@
       });
       if (!d) return;
       var dashes = ["none", "7 4", "2 3"];
-      var colors = ["#111", "#0000cc", "#111"];
+      var colors = ["#111", "#1d4ed8", "#111"];
       svg.appendChild(svgEl("path", {
         d: d,
         fill: "none",
@@ -1043,7 +1051,7 @@
     root.appendChild(body);
     root.appendChild(el("p", { class: "widget-plot-label" }, "Power versus resistance. The dashed line is the rating."));
     root.appendChild(plot);
-    var live = el("div", { class: "widget-readout", "aria-live": "polite" });
+    var live = el("div", { class: "readout", "aria-live": "polite" });
     root.appendChild(live);
 
     function paint() {
@@ -1133,7 +1141,7 @@
     ], redraw);
     var plot = el("div", null);
     root.appendChild(plot);
-    var live = el("div", { class: "widget-readout", "aria-live": "polite" });
+    var live = el("div", { class: "readout", "aria-live": "polite" });
     root.appendChild(live);
     root.appendChild(el("p", { class: "noscript-note" }, "The curve is loaded output versus load resistance. The dashed line is the unloaded divider. A 10 MΩ meter barely leaves that line. A load near R2 does not."));
 
@@ -1198,7 +1206,7 @@
       { key: "ifm", label: "Target LED current", min: 1, max: 40, step: 1, value: 20, format: function (n) { return fixed(n, 0) + " mA"; } },
       { key: "rate", label: "Resistor rating (0 = 1/8 W … 4 = 2 W)", min: 0, max: 4, step: 1, value: 0, format: function (n) { return sig(RATINGS[n], 3) + " W"; } }
     ], redraw);
-    var live = el("div", { class: "widget-readout", "aria-live": "polite" });
+    var live = el("div", { class: "readout", "aria-live": "polite" });
     root.appendChild(live);
     root.appendChild(el("p", { class: "noscript-note" }, "Vf and the target current are inputs you type from a datasheet. The widget does not know your LED. Nearest is the closest E-series value. Next up is the smallest standard value at or above the ideal resistance, so the LED current does not exceed the target."));
 
@@ -1252,7 +1260,7 @@
     ], redraw);
     var plot = el("div", null);
     root.appendChild(plot);
-    var live = el("div", { class: "widget-readout", "aria-live": "polite" });
+    var live = el("div", { class: "readout", "aria-live": "polite" });
     root.appendChild(live);
 
     function paint() {
@@ -1315,7 +1323,7 @@
     ], redraw);
     var plot = el("div", null);
     root.appendChild(plot);
-    var live = el("div", { class: "widget-readout", "aria-live": "polite" });
+    var live = el("div", { class: "readout", "aria-live": "polite" });
     root.appendChild(live);
     root.appendChild(el("p", { class: "noscript-note" }, "Ideal R and C. The plot is the whole waveform, so it does not animate. A black trace is the capacitor. A dashed trace is the square wave."));
 
@@ -1381,7 +1389,7 @@
     ], redraw);
     var plot = el("div", null);
     root.appendChild(plot);
-    var live = el("div", { class: "widget-readout", "aria-live": "polite" });
+    var live = el("div", { class: "readout", "aria-live": "polite" });
     root.appendChild(live);
     root.appendChild(el("p", { class: "noscript-note" }, "The no-diode spike uses V = L ΔI / Δt with the turn-off time you set. That time is a teaching model, not a measured edge. With the diode, the coil voltage is the diode drop and the current falls in a straight line. Coil resistance is left out."));
 
@@ -1456,7 +1464,7 @@
     root.appendChild(bode);
     root.appendChild(el("p", { class: "widget-plot-label" }, "Time plot. Dashed input, solid output."));
     root.appendChild(time);
-    var live = el("div", { class: "widget-readout", "aria-live": "polite" });
+    var live = el("div", { class: "readout", "aria-live": "polite" });
     root.appendChild(live);
 
     function paint() {
@@ -1546,7 +1554,7 @@
     ], redraw);
     var plot = el("div", null);
     root.appendChild(plot);
-    var live = el("div", { class: "widget-readout", "aria-live": "polite" });
+    var live = el("div", { class: "readout", "aria-live": "polite" });
     root.appendChild(live);
     root.appendChild(el("p", { class: "noscript-note" }, "Solid black is R. Dashed blue is Xc = 1/(2πfC). Dotted black is XL = 2πfL. Both axes are logarithmic. Ideal parts: no ESR, no winding resistance."));
 
@@ -1600,7 +1608,7 @@
         vLines: [{ x: 3 }],
         series: [
           { name: "R", points: rPts, dash: "none" },
-          { name: "C", points: cPts, dash: "7 4", stroke: "#0000cc" },
+          { name: "C", points: cPts, dash: "7 4", stroke: "#1d4ed8" },
           { name: "L", points: lPts, dash: "2 3" }
         ]
       });
