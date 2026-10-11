@@ -1,0 +1,1056 @@
+<!doctype html>
+<html lang="en" data-root="../../" data-module="ee02">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Circuit Analysis · EE 2</title>
+<meta name="description" content="EE module 2: Kirchhoff's laws, series and parallel, the voltage divider for battery monitoring, loading, Thévenin equivalents, superposition, and reading schematics and datasheets.">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<link rel="stylesheet" href="../../assets/site.css">
+<script src="../../assets/course.js"></script>
+<script src="../../assets/site.js"></script>
+<script src="../../assets/plot.js"></script>
+</head>
+<body>
+<div class="layout">
+<aside class="side" aria-label="Module contents"></aside>
+<main class="content">
+
+<!-- ================= HERO ================= -->
+<header class="hero">
+  <div class="eyebrow">EE Fundamentals · Module 2</div>
+  <h1>Circuit analysis</h1>
+  <p class="lede">Module 1 dealt with one battery and one resistor. Real boards have dozens of parts sharing supplies, grounds and signals. Two conservation laws and a handful of shortcuts let you work out what any of them is doing, and tell you why a battery monitor or a pressure reading can come out wrong.</p>
+  <p class="meta">Builds on: EE module 1. Bench: multimeter, bench supply, resistors from 1 kΩ to 1 MΩ.</p>
+  <div class="resources" data-auto></div>
+  <div class="objectives">
+    <h3>What's covered</h3>
+    <ul>
+      <li>Kirchhoff's current and voltage laws, and how a shared ground wire shifts every sensor reading on it.</li>
+      <li>Series and parallel combinations, and the current divider.</li>
+      <li>The voltage divider, designed as a battery monitor for the flight computer.</li>
+      <li>Loading: why the divider reads wrong once you connect something to it.</li>
+      <li>Thévenin equivalents and superposition, the two tools that make bigger circuits manageable.</li>
+      <li>Reading a schematic and a datasheet without being fooled by the word "typical".</li>
+    </ul>
+  </div>
+  <div class="video" data-video="lecture" id="lecture">
+    <div class="plan">
+      <p>Planned walkthrough of this page (≈ 30 min):</p>
+      <ol>
+        <li data-t="0:00">Nodes, branches and loops: the vocabulary</li>
+        <li data-t="2:30">Kirchhoff's current law at the power bus</li>
+        <li data-t="5:30">Kirchhoff's voltage law, and the ground wire that isn't at 0 V</li>
+        <li data-t="9:30">Series, parallel and the current divider</li>
+        <li data-t="13:00">Designing a battery-voltage monitor</li>
+        <li data-t="17:00">Loading: the divider that reads wrong</li>
+        <li data-t="20:30">Thévenin equivalents</li>
+        <li data-t="24:00">Superposition: shifting a bipolar signal into the ADC</li>
+        <li data-t="27:00">Reading schematics and datasheets</li>
+      </ol>
+    </div>
+  </div>
+</header>
+
+<!-- ================= 1 VOCABULARY ================= -->
+<section class="sec" id="nodes" data-short="Nodes, branches, loops">
+<h2>Nodes, branches and loops <a class="vjump" data-t="0:00"></a></h2>
+<p>Circuit analysis needs three words, and it's worth getting them exactly right:</p>
+<ul>
+  <li>A <strong>node</strong> is a set of points joined by wire. Every point on a node is at the same voltage, because an ideal wire drops nothing. A node can be a single solder joint or a whole copper pour: the entire ground plane of a board is one node (as long as you ignore its resistance, which Section 3 won't).</li>
+  <li>A <strong>branch</strong> is a single path between two nodes: one component, or several in series. The same current flows all the way along a branch.</li>
+  <li>A <strong>loop</strong> is any closed path you can trace through branches, starting and ending at the same node.</li>
+</ul>
+
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>Two nodes, three branches, two loops</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 240" role="img" aria-label="A battery and R1 in series feed node A; R2 and R3 run in parallel from node A down to node B, which is ground. Two loops are marked.">
+    <defs><marker id="arA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--c1)"/></marker></defs>
+    <g stroke="var(--ink)" stroke-width="2" fill="none" stroke-linejoin="round">
+      <!-- battery on the left -->
+      <path d="M90 50v65M90 125v65"/>
+      <path d="M76 115h28"/><path d="M83 125h14" stroke-width="4"/>
+      <!-- R1 along the top -->
+      <path d="M90 50h70l3-6l6 12l6-12l6 12l6-12l6 12l3-6h70"/>
+      <!-- node A to R3 -->
+      <path d="M260 50h220"/>
+      <!-- R2 and R3 vertical -->
+      <path d="M260 50v40l6 3l-12 6l12 6l-12 6l12 6l-12 6l6 3v40"/>
+      <path d="M480 50v40l6 3l-12 6l12 6l-12 6l12 6l-12 6l6 3v40"/>
+      <!-- return wire and ground -->
+      <path d="M90 190h390"/>
+      <path d="M260 190v12M248 202h24M252 207h16M257 212h6"/>
+    </g>
+    <circle cx="260" cy="50" r="5" fill="var(--c2)"/><circle cx="260" cy="190" r="5" fill="var(--c3)"/>
+    <text x="270" y="36" font-size="13" font-weight="600" fill="var(--c2)">node A</text>
+    <text x="272" y="210" font-size="13" font-weight="600" fill="var(--c3)">node B (GND)</text>
+    <text x="64" y="124" font-size="12" text-anchor="end" fill="var(--ink2)">V<tspan font-size="9" dy="3">bat</tspan></text>
+    <text x="108" y="110" font-size="12" fill="var(--ink2)">+</text>
+    <text x="175" y="34" font-size="13" text-anchor="middle">R1</text>
+    <text x="242" y="124" font-size="13" text-anchor="end">R2</text>
+    <text x="496" y="124" font-size="13">R3</text>
+    <!-- loops -->
+    <path d="M150 100a28 28 0 1 1 28 28" fill="none" stroke="var(--c1)" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arA)"/>
+    <text x="178" y="150" font-size="12" text-anchor="middle" fill="var(--c1)">loop 1</text>
+    <path d="M342 100a28 28 0 1 1 28 28" fill="none" stroke="var(--c1)" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arA)"/>
+    <text x="370" y="150" font-size="12" text-anchor="middle" fill="var(--c1)">loop 2</text>
+    <text x="560" y="96" font-size="12" fill="var(--muted)">branches:</text>
+    <text x="560" y="114" font-size="12" fill="var(--muted)">battery + R1</text>
+    <text x="560" y="130" font-size="12" fill="var(--muted)">R2</text>
+    <text x="560" y="146" font-size="12" fill="var(--muted)">R3</text>
+  </svg>
+  </div>
+</div>
+
+<p>The whole top wire from R1 to R3 is node A, however long it's drawn. The whole bottom wire is node B. There's a third loop too, around the outside through the battery, R1 and R3. Counting nodes properly is the first step of every analysis, and the most common beginner error is treating two ends of the same wire as different nodes.</p>
+</section>
+
+<!-- ================= 2 KCL ================= -->
+<section class="sec" id="kcl" data-short="Current law (KCL)">
+<h2>Kirchhoff's current law: what goes in comes out <a class="vjump" data-t="2:30"></a></h2>
+<p>Module 1 said that current isn't used up. Applied to a node, that becomes <strong>Kirchhoff's current law</strong> (KCL): charge can't pile up on a wire, so the total current flowing into any node equals the total flowing out.</p>
+<div class="eq">$$\sum I_\text{in} = \sum I_\text{out}$$<div class="n">at every node, at every instant</div></div>
+<p>The avionics power bus is the textbook example. The battery feeds one wire into the bus, and the flight computer, radio and GPS each take their share from it. KCL says the battery wire carries the sum. And every one of those currents has to get back to the battery, so <b>the ground wire carries the sum too</b>. That second fact is easy to forget, and it matters in the next section.</p>
+
+<div class="example">
+  <span class="xk">Worked example</span>
+  <p>In Module 1's power budget the flight computer drew 180 mA, the radio 120 mA and the GPS 30 mA. At the bus node:</p>
+  <p>\(I_\text{battery} = 180 + 120 + 30 = 330\ \text{mA}\)</p>
+  <p>If you measure 330 mA in the battery lead and only 300 mA in the flight computer and radio leads together, KCL tells you the missing 30 mA is going somewhere. That's a useful debugging tool: currents that don't add up mean there's a path you didn't know about, often a leaky or shorted part.</p>
+</div>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">How much is left on the fuse?</span><span class="eo">optional</span></summary>
+  <div class="eb">
+    <p>The pad-box bus is fed through a 5 A fuse. On it are the flight computer (180 mA), the radio while transmitting (600 mA), a camera (900 mA) and two valve drivers that each draw 1.5 A when open. Everything can be on at once.</p>
+    <div class="check" data-ans="0.32" data-tol="3%" data-unit="A"><p>How much current is left before the fuse's rating?</p>
+      <div class="miss" data-val="1.82"><p>There are <em>two</em> valve drivers, and both can be open at once.</p></div>
+      <div class="hint">KCL: the fuse carries the sum of every branch current.</div>
+      <div class="solution"><p>\(0.18 + 0.6 + 0.9 + 2 \times 1.5 = 4.68\ \text{A}\), leaving 0.32 A. That's far too close: fuses are typically run at no more than about 75 % of their rating, and valves draw more than their holding current for a moment as they open. Either a bigger fuse and wiring to match, or a separate fused feed for the valves.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 3 KVL ================= -->
+<section class="sec" id="kvl" data-short="Voltage law (KVL)">
+<h2>Kirchhoff's voltage law: around a loop, the drops add up <a class="vjump" data-t="5:30"></a></h2>
+<p>Go around any loop, adding up the voltage across every component on the way. You always get back to zero, because you're back at the same node you started from. That's <strong>Kirchhoff's voltage law</strong> (KVL):</p>
+<div class="eq">$$\sum_\text{loop} V = 0 \qquad\text{or equivalently}\qquad \text{sum of rises} = \text{sum of drops}$$<div class="n">count a voltage as positive going − to + and negative going + to −; any consistent convention works</div></div>
+<p>In plain terms, the battery's voltage gets shared out between everything in the loop, and every volt is accounted for. Module 1's igniter cable was KVL already: the 12 V was split between the outgoing wire, the igniter and the return wire.</p>
+<p>The figure below puts KCL and KVL together on a real power bus: a 2S LiPo, a harness with a feed wire and a return (ground) wire, and four loads. The loads are modelled as drawing a fixed current, which is roughly how regulated electronics behave.</p>
+
+<div class="widget wide" id="w-bus">
+  <div class="wh"><span class="tag">Interactive</span><b>KCL and KVL on the avionics power bus</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label>Loads switched on</label>
+        <div class="seg" id="kLoads"><button type="button" data-v="fc" class="on" aria-pressed="true">Flight computer</button><button type="button" data-v="radio" class="on" aria-pressed="true">Radio (TX)</button><button type="button" data-v="gps" class="on" aria-pressed="true">GPS</button><button type="button" data-v="valve" aria-pressed="false">Valve</button></div></div>
+      <div class="ctrl"><label for="kV">Battery open-circuit voltage <b id="kVv"></b></label><input id="kV" type="range" min="6" max="8.4" step="0.05" value="7.4"></div>
+      <div class="ctrl"><label>Battery condition</label><div class="seg" id="kR"><button type="button" data-v="0.08" class="on">Fresh (80 mΩ)</button><button type="button" data-v="0.25">Cold or old (250 mΩ)</button></div></div>
+      <div class="ctrl"><label for="kL">Harness length, 22 AWG <b id="kLv"></b></label><input id="kL" type="range" min="0.2" max="3" step="0.1" value="1"></div>
+      <p class="small">Loads: flight computer 180 mA, radio 600 mA while transmitting, GPS 30 mA, valve 3 A. The regulators need at least 6.0 V at the bus.</p>
+    </div>
+    <div>
+      <canvas id="cvBus" style="height:290px" aria-label="Schematic of a battery feeding four loads through a feed wire and a return wire, with a bar showing how the battery voltage is shared around the loop"></canvas>
+      <p class="small" id="kEq" style="margin:.5em 0 0"></p>
+      <div class="readout">
+        <div class="stat"><div class="k">Battery current</div><div class="v" id="kI"></div></div>
+        <div class="stat" id="kBusS"><div class="k">Voltage at the loads</div><div class="v" id="kBus"></div></div>
+        <div class="stat" id="kGndS"><div class="k">Ground shift</div><div class="v" id="kGnd"></div></div>
+      </div>
+      <div class="verdict" id="kVerdict"></div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>With the default loads, check KCL: does the battery current equal the sum of the branch currents?</li>
+    <li>Open the valve. How far does the ground at the loads rise above the battery's negative terminal? Every sensor measured against that ground now reads off by that much.</li>
+    <li>With the valve open, make the battery cold and the harness 3 m long. Which part of the loop is eating the voltage?</li>
+  </ol></div>
+</div>
+
+<div class="note rocket">
+  <span class="ni">🚀</span>
+  <div><span class="nt">The ground that isn't at 0 V</span>The return wire carries the sum of every load current, so when the valve opens, the "ground" at the far end of the harness rises by \(I \times R_\text{return}\). A pressure transducer that shares that ground reports a pressure spike that never happened. It looks like a sensor fault, but it's KVL. The fixes are separate return wires for high-current loads, or measuring the sensor differentially. Exercise 3 at the end works through the numbers; Module 13 covers grounding properly.</div>
+</div>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">Find the bad crimp</span><span class="eo">optional</span></summary>
+  <div class="eb">
+    <p>A valve on the test stand opens sluggishly. Its supply is 12.0 V at the battery, and with the valve energised (2.0 A) you measure 10.9 V across the valve itself, 0.3 V along the feed wire and 0.3 V along the return wire. The only other thing in the loop is a connector.</p>
+    <div class="check" data-ans="0.25" data-tol="3%" data-unit="Ω"><p>What's the connector's resistance?</p>
+      <div class="miss" data-val="0.5"><p>0.5 is the voltage across the connector. Ohm's law turns it into a resistance.</p></div>
+      <div class="hint">KVL first: the drops around the loop add up to 12.0 V. What's left for the connector?</div>
+      <div class="solution"><p>KVL: \(12.0 - 10.9 - 0.3 - 0.3 = 0.5\ \text{V}\) across the connector. At 2.0 A that's \(0.5 / 2 = 0.25\ \Omega\). A good crimped contact is a few milliohms, so this one is a hundred times too high. It's also dissipating \(0.5 \times 2 = 1\ \text{W}\) inside a connector body, which is how connectors melt.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 4 SERIES / PARALLEL ================= -->
+<section class="sec" id="series" data-short="Series &amp; parallel">
+<h2>Series and parallel <a class="vjump" data-t="9:30"></a></h2>
+<p>Two shortcuts follow directly from Kirchhoff's laws, and you'll use them constantly.</p>
+<p><strong>In series</strong>, components share one branch, so they carry the same current (KCL), and their voltages add up (KVL). The resistances add:</p>
+<div class="eq">$$R_\text{series} = R_1 + R_2 + \dots$$</div>
+<p><strong>In parallel</strong>, components connect between the same two nodes, so they have the same voltage across them, and their currents add up. The <em>conductances</em> (1/R) add:</p>
+<div class="eq">$$\frac{1}{R_\text{par}} = \frac{1}{R_1} + \frac{1}{R_2} + \dots \qquad\text{for two:}\qquad R_\text{par} = R_1 \parallel R_2 = \frac{R_1 R_2}{R_1 + R_2}$$<div class="n">"product over sum"; the ∥ symbol means "in parallel with"</div></div>
+<p>Two quick checks catch most mistakes: series is always <em>larger</em> than the largest resistor, and parallel is always <em>smaller</em> than the smallest. Two equal resistors in parallel give exactly half.</p>
+<p>In parallel the current splits, and more of it takes the easier path. That's the <strong>current divider</strong>:</p>
+<div class="eq">$$I_1 = I\,\frac{R_2}{R_1 + R_2} \qquad I_2 = I\,\frac{R_1}{R_1 + R_2}$$<div class="n">note the "wrong" resistor on top: the current through R1 depends on R2</div></div>
+
+<div class="widget wide" id="w-sp">
+  <div class="wh"><span class="tag">Interactive</span><b>Two resistors, in series or in parallel</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label>Connection</label><div class="seg" id="sM"><button type="button" data-v="s" class="on">Series</button><button type="button" data-v="p">Parallel</button></div></div>
+      <div class="ctrl"><label for="sV">Supply voltage <b id="sVv"></b></label><input id="sV" type="range" min="0" max="12" step="0.1" value="9"></div>
+      <div class="ctrl"><label for="sR1">R1 <b id="sR1v"></b></label><input id="sR1" type="range" min="0" max="48" step="1" value="24"></div>
+      <div class="ctrl"><label for="sR2">R2 <b id="sR2v"></b></label><input id="sR2" type="range" min="0" max="48" step="1" value="28"></div>
+      <p class="small">Resistor values step through the E12 series, the standard values you can actually buy.</p>
+    </div>
+    <div>
+      <canvas id="cvSP" style="height:250px" aria-label="Schematic of a battery and two resistors in series or in parallel, labelled with the current through and the voltage across each"></canvas>
+      <div class="readout">
+        <div class="stat"><div class="k">Equivalent R</div><div class="v" id="sReq"></div></div>
+        <div class="stat"><div class="k">Supply current</div><div class="v" id="sI"></div></div>
+        <div class="stat"><div class="k">Total power</div><div class="v" id="sP"></div></div>
+      </div>
+      <div class="verdict" id="sVerdict"></div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>In series, make R2 ten times R1. What share of the 9 V does each resistor get?</li>
+    <li>Switch to parallel with the same values. Which resistor carries more current now, and which dissipates more power?</li>
+    <li>In parallel, set R1 = 10 Ω and R2 = 100 kΩ. What's the equivalent resistance? A huge resistor in parallel barely matters, a fact that comes back in Section 6.</li>
+  </ol></div>
+</div>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">Dual igniters on one cable</span><span class="eo">optional</span></summary>
+  <div class="eb">
+    <p>For redundancy, two igniters are wired in parallel at the end of the launch cable. Each is 1.6 Ω with a 1.0 A all-fire current. The cable is Module 1's 30 m of 22 AWG twin (3.17 Ω round trip), and the firing box supplies 12 V. Ignore the battery's and relay's resistance.</p>
+    <div class="check" data-ans="1.51" data-tol="2%" data-unit="A"><p>How much current goes through <em>each</em> igniter?</p>
+      <div class="miss" data-val="3.02"><p>That's the total current in the cable. It splits between the two igniters.</p></div>
+      <div class="miss" data-val="2.46"><p>That's the current for a single igniter. With two in parallel, the load resistance halves.</p></div>
+      <div class="hint">Two equal resistors in parallel give half the resistance. Then it's one series loop: cable plus the parallel pair.</div>
+      <div class="solution"><p>The pair is \(1.6 \parallel 1.6 = 0.8\ \Omega\). The loop is \(3.17 + 0.8 = 3.97\ \Omega\), so the cable carries \(12 / 3.97 = 3.02\ \text{A}\), which splits equally: 1.51 A each, a 1.5× margin. Compare a single igniter at 2.46 A: adding the second one roughly doubled the load, so the cable's share of the voltage went up and each igniter got less. Redundancy here costs margin.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 5 DIVIDER ================= -->
+<section class="sec" id="divider" data-short="The voltage divider">
+<h2>The voltage divider: watching the battery <a class="vjump" data-t="13:00"></a></h2>
+<p>The flight computer should know its own battery voltage: to log it, to refuse to arm on a flat pack, and to warn the ground station during a long hold. But a 2S LiPo reaches 8.4 V and the microcontroller's ADC pin only accepts 0 to 3.3 V. Putting 8.4 V on that pin damages it.</p>
+<p>The fix is two resistors in series across the battery. The same current flows through both, so the voltage splits in proportion to their resistances, and the junction between them sits at a fixed fraction of the input:</p>
+<div class="eq">$$V_\text{out} = V_\text{in}\,\frac{R_2}{R_1 + R_2}$$<div class="n">R1 from the input to the output, R2 from the output to ground</div></div>
+<p>That fraction is the <strong>divider ratio</strong>. The firmware reads \(V_\text{out}\) and multiplies by \((R_1 + R_2)/R_2\) to get the battery voltage back.</p>
+
+<div class="widget wide" id="w-div">
+  <div class="wh"><span class="tag">Interactive</span><b>Design a battery-voltage monitor</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label>Cells in series</label><div class="seg" id="dS"><button type="button" data-v="1">1S</button><button type="button" data-v="2" class="on">2S</button><button type="button" data-v="3">3S</button><button type="button" data-v="4">4S</button></div></div>
+      <div class="ctrl"><label for="dQ">Cell voltage now <b id="dQv"></b></label><input id="dQ" type="range" min="3" max="4.2" step="0.01" value="3.8"></div>
+      <div class="ctrl"><label for="dR1">R1 (top) <b id="dR1v"></b></label><input id="dR1" type="range" min="0" max="36" step="1" value="16"></div>
+      <div class="ctrl"><label for="dR2">R2 (bottom) <b id="dR2v"></b></label><input id="dR2" type="range" min="0" max="36" step="1" value="12"></div>
+      <p class="small">ADC input range 0 to 3.3 V, 12 bits (0 to 4095).</p>
+    </div>
+    <div>
+      <canvas id="cvDiv" style="height:290px" aria-label="Schematic of a battery feeding a two-resistor divider whose midpoint goes to an ADC pin, with a gauge showing the ADC voltage now and at full charge"></canvas>
+      <div class="readout">
+        <div class="stat"><div class="k">V<sub>out</sub> now</div><div class="v" id="dVo"></div></div>
+        <div class="stat" id="dFullS"><div class="k">V<sub>out</sub> at full charge</div><div class="v" id="dFull"></div></div>
+        <div class="stat"><div class="k">ADC reading</div><div class="v" id="dCode"></div></div>
+        <div class="stat" id="dDrainS"><div class="k">Divider drain</div><div class="v" id="dDrain"></div></div>
+      </div>
+      <div class="verdict" id="dVerdict"></div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>Switch to 3S without changing the resistors. What happens at full charge?</li>
+    <li>Find a pair that works for 3S with some headroom at full charge, and check how much current the divider wastes.</li>
+    <li>Try 1 kΩ and 330 Ω. The ratio is fine, but how long would that divider take to drain the pack on its own?</li>
+  </ol></div>
+</div>
+
+<p>Picking the ratio is easy. Picking the <em>size</em> of the resistors is the real design decision, because the divider is always connected, always drawing current from the battery:</p>
+<ul>
+  <li><strong>Too small</strong> (a few kΩ in total) and the divider is a constant load. A few milliamps doesn't sound like much, but over a week on the shelf it flattens a small pack, and LiPos are damaged by being run flat.</li>
+  <li><strong>Too large</strong> (megohms) and the divider becomes fragile: anything connected to its output disturbs it, which is the subject of the next section.</li>
+</ul>
+<p>Tens of kilohms in total is the usual compromise for a battery monitor, often with a 100 nF capacitor from the output to ground to steady the voltage while the ADC samples it (Module 3 explains why that works).</p>
+
+<div class="example">
+  <span class="xk">Worked example</span>
+  <p>A 2S pack (8.4 V full) with R1 = 22 kΩ and R2 = 10 kΩ. The ratio is \(10 / 32 = 0.3125\), so at full charge the ADC sees \(8.4 \times 0.3125 = 2.63\ \text{V}\), comfortably below 3.3 V.</p>
+  <p>The divider draws \(8.4\ \text{V} / 32\ \text{k}\Omega = 0.26\ \text{mA}\). That's about 190 mAh a month, so a 2200 mAh pack left connected in a cupboard for a few months would be flat. Many flight computers switch the divider off with a small MOSFET when they aren't measuring (Module 6).</p>
+</div>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">Read the battery back</span><span class="eo">optional</span></summary>
+  <div class="eb">
+    <p>The flight computer uses the 22 kΩ / 10 kΩ divider above. During a pad hold the ADC reads 2.10 V.</p>
+    <div class="check" data-ans="6.72" data-tol="1%" data-unit="V"><p>What's the battery voltage?</p>
+      <div class="miss" data-val="4.62"><p>That's 2.10 × 22/10. The scale factor is the <em>total</em> resistance over R2: (22 + 10)/10.</p></div>
+      <div class="miss" data-val="0.656"><p>You multiplied by the ratio instead of dividing by it. The battery is bigger than what the ADC sees.</p></div>
+      <div class="solution"><p>\(V_\text{bat} = 2.10 \times (22 + 10)/10 = 6.72\ \text{V}\), or 3.36 V per cell. That's close to empty: time to stop holding and swap the pack.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 6 LOADING ================= -->
+<section class="sec" id="loading" data-short="Loading">
+<h2>Loading: why your divider reads wrong <a class="vjump" data-t="17:00"></a></h2>
+<p>The divider equation assumes nothing is connected to the output. In reality something always is: the ADC pin, a multimeter, a data logger. Whatever you connect draws some current, and it sits <em>in parallel with R2</em>. That lowers the bottom half of the divider, so the output drops. This is called <strong>loading</strong>.</p>
+<div class="eq">$$V_\text{out} = V_\text{in}\,\frac{R_2 \parallel R_L}{R_1 + R_2 \parallel R_L}$$<div class="n">R<sub>L</sub> is the load: the input resistance of whatever reads the divider</div></div>
+<p>If \(R_L\) is huge compared with R2, then \(R_2 \parallel R_L \approx R_2\) and nothing changes. You saw that in the series and parallel figure: a big resistor in parallel barely matters. The trouble starts when the load is within a factor of a hundred or so of the divider's resistors.</p>
+
+<div class="widget wide" id="w-load">
+  <div class="wh"><span class="tag">Interactive</span><b>Loading a divider</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label for="lV">Input voltage <b id="lVv"></b></label><input id="lV" type="range" min="1" max="20" step="0.1" value="10"></div>
+      <div class="ctrl"><label for="lR1">R1 <b id="lR1v"></b></label><input id="lR1" type="range" min="0" max="48" step="1" value="36"></div>
+      <div class="ctrl"><label for="lR2">R2 <b id="lR2v"></b></label><input id="lR2" type="range" min="0" max="48" step="1" value="36"></div>
+      <div class="ctrl"><label for="lRL">Load resistance <b id="lRLv"></b></label><input id="lRL" type="range" min="3" max="9" step="0.01" value="7"></div>
+      <div class="ctrl"><label>Typical loads</label><div class="btns" id="lPre"><button type="button" data-v="5">Data logger (100 kΩ)</button><button type="button" data-v="6">Oscilloscope (1 MΩ)</button><button type="button" data-v="7">Multimeter (10 MΩ)</button></div></div>
+    </div>
+    <div>
+      <canvas id="cvLoad" style="height:380px" aria-label="Schematic of a divider with a load resistor across its lower half, and a plot of output voltage against load resistance"></canvas>
+      <div class="legend"><span style="--c:var(--c1)">loaded output</span><span class="dash" style="--c:var(--muted)">unloaded (ideal) output</span></div>
+      <div class="readout">
+        <div class="stat"><div class="k">Unloaded V<sub>out</sub></div><div class="v" id="lVi"></div></div>
+        <div class="stat"><div class="k">Loaded V<sub>out</sub></div><div class="v" id="lVl"></div></div>
+        <div class="stat" id="lErrS"><div class="k">Error</div><div class="v" id="lErr"></div></div>
+        <div class="stat"><div class="k">R1 ∥ R2</div><div class="v" id="lRth"></div></div>
+      </div>
+      <div class="verdict" id="lVerdict"></div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>The default is a 1 MΩ / 1 MΩ divider from 10 V, measured with a 10 MΩ multimeter. It should read 5 V. What does the meter actually show?</li>
+    <li>Keep the meter, and scale both resistors down to 10 kΩ. Same ratio, so what changed?</li>
+    <li>Find where the curve starts to bend. Compare that load with the R1 ∥ R2 readout. The rule of thumb in the next section comes from this.</li>
+  </ol></div>
+</div>
+
+<div class="note myth">
+  <span class="ni">!</span>
+  <div><span class="nt">"The meter is lying"</span>When a high-value divider reads low on your multimeter, the meter is reporting the voltage correctly. It's the circuit that changed when you connected the meter. Every measurement loads the thing it measures a little; the skill is knowing when "a little" is too much. Probing a megohm node with a 10 MΩ meter, or a 1 MΩ scope probe, is a classic way to chase a fault that isn't there.</div>
+</div>
+</section>
+
+<!-- ================= 7 THEVENIN ================= -->
+<section class="sec" id="thevenin" data-short="Thévenin equivalents">
+<h2>Thévenin equivalents <a class="vjump" data-t="20:30"></a></h2>
+<p>Loading problems get much easier with one of the most useful results in circuit theory. <strong>Thévenin's theorem</strong> says that any circuit made of voltage sources, current sources and resistors, looked at from two terminals, behaves exactly like one voltage source \(V_\text{th}\) in series with one resistor \(R_\text{th}\). Whatever you connect to those terminals can't tell the difference.</p>
+<p>You've already met one. Module 1's battery model, an ideal source with an internal resistance, is a Thévenin equivalent. Finding one takes two steps:</p>
+<ol>
+  <li><strong>\(V_\text{th}\)</strong> is the <em>open-circuit voltage</em>: what the terminals show with nothing connected.</li>
+  <li><strong>\(R_\text{th}\)</strong> is the resistance you see looking back into the terminals with every source switched off. Switching a voltage source off means replacing it with a wire (0 V); a current source becomes an open circuit (0 A).</li>
+</ol>
+<p>For a divider, switching the source off joins the top of R1 to ground, so looking back from the output you see R1 and R2 in parallel:</p>
+<div class="eq">$$V_\text{th} = V_\text{in}\,\frac{R_2}{R_1 + R_2} \qquad R_\text{th} = R_1 \parallel R_2$$</div>
+
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>A divider and its Thévenin equivalent are indistinguishable from the outside</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 230" role="img" aria-label="Left: a 12 volt source with two 10 kilohm resistors forming a divider, output terminals a and b. Right: a 6 volt source in series with 5 kilohms, the same terminals.">
+    <g stroke="var(--line2)" stroke-width="1" fill="none" stroke-dasharray="4 4"><rect x="20" y="20" width="250" height="180"/><rect x="360" y="20" width="220" height="180"/></g>
+    <g stroke="var(--ink)" stroke-width="2" fill="none" stroke-linejoin="round">
+      <!-- left: divider -->
+      <path d="M70 50v55M70 115v65"/><path d="M56 105h28"/><path d="M63 115h14" stroke-width="4"/>
+      <path d="M70 50h110v12l6 3l-12 6l12 6l-12 6l12 6l-12 6l6 3v12"/>
+      <path d="M180 110v12l6 3l-12 6l12 6l-12 6l12 6l-12 6l6 3v12"/>
+      <path d="M70 180h210M180 110h100"/>
+      <!-- right: Thevenin -->
+      <path d="M420 50v55M420 115v65"/><path d="M406 105h28"/><path d="M413 115h14" stroke-width="4"/>
+      <path d="M420 50h40l3-6l6 12l6-12l6 12l6-12l6 12l3-6h40v60h53"/>
+      <path d="M420 180h170"/>
+    </g>
+    <circle cx="180" cy="110" r="4" fill="var(--ink)"/>
+    <g fill="#fff" stroke="var(--ink)" stroke-width="2"><circle cx="284" cy="110" r="5"/><circle cx="284" cy="180" r="5"/><circle cx="594" cy="110" r="5"/><circle cx="594" cy="180" r="5"/></g>
+    <text x="296" y="114" font-size="13" font-weight="600">a</text><text x="296" y="184" font-size="13" font-weight="600">b</text>
+    <text x="606" y="114" font-size="13" font-weight="600">a</text><text x="606" y="184" font-size="13" font-weight="600">b</text>
+    <text x="50" y="114" font-size="12" text-anchor="end">12 V</text>
+    <text x="196" y="84" font-size="12">R1 10 kΩ</text>
+    <text x="196" y="146" font-size="12">R2 10 kΩ</text>
+    <text x="400" y="114" font-size="12" text-anchor="end" fill="var(--c2)">6 V</text>
+    <text x="480" y="36" font-size="12" text-anchor="middle" fill="var(--c2)">R<tspan font-size="9" dy="3">th</tspan><tspan dy="-3"> 5 kΩ</tspan></text>
+    <text x="330" y="124" font-size="28" text-anchor="middle">≡</text>
+    <text x="145" y="222" font-size="12" text-anchor="middle" fill="var(--muted)">the real circuit</text>
+    <text x="480" y="222" font-size="12" text-anchor="middle" fill="var(--muted)">its Thévenin equivalent</text>
+  </svg>
+  </div>
+</div>
+
+<p>Now loading is just one more divider, made of \(R_\text{th}\) and the load:</p>
+<div class="eq">$$V_\text{load} = V_\text{th}\,\frac{R_L}{R_\text{th} + R_L}$$</div>
+<p>The fractional error is \(R_\text{th}/(R_\text{th} + R_L)\), which gives the rule of thumb behind the loading figure:</p>
+<div class="note rule">
+  <span class="ni">✓</span>
+  <div><span class="nt">Rule of thumb: the 100× rule</span>Keep the load at least 100 times the source's Thévenin resistance, and loading costs you less than 1 %. At 10× it costs about 9 %. When you can't meet the rule, put a buffer amplifier in between (Module 10), or calibrate the error out.</div>
+</div>
+
+<div class="example">
+  <span class="xk">Worked example</span>
+  <p>The 1 MΩ / 1 MΩ divider from 10 V, measured with a 10 MΩ meter. Thévenin: \(V_\text{th} = 5\ \text{V}\), \(R_\text{th} = 1\ \text{M}\Omega \parallel 1\ \text{M}\Omega = 500\ \text{k}\Omega\).</p>
+  <p>The meter reads \(5 \times 10 / (0.5 + 10) = 4.76\ \text{V}\), a 4.8 % error. The meter is only 20× the source resistance, short of the 100× rule.</p>
+</div>
+
+<p>Thévenin also works the other way round, as a measurement. Measure the open-circuit voltage, then connect a known load and measure again. The drop tells you \(R_\text{th}\) without opening the box. It's how you find a battery's internal resistance, or the output resistance of a sensor with no datasheet. Equivalently, \(R_\text{th} = V_\text{oc}/I_\text{sc}\), the open-circuit voltage over the short-circuit current, though deliberately shorting a source is rarely a good idea.</p>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">What's inside the sensor?</span><span class="eo">optional</span></summary>
+  <div class="eb">
+    <p>A cheap temperature sensor board has an analog output and no useful datasheet. With nothing connected, the output reads 3.00 V on your meter. With a 10 kΩ resistor from the output to ground, it reads 2.50 V.</p>
+    <div class="check" data-ans="2000" data-tol="2%" data-unit="Ω"><p>What's the sensor's output (Thévenin) resistance?</p>
+      <div class="miss" data-val="12000"><p>That's the total resistance in the loop. Subtract the 10 kΩ load.</p></div>
+      <div class="hint">The 10 kΩ carries 2.50 V / 10 kΩ = 0.25 mA. The missing 0.50 V is dropped inside the sensor at that same current.</div>
+      <div class="solution"><p>\(I = 2.50 / 10\,\text{k} = 0.25\ \text{mA}\), and the 0.50 V drop inside the sensor gives \(R_\text{th} = 0.50 / 0.25\,\text{mA} = 2\ \text{k}\Omega\). By the 100× rule, anything reading this sensor should have an input resistance of at least 200 kΩ. A 10 MΩ meter is fine; some logger inputs are not.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 8 SUPERPOSITION ================= -->
+<section class="sec" id="superposition" data-short="Superposition">
+<h2>Superposition: one source at a time <a class="vjump" data-t="24:00"></a></h2>
+<p>Circuits made of resistors and sources are <strong>linear</strong>: double every source and every voltage and current doubles. That gives you <strong>superposition</strong>. With several sources, the voltage at any point is the sum of what each source would produce on its own, with all the others switched off (voltage sources replaced by wires, current sources by open circuits).</p>
+<p>A common use on the test stand: a load-cell amplifier puts out a signal between −2.5 V and +2.5 V, but the ADC only accepts 0 to 3.3 V. Two equal resistors, one from the signal and one from the 3.3 V supply, meet at the ADC pin. Each source sees a simple divider when the other is switched off:</p>
+<div class="eq">$$V_\text{out} = \underbrace{V_\text{sig}\,\frac{R_2}{R_1 + R_2}}_\text{signal alone} + \underbrace{V_\text{ref}\,\frac{R_1}{R_1 + R_2}}_\text{reference alone} = \frac{V_\text{sig}}{2} + 1.65\ \text{V}$$<div class="n">with R1 = R2; each term is the other source switched off</div></div>
+<p>The signal is halved and shifted up by 1.65 V, so −2.5 to +2.5 V lands on 0.4 to 2.9 V, safely inside the ADC's range.</p>
+
+<div class="widget wide" id="w-sup">
+  <div class="wh"><span class="tag">Interactive</span><b>Superposition: shifting a bipolar signal into the ADC range</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label for="uV">Signal voltage <b id="uVv"></b></label><input id="uV" type="range" min="-2.5" max="2.5" step="0.05" value="1"></div>
+      <div class="ctrl"><label>Sources switched on</label><div class="seg" id="uM"><button type="button" data-v="both" class="on">Both</button><button type="button" data-v="sig">Signal only</button><button type="button" data-v="ref">Reference only</button></div></div>
+      <p class="small">R1 = R2 = 10 kΩ, reference 3.3 V. A source that's switched off is replaced by a wire, holding its terminals at 0 V.</p>
+    </div>
+    <div>
+      <canvas id="cvSup" style="height:300px" aria-label="Schematic of a signal source and a 3.3 volt reference joined by two resistors at the ADC node, with arrows showing each source's contribution"></canvas>
+      <div class="readout">
+        <div class="stat"><div class="k">From the signal</div><div class="v" id="uS"></div></div>
+        <div class="stat"><div class="k">From the reference</div><div class="v" id="uR"></div></div>
+        <div class="stat"><div class="k">V<sub>out</sub></div><div class="v" id="uO"></div></div>
+      </div>
+      <div class="verdict" id="uVerdict"></div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>Set the signal to +1 V. Read "signal only" and "reference only", then switch both on. Do the two parts add up?</li>
+    <li>Sweep the signal across its whole range with both sources on. Does the output ever leave 0 to 3.3 V?</li>
+  </ol></div>
+</div>
+
+<div class="note warn">
+  <span class="ni">!</span>
+  <div><span class="nt">Where superposition stops working</span>It only applies to linear circuits, and only to voltages and currents. Power goes as \(V^2/R\), so you can't add up the power from each source separately. And anything nonlinear, like a diode or a transistor switching on and off, breaks it. Use it on the resistor networks around those parts, not on the parts themselves.</div>
+</div>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">An unequal level shifter</span><span class="eo">optional</span></summary>
+  <div class="eb">
+    <p>The same circuit, but with R1 = 20 kΩ from the signal and R2 = 10 kΩ from the 3.3 V reference.</p>
+    <div class="check" data-ans="1.2" data-tol="2%" data-unit="V"><p>What does the ADC see when the signal is −3.0 V?</p>
+      <div class="miss" data-val="2.2"><p>That's the reference's contribution alone. Add the signal's part (it's negative).</p></div>
+      <div class="miss" data-val="0.1"><p>Check which resistor each source sees on top. With the reference off, the signal sees R1 on top and R2 to "ground".</p></div>
+      <div class="hint">Signal alone: a divider with R1 = 20 kΩ on top and R2 = 10 kΩ below. Reference alone: R2 on top, R1 below.</div>
+      <div class="solution"><p>Signal alone: \(-3.0 \times 10/30 = -1.0\ \text{V}\). Reference alone: \(3.3 \times 20/30 = 2.2\ \text{V}\). Together: \(-1.0 + 2.2 = 1.2\ \text{V}\). This shifter maps −6.6 V to 0 V and +3.3 V to 3.3 V, so it suits signals that swing further negative than positive.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 9 SCHEMATICS & DATASHEETS ================= -->
+<section class="sec" id="reading" data-short="Schematics &amp; datasheets">
+<h2>Reading schematics and datasheets <a class="vjump" data-t="27:00"></a></h2>
+<p>A schematic shows how parts are <em>connected</em>, not where they sit on the board. Here is the battery monitor from Section 5 as it would appear in the flight computer's schematic, with the conventions that trip people up most often marked:</p>
+
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>The battery monitor as drawn in a real schematic</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 270" role="img" aria-label="Schematic: a VBAT power label feeds R7 33k and R8 10k to ground; the midpoint, net VBAT_SENSE, has C12 100 nF to ground and runs to pin PA0 of U1. An SPI clock net crosses the sense wire without a junction dot. Numbered callouts mark the conventions.">
+    <g stroke="var(--ink)" stroke-width="2" fill="none" stroke-linejoin="round">
+      <!-- VBAT power flag -->
+      <path d="M110 30h-24l-8 9l8 9h24z" stroke-width="1.5"/>
+      <path d="M110 39h30v16"/>
+      <!-- R7 vertical -->
+      <path d="M140 55v6l6 3l-12 6l12 6l-12 6l12 6l-12 6l6 3v12"/>
+      <!-- R8 vertical -->
+      <path d="M140 140v6l6 3l-12 6l12 6l-12 6l12 6l-12 6l6 3v20"/>
+      <path d="M140 109v31"/>
+      <!-- sense net to MCU -->
+      <path d="M140 125h330"/>
+      <!-- C12 -->
+      <path d="M260 125v35M246 160h28M246 168h28M260 168v24"/>
+      <!-- grounds -->
+      <path d="M128 199h24M132 204h16M137 209h6"/>
+      <path d="M248 192h24M252 197h16M257 202h6"/>
+      <!-- MCU -->
+      <rect x="470" y="70" width="120" height="160" stroke-width="1.5"/>
+      <!-- SPI clock crossing -->
+      <path d="M360 60v150h110"/>
+    </g>
+    <circle cx="140" cy="125" r="4.5" fill="var(--ink)"/><circle cx="260" cy="125" r="4.5" fill="var(--ink)"/>
+    <text x="98" y="43" font-size="11" text-anchor="middle" font-family="var(--mono)">VBAT</text>
+    <text x="156" y="80" font-size="12">R7</text><text x="156" y="95" font-size="12">33k 1%</text>
+    <text x="156" y="164" font-size="12">R8</text><text x="156" y="179" font-size="12">10k 1%</text>
+    <text x="280" y="160" font-size="12">C12</text><text x="280" y="175" font-size="12">100n</text>
+    <text x="300" y="117" font-size="11" font-family="var(--mono)">VBAT_SENSE</text>
+    <text x="370" y="56" font-size="11" font-family="var(--mono)">SPI_SCK</text>
+    <text x="530" y="62" font-size="12" text-anchor="middle" font-weight="600">U1  MCU</text>
+    <text x="478" y="129" font-size="11" font-family="var(--mono)">PA0/ADC_IN0</text>
+    <text x="478" y="214" font-size="11" font-family="var(--mono)">PB3/SPI1_SCK</text>
+    <!-- callouts -->
+    <g font-size="11" font-weight="700" text-anchor="middle" fill="#fff">
+      <circle cx="60" cy="39" r="9" fill="var(--c2)"/><text x="60" y="43">1</text>
+      <circle cx="205" cy="70" r="9" fill="var(--c2)"/><text x="205" y="74">2</text>
+      <circle cx="118" cy="112" r="9" fill="var(--c2)"/><text x="118" y="116">3</text>
+      <circle cx="378" cy="144" r="9" fill="var(--c2)"/><text x="378" y="148">4</text>
+      <circle cx="110" cy="206" r="9" fill="var(--c2)"/><text x="110" y="210">5</text>
+      <circle cx="286" cy="112" r="9" fill="var(--c2)"/><text x="286" y="116">6</text>
+    </g>
+  </svg>
+  </div>
+</div>
+
+<ol>
+  <li><strong>Power labels.</strong> The VBAT flag connects this wire to every other VBAT flag in the whole schematic, possibly on another page. No wire is drawn between them.</li>
+  <li><strong>Reference designators and values.</strong> R7 is "the seventh resistor". The letter tells you the kind of part: R resistor, C capacitor, L inductor, D diode, Q transistor, U integrated circuit, J connector, F fuse. Values are written without the unit and with the multiplier in place of the decimal point: 4k7 is 4.7 kΩ, 100n is 100 nF.</li>
+  <li><strong>Junction dots.</strong> A dot means the wires are connected. Here three wires meet at the top of R8, and the capacitor joins at a second dot.</li>
+  <li><strong>Crossings without a dot are not connected.</strong> The SPI clock passes straight over the sense net. Good schematics avoid four-way junctions entirely, so a crossing is never ambiguous.</li>
+  <li><strong>Ground symbols</strong> are all one node, like power labels. Boards often have several named grounds (GND, AGND, PGND, chassis), and which ones are joined, and where, is a deliberate design decision (Module 12).</li>
+  <li><strong>Net labels.</strong> VBAT_SENSE names the node, so you can find it in the layout and in the firmware's pin map. Two labels with the same name are connected, even if they're drawn pages apart.</li>
+</ol>
+
+<h3>Datasheets</h3>
+<p>Every part has a datasheet, and the numbers in it come in different kinds that mean very different things:</p>
+<div class="tablewrap"><table>
+  <tr><th>Section</th><th>What it means</th><th>How to use it</th></tr>
+  <tr><td><b>Absolute maximum ratings</b></td><td>Exceed these and the part may be damaged, even briefly</td><td>Never a place to operate. Stay well inside, with margin for transients</td></tr>
+  <tr><td><b>Recommended operating conditions</b></td><td>The range over which the part is designed to work</td><td>Design to these: supply voltage, temperature, input range</td></tr>
+  <tr><td><b>Electrical characteristics</b></td><td>Guaranteed min and max values, plus a "typical", under the stated test conditions</td><td>Design to the min or max. Check the conditions column: they may not match your circuit</td></tr>
+  <tr><td><b>Typical performance graphs</b></td><td>How a typical part behaves</td><td>Good for intuition, not a guarantee</td></tr>
+  <tr><td><b>Application circuit</b></td><td>The manufacturer's suggested schematic</td><td>The best starting point. Deviate on purpose, not by accident</td></tr>
+</table></div>
+
+<div class="note myth">
+  <span class="ni">!</span>
+  <div><span class="nt">"Typical" is not a specification</span>A typical value is what the median part does at room temperature. Your part could be anywhere between the min and max, and at −20 °C on a cold pad it might sit at the edge. If a design only works with the typical value, it doesn't work.</div>
+</div>
+
+<div class="note tip">
+  <span class="ni">✓</span>
+  <div><span class="nt">Where loading hides in a datasheet</span>Microcontroller ADCs list a maximum <em>source impedance</em> (sometimes called external input impedance), often a few tens of kilohms for slow sampling and much less for fast. That's the 100× rule from the ADC's side: the Thévenin resistance of your divider has to stay below it, or the readings come out low. The 100 nF capacitor on the battery monitor gets around it by holding the voltage steady while the ADC samples, so slow signals like battery voltage can use larger resistors.</div>
+</div>
+</section>
+
+<!-- ================= DESIGN EXERCISES ================= -->
+<section class="sec" id="exercises" data-nonum data-short="Design exercises">
+<h2>Design exercises</h2>
+<p>Problems taken from the team's own hardware. Each takes a few steps. Enter numbers to check your reasoning as you go, or open the worked solutions and discussion. The figures above are useful for sanity-checking.</p>
+
+<div class="chal">
+  <div class="ch"><span class="cn">Exercise 1</span><span class="cd">Design · ●●○</span><span class="ctitle">A battery monitor for a 3S pack</span></div>
+  <div class="cbody">
+    <p>The new flight computer runs from a 3S LiPo. Its ADC accepts 0 to 3.3 V, and you want the reading at full charge to be no more than 3.0 V, leaving headroom for resistor tolerance.</p>
+    <div class="given"><b>Given</b>
+      <span>Battery, full charge</span><span>3 × 4.2 V = 12.6 V</span>
+      <span>Maximum ADC voltage at full charge</span><span>3.0 V</span>
+      <span>R2 (bottom)</span><span>10 kΩ</span>
+    </div>
+    <div class="check" data-ans="0.238" data-tol="2%"><p>(a) What divider ratio \(R_2/(R_1 + R_2)\) do you need?</p>
+      <div class="miss" data-val="4.2"><p>That's the inverse: the factor the firmware multiplies by. The ratio is less than 1.</p></div>
+      <div class="solution"><p>\(3.0 / 12.6 = 0.238\).</p></div></div>
+    <div class="check" data-ans="32000" data-tol="2%" data-unit="Ω"><p>(b) With R2 = 10 kΩ, what's the smallest R1 that achieves it?</p>
+      <div class="miss" data-val="42000"><p>That's the total, R1 + R2. Take away R2.</p></div>
+      <div class="hint">\(R_1 + R_2 = R_2 / 0.238\).</div>
+      <div class="solution"><p>\(R_1 + R_2 = 10\,\text{k} / 0.238 = 42\ \text{k}\Omega\), so \(R_1 = 32\ \text{k}\Omega\). It isn't a standard value, so round <em>up</em> to 33 kΩ (E12), which gives 2.93 V at full charge. Rounding down would overshoot 3.0 V.</p></div></div>
+    <div class="check" data-ans="293" data-tol="2%" data-unit="µA"><p>(c) With 33 kΩ and 10 kΩ, how much current does the divider draw from a full pack?</p>
+      <div class="solution"><p>\(12.6\ \text{V} / 43\ \text{k}\Omega = 293\ \mu\text{A}\). Over a month in storage that's about 210 mAh.</p></div></div>
+    <details><summary>Discussion: what if the drain is too much?</summary><p>Scaling both resistors up by ten cuts the drain to 29 µA, but the Thévenin resistance becomes 77 kΩ, beyond what many ADCs accept as a source. A 100 nF capacitor at the ADC pin solves that for a slowly changing voltage like a battery. The other approach is to switch the divider with a MOSFET and only power it while measuring (Module 6). Either way, also check that the ADC pin is safe if the MCU is unpowered but the battery is connected: the divider can then push current into the pin's protection diodes.</p></details>
+  </div>
+</div>
+
+<div class="chal">
+  <div class="ch"><span class="cn">Exercise 2</span><span class="cd">Analysis · ●●●</span><span class="ctitle">The pressure reading that's 7 % low</span></div>
+  <div class="cbody">
+    <p>A tank pressure transducer outputs 0.5 V at 0 psi and 4.5 V at 1000 psi. The test-stand data logger's channels accept 0 to 3.3 V, so a divider (R1 = 10 kΩ, R2 = 20 kΩ) scales the transducer down by 2/3. The logger software multiplies by 1.5 to undo it. On the first pressurisation the logged pressure is consistently low.</p>
+    <div class="given"><b>Given</b>
+      <span>Transducer</span><span>0.5–4.5 V for 0–1000 psi, output resistance negligible</span>
+      <span>Divider</span><span>R1 = 10 kΩ, R2 = 20 kΩ</span>
+      <span>Logger input resistance</span><span>100 kΩ (from its datasheet)</span>
+    </div>
+    <div class="check" data-ans="6667" data-tol="2%" data-unit="Ω"><p>(a) What's the Thévenin resistance the logger sees, looking back into the divider?</p>
+      <div class="miss" data-val="30000"><p>That's R1 + R2 in series. With the transducer replaced by a wire, they're in parallel as seen from the output.</p></div>
+      <div class="solution"><p>\(R_\text{th} = 10\,\text{k} \parallel 20\,\text{k} = 6.67\ \text{k}\Omega\). The logger is only 15× that, so expect several percent of error.</p></div></div>
+    <div class="check" data-ans="2.81" data-tol="1%" data-unit="V"><p>(b) At 1000 psi the transducer outputs 4.5 V. What voltage does the logger actually measure?</p>
+      <div class="miss" data-val="3.0"><p>That's the unloaded divider output. The logger's 100 kΩ loads it.</p></div>
+      <div class="hint">\(V_\text{th} = 3.0\ \text{V}\). Then it's a divider of R<sub>th</sub> and the logger.</div>
+      <div class="solution"><p>\(V = 3.0 \times 100/(100 + 6.67) = 2.81\ \text{V}\).</p></div></div>
+    <div class="check" data-ans="930" data-tol="1%" data-unit="psi"><p>(c) What pressure does the logger report at a true 1000 psi?</p>
+      <div class="miss" data-val="937.5"><p>Close, but the transducer's 0 psi point is at 0.5 V, not 0 V. Subtract the offset before scaling.</p></div>
+      <div class="solution"><p>The software computes \(2.8125 \times 1.5 = 4.22\ \text{V}\), and converts: \((4.22 - 0.5)/4.0 \times 1000 = 930\ \text{psi}\). It reads 70 psi low at full scale, about 7 %, and the error grows with pressure.</p></div></div>
+    <details><summary>Discussion: three ways to fix it</summary><p>(1) Account for the loading in software: use the loaded ratio, \(R_2 \parallel R_L / (R_1 + R_2 \parallel R_L)\), instead of 2/3. Cheap, but the logger's input resistance varies from unit to unit. (2) Scale the divider down: 1 kΩ and 2 kΩ give R<sub>th</sub> = 667 Ω, 150× smaller than the logger, so the error drops below 1 %. The transducer then has to drive 1.5 mA; check that it can. (3) Put a unity-gain op-amp buffer between the divider and the logger (Module 10). Whatever you choose, calibrate the whole chain end to end with a reference gauge before trusting it.</p></details>
+  </div>
+</div>
+
+<div class="chal">
+  <div class="ch"><span class="cn">Exercise 3</span><span class="cd">Analysis · ●●○</span><span class="ctitle">The pressure spike that wasn't</span></div>
+  <div class="cbody">
+    <p>On the test stand, a pressure transducer and a solenoid valve sit next to each other, 5 m from the DAQ box. To save wire, they share one ground return back to the DAQ. Every time the valve opens, the logged pressure jumps, then drops back when the valve closes.</p>
+    <div class="given"><b>Given</b>
+      <span>Shared ground return</span><span>5 m of 18 AWG, 21 mΩ/m</span>
+      <span>Valve current</span><span>3.0 A</span>
+      <span>Transducer</span><span>0.5–4.5 V for 0–1000 psi (4 mV/psi)</span>
+      <span>DAQ input</span><span>measures the signal wire against the DAQ's own ground</span>
+    </div>
+    <div class="check" data-ans="0.315" data-tol="2%" data-unit="V"><p>(a) How far does the ground at the transducer rise above the DAQ's ground when the valve is open?</p>
+      <div class="miss" data-val="0.105"><p>That's the wire's resistance in ohms. Multiply by the current flowing through it.</p></div>
+      <div class="solution"><p>\(R = 5 \times 0.021 = 0.105\ \Omega\), so \(V = 3.0 \times 0.105 = 0.315\ \text{V}\).</p></div></div>
+    <div class="check" data-ans="78.8" data-tol="2%" data-unit="psi"><p>(b) How big is the false pressure jump?</p>
+      <div class="hint">The transducer's output rides on top of its local ground, and the DAQ measures from its own ground. KVL around that path.</div>
+      <div class="solution"><p>The DAQ sees the transducer's output plus 0.315 V. At 4 mV/psi that's \(0.315 / 0.004 \approx 79\ \text{psi}\) of pressure that doesn't exist, appearing exactly when the valve opens. If the sequence has a pressure-based abort, it could abort on this.</p></div></div>
+    <details><summary>Discussion: what would you change?</summary><p>Give the valve its own return wire, so no valve current flows in the sensor's ground. Better still, measure the transducer differentially: run both its signal and its ground back to a differential DAQ input, which measures the voltage between the two wires and ignores the common shift (Modules 10 and 13). And a habit worth building: when a sensor reading changes the moment an actuator switches, suspect the wiring before the sensor.</p></details>
+  </div>
+</div>
+</section>
+
+<!-- ================= BENCH ================= -->
+<section class="sec" id="bench" data-nonum data-short="At the bench">
+<h2>At the bench</h2>
+<div class="video" data-video="lab">
+  <div class="plan">
+    <p>Planned lab demo (≈ 15 min, filmed at the bench):</p>
+    <ol>
+      <li>KCL and KVL checked with a meter on a breadboard network</li>
+      <li>Building the battery monitor and reading it with the flight computer's ADC</li>
+      <li>The 1 MΩ divider that reads wrong on a multimeter</li>
+      <li>Measuring a sensor's Thévenin resistance with one load resistor</li>
+      <li>Ground shift on the test stand: a valve and a transducer on a shared return</li>
+    </ol>
+  </div>
+</div>
+<div class="lab">
+  <h3>Kirchhoff, dividers and loading</h3>
+  <div class="parts"><span>Multimeter</span><span>Bench supply</span><span>Resistors: 1 kΩ, 2.2 kΩ, 4.7 kΩ, 10 kΩ (×2), 1 MΩ (×2), 47 Ω ½ W</span><span>A 9 V battery</span><span>Breadboard</span></div>
+  <ol>
+    <li><b>KVL.</b> Put 1 kΩ, 2.2 kΩ and 4.7 kΩ in series across a 10 V supply. Measure the voltage across each resistor. Do they add up to the supply? Predict each one with the divider equation first.</li>
+    <li><b>KCL.</b> Rearrange so the 2.2 kΩ and 4.7 kΩ are in parallel, in series with the 1 kΩ. Measure the current in each branch by breaking it and inserting the meter. Check that the branch currents add up to the supply current, and that they split in the current-divider ratio.</li>
+    <li><b>Loading.</b> Build a divider from the two 1 MΩ resistors across 10 V. Measure the midpoint. It should read about 4.76 V rather than 5 V. Now swap in the two 10 kΩ resistors and measure again.</li>
+    <li><b>Thévenin by measurement.</b> Measure the 9 V battery's open-circuit voltage, then connect a 47 Ω resistor across it (briefly: it draws about 190 mA) and measure again. Calculate its internal resistance, as in the Thévenin exercise.</li>
+  </ol>
+  <div class="record"><b>What you should see:</b> drops that add up to the supply within your meter's accuracy, branch currents that add up at each node, a 1 MΩ divider that reads about 5 % low on a 10 MΩ meter while the 10 kΩ version reads correctly, and a 9 V battery with one or two ohms inside it.</div>
+</div>
+</section>
+
+<!-- ================= SUMMARY ================= -->
+<section class="sec" id="summary" data-nonum data-short="Summary">
+<h2>Summary &amp; cheat sheet</h2>
+<ol class="takeaways">
+  <li>KCL: the currents into a node add up to the currents out. The ground return carries the sum of every load current.</li>
+  <li>KVL: the voltages around any loop add up to zero. Every volt of the supply is dropped somewhere, including in wires, connectors and ground returns.</li>
+  <li>Series resistances add; parallel conductances add. Series is bigger than the biggest, parallel smaller than the smallest.</li>
+  <li>A divider scales a voltage by \(R_2/(R_1 + R_2)\). Its resistors trade battery drain against sensitivity to loading.</li>
+  <li>Any linear circuit looks like \(V_\text{th}\) in series with \(R_\text{th}\) from two terminals. Keep the load at least 100× \(R_\text{th}\), or account for it.</li>
+  <li>Superposition: with several sources, add the effect of each one alone. Linear circuits only, and never for power.</li>
+  <li>On schematics, same-named labels are connected and dotless crossings are not. In datasheets, design to min and max, not typical.</li>
+</ol>
+<div class="cheat">
+  <div><b>Kirchhoff</b>\(\sum I_\text{in} = \sum I_\text{out}\)<br>\(\sum_\text{loop} V = 0\)</div>
+  <div><b>Series and parallel</b>\(R_s = R_1 + R_2\)<br>\(R_1 \parallel R_2 = R_1R_2/(R_1 + R_2)\)</div>
+  <div><b>Voltage divider</b>\(V_\text{out} = V_\text{in}\,R_2/(R_1 + R_2)\)</div>
+  <div><b>Current divider</b>\(I_1 = I\,R_2/(R_1 + R_2)\)</div>
+  <div><b>Thévenin</b>\(V_\text{th} = V_\text{oc}\), \(R_\text{th} = V_\text{oc}/I_\text{sc}\)<br><span class="small">divider: \(R_\text{th} = R_1 \parallel R_2\)</span></div>
+  <div><b>Loading</b>error ≈ \(R_\text{th}/(R_\text{th} + R_L)\)<br><span class="small">100× rule: under 1 %</span></div>
+</div>
+<h3>Further reading</h3>
+<ul class="small">
+  <li><em>The Art of Electronics</em> (Horowitz &amp; Hill), chapter 1.2: dividers, Thévenin and small-signal resistance.</li>
+  <li><em>Practical Electronics for Inventors</em> (Scherz &amp; Monk), chapter 2: Kirchhoff's laws and network theorems, with many worked examples.</li>
+</ul>
+</section>
+
+<nav class="pager"></nav>
+</main>
+</div>
+<footer class="site">Hardware Engineering Fundamentals · EE Fundamentals</footer>
+
+<script>
+'use strict';
+const $ = s => document.querySelector(s);
+const {col, si, fmt} = Plot;
+function seg(id, cb){
+  const el = $(id);
+  el.addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    el.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
+    cb();
+  });
+  return () => el.querySelector('button.on').dataset.v;
+}
+// independent on/off buttons: returns the set of values that are on
+function toggles(id, cb){
+  const el = $(id);
+  el.addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    b.classList.toggle('on'); b.setAttribute('aria-pressed', b.classList.contains('on'));
+    cb();
+  });
+  return () => new Set([...el.querySelectorAll('button.on')].map(b => b.dataset.v));
+}
+function setVerdict(el, cls, html){ el.className = 'verdict ' + cls; el.innerHTML = html; }
+// E12 standard values: index 0 is 10^d0 ohms, then 12 steps per decade
+const E12 = [10, 12, 15, 18, 22, 27, 33, 39, 47, 56, 68, 82];
+const e12 = (i, d0) => E12[i % 12] * Math.pow(10, Math.floor(i / 12) + d0 - 1);
+const par = (a, b) => a * b / (a + b);
+function gnd(ctx, x, y){
+  Plot.wire(ctx, [[x, y], [x, y + 8]]);
+  Plot.wire(ctx, [[x - 9, y + 8], [x + 9, y + 8]]);
+  Plot.wire(ctx, [[x - 5.5, y + 12.5], [x + 5.5, y + 12.5]]);
+  Plot.wire(ctx, [[x - 2, y + 17], [x + 2, y + 17]]);
+}
+const node = (ctx, x, y) => Plot.dot(ctx, x, y, 3.4, col.ink);
+
+/* ============ 1. KCL / KVL power bus ============ */
+(() => {
+  const LOADS = [['fc', 'FC', 0.18], ['radio', 'Radio', 0.6], ['gps', 'GPS', 0.03], ['valve', 'Valve', 3.0]];
+  const OHM_PER_M = 0.0529;
+  const on = toggles('#kLoads', upd), cond = seg('#kR', upd);
+  let s = {};
+  function upd(){
+    const Voc = +$('#kV').value, Ri = +cond(), L = +$('#kL').value, set = on();
+    const Rw = OHM_PER_M * L;
+    const I = LOADS.reduce((a, [k, , i]) => a + (set.has(k) ? i : 0), 0);
+    const dInt = I * Ri, dW = I * Rw, Vbus = Voc - dInt - 2*dW;
+    s = {Voc, Ri, Rw, I, dInt, dW, Vbus, set, L};
+    $('#kVv').textContent = fmt(Voc, 3) + ' V'; $('#kLv').textContent = fmt(L, 2) + ' m';
+    $('#kI').textContent = si(I, 'A'); $('#kBus').textContent = si(Vbus, 'V'); $('#kGnd').textContent = si(dW, 'V');
+    $('#kBusS').className = 'stat ' + (Vbus < 6 ? 'bad' : Vbus < 6.3 ? 'warn' : '');
+    $('#kGndS').className = 'stat ' + (dW > 0.05 ? 'warn' : '');
+    const parts = LOADS.filter(([k]) => set.has(k)).map(([, , i]) => si(i, 'A'));
+    $('#kEq').innerHTML = parts.length
+      ? `<b>KCL</b> at the bus: ${si(I, 'A')} in = ${parts.join(' + ')} out. ` +
+        `<b>KVL</b> around the loop: ${fmt(Voc, 3)} V = ${si(dInt, 'V')} (inside the battery) + ${si(dW, 'V')} (feed) + ${si(Vbus, 'V')} (loads) + ${si(dW, 'V')} (return).`
+      : 'No loads on: no current flows, so nothing drops anywhere and the loads see the full battery voltage.';
+    const v = $('#kVerdict');
+    if (Vbus < 6) setVerdict(v, 'bad', `<b>Brown-out.</b> Only ${si(Vbus, 'V')} reaches the loads, below the regulators' 6.0 V minimum. ${si(dInt + 2*dW, 'V')} is lost before the current even gets there.`);
+    else if (dW > 0.05) setVerdict(v, 'warn', `<b>Powered, but the ground has moved.</b> The return wire carries all ${si(I, 'A')}, so the loads' ground sits ${si(dW, 'V')} above the battery's negative terminal. Any sensor measured against the battery end will read off by that much.`);
+    else setVerdict(v, 'ok', `<b>Healthy.</b> ${si(Vbus, 'V')} at the loads, and the ground shifts by only ${si(dW, 'V')}.`);
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvBus'), (ctx, W, H) => {
+    const {Voc, Ri, Rw, I, Vbus, set, dInt, dW, L} = s; if (Voc === undefined) return;
+    const xB = 44, xN = xB + Math.max(100, W*0.3), yT = 30, yBt = 190, yc = 150;
+    // battery: internal resistance above the cell, inside a dashed box
+    Plot.dashedBox(ctx, xB - 30, yT + 8, 84, yBt - yT - 22, '');
+    Plot.resistor(ctx, xB, yT, xB, 112, {len: 34, amp: 5});
+    Plot.wire(ctx, [[xB, 112], [xB, yc - 5]]);
+    Plot.battery(ctx, xB, yc);
+    Plot.wire(ctx, [[xB, yc + 5], [xB, yBt]]);
+    Plot.text(ctx, si(Ri, 'Ω'), xB + 12, 76, {mono: true, color: col.ink2});
+    Plot.text(ctx, fmt(Voc, 3) + ' V', xB + 12, yc + 14, {mono: true, color: col.ink2});
+    // harness: feed and return wires drawn as resistors
+    Plot.resistor(ctx, xB, yT, xN, yT, {len: 38, amp: 5, color: col.c4});
+    Plot.resistor(ctx, xN, yBt, xB, yBt, {len: 38, amp: 5, color: col.c4});
+    Plot.text(ctx, 'feed ' + si(Rw, 'Ω'), (xB + xN)/2 + 8, yT - 14, {align: 'center', color: col.ink2});
+    Plot.text(ctx, 'return ' + si(Rw, 'Ω'), (xB + xN)/2 + 8, yBt + 15, {align: 'center', color: col.ink2});
+    // loads hanging between the + bus (node A) and the load ground (node B)
+    const n = LOADS.length, x0 = xN + 30, x1 = W - 30, sp = (x1 - x0)/(n - 1);
+    const bw = Math.min(56, sp - 4), bh = 44, by = 92;
+    Plot.wire(ctx, [[xN, yT], [x1, yT]]); Plot.wire(ctx, [[x1, yBt], [xN, yBt]]);
+    LOADS.forEach(([k, name, i], j) => {
+      const x = x0 + j*sp, live = set.has(k), c = live ? col.ink : col.muted;
+      // a switch below the bus, closed when the load is on
+      Plot.wire(ctx, [[x, yT], [x, yT + 14]]);
+      Plot.dot(ctx, x, yT + 14, 2.2, col.ink);
+      Plot.line(ctx, [[x, yT + 14], live ? [x, yT + 34] : [x + 11, yT + 31]], col.ink, 1.6);
+      Plot.dot(ctx, x, yT + 34, 2.2, col.ink);
+      Plot.wire(ctx, [[x, yT + 34], [x, by - bh/2]]);
+      ctx.save(); ctx.fillStyle = '#fff'; ctx.strokeStyle = c; ctx.lineWidth = 1.4; ctx.fillRect(x - bw/2, by - bh/2, bw, bh); ctx.strokeRect(x - bw/2 + .5, by - bh/2 + .5, bw - 1, bh - 1); ctx.restore();
+      Plot.text(ctx, name, x, by - 8, {align: 'center', color: c});
+      Plot.text(ctx, live ? (bw < 50 ? si(i, 'A').replace(' ', '') : si(i, 'A')) : 'off', x, by + 9, {align: 'center', mono: true, color: live ? col.c1 : col.muted});
+      Plot.wire(ctx, [[x, by + bh/2], [x, yBt]]);
+      if (j < n - 1) node(ctx, x, yT), node(ctx, x, yBt);
+    });
+    node(ctx, xN, yT); node(ctx, xN, yBt);
+    Plot.text(ctx, 'A', xN - 6, yT + 12, {align: 'right', bold: true, color: col.c2});
+    Plot.text(ctx, 'B', xN - 6, yBt - 12, {align: 'right', bold: true, color: col.c3});
+    if (I > 0){ Plot.arrow(ctx, xN + 4, yT - 9, xN + 26, yT - 9, col.c1); Plot.text(ctx, si(I, 'A'), xN + 30, yT - 9, {mono: true, color: col.c1}); }
+    // KVL: where the battery's voltage goes, as one stacked bar
+    const l = 14, r = W - 14, yb = H - 44, bhh = 24;
+    Plot.text(ctx, 'Around the loop: where the ' + fmt(Voc, 3) + ' V goes', l, yb - 12, {color: col.ink2});
+    const parts = [['battery', dInt, Plot.mix(col.bad, '#ffffff', .6)], ['feed', dW, Plot.mix(col.c4, '#ffffff', .6)], ['loads', Math.max(0, Vbus), Plot.mix(col.c1, '#ffffff', .7)], ['return', dW, Plot.mix(col.c4, '#ffffff', .6)]];
+    let x = l;
+    parts.forEach(([name, v, c]) => {
+      const w2 = (r - l) * v / Voc; if (w2 <= 0) return;
+      ctx.fillStyle = c; ctx.fillRect(x, yb, w2, bhh);
+      ctx.strokeStyle = '#000'; ctx.lineWidth = 1; ctx.strokeRect(x + .5, yb + .5, w2, bhh - 1);
+      const lbl = w2 > 84 ? `${name} ${si(v, 'V')}` : w2 > 46 ? si(v, 'V') : '';
+      if (lbl) Plot.text(ctx, lbl, x + w2/2, yb + bhh/2, {align: 'center', color: '#000'});
+      x += w2;
+    });
+    Plot.text(ctx, I > 0 ? `${Math.round(100*(dInt + 2*dW)/Voc)} % lost before the loads` : 'no current, no drops', r, yb + bhh + 13, {align: 'right', color: col.muted});
+  });
+  ['#kV', '#kL'].forEach(id => $(id).addEventListener('input', upd));
+  upd();
+})();
+
+/* ============ 2. Series and parallel ============ */
+(() => {
+  const mode = seg('#sM', upd);
+  let s = {};
+  function upd(){
+    const V = +$('#sV').value, R1 = e12(+$('#sR1').value, 1), R2 = e12(+$('#sR2').value, 1), m = mode();
+    let Req, I, I1, I2, V1, V2;
+    if (m === 's'){ Req = R1 + R2; I = V / Req; I1 = I2 = I; V1 = I*R1; V2 = I*R2; }
+    else { Req = par(R1, R2); I = V / Req; V1 = V2 = V; I1 = V/R1; I2 = V/R2; }
+    s = {V, R1, R2, m, Req, I, I1, I2, V1, V2};
+    $('#sVv').textContent = fmt(V, 3) + ' V'; $('#sR1v').textContent = si(R1, 'Ω'); $('#sR2v').textContent = si(R2, 'Ω');
+    $('#sReq').textContent = si(Req, 'Ω'); $('#sI').textContent = si(I, 'A'); $('#sP').textContent = si(V*I, 'W');
+    const big = R1 >= R2 ? 'R1' : 'R2', small = R1 >= R2 ? 'R2' : 'R1';
+    if (m === 's') setVerdict($('#sVerdict'), 'ok', `<b>Series:</b> one current, ${si(I, 'A')}, through both. The voltage splits in proportion to resistance, so ${R1 === R2 ? 'each gets half' : `the larger, ${big}, takes the larger share (${Math.round(100*Math.max(V1, V2)/V || 0)} %)`}. R<sub>eq</sub> = ${si(Req, 'Ω')}, more than either resistor.`);
+    else setVerdict($('#sVerdict'), 'ok', `<b>Parallel:</b> both see the full ${fmt(V, 3)} V. The current splits, and ${R1 === R2 ? 'each takes half' : `more of it, ${Math.round(100*Math.max(I1, I2)/I || 0)} %, takes the easier path through ${small}`}. R<sub>eq</sub> = ${si(Req, 'Ω')}, less than either resistor.`);
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvSP'), (ctx, W, H) => {
+    const {V, R1, R2, m, I, I1, I2, V1, V2} = s; if (!m) return;
+    const xL = 60, xR = W - Math.max(120, W*0.28), yT = 40, yB = H - 40, yc = (yT + yB)/2;
+    Plot.wire(ctx, [[xL, yc - 5], [xL, yT]]); Plot.wire(ctx, [[xL, yB], [xL, yc + 5]]);
+    Plot.battery(ctx, xL, yc);
+    Plot.text(ctx, fmt(V, 3) + ' V', xL - 22, yc, {align: 'right', mono: true});
+    const lab = (x, y, name, R, Ii, Vi, c, align) => {
+      Plot.text(ctx, `${name} = ${si(R, 'Ω')}`, x, y - 17, {mono: true, align, bold: true, color: c});
+      Plot.text(ctx, `I = ${si(Ii, 'A')}`, x, y, {mono: true, align, color: c});
+      Plot.text(ctx, `V = ${si(Vi, 'V')}`, x, y + 17, {mono: true, align, color: c});
+    };
+    if (m === 's'){
+      Plot.resistor(ctx, xL, yT, xR, yT, {len: 56, color: col.c1});
+      Plot.resistor(ctx, xR, yT, xR, yB, {len: 56, color: col.c2});
+      Plot.wire(ctx, [[xR, yB], [xL, yB]]);
+      lab((xL + xR)/2, yT + 34, 'R1', R1, I1, V1, col.c1, 'center');
+      lab(xR + 16, yc, 'R2', R2, I2, V2, col.c2, 'left');
+    } else {
+      const xa = xL + (xR - xL)*0.45;
+      Plot.wire(ctx, [[xL, yT], [xR, yT]]); Plot.wire(ctx, [[xR, yB], [xL, yB]]);
+      Plot.resistor(ctx, xa, yT, xa, yB, {len: 56, color: col.c1});
+      Plot.resistor(ctx, xR, yT, xR, yB, {len: 56, color: col.c2});
+      node(ctx, xa, yT); node(ctx, xa, yB);
+      lab(xa - 16, yc, 'R1', R1, I1, V1, col.c1, 'right');
+      lab(xR + 16, yc, 'R2', R2, I2, V2, col.c2, 'left');
+    }
+    const xm = xL + 30;
+    Plot.arrow(ctx, xm, yT - 12, xm + 26, yT - 12, col.ink2);
+    Plot.text(ctx, 'I = ' + si(I, 'A'), xm + 32, yT - 12, {mono: true, color: col.ink2});
+  });
+  ['#sV', '#sR1', '#sR2'].forEach(id => $(id).addEventListener('input', upd));
+  upd();
+})();
+
+/* ============ 3. Battery monitor divider ============ */
+(() => {
+  const cells = seg('#dS', upd);
+  let s = {};
+  function upd(){
+    const n = +cells(), Vc = +$('#dQ').value, R1 = e12(+$('#dR1').value, 3), R2 = e12(+$('#dR2').value, 3);
+    const k = R2/(R1 + R2), Vb = n*Vc, Vo = Vb*k, Vf = n*4.2*k, Id = n*4.2/(R1 + R2);
+    const code = Math.max(0, Math.min(4095, Math.round(Vo/3.3*4095)));
+    s = {n, Vb, R1, R2, Vo, Vf};
+    $('#dQv').textContent = fmt(Vc, 3) + ' V'; $('#dR1v').textContent = si(R1, 'Ω'); $('#dR2v').textContent = si(R2, 'Ω');
+    $('#dVo').textContent = si(Vo, 'V'); $('#dFull').textContent = si(Vf, 'V');
+    $('#dCode').textContent = code + (Vo >= 3.3 ? ' (clipped)' : '');
+    const mAhMonth = Id*1000*24*30;
+    $('#dDrain').textContent = si(Id, 'A');
+    $('#dFullS').className = 'stat ' + (Vf > 3.3 ? 'bad' : Vf > 3.1 ? 'warn' : '');
+    $('#dDrainS').className = 'stat ' + (Id > 1e-3 ? 'warn' : '');
+    const v = $('#dVerdict'), Rth = par(R1, R2);
+    if (Vf > 3.3) setVerdict(v, 'bad', `<b>Over range at full charge.</b> A full pack puts ${si(Vf, 'V')} on the ADC pin. Readings clip at 4095 and the pin can be damaged. Make R1 bigger or R2 smaller.`);
+    else if (Vf > 3.1) setVerdict(v, 'warn', `<b>Too little headroom.</b> ${si(Vf, 'V')} at full charge leaves almost no margin for resistor tolerance or a charger that overshoots.`);
+    else if (Id > 1e-3) setVerdict(v, 'warn', `<b>Works, but wasteful.</b> The divider alone draws ${si(Id, 'A')}, about ${fmt(mAhMonth, 2)} mAh a month from a pack sitting on the shelf. Scale both resistors up.`);
+    else if (Rth > 50e3) setVerdict(v, 'warn', `<b>Low drain, but high resistance.</b> The divider's output resistance (R1 ∥ R2 = ${si(Rth, 'Ω')}) is high enough that the ADC itself loads it. Read the next section, or add a capacitor at the pin.`);
+    else setVerdict(v, 'ok', `<b>Good design.</b> ${si(Vf, 'V')} at full charge, ${si(Id, 'A')} of drain, and an output resistance of ${si(Rth, 'Ω')}. Left connected, the divider takes about ${fmt(mAhMonth, 2)} mAh a month from the pack. Firmware multiplies the reading by ${fmt((R1 + R2)/R2, 4)}.`);
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvDiv'), (ctx, W, H) => {
+    const {n, Vb, R1, R2, Vo, Vf} = s; if (!n) return;
+    const xL = 54, xD = xL + Math.max(120, W*0.3), yT = 26, yB = 176, ym = (yT + yB)/2, yc = ym;
+    Plot.wire(ctx, [[xL, yc - 5], [xL, yT], [xD, yT]]); Plot.wire(ctx, [[xL, yc + 5], [xL, yB], [xD, yB]]);
+    Plot.battery(ctx, xL, yc);
+    Plot.text(ctx, `${n}S`, xL - 20, yc - 9, {align: 'right', color: col.ink2});
+    Plot.text(ctx, fmt(Vb, 3) + ' V', xL - 20, yc + 9, {align: 'right', mono: true});
+    Plot.resistor(ctx, xD, yT, xD, ym, {len: 44});
+    Plot.resistor(ctx, xD, ym, xD, yB, {len: 44});
+    Plot.text(ctx, 'R1 ' + si(R1, 'Ω'), xD - 14, (yT + ym)/2, {align: 'right', mono: true});
+    Plot.text(ctx, 'R2 ' + si(R2, 'Ω'), xD - 14, (ym + yB)/2, {align: 'right', mono: true});
+    gnd(ctx, xD, yB); node(ctx, xD, yB);
+    // tap to the ADC pin
+    const xA = Math.min(W - 100, xD + Math.max(80, W*0.22));
+    Plot.wire(ctx, [[xD, ym], [xA, ym]]); node(ctx, xD, ym);
+    Plot.dashedBox(ctx, xA, ym - 34, Math.min(96, W - xA - 6), 68, 'MCU');
+    Plot.text(ctx, 'ADC pin', xA + 8, ym, {color: col.ink2});
+    const over = Vo > 3.3;
+    Plot.text(ctx, 'V = ' + si(Vo, 'V'), (xD + xA)/2, ym - 12, {align: 'center', mono: true, color: over ? col.bad : col.c1});
+    // gauge: where the ADC voltage sits in the 0 to 3.3 V range
+    const l = 18, r = W - 18, yg = H - 50, vmax = Math.max(3.6, Vf*1.08), X = Plot.lin(0, vmax, l, r);
+    ctx.fillStyle = Plot.rgba(col.good, .12); ctx.fillRect(X(0), yg - 10, X(3.3) - X(0), 20);
+    ctx.fillStyle = Plot.rgba(col.bad, .12); ctx.fillRect(X(3.3), yg - 10, X(vmax) - X(3.3), 20);
+    Plot.line(ctx, [[l, yg + 10], [r, yg + 10]], col.line2, 1);
+    Plot.ticks(0, vmax, 6).forEach(t => { Plot.line(ctx, [[X(t), yg + 10], [X(t), yg + 14]], col.line2, 1); Plot.text(ctx, fmt(t, 2), X(t), yg + 22, {align: 'center', color: col.muted}); });
+    Plot.text(ctx, 'ADC range', X(1.65), yg - 18, {align: 'center', color: col.good});
+    Plot.line(ctx, [[X(Vf), yg - 14], [X(Vf), yg + 10]], Vf > 3.3 ? col.bad : col.c2, 2, [4, 3]);
+    Plot.text(ctx, 'full charge', X(Vf), yg + 36, {align: 'center', color: Vf > 3.3 ? col.bad : col.c2});
+    Plot.dot(ctx, X(Math.min(Vo, vmax)), yg, 6, over ? col.bad : col.c1);
+    Plot.text(ctx, 'now', X(Math.min(Vo, vmax)), yg - 18, {align: 'center', color: over ? col.bad : col.c1});
+  });
+  ['#dQ', '#dR1', '#dR2'].forEach(id => $(id).addEventListener('input', upd));
+  upd();
+})();
+
+/* ============ 4. Loading ============ */
+(() => {
+  const pre = $('#lPre');
+  pre.addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    $('#lRL').value = b.dataset.v; upd();
+  });
+  let s = {};
+  function upd(){
+    const V = +$('#lV').value, R1 = e12(+$('#lR1').value, 3), R2 = e12(+$('#lR2').value, 3), RL = Math.pow(10, +$('#lRL').value);
+    const Vi = V*R2/(R1 + R2), Rth = par(R1, R2), Vl = Vi*RL/(Rth + RL), err = (Vl - Vi)/Vi;
+    s = {V, R1, R2, RL, Vi, Rth, Vl};
+    $('#lVv').textContent = fmt(V, 3) + ' V'; $('#lR1v').textContent = si(R1, 'Ω'); $('#lR2v').textContent = si(R2, 'Ω'); $('#lRLv').textContent = si(RL, 'Ω');
+    $('#lVi').textContent = si(Vi, 'V'); $('#lVl').textContent = si(Vl, 'V');
+    $('#lErr').textContent = (err*100).toFixed(Math.abs(err) < 0.1 ? 2 : 1).replace('-', '−') + ' %';
+    $('#lRth').textContent = si(Rth, 'Ω');
+    $('#lErrS').className = 'stat ' + (Math.abs(err) > 0.05 ? 'bad' : Math.abs(err) > 0.01 ? 'warn' : '');
+    const ratio = RL/Rth, v = $('#lVerdict');
+    if (Math.abs(err) <= 0.01) setVerdict(v, 'ok', `<b>Negligible loading.</b> The load is ${fmt(ratio, 3)}× the divider's R1 ∥ R2, so it reads within 1 % of the ideal.`);
+    else if (Math.abs(err) <= 0.05) setVerdict(v, 'warn', `<b>Noticeable loading.</b> The load is only ${fmt(ratio, 3)}× R1 ∥ R2, so the output reads ${fmt(-err*100, 2)} % low.`);
+    else setVerdict(v, 'bad', `<b>Heavy loading.</b> The load is ${fmt(ratio, 3)}× R1 ∥ R2. It's pulling the output ${fmt(-err*100, 2)} % low: you're measuring a different circuit from the one you built.`);
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvLoad'), (ctx, W, H) => {
+    const {V, R1, R2, RL, Vi, Rth, Vl} = s; if (!V) return;
+    // schematic
+    const xL = 54, xD = xL + Math.max(110, W*0.3), yT = 20, yB = 140, ym = (yT + yB)/2, xLd = xD + Math.max(90, W*0.22);
+    Plot.wire(ctx, [[xL, ym - 5], [xL, yT], [xD, yT]]); Plot.wire(ctx, [[xL, ym + 5], [xL, yB], [xLd, yB]]);
+    Plot.battery(ctx, xL, ym);
+    Plot.text(ctx, fmt(V, 3) + ' V', xL - 20, ym, {align: 'right', mono: true});
+    Plot.resistor(ctx, xD, yT, xD, ym, {len: 40});
+    Plot.resistor(ctx, xD, ym, xD, yB, {len: 40});
+    Plot.text(ctx, 'R1 ' + si(R1, 'Ω'), xD - 14, (yT + ym)/2, {align: 'right', mono: true});
+    Plot.text(ctx, 'R2 ' + si(R2, 'Ω'), xD - 14, (ym + yB)/2, {align: 'right', mono: true});
+    Plot.wire(ctx, [[xD, ym], [xLd, ym]]);
+    Plot.resistor(ctx, xLd, ym, xLd, yB, {len: 40, color: col.c2});
+    node(ctx, xD, ym); node(ctx, xD, yB);
+    Plot.text(ctx, 'load', xLd + 14, (ym + yB)/2 - 9, {color: col.c2});
+    Plot.text(ctx, si(RL, 'Ω'), xLd + 14, (ym + yB)/2 + 8, {mono: true, color: col.c2});
+    Plot.text(ctx, 'V = ' + si(Vl, 'V'), (xD + xLd)/2, ym - 12, {align: 'center', mono: true, color: col.c1});
+    // plot: output voltage against load resistance
+    const P = {l: 50, r: W - 14, t: 172, b: H - 40};
+    const X = Plot.log(1e3, 1e9, P.l, P.r), ymax = Vi*1.12, Y = Plot.lin(0, ymax, P.b, P.t);
+    Plot.axes(ctx, P, X, Y, {xt: Plot.logTicks(1e3, 1e9), yt: Plot.ticks(0, ymax, 4), xl: 'load resistance', yl: 'V out (V)', xf: t => si(t, 'Ω').replace(' ', ''), yf: t => fmt(t, 3), xgrid: true});
+    Plot.clip(ctx, P);
+    Plot.line(ctx, [[P.l, Y(Vi)], [P.r, Y(Vi)]], col.muted, 1.4, [6, 5]);
+    const pts = []; for (let i = 0; i <= 120; i++){ const r = Math.pow(10, 3 + 6*i/120); pts.push([X(r), Y(Vi*r/(Rth + r))]); }
+    Plot.line(ctx, pts, col.c1, 2.2);
+    const x100 = X(100*Rth);
+    if (x100 > P.l && x100 < P.r){
+      const right = x100 > P.r - 90;
+      Plot.line(ctx, [[x100, P.t], [x100, P.b]], col.good, 1, [3, 3]);
+      Plot.text(ctx, '100 × R1∥R2', x100 + (right ? -4 : 4), P.b - 10, {align: right ? 'right' : 'left', color: col.good});
+    }
+    ctx.restore();
+    Plot.dot(ctx, X(RL), Y(Vl), 5.5, col.c2);
+    Plot.dot(ctx, X(RL), Y(Vl), 2.2, '#fff');
+  });
+  ['#lV', '#lR1', '#lR2', '#lRL'].forEach(id => $(id).addEventListener('input', upd));
+  upd();
+})();
+
+/* ============ 5. Superposition ============ */
+(() => {
+  const mode = seg('#uM', upd);
+  const Vref = 3.3;
+  let s = {};
+  function upd(){
+    const Vs = +$('#uV').value, m = mode();
+    const fs = m !== 'ref' ? Vs/2 : 0, fr = m !== 'sig' ? Vref/2 : 0, Vo = fs + fr;
+    s = {Vs, m, fs, fr, Vo};
+    $('#uVv').textContent = (Vs > 0 ? '+' : '') + fmt(Vs, 3) + ' V';
+    $('#uS').textContent = si(fs, 'V'); $('#uR').textContent = si(fr, 'V'); $('#uO').textContent = si(Vo, 'V');
+    const v = $('#uVerdict');
+    if (m === 'both') setVerdict(v, 'ok', `<b>Both sources:</b> ${si(fs, 'V')} from the signal plus ${si(fr, 'V')} from the reference gives ${si(Vo, 'V')}, inside the ADC's 0 to 3.3 V. Check it against the single-source cases.`);
+    else if (m === 'sig') setVerdict(v, 'warn', `<b>Signal only.</b> The reference is replaced by a wire, so R2 goes to ground and the signal sees a plain 50 % divider: ${si(Vs, 'V')} → ${si(fs, 'V')}.`);
+    else setVerdict(v, 'warn', `<b>Reference only.</b> The signal source is replaced by a wire, so the 3.3 V sees a 50 % divider: always ${si(fr, 'V')}, whatever the signal is doing.`);
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvSup'), (ctx, W, H) => {
+    const {Vs, m, fs, fr, Vo} = s; if (!m) return;
+    const xL = 60, xR = W - 60, xm = W/2, yT = 40, yB = 140, yc = (yT + yB)/2;
+    Plot.resistor(ctx, xL, yT, xm, yT, {len: 50, color: col.c1});
+    Plot.resistor(ctx, xm, yT, xR, yT, {len: 50, color: col.c2});
+    Plot.text(ctx, 'R1 10 kΩ', (xL + xm)/2, yT - 16, {align: 'center', mono: true, color: col.c1});
+    Plot.text(ctx, 'R2 10 kΩ', (xm + xR)/2, yT - 16, {align: 'center', mono: true, color: col.c2});
+    Plot.wire(ctx, [[xL, yB], [xR, yB]]); gnd(ctx, xm, yB); node(ctx, xm, yB);
+    // the output node and the ADC
+    node(ctx, xm, yT); Plot.wire(ctx, [[xm, yT], [xm, yT + 26]]);
+    Plot.arrow(ctx, xm, yT + 26, xm, yT + 44, col.ink);
+    Plot.text(ctx, 'to ADC', xm, yT + 56, {align: 'center'});
+    Plot.text(ctx, si(Vo, 'V'), xm, yT + 72, {align: 'center', mono: true, bold: true});
+    // signal source (circle) on the left, reference cell on the right; a switched-off source is a wire
+    if (m !== 'ref'){
+      Plot.wire(ctx, [[xL, yT], [xL, yc - 15]]); Plot.wire(ctx, [[xL, yc + 15], [xL, yB]]);
+      ctx.save(); ctx.fillStyle = '#fff'; ctx.strokeStyle = col.c1; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.arc(xL, yc, 15, 0, 2*Math.PI); ctx.fill(); ctx.stroke(); ctx.restore();
+      Plot.text(ctx, '+', xL, yc - 7, {align: 'center', color: col.c1}); Plot.text(ctx, '−', xL, yc + 7, {align: 'center', color: col.c1});
+      Plot.text(ctx, 'V_sig', xL - 22, yc - 8, {align: 'right', color: col.c1});
+      Plot.text(ctx, (Vs > 0 ? '+' : '') + fmt(Vs, 3) + ' V', xL - 22, yc + 8, {align: 'right', mono: true, color: col.c1});
+    } else {
+      Plot.wire(ctx, [[xL, yT], [xL, yB]], col.muted);
+      Plot.text(ctx, 'V_sig off', xL - 10, yc - 8, {align: 'right', color: col.muted});
+      Plot.text(ctx, '(a wire)', xL - 10, yc + 8, {align: 'right', color: col.muted});
+    }
+    if (m !== 'sig'){
+      Plot.wire(ctx, [[xR, yT], [xR, yc - 5]]); Plot.wire(ctx, [[xR, yc + 5], [xR, yB]]);
+      Plot.battery(ctx, xR, yc, {color: col.c2});
+      Plot.text(ctx, 'V_ref', xR - 22, yc - 8, {align: 'right', color: col.c2});
+      Plot.text(ctx, '3.3 V', xR - 22, yc + 8, {align: 'right', mono: true, color: col.c2});
+    } else {
+      Plot.wire(ctx, [[xR, yT], [xR, yB]], col.muted);
+      Plot.text(ctx, 'V_ref off', xR - 10, yc - 8, {align: 'right', color: col.muted});
+      Plot.text(ctx, '(a wire)', xR - 10, yc + 8, {align: 'right', color: col.muted});
+    }
+    // number line: each source's contribution, then the total
+    const l = 34, r = W - 20, X = Plot.lin(-1.5, 3.6, l, r), ya = H - 22;
+    ctx.fillStyle = Plot.rgba(col.good, .10); ctx.fillRect(X(0), ya - 92, X(3.3) - X(0), 92);
+    Plot.text(ctx, 'ADC range', X(3.3) - 4, ya - 84, {align: 'right', color: col.good});
+    Plot.line(ctx, [[l, ya], [r, ya]], col.line2, 1);
+    [-1, 0, 1, 2, 3].forEach(t => { Plot.line(ctx, [[X(t), ya], [X(t), ya + 4]], col.line2, 1); Plot.text(ctx, (t > 0 ? '+' : '') + t + ' V', X(t), ya + 13, {align: 'center', color: col.muted}); });
+    Plot.line(ctx, [[X(0), ya - 92], [X(0), ya]], col.line2, 1);
+    const row = (y, v0, v1, c, label) => {
+      if (Math.abs(v1 - v0) > 0.02) Plot.arrow(ctx, X(v0), y, X(v1), y, c, 2.2);
+      else Plot.dot(ctx, X(v0), y, 3, c);
+      const right = v1 >= v0;
+      Plot.text(ctx, label, X(v1) + (right ? 8 : -8), y, {align: right ? 'left' : 'right', color: c});
+    };
+    row(ya - 66, 0, fs, col.c1, 'signal ' + si(fs, 'V'));
+    row(ya - 44, fs, fs + fr, col.c2, 'reference ' + si(fr, 'V'));
+    Plot.dot(ctx, X(Vo), ya - 20, 5, col.ink);
+    Plot.text(ctx, 'sum ' + si(Vo, 'V'), X(Vo) + 9, ya - 20, {mono: true, bold: true});
+  });
+  $('#uV').addEventListener('input', upd);
+  upd();
+})();
+</script>
+</body>
+</html>
