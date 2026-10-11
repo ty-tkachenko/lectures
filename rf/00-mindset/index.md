@@ -12,7 +12,7 @@ practicals: []
 # Module 0: Why RF Is Different
 
 > **What you should already know**
-> - What voltage, current and resistance are, and Ohm's law (\(V = IR\)).
+> - What voltage, current and resistance are, and Ohm's law ($$V = IR$$).
 > - That a signal can repeat at a *frequency*, measured in hertz (Hz = cycles per second).
 > - Scientific prefixes: kilo (10³), mega (10⁶), giga (10⁹), milli (10⁻³), micro (10⁻⁶), nano (10⁻⁹).
 >
@@ -48,19 +48,19 @@ What decides whether a wire is "short" or "long" is its length compared with the
 
 $$\lambda = \frac{v}{f}$$
 
-- \(v\) is how fast the wave travels, in meters per second (m/s).
-- \(f\) is the frequency in hertz (Hz).
+- $$v$$ is how fast the wave travels, in meters per second (m/s).
+- $$f$$ is the frequency in hertz (Hz).
 
-In air or vacuum, \(v\) is the speed of light, \(c = 3\times10^8\) m/s. On a circuit board the wave travels partly through the board material, which slows it down by a factor \(\sqrt{\varepsilon_{\text{eff}}}\):
+In air or vacuum, $$v$$ is the speed of light, $$c = 3\times10^8$$ m/s. On a circuit board the wave travels partly through the board material, which slows it down by a factor $$\sqrt{\varepsilon_{\text{eff}}}$$:
 
 $$\lambda_{\text{board}} = \frac{c}{f\sqrt{\varepsilon_{\text{eff}}}}$$
 
-- \(\varepsilon_{\text{eff}}\) ("effective epsilon") is the *effective dielectric constant*, a number that describes how much the material slows the wave. For a trace on common FR-4 board material, \(\varepsilon_{\text{eff}} \approx 3.4\), so waves move at about \(1/\sqrt{3.4} \approx 54\%\) of the speed of light.
+- $$\varepsilon_{\text{eff}}$$ ("effective epsilon") is the *effective dielectric constant*, a number that describes how much the material slows the wave. For a trace on common FR-4 board material, $$\varepsilon_{\text{eff}} \approx 3.4$$, so waves move at about $$1/\sqrt{3.4} \approx 54\%$$ of the speed of light.
 
 **Worked example: 915 MHz** (a common rocket-telemetry band)
 
-1. In air: \(\lambda = \dfrac{3\times10^8\ \text{m/s}}{915\times10^6\ \text{Hz}} = 0.328\ \text{m} = 32.8\ \text{cm}\)
-2. On FR-4: \(\lambda_{\text{board}} = \dfrac{32.8\ \text{cm}}{\sqrt{3.4}} = \dfrac{32.8}{1.84} = 17.8\ \text{cm}\)
+1. In air: $$\lambda = \dfrac{3\times10^8\ \text{m/s}}{915\times10^6\ \text{Hz}} = 0.328\ \text{m} = 32.8\ \text{cm}$$
+2. On FR-4: $$\lambda_{\text{board}} = \dfrac{32.8\ \text{cm}}{\sqrt{3.4}} = \dfrac{32.8}{1.84} = 17.8\ \text{cm}$$
 
 | Frequency | Where you meet it | λ in air | λ on an FR-4 trace | λ/10 on FR-4 |
 |---|---|---|---|---|
@@ -69,11 +69,19 @@ $$\lambda_{\text{board}} = \frac{c}{f\sqrt{\varepsilon_{\text{eff}}}}$$
 | 2.4 GHz | Wi-Fi, Bluetooth | 12.5 cm | 6.8 cm | 6.8 mm |
 | 5.8 GHz | FPV drone video | 5.2 cm | 2.8 cm | 2.8 mm |
 
+![One wavelength drawn to scale on an FR-4 trace at 915 MHz (17.8 cm), 2.4 GHz (6.8 cm) and 5.8 GHz (2.8 cm), with λ/10 marked, next to a 50 mm-wide board](img/wavelength-vs-board.svg){: .figure}
+
+*One wavelength on an FR-4 trace, to scale. At 915 MHz λ/10 is 17.8 mm; at 2.4 GHz it is 6.8 mm, a small fraction of a 50 mm board.*
+
 ### The rule of thumb
 
 > **If a trace is longer than about λ/10, treat it as a transmission line, not a wire.**
 
 At 2.4 GHz that's only **6.8 mm**, shorter than most traces on a real board. At RF, almost every connection is a transmission line.
+
+Try it in the **wavelength explorer**: pick a frequency and a board material and see λ, λ/10 and λ/4 drawn to scale next to a trace.
+
+{% include widget.html widget="wavelength-explorer" height=600 title="Wavelength explorer" %}
 
 > **Go deeper: why λ/10?** Over one wavelength a wave goes through a full 360° cycle. Over λ/10 it goes through 36°, so the two ends of the trace are already noticeably out of step. Kirchhoff's circuit laws assume the voltage is the same all along a wire at every instant. That's the *lumped* model. Past about λ/10 that assumption gets too inaccurate and you need the *distributed* model, where voltage and current vary along the line (Module 1). λ/10 isn't a law of physics. It's a convenient threshold, and some designers use λ/20 to be safe.
 
@@ -87,22 +95,26 @@ At DC (steady current), current spreads evenly through the whole thickness of a 
 
 That's why RF loss depends so much on the *surface* of the copper, meaning its roughness and plating, and only a little on how thick the copper is.
 
+![Cross-sections of a 35 µm copper trace shaded by current density: even at DC, crowded into a 2.2 µm skin at 915 MHz, and crowded toward the ground-plane side over a plane; with a plot of current density against depth](img/skin-depth.svg){: .figure}
+
+*Where the current flows in a 1 oz (35 µm) trace. At DC it fills the copper. At 915 MHz it lives in a skin about 2.2 µm deep; over a ground plane it crowds onto the face toward the plane.*
+
 ### The math
 
-**Skin depth** (δ, "delta") is the depth at which the current has fallen to about 37% (that's \(1/e\)) of its value at the surface:
+**Skin depth** (δ, "delta") is the depth at which the current has fallen to about 37% (that's $$1/e$$) of its value at the surface:
 
 $$\delta = \sqrt{\frac{2\rho}{\omega\mu}}$$
 
-- \(\rho\) is the resistivity of the metal. For copper it's \(1.68\times10^{-8}\ \Omega\cdot\text{m}\).
-- \(\omega = 2\pi f\) is the *angular frequency* in radians per second.
-- \(\mu\) is the magnetic permeability. For copper it's \(\mu_0 = 4\pi\times10^{-7}\) H/m.
+- $$\rho$$ is the resistivity of the metal. For copper it's $$1.68\times10^{-8}\ \Omega\cdot\text{m}$$.
+- $$\omega = 2\pi f$$ is the *angular frequency* in radians per second.
+- $$\mu$$ is the magnetic permeability. For copper it's $$\mu_0 = 4\pi\times10^{-7}$$ H/m.
 
 **Worked example: copper at 915 MHz**
 
-1. \(\omega = 2\pi \times 915\times10^6 = 5.75\times10^9\) rad/s
-2. \(\omega\mu = 5.75\times10^9 \times 1.257\times10^{-6} = 7.23\times10^3\)
-3. \(2\rho/(\omega\mu) = 3.36\times10^{-8} / 7.23\times10^3 = 4.65\times10^{-12}\ \text{m}^2\)
-4. \(\delta = \sqrt{4.65\times10^{-12}} = 2.2\times10^{-6}\ \text{m} = 2.2\ \mu\text{m}\)
+1. $$\omega = 2\pi \times 915\times10^6 = 5.75\times10^9$$ rad/s
+2. $$\omega\mu = 5.75\times10^9 \times 1.257\times10^{-6} = 7.23\times10^3$$
+3. $$2\rho/(\omega\mu) = 3.36\times10^{-8} / 7.23\times10^3 = 4.65\times10^{-12}\ \text{m}^2$$
+4. $$\delta = \sqrt{4.65\times10^{-12}} = 2.2\times10^{-6}\ \text{m} = 2.2\ \mu\text{m}$$
 
 | Frequency | Skin depth in copper |
 |---|---|
@@ -112,6 +124,10 @@ $$\delta = \sqrt{\frac{2\rho}{\omega\mu}}$$
 | 2.4 GHz | 1.3 µm |
 
 A standard "1 oz" PCB trace is 35 µm thick, so at 915 MHz nearly all the current flows in the top and bottom ~2 µm. That's about the same size as the bumps on the copper's surface, which is why rough copper adds loss (Module 3).
+
+Sweep it yourself in the **skin-depth visualizer**, from 1 kHz to 6 GHz:
+
+{% include widget.html widget="skin-depth" height=570 title="Skin-depth visualizer" %}
 
 ---
 
@@ -125,6 +141,10 @@ Current always flows in a loop: out along the signal trace and back along a **re
 - At **RF**, it follows the lowest **inductance**. Inductance is the opposition to a *changing* current, and it grows with the area of the loop the current encloses. The smallest loop is the one where the return current runs **directly underneath the signal trace**.
 
 So at RF the return current hugs the bottom of the trace, mirror-image style.
+
+![Top views of a ground plane under a trace: at DC the return current spreads in wide arcs; at RF it runs in a narrow band under the trace; over a slot it must detour around the slot, opening a loop](img/return-current.svg){: .figure}
+
+*The return current in the plane under a trace. At DC it spreads out; at RF it follows the trace; a slot forces a detour and opens a loop that radiates.*
 
 ### Why it matters
 
@@ -150,12 +170,12 @@ An inductor's opposition to AC current is its *reactance*:
 
 $$X_L = 2\pi f L$$
 
-- \(X_L\) is in ohms (Ω).
-- \(L\) is the inductance in henries (H). A typical PCB via is about 0.5–1 nH (nanohenry, \(10^{-9}\) H).
+- $$X_L$$ is in ohms (Ω).
+- $$L$$ is the inductance in henries (H). A typical PCB via is about 0.5–1 nH (nanohenry, $$10^{-9}$$ H).
 
 **Worked example: a 1 nH ground via at 2.4 GHz**
 
-\(X_L = 2\pi \times 2.4\times10^9\ \text{Hz} \times 1\times10^{-9}\ \text{H} = 15\ \Omega\)
+$$X_L = 2\pi \times 2.4\times10^9\ \text{Hz} \times 1\times10^{-9}\ \text{H} = 15\ \Omega$$
 
 Fifteen ohms isn't a short circuit. Two points on the "same" ground can be at different RF voltages, so a ground plane at RF behaves like a network of small inductors.
 
@@ -173,7 +193,11 @@ The copper only **guides** the wave, the way rails guide a train. On a PCB, most
 
 > The board material carries your signal. Its properties matter as much as the copper does.
 
-> **Go deeper: the Poynting vector.** The direction and amount of power flowing through space is \( \vec S = \vec E \times \vec H \), in watts per square meter. Here \(\vec E\) is the electric field and \(\vec H\) is the magnetic field. For a trace over a ground plane, \(\vec S\) points along the trace and is concentrated in the dielectric just beneath it. That's why a material's *dielectric constant* (which sets the speed) and *loss tangent* (which sets how much energy turns into heat) show up in every RF calculation (Module 1).
+![Cross-section of a microstrip with electric field lines from the trace to the ground plane, mostly inside the FR-4, magnetic field lines circling the trace, and power flowing along the trace in the dielectric](img/microstrip-fields.svg){: .figure}
+
+*The fields around a 3 mm trace on 1.6 mm FR-4. E runs from the trace to the plane, mostly through the board; H circles the trace. The power flows along the trace, in the space between the conductors.*
+
+> **Go deeper: the Poynting vector.** The direction and amount of power flowing through space is $$\vec S = \vec E \times \vec H$$, in watts per square meter. Here $$\vec E$$ is the electric field and $$\vec H$$ is the magnetic field. For a trace over a ground plane, $$\vec S$$ points along the trace and is concentrated in the dielectric just beneath it. That's why a material's *dielectric constant* (which sets the speed) and *loss tangent* (which sets how much energy turns into heat) show up in every RF calculation (Module 1).
 
 ---
 
@@ -197,8 +221,10 @@ The copper only **guides** the wave, the way rails guide a train. On a PCB, most
 
 ## Interactive
 
-- **Wavelength explorer:** choose a frequency and a board material and see λ, λ/10 and λ/4 drawn to scale next to a real trace.
-- **Skin-depth visualizer:** sweep from DC to 6 GHz and watch the current crowd to the surface of a trace cross-section.
+Both widgets are embedded in the sections above. Open them full screen here:
+
+- **[Wavelength explorer](widgets/demo.html?w=wavelength-explorer):** choose a frequency and a board material and see λ, λ/10 and λ/4 drawn to scale next to a real trace.
+- **[Skin-depth visualizer](widgets/demo.html?w=skin-depth):** sweep from DC to 6 GHz and watch the current crowd to the surface of a trace cross-section.
 
 ## Practical
 
@@ -207,7 +233,19 @@ The copper only **guides** the wave, the way rails guide a train. On a PCB, most
 ## Check yourself
 
 1. **Recall.** What does "λ/10" compare, and what happens when a trace is longer than it?
-2. **Calculate.** What is the wavelength of a 433 MHz signal in air? On an FR-4 trace (\(\varepsilon_{\text{eff}} = 3.4\))?
+2. **Calculate.** What is the wavelength of a 433 MHz signal in air? On an FR-4 trace ($$\varepsilon_{\text{eff}} = 3.4$$)?
 3. **Calculate.** What is the reactance of a 1 nH ground via at 5.8 GHz? Is that closer to a short circuit or a resistor?
 4. **Explain.** Why does a slot in the ground plane under a trace cause trouble at 2.4 GHz but not at 1 kHz?
 5. **Design.** A 915 MHz radio chip sits 25 mm from its antenna connector on an FR-4 board. Should you treat that trace as a transmission line? Show your numbers.
+
+<script>
+/* Grow each embedded widget iframe (figure.widget-embed from _includes/widget.html) to fit its content (the widget posts its height). */
+window.addEventListener("message", function (e) {
+  var d = e.data;
+  if (!d || d.type !== "widget-height" || !(d.height > 0)) return;
+  var frames = document.querySelectorAll(".widget-embed iframe");
+  for (var i = 0; i < frames.length; i++) {
+    if (frames[i].contentWindow === e.source) frames[i].style.height = Math.min(Math.ceil(d.height) + 4, 4000) + "px";
+  }
+});
+</script>

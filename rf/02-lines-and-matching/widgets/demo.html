@@ -21,11 +21,23 @@ canvas{width:100%;border-radius:8px;background:#fafafa}
 .verdict{font-weight:600}
 .legend{font-size:.85rem;color:#555}
 .legend span{display:inline-block;width:14px;height:3px;vertical-align:middle;margin:0 .3rem 0 .8rem}
-</style></head><body>
+</style>
+<!-- embed mode: demo.html?w=<widget-id> shows only that widget (for an iframe in the lesson page) -->
+<script>(function(){try{var w=new URLSearchParams(location.search).get('w');if(w){document.documentElement.className+=' embed';document.documentElement.setAttribute('data-w',w)}}catch(e){}})();</script>
+<style>
+html.embed,html.embed body{background:transparent}
+html.embed body{max-width:none;margin:0;padding:.25rem .6rem .5rem}
+html.embed body>h1{display:none}
+html.embed .widget{display:none;margin:0;border:0;padding:.25rem 0}
+html.embed .widget.w-only{display:block}
+html.embed.w-unknown .widget{display:block;border:1px solid #eee;padding:1rem 1.25rem;margin:1rem 0}
+.w-notice{font-size:.85rem;color:#b45309}
+</style>
+</head><body>
 <h1>Module 2: interactive widgets (draft)</h1>
 
 <!-- ============ 1. Smith chart ============ -->
-<div class="widget" id="sc">
+<div class="widget" id="sc" data-wid="smith-chart">
 <h3>Live Smith chart</h3>
 <p class="legend">Drag the red dot anywhere on the chart, or use the sliders. Every point on the chart is one load impedance, and its distance from the center is |Γ|.</p>
 <div class="row">
@@ -55,7 +67,7 @@ canvas{width:100%;border-radius:8px;background:#fafafa}
 </div>
 
 <!-- ============ 2. L-network designer ============ -->
-<div class="widget" id="lm">
+<div class="widget" id="lm" data-wid="l-match-designer">
 <h3>L-network matching designer</h3>
 <p class="legend">Enter what your source wants to see and what the load actually is. The designer finds every two-part (one series, one shunt) match and draws its path on the Smith chart.</p>
 <div class="row">
@@ -74,7 +86,7 @@ canvas{width:100%;border-radius:8px;background:#fafafa}
 </div>
 
 <!-- ============ 3. quarter-wave transformer ============ -->
-<div class="widget" id="qw">
+<div class="widget" id="qw" data-wid="quarter-wave-transformer">
 <h3>Quarter-wave transformer</h3>
 <div class="row">
 <div><label>Load resistance R<sub>L</sub>: <span id="qw-rv"></span></label><input id="qw-r" type="range" min="0" max="1000" step="any" value="650.515"></div>
@@ -92,7 +104,7 @@ canvas{width:100%;border-radius:8px;background:#fafafa}
 </div>
 
 <!-- ============ 4. S-parameters power split ============ -->
-<div class="widget" id="sp">
+<div class="widget" id="sp" data-wid="s-parameter-power">
 <h3>What S<sub>11</sub> and S<sub>21</sub> say about power</h3>
 <div class="row">
 <div><label>S<sub>11</sub>: <span id="sp-av"></span></label><input id="sp-a" type="range" min="-40" max="0" step="0.1" value="-15"></div>
@@ -254,4 +266,25 @@ function sp(){const a=+q('sp-a').value,b=+q('sp-b').value,r=Math.pow(10,a/10),t=
  [[r,'#ef4444','reflected'],[t,'#3b82f6','transmitted'],[Math.max(0,l),'#f59e0b','lost']].forEach(([fr,col,name])=>{const w=Wd*Math.min(1,fr);x.fillStyle=col;x.fillRect(px,20,w,40);if(w>70){x.fillStyle='#fff';x.font='600 13px Inter,sans-serif';x.fillText(name,px+6,45)}px+=w});
  x.strokeStyle='#999';x.strokeRect(L,20,Wd,40);x.fillStyle='#555';x.font='12px Inter,sans-serif';x.fillText('100% of the power arriving at port 1',L,H-8)}
 ['sp-a','sp-b'].forEach(i=>q(i).addEventListener('input',sp));sp();
-</script></body></html>
+</script><script>
+// ---- embed mode + iframe auto-height ----
+(function(){
+ var html=document.documentElement, w=html.getAttribute('data-w');
+ if(w){
+  var el=document.querySelector('.widget[data-wid="'+w.replace(/["\\]/g,'')+'"]');
+  if(el){el.classList.add('w-only');var h=el.querySelector('h3');if(h)document.title=h.textContent}
+  else{html.classList.add('w-unknown');var n=document.createElement('p');n.className='w-notice';n.textContent='Unknown widget id "'+w+'". Showing all widgets.';document.body.insertBefore(n,document.body.firstChild)}
+ }
+ var last=0;
+ function post(){
+  var b=document.body,cs=getComputedStyle(b);
+  var hgt=Math.ceil(b.getBoundingClientRect().height+parseFloat(cs.marginTop)+parseFloat(cs.marginBottom));
+  if(hgt===last)return; last=hgt;
+  if(window.parent&&window.parent!==window){try{window.parent.postMessage({type:'widget-height',id:w||null,height:hgt},'*')}catch(e){}}
+ }
+ window.addEventListener('load',post); window.addEventListener('resize',post);
+ if(window.ResizeObserver){new ResizeObserver(post).observe(document.body)}
+ post();
+})();
+</script>
+</body></html>

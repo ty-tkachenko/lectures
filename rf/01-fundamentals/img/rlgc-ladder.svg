@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 270" width="760" height="270" role="img" aria-labelledby="t d" font-family="system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif">
+<title id="t">RLGC model of a transmission line</title><desc id="d">A transmission line drawn as a chain of identical short slices. Each slice of length delta z has a series resistance R delta z and inductance L delta z in the signal conductor, and a shunt conductance G delta z and capacitance C delta z between signal and return.</desc>
+<defs><marker id="ah94a3b8" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#94a3b8"/></marker></defs>
+<rect width="760" height="270" fill="#ffffff"/>
+<text x="20" y="24" font-size="14" fill="#2b2b2b" font-weight="600">A transmission line as a chain of tiny slices (the RLGC model)</text>
+<path d="M70,80 L78,80 L82.4,85 L86.8,75 L91.2,85 L95.6,75 L100,85 L104.4,75 L108.8,85 L113.2,75 L117.6,85 L122,80 L130,80" stroke="#2b2b2b" stroke-width="1.6" fill="none" stroke-linejoin="round"/>
+<path d="M130,80 L136,80 A7.2,7.2 0 0 1 150.5,80 A7.2,7.2 0 0 1 165,80 A7.2,7.2 0 0 1 179.5,80 A7.2,7.2 0 0 1 194,80 L200,80" stroke="#2b2b2b" stroke-width="1.6" fill="none" stroke-linejoin="round"/>
+<path d="M200,80 L270,80" stroke="#2b2b2b" stroke-width="1.6" fill="none" stroke-linejoin="round"/>
+<circle cx="210" cy="80" r="3" stroke-width="1" fill="#2b2b2b"/>
+<path d="M220,80 L220,98" stroke="#2b2b2b" stroke-width="1.6" fill="none" stroke-linejoin="round"/>
+<path d="M220,98 L220,104 L215,113 L225,122 L215,131 L225,140 L215,149 L225,158 L215,167 L220,176 L220,182" stroke="#2b2b2b" stroke-width="1.6" fill="none" stroke-linejoin="round"/>
+<path d="M220,182 L220,200" stroke="#2b2b2b" stroke-width="1.6" fill="none" stroke-linejoin="round"/>
+<path d="M255,80 L255,110" stroke="#2b2b2b" stroke-width="1.6" fill="none" stroke-linejoin="round"/>
+<path d="M255,110 L255,136" stroke="#2b2b2b" stroke-width="1.6" fill="none" stroke-linejoin="round"/>
+<path d="M255,144 L255,170" stroke="#2b2b2b" stroke-width="1.6" fill="none" stroke-linejoin="round"/>
+<line x1="266" y1="136" x2="244" y2="136" stroke="#2b2b2b" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+<line x1="266" y1="144" x2="244" y2="144" stroke="#2b2b2b" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+<path d="M255,170 L255,200" stroke="#2b2b2b" stroke-width="1.6" fill="none" stroke-linejoin="round"/>
+<circle cx="220" cy="80" r="3" stroke-width="1" fill="#2b2b2b"/>
+<circle cx="255" cy="80" r="3" stroke-width="1" fill="#2b2b2b"/>
+<circle cx="220" cy="200" r="3" stroke-width="1" fill="#2b2b2b"/>
+<circle cx="255" cy="200" r="3" stroke-width="1" fill="#2b2b2b"/>
+<text x="100" y="66" font-size="12" fill="#2b2b2b" text-anchor="middle">R·Δz</text>
+<text x="165" y="66" font-size="12" fill="#2b2b2b" text-anchor="middle">L·Δz</text>
+<text x="210" y="144" font-size="12" fill="#2b2b2b" text-anchor="end">G·Δz</text>
+<text x="271" y="144" font-size="12" fill="#2b2b2b">C·Δz</text>
+<line x1="72" y1="218" x2="268" y2="218" stroke="#94a3b8" stroke-width="1" fill="none" stroke-linecap="round" marker-end="url(#ah94a3b8)" marker-start="url(#ah94a3b8)"/>
+<text x="170" y="234" font-size="12" fill="#555" text-anchor="middle">Δz</text>
+<line x1="70" y1="50" x2="70" y2="224" stroke="#cbd5e1" stroke-width="1" fill="none" stroke-dasharray="3 3" stroke-linecap="round"/>
+<path d="M270,80 L278,80 L282.4,85 L286.8,75 L291.2,85 L295.6,75 L300,85 L304.4,75 L308.8,85 L313.2,75 L317.6,85 L322,80 L330,80" stroke="#2b2b2b" stroke-width="1.6" fill="none" stroke-linejoin="round"/>
+<path d="M330,80 L336,80 A7.2,7.2 0 0 1 350.5,80 A7.2,7.2 0 0 1 365,80 A7.2,7.2 0 0 1 379.5,80 A7.2,7.2 0 0 1 394,80 L400,80" stroke="#2b2b2b" stroke-width="1.6" fill="none" stroke-linejoin="round"/>
+<path d="M400,80 L470,80" stroke="#2b2b2b" stroke-width="1.6" fill="none" stroke-linejoin="round"/>
+<circle cx="410" cy="80" r="3" stroke-width="1" fill="#2b2b2b"/>
+<path d="M420,80 L420,98" stroke="#2b2b2b" stroke-width="1.6" fill="none" stroke-linejoin="round"/>
+<path d="M420,98 L420,104 L415,113 L425,122 L415,131 L425,140 L415,149 L425,158 L415,167 L420,176 L420,182" stroke="#2b2b2b" stroke-width="1.6" fill="none" stroke-linejoin="round"/>
+<path d="M420,182 L420,200" stroke="#2b2b2b" stroke-width="1.6" fill="none" stroke-linejoin="round"/>
+<path d="M455,80 L455,110" stroke="#2b2b2b" stroke-width="1.6" fill="none" stroke-linejoin="round"/>
+<path d="M455,110 L455,136" stroke="#2b2b2b" stroke-width="1.6" fill="none" stroke-linejoin="round"/>
+<path d="M455,144 L455,170" stroke="#2b2b2b" stroke-width="1.6" fill="none" stroke-linejoin="round"/>
+<line x1="466" y1="136" x2="444" y2="136" stroke="#2b2b2b" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+<line x1="466" y1="144" x2="444" y2="144" stroke="#2b2b2b" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+<path d="M455,170 L455,200" stroke="#2b2b2b" stroke-width="1.6" fill="none" stroke-linejoin="round"/>
+<circle cx="420" cy="80" r="3" stroke-width="1" fill="#2b2b2b"/>
+<circle cx="455" cy="80" r="3" stroke-width="1" fill="#2b2b2b"/>
+<circle cx="420" cy="200" r="3" stroke-width="1" fill="#2b2b2b"/>
+<circle cx="455" cy="200" r="3" stroke-width="1" fill="#2b2b2b"/>
+<line x1="272" y1="218" x2="468" y2="218" stroke="#94a3b8" stroke-width="1" fill="none" stroke-linecap="round" marker-end="url(#ah94a3b8)" marker-start="url(#ah94a3b8)"/>
+<text x="370" y="234" font-size="12" fill="#555" text-anchor="middle">Δz</text>
+<line x1="270" y1="50" x2="270" y2="224" stroke="#cbd5e1" stroke-width="1" fill="none" stroke-dasharray="3 3" stroke-linecap="round"/>
+<path d="M470,80 L478,80 L482.4,85 L486.8,75 L491.2,85 L495.6,75 L500,85 L504.4,75 L508.8,85 L513.2,75 L517.6,85 L522,80 L530,80" stroke="#2b2b2b" stroke-width="1.6" fill="none" stroke-linejoin="round"/>
+<path d="M530,80 L536,80 A7.2,7.2 0 0 1 550.5,80 A7.2,7.2 0 0 1 565,80 A7.2,7.2 0 0 1 579.5,80 A7.2,7.2 0 0 1 594,80 L600,80" stroke="#2b2b2b" stroke-width="1.6" fill="none" stroke-linejoin="round"/>
+<path d="M600,80 L670,80" stroke="#2b2b2b" stroke-width="1.6" fill="none" stroke-linejoin="round"/>
+<circle cx="610" cy="80" r="3" stroke-width="1" fill="#2b2b2b"/>
+<path d="M620,80 L620,98" stroke="#2b2b2b" stroke-width="1.6" fill="none" stroke-linejoin="round"/>
+<path d="M620,98 L620,104 L615,113 L625,122 L615,131 L625,140 L615,149 L625,158 L615,167 L620,176 L620,182" stroke="#2b2b2b" stroke-width="1.6" fill="none" stroke-linejoin="round"/>
+<path d="M620,182 L620,200" stroke="#2b2b2b" stroke-width="1.6" fill="none" stroke-linejoin="round"/>
+<path d="M655,80 L655,110" stroke="#2b2b2b" stroke-width="1.6" fill="none" stroke-linejoin="round"/>
+<path d="M655,110 L655,136" stroke="#2b2b2b" stroke-width="1.6" fill="none" stroke-linejoin="round"/>
+<path d="M655,144 L655,170" stroke="#2b2b2b" stroke-width="1.6" fill="none" stroke-linejoin="round"/>
+<line x1="666" y1="136" x2="644" y2="136" stroke="#2b2b2b" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+<line x1="666" y1="144" x2="644" y2="144" stroke="#2b2b2b" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+<path d="M655,170 L655,200" stroke="#2b2b2b" stroke-width="1.6" fill="none" stroke-linejoin="round"/>
+<circle cx="620" cy="80" r="3" stroke-width="1" fill="#2b2b2b"/>
+<circle cx="655" cy="80" r="3" stroke-width="1" fill="#2b2b2b"/>
+<circle cx="620" cy="200" r="3" stroke-width="1" fill="#2b2b2b"/>
+<circle cx="655" cy="200" r="3" stroke-width="1" fill="#2b2b2b"/>
+<line x1="472" y1="218" x2="668" y2="218" stroke="#94a3b8" stroke-width="1" fill="none" stroke-linecap="round" marker-end="url(#ah94a3b8)" marker-start="url(#ah94a3b8)"/>
+<text x="570" y="234" font-size="12" fill="#555" text-anchor="middle">Δz</text>
+<line x1="470" y1="50" x2="470" y2="224" stroke="#cbd5e1" stroke-width="1" fill="none" stroke-dasharray="3 3" stroke-linecap="round"/>
+<line x1="670" y1="50" x2="670" y2="224" stroke="#cbd5e1" stroke-width="1" fill="none" stroke-dasharray="3 3" stroke-linecap="round"/>
+<path d="M40,200 L700,200" stroke="#2b2b2b" stroke-width="1.6" fill="none" stroke-linejoin="round"/>
+<path d="M40,80 L70,80" stroke="#2b2b2b" stroke-width="1.6" fill="none" stroke-linejoin="round"/>
+<path d="M670,80 L700,80" stroke="#2b2b2b" stroke-width="1.6" fill="none" stroke-linejoin="round"/>
+<text x="34" y="84" font-size="16" fill="#555" text-anchor="end">···</text>
+<text x="706" y="84" font-size="16" fill="#555">···</text>
+<text x="34" y="204" font-size="16" fill="#555" text-anchor="end">···</text>
+<text x="706" y="204" font-size="16" fill="#555">···</text>
+<text x="740" y="40" font-size="11.5" fill="#555" text-anchor="end">signal conductor (trace)</text>
+<text x="740" y="252" font-size="11.5" fill="#555" text-anchor="end">return conductor (ground plane)</text>
+<text x="20" y="258" font-size="11.5" fill="#555" font-style="italic">L and C store energy (they set Z₀ = √(L/C) and the speed); R (copper) and G (dielectric) turn it into heat.</text>
+</svg>

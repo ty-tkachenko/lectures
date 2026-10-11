@@ -14,10 +14,22 @@ select{padding:.2rem}
 canvas{width:100%;border-radius:8px;background:#fafafa}
 .try{font-size:.9rem;background:#fffbeb;border-left:3px solid #f59e0b;padding:.5rem .75rem;margin-top:.8rem}
 .verdict{font-weight:600}
-</style></head><body>
+</style>
+<!-- embed mode: demo.html?w=<widget-id> shows only that widget (for an iframe in the lesson page) -->
+<script>(function(){try{var w=new URLSearchParams(location.search).get('w');if(w){document.documentElement.className+=' embed';document.documentElement.setAttribute('data-w',w)}}catch(e){}})();</script>
+<style>
+html.embed,html.embed body{background:transparent}
+html.embed body{max-width:none;margin:0;padding:.25rem .6rem .5rem}
+html.embed body>h1{display:none}
+html.embed .widget{display:none;margin:0;border:0;padding:.25rem 0}
+html.embed .widget.w-only{display:block}
+html.embed.w-unknown .widget{display:block;border:1px solid #eee;padding:1rem 1.25rem;margin:1rem 0}
+.w-notice{font-size:.85rem;color:#b45309}
+</style>
+</head><body>
 <h1>Module 0: interactive widgets (draft)</h1>
 
-<div class="widget" id="wl">
+<div class="widget" id="wl" data-wid="wavelength-explorer">
 <h3>Wavelength explorer</h3>
 <label>Frequency: <span id="wl-fv"></span></label>
 <input id="wl-f" type="range" min="0" max="1000" value="600">
@@ -41,7 +53,7 @@ canvas{width:100%;border-radius:8px;background:#fafafa}
 <div class="try"><b>Try this:</b> set the trace to 25 mm and slide from 100 MHz up to 6 GHz. Where does it stop being "just a wire"? Then switch FR-4 to air: does the threshold move up or down, and why?</div>
 </div>
 
-<div class="widget" id="sd">
+<div class="widget" id="sd" data-wid="skin-depth">
 <h3>Skin depth visualizer</h3>
 <label>Frequency: <span id="sd-fv"></span></label>
 <input id="sd-f" type="range" min="0" max="1000" value="700">
@@ -106,4 +118,25 @@ const q=id=>document.getElementById(id);
 const wlf=q('wl-f'),wlm=q('wl-mat'),wll=q('wl-l'),sdf=q('sd-f'),sdt=q('sd-t');
 [wlf,wlm,wll].forEach(e=>e.addEventListener('input',wl));[sdf,sdt].forEach(e=>e.addEventListener('input',sd));
 wl();sd();
-</script></body></html>
+</script><script>
+// ---- embed mode + iframe auto-height ----
+(function(){
+ var html=document.documentElement, w=html.getAttribute('data-w');
+ if(w){
+  var el=document.querySelector('.widget[data-wid="'+w.replace(/["\\]/g,'')+'"]');
+  if(el){el.classList.add('w-only');var h=el.querySelector('h3');if(h)document.title=h.textContent}
+  else{html.classList.add('w-unknown');var n=document.createElement('p');n.className='w-notice';n.textContent='Unknown widget id "'+w+'". Showing all widgets.';document.body.insertBefore(n,document.body.firstChild)}
+ }
+ var last=0;
+ function post(){
+  var b=document.body,cs=getComputedStyle(b);
+  var hgt=Math.ceil(b.getBoundingClientRect().height+parseFloat(cs.marginTop)+parseFloat(cs.marginBottom));
+  if(hgt===last)return; last=hgt;
+  if(window.parent&&window.parent!==window){try{window.parent.postMessage({type:'widget-height',id:w||null,height:hgt},'*')}catch(e){}}
+ }
+ window.addEventListener('load',post); window.addEventListener('resize',post);
+ if(window.ResizeObserver){new ResizeObserver(post).observe(document.body)}
+ post();
+})();
+</script>
+</body></html>

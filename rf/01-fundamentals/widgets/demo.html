@@ -21,11 +21,23 @@ canvas{width:100%;border-radius:8px;background:#fafafa}
 .verdict{font-weight:600}
 .legend{font-size:.85rem;color:#555}
 .legend span{display:inline-block;width:14px;height:3px;vertical-align:middle;margin:0 .3rem 0 .8rem}
-</style></head><body>
+</style>
+<!-- embed mode: demo.html?w=<widget-id> shows only that widget (for an iframe in the lesson page) -->
+<script>(function(){try{var w=new URLSearchParams(location.search).get('w');if(w){document.documentElement.className+=' embed';document.documentElement.setAttribute('data-w',w)}}catch(e){}})();</script>
+<style>
+html.embed,html.embed body{background:transparent}
+html.embed body{max-width:none;margin:0;padding:.25rem .6rem .5rem}
+html.embed body>h1{display:none}
+html.embed .widget{display:none;margin:0;border:0;padding:.25rem 0}
+html.embed .widget.w-only{display:block}
+html.embed.w-unknown .widget{display:block;border:1px solid #eee;padding:1rem 1.25rem;margin:1rem 0}
+.w-notice{font-size:.85rem;color:#b45309}
+</style>
+</head><body>
 <h1>Module 1: interactive widgets (draft)</h1>
 
 <!-- ============ 1. standing waves ============ -->
-<div class="widget" id="sw">
+<div class="widget" id="sw" data-wid="standing-wave">
 <h3>Standing waves and VSWR</h3>
 <p class="legend">A 50 Ω line runs from the source (left) to a load (right edge). Pick the load and watch the wave that goes in, the wave that bounces back, and their sum.</p>
 <div class="row">
@@ -57,7 +69,7 @@ canvas{width:100%;border-radius:8px;background:#fafafa}
 </div>
 
 <!-- ============ 2. TDR ============ -->
-<div class="widget" id="tdr">
+<div class="widget" id="tdr" data-wid="tdr-simulator">
 <h3>TDR simulator: see reflections in time, then in frequency</h3>
 <p class="legend">A fast voltage step is launched into a 50 Ω line. At some distance there is a discontinuity. The trace shows the voltage at the launch point over time, converted to impedance and distance.</p>
 <div class="row">
@@ -92,7 +104,7 @@ canvas{width:100%;border-radius:8px;background:#fafafa}
 </div>
 
 <!-- ============ 3. microstrip ============ -->
-<div class="widget" id="ms">
+<div class="widget" id="ms" data-wid="microstrip-z0">
 <h3>Microstrip impedance calculator</h3>
 <div class="row">
 <div><label>Trace width w: <span id="ms-wv"></span></label><input id="ms-w" type="range" min="0.05" max="6" step="0.01" value="1.0"></div>
@@ -124,7 +136,7 @@ canvas{width:100%;border-radius:8px;background:#fafafa}
 </div>
 
 <!-- ============ 4. dB chain ============ -->
-<div class="widget" id="db">
+<div class="widget" id="db" data-wid="db-chain">
 <h3>dB and dBm chain</h3>
 <p class="legend">Each block multiplies the power. In dB, multiplying becomes adding, so you can follow a signal down a chain with mental arithmetic.</p>
 <label>Source power: <span id="db-pv"></span></label><input id="db-p" type="range" min="-40" max="30" step="0.5" value="0">
@@ -140,7 +152,7 @@ canvas{width:100%;border-radius:8px;background:#fafafa}
 </div>
 
 <!-- ============ 5. polarization ============ -->
-<div class="widget" id="pol">
+<div class="widget" id="pol" data-wid="polarization">
 <h3>Polarization mismatch</h3>
 <div class="row">
 <div><label>Transmit antenna
@@ -160,7 +172,7 @@ canvas{width:100%;border-radius:8px;background:#fafafa}
 </div>
 
 <!-- ============ 6. Dk / Df loss ============ -->
-<div class="widget" id="ls">
+<div class="widget" id="ls" data-wid="dk-df-loss">
 <h3>Where the loss comes from: copper vs dielectric</h3>
 <div class="row">
 <div><label>Board material
@@ -394,4 +406,25 @@ function ls(){const [er,td]=q('ls-mat').value.split(',').map(Number),h=+q('ls-h'
  curve(o=>o.ac,'#b87333',2);curve(o=>o.ad,'#16a34a',2);curve(o=>o.ac+o.ad,'#111',2.5);
  x.strokeStyle='#f59e0b';x.setLineDash([4,4]);x.beginPath();x.moveTo(xs(f),T);x.lineTo(xs(f),B);x.stroke();x.setLineDash([])}
 ['ls-mat','ls-h','ls-f','ls-l'].forEach(i=>q(i).addEventListener('input',ls));ls();
-</script></body></html>
+</script><script>
+// ---- embed mode + iframe auto-height ----
+(function(){
+ var html=document.documentElement, w=html.getAttribute('data-w');
+ if(w){
+  var el=document.querySelector('.widget[data-wid="'+w.replace(/["\\]/g,'')+'"]');
+  if(el){el.classList.add('w-only');var h=el.querySelector('h3');if(h)document.title=h.textContent}
+  else{html.classList.add('w-unknown');var n=document.createElement('p');n.className='w-notice';n.textContent='Unknown widget id "'+w+'". Showing all widgets.';document.body.insertBefore(n,document.body.firstChild)}
+ }
+ var last=0;
+ function post(){
+  var b=document.body,cs=getComputedStyle(b);
+  var hgt=Math.ceil(b.getBoundingClientRect().height+parseFloat(cs.marginTop)+parseFloat(cs.marginBottom));
+  if(hgt===last)return; last=hgt;
+  if(window.parent&&window.parent!==window){try{window.parent.postMessage({type:'widget-height',id:w||null,height:hgt},'*')}catch(e){}}
+ }
+ window.addEventListener('load',post); window.addEventListener('resize',post);
+ if(window.ResizeObserver){new ResizeObserver(post).observe(document.body)}
+ post();
+})();
+</script>
+</body></html>
