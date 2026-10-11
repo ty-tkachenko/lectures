@@ -112,12 +112,17 @@
   <p>Break any dB value into 10s and 3s. 13 dB = 10 + 3, so ×10 × 2 = ×20. 27 dBm = 30 − 3, so 1 W ÷ 2 = 500 mW. With practice this needs no calculator.</p>
 </div>
 <details class="exercise">
-  <summary><span class="ek">Design exercise</span><span class="et">Signal level at the ground receiver</span></summary>
+  <summary><span class="ek">Design exercise</span><span class="et">Where should the amplifier go?</span></summary>
   <div class="eb">
-    <p>At the ground station, the antenna delivers −95 dBm. It feeds a 20 dB low-noise amplifier mounted at the mast, then 4 dB of cable down to the receiver.</p>
-    <div class="check" data-ans="-79" data-tol="0.1" data-unit="dBm"><p>What power reaches the receiver?</p>
-      <div class="miss" data-val="-119"><p>The amplifier adds 20 dB. It doesn't subtract it.</p></div>
-      <div class="solution"><p>−95 + 20 − 4 = <b>−79 dBm</b>. In linear terms that's about 12.6 pW. Putting the amplifier at the mast <em>before</em> the cable is deliberate: Module 6 shows why it gives a much better noise figure than putting it at the receiver.</p></div>
+    <p>At the ground station, the antenna delivers −95 dBm into a 20 dB low-noise amplifier at the mast, followed by 4 dB of cable down to the receiver: −79 dBm arrives. Someone proposes moving the amplifier indoors, after the cable.</p>
+    <div class="choice"><p>What happens?</p>
+    <ol class="opts">
+      <li>The received power drops by 4 dB.<div class="why">Add up the gains and losses in the new order.</div></li>
+      <li data-correct>The received power is unchanged, because gains and losses add in any order, but the noise gets worse, because the cable's loss now comes before the amplifier.<div class="why">The signal level is the same; the signal-to-noise ratio isn't.</div></li>
+      <li>The received power rises, because the amplifier sees a cleaner signal indoors.<div class="why">The total gain and loss haven't changed.</div></li>
+      <li>Nothing changes at all.<div class="why">The power is the same, but something else does change.</div></li>
+    </ol>
+    <div class="solution"><p>In decibels the chain is just a sum, and −95 + 20 − 4 = −95 − 4 + 20 = −79 dBm either way. What changes is the noise: a loss before the first amplifier weakens the signal before it's amplified, while the noise the amplifier adds stays the same, so the signal-to-noise ratio drops by about the cable's loss. That's why low-noise amplifiers go at the antenna. Module 6 makes this precise with noise figure.</p></div>
     </div>
   </div>
 </details>
@@ -171,12 +176,17 @@
   <div><span class="nt">It isn't only radios: fast digital edges count too</span>A digital edge with rise time \(t_r\) contains significant energy up to roughly \(0.35/t_r\). A 1 ns edge on an SPI or Ethernet line behaves like a 350 MHz signal, so a long trace or ribbon cable starts acting like a transmission line, ringing and all. This is where RF and high-speed digital design meet.</div>
 </div>
 <details class="exercise">
-  <summary><span class="ek">Design exercise</span><span class="et">The longest "lumped" trace at 2.4 GHz</span></summary>
+  <summary><span class="ek">Design exercise</span><span class="et">A different board material</span></summary>
   <div class="eb">
-    <p>A 2.4 GHz video transmitter sits on an FR-4 board (ε<sub>eff</sub> ≈ 3.3). You'd like to route its output without impedance control.</p>
-    <div class="check" data-ans="6.9" data-tol="3%" data-unit="mm"><p>Up to what trace length is that acceptable, by the λ/10 rule?</p>
-      <div class="miss" data-val="12.5"><p>That uses the free-space wavelength. On FR-4 it's shorter by √3.3.</p></div>
-      <div class="solution"><p>\(\lambda = c/(f\sqrt{\varepsilon_\text{eff}}) = 3\times10^8/(2.4\times10^9 \times 1.817) \approx 68.8\ \text{mm}\), so λ/10 ≈ 6.9 mm. Anything longer, which is nearly any real route, should be a 50 Ω line.</p></div>
+    <p>By the λ/10 rule, a 2.4 GHz trace on FR-4 can be about 7 mm long before it needs impedance control. The same design is moved to a PTFE-based board, with a lower dielectric constant.</p>
+    <div class="choice"><p>Does the longest "lumped" trace get longer or shorter?</p>
+    <ol class="opts">
+      <li>Shorter.<div class="why">Think about how the dielectric constant affects the speed of the wave.</div></li>
+      <li data-correct>Longer, because the wave travels faster in a lower-εr material, so the wavelength on the board is longer.<div class="why">λ = c/(f√ε<sub>eff</sub>): lower ε<sub>eff</sub>, longer wavelength.</div></li>
+      <li>Unchanged: the frequency is the same.<div class="why">The frequency is the same, but the wavelength also depends on the speed.</div></li>
+      <li>It depends only on the trace width.<div class="why">Width sets the impedance, not the wavelength.</div></li>
+    </ol>
+    <div class="solution"><p>A wave covers one wavelength per cycle. In a lower-εr material it travels faster, so it covers more distance per cycle and the wavelength is longer. On PTFE (ε<sub>eff</sub> around 1.9 for microstrip) the wavelength at 2.4 GHz is about a third longer than on FR-4, so the λ/10 limit moves out to about 9 mm. Still short: at 2.4 GHz, almost any real route needs to be a controlled-impedance line.</p></div>
     </div>
   </div>
 </details>
@@ -218,13 +228,17 @@
 <h3>Why 50 Ω?</h3>
 <p>For air-filled coax of a given outer size, loss is lowest near 77 Ω and power handling is highest near 30 Ω. 50 Ω is a compromise between the two that stuck in the 1930s, and today nearly every RF connector, cable, amplifier and instrument is built for it. (Video and TV systems standardised on 75 Ω, which is why that coax is different.) On our PCBs, a 50 Ω microstrip is a trace of a particular width over a ground plane; Modules 2 and 4 show how to calculate its width.</p>
 <details class="exercise">
-  <summary><span class="ek">Design exercise</span><span class="et">Design a 50 Ω PTFE coax</span></summary>
+  <summary><span class="ek">Design exercise</span><span class="et">Filling an air line with PTFE</span></summary>
   <div class="eb">
-    <p>You're specifying a semi-rigid cable with solid PTFE dielectric (ε<sub>r</sub> = 2.1).</p>
-    <div class="check" data-ans="3.35" data-tol="2%" data-unit=""><p>What ratio D/d gives 50 Ω?</p>
-      <div class="miss" data-val="2.3"><p>That's the ratio for an <em>air</em>-filled line. The dielectric lowers Z₀, so the ratio must grow to compensate.</p></div>
-      <div class="hint">Rearrange: \(\ln(D/d) = Z_0\sqrt{\varepsilon_r}/60\).</div>
-      <div class="solution"><p>\(\ln(D/d) = 50 \times 1.449 / 60 = 1.208\), so \(D/d = e^{1.208} \approx 3.35\). Real 0.141″ semi-rigid has d = 0.91 mm and D = 2.98 mm, a ratio of 3.27, which is 49 Ω in this simple formula. Check it with the presets in the calculator above.</p></div>
+    <p>An air-dielectric coax has 50 Ω characteristic impedance. Without changing the conductors, the air is replaced with solid PTFE (ε<sub>r</sub> = 2.1).</p>
+    <div class="choice"><p>What happens to Z₀?</p>
+    <ol class="opts">
+      <li>It rises.<div class="why">Think about what the dielectric does to the capacitance per metre.</div></li>
+      <li data-correct>It falls, to about 35 Ω.<div class="why">The dielectric raises the capacitance per metre by 2.1×, and Z₀ falls by √2.1.</div></li>
+      <li>It stays at 50 Ω, because the geometry is the same.<div class="why">Geometry sets the inductance per metre. The dielectric changes the capacitance.</div></li>
+      <li>It halves.<div class="why">Z₀ depends on the square root of the capacitance.</div></li>
+    </ol>
+    <div class="solution"><p>Z₀ = √(L′/C′). The conductors set L′, which doesn't change. The dielectric multiplies C′ by ε<sub>r</sub>, so Z₀ falls by √2.1 ≈ 1.45, from 50 Ω to about 35 Ω. To get 50 Ω back with PTFE, the conductors have to be further apart relative to their size: D/d grows from 2.3 to about 3.35. That's why PTFE cables are thicker for the same centre conductor than air lines would be. Try it with the calculator above.</p></div>
     </div>
   </div>
 </details>
@@ -280,12 +294,17 @@
   <div><span class="nt">The airframe is part of the antenna</span>An antenna tuned on the bench can be badly mismatched once it's inside the rocket. Carbon fibre is conductive and shields the antenna; metal bulkheads and the wiring harness change its impedance. Always measure return loss with the antenna installed in the real airframe section.</div>
 </div>
 <details class="exercise">
-  <summary><span class="ek">Design exercise</span><span class="et">A 75 Ω antenna on a 50 Ω radio</span></summary>
+  <summary><span class="ek">Design exercise</span><span class="et">Which mismatch is worse?</span></summary>
   <div class="eb">
-    <p>A 75 Ω antenna is connected directly to the 50 Ω telemetry radio.</p>
-    <div class="check" data-ans="13.98" data-tol="0.15" data-unit="dB"><p>What return loss will you measure?</p>
-      <div class="miss" data-val="0.2"><p>That's |Γ|. Return loss is \(-20\log_{10}|\Gamma|\) in dB.</p></div>
-      <div class="solution"><p>\(\Gamma = (75-50)/(75+50) = 0.2\), so return loss = \(-20\log_{10}(0.2) \approx 14\ \text{dB}\), and VSWR = 1.5:1. Only 4 % of the power reflects (0.18 dB), which is acceptable for most links. A 75/50 mismatch is much less serious than often assumed.</p></div>
+    <p>Two antennas are tested on a 50 Ω radio. One has a 75 Ω feed impedance; the other measures 33 Ω.</p>
+    <div class="choice"><p>Which reflects more power?</p>
+    <ol class="opts">
+      <li>The 75 Ω one, because it's 25 Ω away from 50 Ω instead of 17 Ω.<div class="why">Reflection depends on the ratio of impedances, not their difference.</div></li>
+      <li>The 33 Ω one, because low impedances reflect more.<div class="why">Neither direction is worse in itself. Look at the ratio.</div></li>
+      <li data-correct>About the same: both are about 1.5 times away from 50 Ω, one above and one below.<div class="why">Both give |Γ| ≈ 0.2, a VSWR of about 1.5:1.</div></li>
+      <li>Neither, as long as the cable is short.<div class="why">A short cable doesn't remove the mismatch at the antenna.</div></li>
+    </ol>
+    <div class="solution"><p>Γ = (Z<sub>L</sub> − Z₀)/(Z<sub>L</sub> + Z₀) depends on how far the load is from Z₀ as a ratio. 75/50 = 1.5 and 50/33 ≈ 1.5, so both reflect about 4 % of the power, with opposite signs of Γ. Thinking in ratios is the useful habit: a 100 Ω load and a 25 Ω load are both a 2:1 mismatch.</p></div>
     </div>
   </div>
 </details>
@@ -312,12 +331,17 @@
 </div>
 <p>A VNA can compute the same view (most have a "time domain" mode, including the NanoVNA), which is how we check cable assemblies and find bad crimps on the rocket's RF harness.</p>
 <details class="exercise">
-  <summary><span class="ek">Design exercise</span><span class="et">Measure a cable's velocity factor</span></summary>
+  <summary><span class="ek">Design exercise</span><span class="et">A TDR set for the wrong cable</span></summary>
   <div class="eb">
-    <p>You have a spool of unknown coax. You cut exactly 2.00 m, leave the far end open, and the TDR shows the open-circuit step 19.5 ns after launch.</p>
-    <div class="check" data-ans="0.684" data-tol="1.5%" data-unit=""><p>What's the cable's velocity factor?</p>
-      <div class="miss" data-val="0.342"><p>The echo travelled 2 m out <em>and</em> 2 m back, so the wave covered 4 m in 19.5 ns.</p></div>
-      <div class="solution"><p>\(v = 2 \times 2.00 / 19.5\ \text{ns} = 2.05\times10^8\ \text{m/s}\), so VF = v/c ≈ 0.684, typical of solid PTFE. Enter this into the TDR afterwards so its distance readings are right.</p></div>
+    <p>A TDR shows a fault 1.5 m along a PTFE cable, but its velocity factor was left at 1.0, the value for air.</p>
+    <div class="choice"><p>Where is the fault really?</p>
+    <ol class="opts">
+      <li>Further than 1.5 m.<div class="why">Think about how fast the wave actually travelled.</div></li>
+      <li data-correct>Closer than 1.5 m, at about 1.0 m.<div class="why">The wave travels at about 0.69c in PTFE, so it covered less distance in the measured time.</div></li>
+      <li>At 1.5 m: the TDR measures time directly.<div class="why">It measures time and converts it to distance using the velocity factor.</div></li>
+      <li>It can't be located without cutting the cable.<div class="why">The time is correct; only the conversion is wrong.</div></li>
+    </ol>
+    <div class="solution"><p>The TDR measures the echo's round-trip time and converts it to distance assuming the speed you set. Set for air, it assumes the wave went at c, but in PTFE it went at about 0.69c, so it covered only 69 % of the assumed distance: about 1.0 m. Measuring a cut length of the same cable first, as in the lab, gives you the right velocity factor.</p></div>
     </div>
   </div>
 </details>
@@ -355,12 +379,17 @@
   </ol></div>
 </div>
 <details class="exercise">
-  <summary><span class="ek">Design exercise</span><span class="et">Locate a problem from the ripple</span></summary>
+  <summary><span class="ek">Design exercise</span><span class="et">Shortening the cable between two mismatches</span></summary>
   <div class="eb">
-    <p>A VNA sweep of the rocket's GPS cable assembly shows a return-loss ripple repeating every 125 MHz. The cable is PTFE, velocity factor 0.70.</p>
-    <div class="check" data-ans="84" data-tol="2%" data-unit="cm"><p>How far apart are the two discontinuities causing it?</p>
-      <div class="miss" data-val="168"><p>That's the round-trip distance. The ripple period is set by \(2\tau\), so halve it.</p></div>
-      <div class="solution"><p>\(\tau = 1/(2\Delta f) = 4\ \text{ns}\), so the distance is \(0.70 \times 3\times10^8 \times 4\ \text{ns} \approx 0.84\ \text{m}\). If the assembly is 84 cm long, the two discontinuities are the connectors at each end.</p></div>
+    <p>A VNA shows a return-loss ripple caused by mismatches at each end of a cable. The cable is cut to half its length and re-terminated with the same connectors.</p>
+    <div class="choice"><p>What happens to the ripple period in frequency?</p>
+    <ol class="opts">
+      <li>It halves.<div class="why">Think about how the delay between the echoes changes.</div></li>
+      <li data-correct>It doubles.<div class="why">The echoes are closer together in time, so their phase difference changes more slowly with frequency.</div></li>
+      <li>It stays the same, because the connectors are the same.<div class="why">The connectors set the ripple's size, not its period.</div></li>
+      <li>The ripple disappears.<div class="why">Both mismatches are still there.</div></li>
+    </ol>
+    <div class="solution"><p>The two echoes are separated by the round-trip delay 2τ. As the frequency rises, their relative phase turns through one full cycle every 1/(2τ) hertz. Halve the cable and τ halves, so the ripple period doubles. The rule to remember: closely spaced ripple means distant mismatches, widely spaced ripple means close ones.</p></div>
     </div>
   </div>
 </details>
@@ -428,12 +457,17 @@
   <div><span class="nt">Why this matters on a rocket</span>The rocket pitches over after launch, may roll, and swings under the parachute during descent. A linear antenna on the airframe and a linear antenna at the ground station will drift in and out of alignment, and the link fades. A circularly polarized ground antenna trades a constant 3 dB for never hitting that deep null, which is usually a worthwhile trade. Antenna patterns and choices are covered in Module 9.</div>
 </div>
 <details class="exercise">
-  <summary><span class="ek">Design exercise</span><span class="et">When does a linear ground antenna lose 6 dB?</span></summary>
+  <summary><span class="ek">Design exercise</span><span class="et">Linear or circular at the ground station?</span></summary>
   <div class="eb">
-    <p>Both antennas are linear. The link budget has 6 dB of margin set aside for polarization.</p>
-    <div class="check" data-ans="60" data-tol="1.5%" data-unit="°"><p>At what tilt angle between them is that margin used up?</p>
-      <div class="hint">Solve \(20\log_{10}|\cos\theta| = -6\) for θ.</div>
-      <div class="solution"><p>\(|\cos\theta| = 10^{-6/20} = 0.501\), so θ ≈ 60°. Any steeper and the link drops below margin. A rocket that's pitched over 60° from vertical at apogee is not unusual, which is why circular polarization at the ground is so common.</p></div>
+    <p>The rocket carries a linearly polarized antenna, and it rolls and pitches through every angle during the flight. The ground station can use a linear antenna (no loss when aligned, a deep null at 90°) or a circular one (a constant 3 dB loss at any angle).</p>
+    <div class="choice"><p>Which gives the more reliable link?</p>
+    <ol class="opts">
+      <li>Linear, because it has no loss when aligned.<div class="why">It also has a deep null when the rocket is at 90°.</div></li>
+      <li data-correct>Circular, because a constant 3 dB loss is easier to budget for than a fade that can exceed 20 dB.<div class="why">A link has to work at its worst moment, not its best.</div></li>
+      <li>They're equivalent on average.<div class="why">The average doesn't matter if the link drops out at the worst angle.</div></li>
+      <li>Neither works on a rolling rocket.<div class="why">One of them works well.</div></li>
+    </ol>
+    <div class="solution"><p>A link budget is set by the worst case. With linear antennas at both ends, the loss swings from 0 dB to 20–30 dB as the rocket turns, and the link drops out each time it passes 90°. A circular ground antenna gives a steady 3 dB whatever the angle. That's a known cost you can budget for, which is why circular polarization at the ground station is so common.</p></div>
     </div>
   </div>
 </details>

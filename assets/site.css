@@ -192,11 +192,21 @@ details.exercise>.eb{padding:.4em 0 .2em}
 .check .numrow{display:flex;flex-wrap:wrap;gap:.4em;align-items:center}
 .check .numrow input{width:9em}
 .check .numrow .unit{font-family:var(--mono)}
-.check .fb{border-left:3px solid #999;padding:.15em 0 .15em .7em;margin:.5em 0 0}
-.check .fb.ok{border-color:var(--good)} .check .fb.bad{border-color:var(--bad)}
-.check .fb>:last-child{margin-bottom:0}
-.check .fb strong:first-child{display:block}
-.check .fb.ok strong:first-child{color:var(--good)}
+.check .fb,.choice .fb{border-left:3px solid #999;padding:.15em 0 .15em .7em;margin:.5em 0 0}
+.check .fb.ok,.choice .fb.ok{border-color:var(--good)} .check .fb.bad,.choice .fb.bad{border-color:var(--bad)}
+.check .fb>:last-child,.choice .fb>:last-child{margin-bottom:0}
+.check .fb strong:first-child,.choice .fb strong:first-child{display:block}
+.check .fb.ok strong:first-child,.choice .fb.ok strong:first-child{color:var(--good)}
+.choice{margin:.7em 0}
+.choice>p{margin:0 0 .4em}
+.choice ol.opts{list-style:none;padding:0;margin:0;display:grid;gap:.35em}
+.choice ol.opts li{margin:0}
+.choice .opt{display:block;width:100%;text-align:left;padding:.4em .7em;line-height:1.4;white-space:normal}
+.choice .opt.ok{border-color:var(--good);box-shadow:inset 3px 0 0 var(--good)}
+.choice .opt.bad{border-color:var(--bad);box-shadow:inset 3px 0 0 var(--bad);color:#555}
+.choice .solution,.choice .why{display:none}
+.choice .sol{margin-top:.4em}
+.choice .sol>summary{cursor:pointer;font-style:italic}
 .check .miss,.check .solution,.check .hint{display:none}
 .check .sol{margin-top:.3em}
 .check .sol>summary{cursor:pointer;font-style:italic}

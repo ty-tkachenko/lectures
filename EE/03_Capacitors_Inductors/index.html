@@ -106,13 +106,17 @@
 </div>
 
 <details class="exercise">
-  <summary><span class="ek">Design exercise</span><span class="et">How long can a capacitor hold up a rail?</span></summary>
+  <summary><span class="ek">Design exercise</span><span class="et">Bigger capacitor, or more allowed droop?</span></summary>
   <div class="eb">
-    <p>A microcontroller runs from a 3.3 V rail and draws 50 mA. It keeps working down to 3.0 V. A 1000 µF capacitor sits across the rail.</p>
-    <div class="check" data-ans="6" data-tol="3%" data-unit="ms"><p>If the supply cuts out, how long does the capacitor keep the rail above 3.0 V?</p>
-      <div class="miss" data-val="66"><p>That's how long it would take to discharge all the way from 3.3 V to 0 V. The microcontroller stops at 3.0 V.</p></div>
-      <div class="hint">Rearrange \(i = C\,dv/dt\) to \(t = C\,\Delta V / I\). How much can the voltage fall?</div>
-      <div class="solution"><p>\(t = C\,\Delta V / I = 1000\,\mu\text{F} \times 0.3\ \text{V} / 50\ \text{mA} = 6\ \text{ms}\). That's not long, because only 0.3 V of the 3.3 V is usable. Exercise 1 at the end shows why hold-up capacitors usually go before the regulator, where far more of the voltage can be used.</p></div>
+    <p>A hold-up capacitor keeps a microcontroller running for a few milliseconds after its supply cuts out. You can make one change: double the capacitor, or use a chip that keeps working down to a lower voltage, so the rail can droop twice as far.</p>
+    <div class="choice"><p>Which gives the longer hold-up time?</p>
+    <ol class="opts">
+      <li>Doubling the capacitor.<div class="why">Compare how each change affects \(t = C\,\Delta V / I\).</div></li>
+      <li>Doubling the allowed droop.<div class="why">Compare how each change affects \(t = C\,\Delta V / I\).</div></li>
+      <li data-correct>They give the same time.<div class="why">The time is proportional to both C and the allowed droop.</div></li>
+      <li>Neither helps: the current sets the time.<div class="why">The current matters, but so do both of these.</div></li>
+    </ol>
+    <div class="solution"><p>The capacitor supplies a charge \(Q = C\,\Delta V\) before the rail falls too far, and the chip uses it at a rate I. Doubling C or doubling ΔV doubles the charge available, so both double the time. This is why hold-up capacitors go before the regulator when possible: there the allowed droop is several volts instead of a few hundred millivolts, worth as much as a far bigger capacitor.</p></div>
     </div>
   </div>
 </details>
@@ -177,13 +181,17 @@
 </div>
 
 <details class="exercise">
-  <summary><span class="ek">Design exercise</span><span class="et">A power-on delay</span></summary>
+  <summary><span class="ek">Design exercise</span><span class="et">A delay on a slowly rising supply</span></summary>
   <div class="eb">
-    <p>A chip's enable pin is fed from its 3.3 V supply through 10 kΩ, with 1 µF from the pin to ground. The chip turns on when the pin reaches 2.0 V.</p>
-    <div class="check" data-ans="9.32" data-tol="2%" data-unit="ms"><p>How long after power-up does the chip turn on?</p>
-      <div class="miss" data-val="10"><p>That's one time constant, when the pin reaches 63 % of 3.3 V, about 2.1 V. The threshold is a little lower.</p></div>
-      <div class="hint">Solve \(2.0 = 3.3\,(1 - e^{-t/\tau})\) for t, with τ = RC.</div>
-      <div class="solution"><p>τ = 10 kΩ × 1 µF = 10 ms. \(e^{-t/\tau} = 1 - 2.0/3.3 = 0.394\), so \(t = -\tau \ln 0.394 = 0.93\,\tau = 9.32\ \text{ms}\). Capacitor tolerance (Section 6) makes the real delay vary by 10 % or more from part to part, so don't rely on it for precise timing.</p></div>
+    <p>A chip's enable pin is fed from its 3.3 V supply through 10 kΩ, with 1 µF to ground, so it turns on about 10 ms after the supply appears. On a new board the supply doesn't jump to 3.3 V; it ramps up slowly over 50 ms.</p>
+    <div class="choice"><p>Does the RC still hold the chip off until the supply has settled?</p>
+    <ol class="opts">
+      <li>Yes: the delay always starts once the supply is fully up.<div class="why">The RC can't tell when the supply is "fully up". It just follows whatever voltage it's given.</div></li>
+      <li data-correct>No: the capacitor follows the slow ramp, lagging it by roughly τ, so the pin can cross its threshold while the supply is still rising.<div class="why">A slow ramp is something an RC tracks, with a lag of about one time constant.</div></li>
+      <li>The chip never turns on.<div class="why">The capacitor still charges; it just follows the ramp.</div></li>
+      <li>The delay becomes 60 ms: 50 ms of ramp plus 10 ms of RC.<div class="why">The RC delay doesn't wait for the ramp to finish before it starts.</div></li>
+    </ol>
+    <div class="solution"><p>An RC delay works because the capacitor can't follow a sudden step. A slow ramp isn't sudden: the capacitor voltage follows it, about one time constant behind. Here the pin crosses 2.0 V roughly 10 ms after the supply does, at which point the supply is only about 2.6 V on its way to 3.3 V. If the chip must wait for a settled supply, use a reset or supervisor chip that watches the supply voltage itself rather than relying on a fixed delay.</p></div>
     </div>
   </div>
 </details>
@@ -200,13 +208,17 @@
   <div><span class="nt">How designs limit inrush</span>A precharge resistor that's connected first and bypassed a moment later, "anti-spark" connectors with a built-in resistor on one pin, or an electronic load switch that turns on slowly (Module 7). All of them do the same thing: they make the capacitor charge through more resistance, or more slowly, than the bare wiring would.</div>
 </div>
 <details class="exercise">
-  <summary><span class="ek">Design exercise</span><span class="et">Peak inrush current</span></summary>
+  <summary><span class="ek">Design exercise</span><span class="et">What sets the size of the inrush spike?</span></summary>
   <div class="eb">
-    <p>A fully charged 2S LiPo (8.4 V) is plugged into a board with 470 µF across its input. The battery's internal resistance is 80 mΩ, the wiring and connector add 20 mΩ, and the capacitor's ESR is 50 mΩ.</p>
-    <div class="check" data-ans="56" data-tol="2%" data-unit="A"><p>What's the peak inrush current?</p>
-      <div class="miss" data-val="84"><p>You left out the capacitor's ESR. Every resistance in the loop counts.</p></div>
-      <div class="hint">At the first instant the capacitor has no voltage across it. All 8.4 V is across the resistances in the loop.</div>
-      <div class="solution"><p>\(R_\text{path} = 0.08 + 0.02 + 0.05 = 0.15\ \Omega\), so \(I_\text{peak} = 8.4 / 0.15 = 56\ \text{A}\). It only lasts a few time constants, \(\tau = 0.15 \times 470\,\mu\text{F} \approx 70\ \mu\text{s}\), so the battery is unaffected, but the connector contacts take the full surge.</p></div>
+    <p>Plugging a battery into a board with a large input capacitor causes a big current spike.</p>
+    <div class="choice"><p>Which change halves the peak current?</p>
+    <ol class="opts">
+      <li>Halving the capacitance.<div class="why">Less capacitance shortens the surge, but think about the very first instant.</div></li>
+      <li data-correct>Doubling the resistance in the path.<div class="why">At the first instant the empty capacitor is a short, so only the path resistance limits the current.</div></li>
+      <li>Either one.<div class="why">Only one of them affects the peak. The other changes how long it lasts.</div></li>
+      <li>Neither: the battery sets the peak.<div class="why">The battery's internal resistance is part of the path resistance, but you can add more.</div></li>
+    </ol>
+    <div class="solution"><p>At the instant of connection the capacitor is empty, has no voltage across it, and looks like a short circuit. The peak current is just the battery voltage divided by everything resistive in the path, whatever the capacitance. The capacitance only sets how long the surge lasts, through τ = RC. That's why inrush limiting always works by adding resistance, or by turning on slowly.</p></div>
     </div>
   </div>
 </details>
@@ -317,13 +329,17 @@
 </div>
 
 <details class="exercise">
-  <summary><span class="ek">Design exercise</span><span class="et">Size of the kickback</span></summary>
+  <summary><span class="ek">Design exercise</span><span class="et">A faster switch, a bigger kick</span></summary>
   <div class="eb">
-    <p>A relay coil has 20 mH of inductance and carries 0.5 A. The transistor driving it turns off, and the current falls to zero in 10 µs.</p>
-    <div class="check" data-ans="1000" data-tol="2%" data-unit="V"><p>What voltage does the coil generate while the current falls?</p>
-      <div class="miss" data-val="0.001"><p>Check the units: 10 µs is \(10 \times 10^{-6}\) s, and 20 mH is 0.02 H.</p></div>
-      <div class="hint">\(v = L\,\Delta i / \Delta t\).</div>
-      <div class="solution"><p>\(v = 0.02 \times 0.5 / 10^{-5} = 1000\ \text{V}\). In practice the transistor breaks down long before that and clamps the voltage at its breakdown rating, absorbing the coil's energy as heat. A diode costing a few cents prevents it.</p></div>
+    <p>Transistors that switch off faster waste less power while switching, so faster is usually better. This one drives a relay coil with no flyback diode.</p>
+    <div class="choice"><p>What does a faster switch-off do to the voltage spike?</p>
+    <ol class="opts">
+      <li>It makes the spike smaller, because the event is over sooner.<div class="why">Shorter, but think about what the coil does when the current is forced to fall faster.</div></li>
+      <li data-correct>It makes the spike larger.<div class="why">The coil generates \(L\,di/dt\), and a faster switch-off means a larger di/dt.</div></li>
+      <li>It doesn't change it: the coil's stored energy is the same.<div class="why">The energy is the same, but it's released over a shorter time, so the voltage is higher.</div></li>
+      <li>It depends only on the supply voltage.<div class="why">The supply voltage sets the current before switch-off, not how fast it's forced to stop.</div></li>
+    </ol>
+    <div class="solution"><p>The coil holds the same energy, \(\tfrac12 LI^2\), however you switch it off. Forcing the current to zero faster means a larger di/dt, so the coil generates a larger voltage to oppose it. Unprotected, a fast switch makes the kick worse, which is one more reason the flyback diode isn't optional. With the diode in place the switch can be as fast as you like, because the current has somewhere to go.</p></div>
     </div>
   </div>
 </details>
@@ -376,12 +392,17 @@
 </div>
 
 <details class="exercise">
-  <summary><span class="ek">Design exercise</span><span class="et">Enough capacitance on a 5 V rail</span></summary>
+  <summary><span class="ek">Design exercise</span><span class="et">Which 10 µF capacitor is really 10 µF?</span></summary>
   <div class="eb">
-    <p>A regulator's datasheet asks for at least 4 µF of <em>effective</em> output capacitance on its 5 V output. You have 10 µF 0603 capacitors, and the manufacturer's curve shows they keep 35 % of their capacitance at 5 V.</p>
-    <div class="check" data-ans="2" data-tol="0"><p>How many do you need?</p>
-      <div class="miss" data-val="1"><p>One 10 µF part only has 3.5 µF left at 5 V, short of the 4 µF required.</p></div>
-      <div class="solution"><p>Each part gives \(0.35 \times 10 = 3.5\ \mu\text{F}\) at 5 V, so you need two (7 µF). Or one larger part with a higher voltage rating. Regulators can oscillate when their output capacitance falls short, and a design that looked fine on the schematic fails on the bench because of exactly this effect.</p></div>
+    <p>Two capacitors, both marked 10 µF X5R, are fitted on a 5 V rail. One is a 0603 rated 6.3 V; the other is a 1206 rated 25 V.</p>
+    <div class="choice"><p>Which has more capacitance at 5 V?</p>
+    <ol class="opts">
+      <li>They're the same: both are 10 µF.<div class="why">The marking is measured with almost no DC voltage across the part.</div></li>
+      <li>The 0603, because it's closer to its rated voltage.<div class="why">Running close to the rating is exactly what makes ceramics lose capacitance.</div></li>
+      <li data-correct>The 1206 rated 25 V.<div class="why">Larger packages and higher voltage ratings lose much less capacitance under DC bias.</div></li>
+      <li>It depends only on temperature.<div class="why">Temperature matters too, but DC bias is the bigger effect here.</div></li>
+    </ol>
+    <div class="solution"><p>X5R and X7R ceramics lose capacitance as DC voltage is applied, and the effect is worst for small packages run close to their rating. At 5 V the 6.3 V 0603 may keep only a quarter to a third of its marking, while the 25 V 1206 keeps most of it. Compare them in the figure above. A regulator that needs 10 µF of effective output capacitance is only stable with the second one.</p></div>
     </div>
   </div>
 </details>
@@ -429,13 +450,17 @@
 </div>
 
 <details class="exercise">
-  <summary><span class="ek">Design exercise</span><span class="et">Checking a regulator's inductor</span></summary>
+  <summary><span class="ek">Design exercise</span><span class="et">More voltage across the same inductor</span></summary>
   <div class="eb">
-    <p>In a switching regulator, a 10 µH inductor has 8.7 V across it for 1 µs each cycle, and its current starts each ramp at 1.5 A. The inductor is rated I<sub>sat</sub> = 2 A.</p>
-    <div class="check" data-ans="2.37" data-tol="2%" data-unit="A"><p>What's the peak current at the end of the ramp?</p>
-      <div class="miss" data-val="0.87"><p>That's how much the current rises. It starts from 1.5 A.</p></div>
-      <div class="hint">\(\Delta i = V\,\Delta t / L\).</div>
-      <div class="solution"><p>\(\Delta i = 8.7 \times 10^{-6} / 10^{-5} = 0.87\ \text{A}\), so the peak is \(1.5 + 0.87 = 2.37\ \text{A}\), above the 2 A rating. The inductance falls near the top of every ramp, so the current rises even faster than this. Choose a part with I<sub>sat</sub> comfortably above the peak, for example 3 A or more, and check its thermal rating against the average current too.</p></div>
+    <p>In a switching regulator, the inductor has a voltage across it for a fixed on-time each cycle, and its current ramps up during that time. The input voltage rises, so the voltage across the inductor during the on-time rises too, with the same on-time.</p>
+    <div class="choice"><p>What happens to the inductor?</p>
+    <ol class="opts">
+      <li>Nothing: the inductance sets the current, not the voltage.<div class="why">Inductance sets how fast the current changes for a given voltage.</div></li>
+      <li data-correct>The current ramps up more steeply and peaks higher, bringing it closer to saturation.<div class="why">The ramp's slope is V/L, so a bigger voltage over the same time means a bigger rise.</div></li>
+      <li>The current ramps up more slowly.<div class="why">More voltage across an inductor makes the current change faster, not slower.</div></li>
+      <li>The inductance increases to compensate.<div class="why">If anything, the inductance falls as the current approaches saturation.</div></li>
+    </ol>
+    <div class="solution"><p>For an inductor, voltage sets the rate of change of current: \(di/dt = V/L\). More voltage for the same time gives a larger rise, so the peak current goes up. If that peak gets near I<sub>sat</sub>, the inductance starts falling, the ramp gets steeper still, and the current can run away. That's why a regulator's inductor is chosen for the worst case: the highest input voltage and the heaviest load.</p></div>
     </div>
   </div>
 </details>
@@ -481,13 +506,17 @@
 <p>A chip's current bursts have most of their energy at tens to hundreds of megahertz, usually above the SRF of every capacitor on the board. Up there, what decides how well a capacitor decouples is its inductance: its own ESL, which grows with package size, plus the trace and vias connecting it to the pin. That's why a 100 nF capacitor in a small package right at the pin beats a 10 µF part in a larger package, and why a capacitor a centimetre away does little for fast edges whatever its value. Larger capacitors still have a job: they cover the slower, larger demands that the small ones run out of charge for, so boards use both. Combining values brings its own problems (parallel capacitors can resonate with each other), which Module 12 covers along with placement.</p>
 
 <details class="exercise">
-  <summary><span class="ek">Design exercise</span><span class="et">How much does the decoupling capacitor droop?</span></summary>
+  <summary><span class="ek">Design exercise</span><span class="et">Swapping in a bigger decoupling capacitor</span></summary>
   <div class="eb">
-    <p>A chip takes a 100 mA burst lasting 20 ns, and in that time the trace inductance lets almost nothing through, so its 100 nF decoupling capacitor supplies all of it.</p>
-    <div class="check" data-ans="20" data-tol="3%" data-unit="mV"><p>How far does the capacitor's voltage drop?</p>
-      <div class="miss" data-val="0.02"><p>Correct value, but in volts. The answer is in millivolts.</p></div>
-      <div class="hint">\(\Delta V = I\,\Delta t / C\).</div>
-      <div class="solution"><p>\(\Delta V = 0.1 \times 20 \times 10^{-9} / 100 \times 10^{-9} = 0.02\ \text{V} = 20\ \text{mV}\), well under 1 % of a 3.3 V rail. In practice the capacitor's own inductance and its connection to the chip matter as much as its value, which is why placement is so important.</p></div>
+    <p>A chip has a 100 nF 0402 decoupling capacitor right at its power pin. To "add more capacitance", someone replaces it with a 10 µF 1206 in the same spot.</p>
+    <div class="choice"><p>Does the chip's supply get cleaner during its fast current bursts?</p>
+    <ol class="opts">
+      <li>Much cleaner: it's a hundred times the capacitance.<div class="why">At the frequencies in a fast edge, capacitance isn't what limits a decoupling capacitor.</div></li>
+      <li data-correct>No better, and probably worse: above their self-resonant frequency both parts act as inductors, and the larger 1206 has more inductance.<div class="why">For fast edges, the inductance of the part and its connection decides.</div></li>
+      <li>Exactly the same, because they're in the same position.<div class="why">Same position, but not the same package.</div></li>
+      <li>Better only if it's an electrolytic.<div class="why">Electrolytics have even more inductance.</div></li>
+    </ol>
+    <div class="solution"><p>A chip's current bursts have most of their energy at tens to hundreds of megahertz, above the self-resonant frequency of both capacitors. There, each behaves as a small inductor: its ESL plus the trace and vias to the pin. The 1206 has more ESL than the 0402, so it does slightly worse on fast edges, despite its hundred times larger value. Try it in the figure above. The 10 µF is still useful, for slower demands, alongside the 100 nF, not instead of it.</p></div>
     </div>
   </div>
 </details>
@@ -537,12 +566,17 @@
 </div>
 
 <details class="exercise">
-  <summary><span class="ek">Design exercise</span><span class="et">Probe attenuation setting</span></summary>
+  <summary><span class="ek">Design exercise</span><span class="et">Is the ringing real?</span></summary>
   <div class="eb">
-    <p>You probe a 3.3 V logic signal with a 10× probe, but the scope channel is still set for a 1× probe.</p>
-    <div class="check" data-ans="0.33" data-tol="3%" data-unit="V"><p>What high level does the scope display?</p>
-      <div class="miss" data-val="33"><p>That's the opposite mistake: a 1× probe with the scope set to 10×.</p></div>
-      <div class="solution"><p>The probe divides by ten, and the scope doesn't multiply back, so it shows 0.33 V. If a reading is off by exactly ten, check the probe setting first.</p></div>
+    <p>A fast logic edge on your scope shows heavy ringing, and you need to know whether the circuit really rings or the probe is adding it.</p>
+    <div class="choice"><p>Which quick test tells you?</p>
+    <ol class="opts">
+      <li>Change the vertical scale and see if the ringing scales with it.<div class="why">Real or not, the ringing scales with the display.</div></li>
+      <li data-correct>Swap the long ground lead for the ground spring, and see whether the ringing changes.<div class="why">If shortening the ground connection changes the ringing, the probe was causing it.</div></li>
+      <li>Move the trigger level.<div class="why">The trigger only sets where the sweep starts.</div></li>
+      <li>Switch to AC coupling.<div class="why">AC coupling removes the average, not ringing.</div></li>
+    </ol>
+    <div class="solution"><p>The probe's long ground lead and its tip capacitance form a resonant circuit, so a ringing frequency that changes, or a ringing that disappears, when you change the ground connection was the probe's. Ringing that stays the same with the shortest ground connection is in the circuit. The same habit applies to any measurement: change the measurement, not the circuit, and see whether the result moves.</p></div>
     </div>
   </div>
 </details>

@@ -75,7 +75,22 @@ Copy an existing module folder (EE 1 is the reference) and keep the same structu
    ```
 
    `data-tol` is relative (`2%`) or absolute (`0.1`). Answers accept SI prefixes (`4.7k`, `2.5m`).
+
+   The short exercises inside sections test understanding rather than plugging numbers into an equation: they ask what happens in one case versus another, and each wrong option explains the misconception behind it. They use a multiple-choice check:
+
+   ```html
+   <div class="choice"><p>Question?</p>
+     <ol class="opts">
+       <li>Option<div class="why">Why this is wrong.</div></li>
+       <li data-correct>Option<div class="why">Why this is right.</div></li>
+     </ol>
+     <div class="solution"><p>Full explanation, shown once answered.</p></div>
+   </div>
+   ```
+
+   The numeric checks are for the multi-step exercises at the end of the page.
 6. End with **At the bench** (lab video slot plus a `<div class="lab">` procedure), a **Summary & cheat sheet**, optional **Go deeper** links (`<a data-deep="matching_theory.html#refl">`), **Further reading**, and `<nav class="pager"></nav>`.
-7. **Further reading** cites specific chapters of the standard references. EE modules use *The Art of Electronics* (Horowitz & Hill) and *Practical Electronics for Inventors* (Scherz & Monk). RF modules use *Microwave Engineering* (Pozar).
+7. **First principles.** Derive results from the underlying physics rather than presenting equations to memorise, and show how to reason about a circuit from understanding before calculating. Advanced topics (switching converters, for example) get a full derivation from first principles: start from what the inductor, capacitor or switch must do, and build the equation from that.
+8. **Further reading** cites specific chapters of the standard references. EE modules use *The Art of Electronics* (Horowitz & Hill) and *Practical Electronics for Inventors* (Scherz & Monk). RF modules use *Microwave Engineering* (Pozar).
 
 Draw every figure with the theme colours from `Plot.col` (or CSS variables in SVG) so the figures match the page.

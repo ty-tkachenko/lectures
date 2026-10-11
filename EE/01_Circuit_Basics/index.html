@@ -163,13 +163,17 @@
   <p>A useful shortcut: <b>volts ÷ kilohms = milliamps</b>. Most signal-level circuits work in kΩ and mA.</p>
 </div>
 <details class="exercise">
-  <summary><span class="ek">Design exercise</span><span class="et">A power indicator LED</span></summary>
+  <summary><span class="ek">Design exercise</span><span class="et">A brighter supply, a brighter LED</span></summary>
   <div class="eb">
-    <p>A board needs an LED that lights when it's powered. It runs from 5 V. A red LED drops about 2 V across itself whenever it's on (Module 5 explains why), and you want 10 mA through it.</p>
-    <div class="check" data-ans="300" data-tol="3%" data-unit="Ω"><p>What series resistor sets 10 mA?</p>
-      <div class="miss" data-val="500"><p>That would be right if the LED took no voltage. The resistor only sees what's left after the LED's 2 V.</p></div>
-      <div class="hint">The resistor and LED share the 5 V. How much is left across the resistor?</div>
-      <div class="solution"><p>The resistor sees 5 − 2 = 3 V, so \(R = 3\ \text{V} / 10\ \text{mA} = 300\ \Omega\). The nearest standard value is 300 Ω (E24) or 330 Ω (E12), which gives about 9 mA, bright enough for an indicator.</p></div>
+    <p>A power indicator LED runs from 5 V through a 300 Ω resistor. A red LED drops about 2 V whenever it's on (Module 5 explains why), so it gets 10 mA. The same board is now fed from 9 V, with the same resistor.</p>
+    <div class="choice"><p>The supply has gone up by a factor of 1.8. What happens to the LED current?</p>
+    <ol class="opts">
+      <li>It rises by the same factor, 1.8×.<div class="why">That would be true if the resistor had the whole supply across it. It only has what the LED leaves.</div></li>
+      <li data-correct>It rises by more than 1.8×.<div class="why">The LED keeps its 2 V, so the resistor's share goes from 3 V to 7 V, a factor of 2.3.</div></li>
+      <li>It rises by less than 1.8×.<div class="why">Think about what the LED's fixed 2 V does to the resistor's share of the extra voltage.</div></li>
+      <li>It stays at 10 mA, because the LED sets its own current.<div class="why">An LED sets its own voltage, not its current. The resistor sets the current.</div></li>
+    </ol>
+    <div class="solution"><p>The LED takes a fixed 2 V, so all the extra supply voltage lands on the resistor: 3 V becomes 7 V, and the current goes from 10 mA to about 23 mA. A fixed drop in the loop makes the current more sensitive to the supply, not less. That's why LED resistors are sized for the highest supply voltage the board will ever see.</p></div>
     </div>
   </div>
 </details>
@@ -193,13 +197,17 @@
   <p>A ¼ W resistor would technically be "within rating", but it would run at its maximum temperature all the time, and the rating assumes cooler conditions than a sealed enclosure in the sun. Applying the 50 % rule, you'd pick a ½ W part. It's also worth asking whether the circuit needs to dissipate a quarter of a watt at all. A smaller package doesn't help: smaller parts have less area to shed heat, so their ratings are <em>lower</em>.</p>
 </div>
 <details class="exercise">
-  <summary><span class="ek">Design exercise</span><span class="et">Does the LED resistor fit in an 0402?</span></summary>
+  <summary><span class="ek">Design exercise</span><span class="et">A smaller resistor, a hotter resistor</span></summary>
   <div class="eb">
-    <p>Back to the 300 Ω resistor carrying 10 mA in the power indicator. The board is tight on space, and an 0402 resistor is rated 1/16 W (62.5 mW).</p>
-    <div class="check" data-ans="30" data-tol="3%" data-unit="mW"><p>How much power does the resistor dissipate?</p>
-      <div class="miss" data-val="0.03"><p>Correct value, but in watts. The answer is in milliwatts.</p></div>
-      <div class="miss" data-val="50"><p>That's 5 V × 10 mA, the power of the whole circuit. The resistor only sees 3 V of it.</p></div>
-      <div class="solution"><p>\(P = I^2R = (0.01)^2 \times 300 = 30\ \text{mW}\), or \(V I = 3\ \text{V} \times 10\ \text{mA}\). That's 48 % of the 0402's rating, just inside the 50 % rule, so it fits.</p></div>
+    <p>Back to the 5 V indicator: 300 Ω, 10 mA, with 3 V across the resistor and about 30 mW in it. To make the LED brighter, someone swaps in 150 Ω.</p>
+    <div class="choice"><p>What happens to the power dissipated in the resistor?</p>
+    <ol class="opts">
+      <li>It halves, because the resistance halved.<div class="why">Lower resistance doesn't mean less heat here: think about what happens to the current.</div></li>
+      <li>It stays the same.<div class="why">The voltage across the resistor stays the same, but the current doesn't.</div></li>
+      <li data-correct>It doubles.<div class="why">The voltage across it stays at 3 V and the current doubles, so \(P = VI\) doubles.</div></li>
+      <li>It quadruples, because power goes as \(I^2R\) and the current doubled.<div class="why">The current doubled, but R also halved. \(I^2R\) gives 4 × ½ = 2.</div></li>
+    </ol>
+    <div class="solution"><p>The LED fixes the voltage across the resistor at 3 V, so the cleanest way to see it is \(P = V^2/R\): halve R and the power doubles, to about 60 mW. That's nearly the full rating of an 0402 (62.5 mW), well past the 50 % derating rule. Choosing the power formula that matches what stays constant makes the answer obvious.</p></div>
     </div>
   </div>
 </details>
@@ -253,13 +261,17 @@
   <p>Note what <em>didn't</em> happen: the voltage didn't "run out" along the cable. Voltage gets <em>divided</em> between every resistance in the loop, and a long cable simply takes a big share.</p>
 </div>
 <details class="exercise">
-  <summary><span class="ek">Design exercise</span><span class="et">How long can the cable be?</span></summary>
+  <summary><span class="ek">Design exercise</span><span class="et">More voltage, or less cable?</span></summary>
   <div class="eb">
-    <p>A 12 V supply drives a 1.6 Ω solenoid that needs at least 1 A, and you want a 2× margin (2 A). The cable is 22 AWG twin, 52.9 mΩ per metre per conductor. Ignore the supply's and switch's own resistance.</p>
-    <div class="check" data-ans="41.6" data-tol="2%" data-unit="m"><p>What's the longest one-way cable length that still delivers 2 A?</p>
-      <div class="miss" data-val="83.2"><p>That's the total length of copper, out <em>and</em> back. The one-way length is half.</p></div>
-      <div class="hint">At 2 A the whole loop can be at most 12 / 2 = 6 Ω. Subtract the solenoid, and what's left is the cable's budget.</div>
-      <div class="solution"><p>Loop budget: 6 Ω. Cable budget: 6 − 1.6 = 4.4 Ω for both conductors, so 2.2 Ω each. Length: \(2.2 / 0.0529 \approx 41.6\ \text{m}\) one way. If the load needs to be further away, go to thicker wire or move the switch next to the load. You can check this in the simulator above.</p></div>
+    <p>In the figure above, a 12 V supply drives a 1.6 Ω solenoid through 30 m of 22 AWG cable (3.17 Ω round trip). The solenoid isn't getting enough current, and you can make one change.</p>
+    <div class="choice"><p>Which raises the solenoid's current more: doubling the supply voltage, or halving the cable length?</p>
+    <ol class="opts">
+      <li data-correct>Doubling the supply voltage.<div class="why">Current is proportional to voltage, so doubling it doubles the current. Halving the cable only removes part of the loop's resistance.</div></li>
+      <li>Halving the cable length, because the cable is most of the resistance.<div class="why">Halving the cable takes the loop from 4.77 Ω to 3.19 Ω, which raises the current by only 1.5×.</div></li>
+      <li>They have the same effect.<div class="why">They would only be equal if the cable were the entire loop resistance.</div></li>
+      <li>Neither: only a thicker wire helps.<div class="why">A thicker wire helps, but so do both of these. Compare how much.</div></li>
+    </ol>
+    <div class="solution"><p>Doubling the voltage always doubles the current. Halving the cable can at best double it, and only if the cable were the whole loop; here the solenoid's own 1.6 Ω stays, so it gives 1.5×. The catch with doubling the voltage is the solenoid itself: it now dissipates four times the power it did, which can overheat a coil rated for less. Check this in the figure.</p></div>
     </div>
   </div>
 </details>
@@ -319,13 +331,17 @@
   </div>
 </div>
 <details class="exercise">
-  <summary><span class="ek">Design exercise</span><span class="et">Spec a pack that won't brown out</span></summary>
+  <summary><span class="ek">Design exercise</span><span class="et">Will a bigger battery stop the brown-out?</span></summary>
   <div class="eb">
-    <p>A motor and its control electronics share a 2S pack. Near the end of the pack's charge the cells are at 3.5 V each (7.0 V open circuit). Starting the motor draws 8 A, and the electronics' regulator needs at least 6.0 V at its input.</p>
-    <div class="check" data-ans="62.5" data-tol="2%" data-unit="mΩ"><p>What's the highest internal resistance <em>per cell</em> the pack can have?</p>
-      <div class="miss" data-val="125"><p>That's the limit for the whole pack. It has two cells in series, so each one gets half.</p></div>
-      <div class="hint">You can afford to lose 7.0 − 6.0 = 1.0 V at 8 A. What total resistance is that?</div>
-      <div class="solution"><p>Allowed sag 1.0 V at 8 A gives \(R \le 1.0 / 8 = 125\ \text{m}\Omega\) total, so 62.5 mΩ per cell. A fresh pack at room temperature may be fine, but internal resistance rises sharply in the cold and with age. That's a strong argument for giving the motor its own battery.</p></div>
+    <p>A motor and its control electronics share a 2S pack. When the motor starts, the pack sags and the electronics reset. A teammate suggests a pack with twice the capacity (mAh) of the same chemistry.</p>
+    <div class="choice"><p>Does a higher capacity fix the brown-out?</p>
+    <ol class="opts">
+      <li>Yes: more capacity means a higher voltage under load.<div class="why">Capacity is how long the pack lasts, not how much it sags. The open-circuit voltage is set by the number of cells.</div></li>
+      <li data-correct>Not by itself: the sag is set by internal resistance. A bigger pack helps only if its internal resistance is lower, which it often is because it has larger or more cells.<div class="why">Sag is \(I R_\text{int}\). Capacity only enters indirectly, through the internal resistance that comes with it.</div></li>
+      <li>No: a larger pack always has a higher internal resistance.<div class="why">Larger packs usually have <em>lower</em> internal resistance, not higher.</div></li>
+      <li>Yes, but only when it's fully charged.<div class="why">State of charge changes the open-circuit voltage, but the sag still comes from the internal resistance.</div></li>
+    </ol>
+    <div class="solution"><p>The sag when the motor starts is \(I R_\text{int}\). Capacity tells you how long the pack lasts; it says nothing directly about sag. Larger packs of the same type often do sag less, because their cells are bigger or paralleled, but the number to compare on the datasheet is internal resistance (or the C rating, which reflects it). The more robust fixes don't depend on the pack at all: a separate supply for the motor, or a hold-up capacitor on the electronics (Module 3).</p></div>
     </div>
   </div>
 </details>

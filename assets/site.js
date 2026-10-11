@@ -169,6 +169,46 @@ function buildCheck(el){
   }
 }
 
+/* ---------- concept questions (multiple choice, used in design exercises) ----------
+   <div class="choice">
+     <p>Question</p>
+     <ol class="opts">
+       <li>Option<div class="why">Why it's wrong</div></li>
+       <li data-correct>Option<div class="why">Why it's right</div></li>
+     </ol>
+     <div class="solution"><p>Full explanation, shown once answered</p></div>
+   </div>                                                                     */
+function buildChoice(el){
+  const list = el.querySelector(':scope > ol.opts');
+  if (!list) return;
+  const opts = [...list.children];
+  const sol = el.querySelector(':scope > .solution');
+  const fb = document.createElement('div'); fb.className = 'fb'; fb.hidden = true; fb.setAttribute('aria-live', 'polite');
+  list.after(fb);
+  let solDet = null;
+  opts.forEach(li => {
+    const why = li.querySelector(':scope > .why');
+    const whyHTML = why ? why.innerHTML : '';
+    if (why) why.remove();
+    const ok = li.hasAttribute('data-correct');
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'opt'; b.innerHTML = li.innerHTML;
+    li.innerHTML = ''; li.appendChild(b);
+    b.onclick = () => {
+      b.classList.add(ok ? 'ok' : 'bad');
+      fb.hidden = false; fb.className = 'fb ' + (ok ? 'ok' : 'bad');
+      fb.innerHTML = ok ? `<strong>✓ That’s it.</strong>${whyHTML ? `<p>${whyHTML}</p>` : ''}${sol ? sol.innerHTML : ''}`
+                        : `<p><b>Not quite.</b> ${whyHTML}</p>`;
+      if (ok){ el.classList.add('solved'); if (solDet) solDet.hidden = true; }
+    };
+  });
+  if (sol){
+    solDet = document.createElement('details'); solDet.className = 'sol';
+    solDet.innerHTML = `<summary>Show the explanation</summary>${sol.innerHTML}`;
+    el.appendChild(solDet);
+  }
+}
+
 /* ---------- sidebar, resource strip, pager ---------- */
 function buildSide(){
   const side = document.querySelector('aside.side');
@@ -261,6 +301,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('[data-video]').forEach(buildVideo);
   wireJumps();
   document.querySelectorAll('.check').forEach(buildCheck);
+  document.querySelectorAll('.choice').forEach(buildChoice);
   buildSide();
   buildResources();
   buildPager();
