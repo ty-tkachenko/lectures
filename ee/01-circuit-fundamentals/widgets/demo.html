@@ -19,6 +19,12 @@ button:hover{background:#eff6ff}
 .readout b{display:block;font-size:1.1rem;color:#1d4ed8}
 canvas{width:100%;border-radius:8px;background:#fafafa}
 .try{font-size:.9rem;background:#fffbeb;border-left:3px solid #f59e0b;padding:.5rem .75rem;margin-top:.8rem}
+.design{font-size:.9rem;background:#f0fdf4;border-left:3px solid #16a34a;padding:.5rem .75rem;margin-top:.8rem}
+.design .spec{margin:.35rem 0 .35rem 1.1rem;padding:0}
+.design .spec li{margin:.12rem 0}
+.design .deliver{margin:.4rem 0}
+.design summary{cursor:pointer;font-weight:600;color:#166534}
+.design details{margin:.25rem 0}
 .verdict{font-weight:600}
 .legend{font-size:.85rem;color:#555}
 .legend span{display:inline-block;width:14px;height:3px;vertical-align:middle;margin:0 .3rem 0 .8rem}
@@ -53,6 +59,7 @@ html.embed.w-unknown .widget{display:block;border:1px solid #eee;padding:1rem 1.
 <button data-p="5,10,0.25">5 V across 10 Ω</button>
 <button data-p="12,220,0.25">12 V, 220 Ω</button>
 <button data-p="9,1000,0.125">9 V, 1 kΩ, 1/8 W</button>
+<button data-p="12,1200,0.5">Load reference design</button>
 </div>
 <div class="readout">
 <div>Current<b id="op-i"></b></div>
@@ -66,6 +73,17 @@ html.embed.w-unknown .widget{display:block;border:1px solid #eee;padding:1rem 1.
 <p class="legend"><span style="background:#111"></span>power <span style="background:#f59e0b"></span>rating <span style="background:#ef4444"></span>operating point</p>
 <p class="verdict" id="op-verdict"></p>
 <div class="try"><b>Try this:</b> (1) The defaults are the 5 V, 100 Ω, 1/4 W example, which sits exactly on the rating. (2) Drop the resistance or raise the voltage until the verdict says the body is over its rating. (3) Press the 1/2 W idea by choosing a higher rating and watch the warning clear.</div>
+<div class="design">
+<b>Design challenge:</b> <p>A 12 V avionics rail needs a bleed resistor so a meter shows the rail is up, drawing about 10 mA. The resistor sits in a warm bay, so keep the heat at or under half of a 1/2 W rating.</p>
+<ul class="spec">
+<li>Voltage across the resistor: 12 V</li>
+<li>Current: 10 mA, with 8–15 mA acceptable</li>
+<li>Power at or under 0.25 W</li>
+</ul>
+<p class="deliver">Produce: the resistance and the wattage rating. At 12 V that current is a 1.2 kΩ part dissipating 0.12 W, which is 24% of a 1/2 W rating. Check it in the widget above.</p>
+<details class="hint"><summary>Hint</summary><p>Start from I = V/R, then check P = V²/R. A smaller resistor draws more current and makes more heat. Half of 1/2 W is 0.25 W.</p></details>
+<details class="check"><summary>Check your design</summary><p>R = 1.2 kΩ on a 1/2 W rating. I = 12/1200 = 10.0 mA and P = 12²/1200 = 0.120 W, which is 0.120/0.500 = 24% of the rating. The verdict stays inside the rating. About 800 Ω (15 mA, 0.18 W) through 1.5 kΩ (8 mA, 0.096 W) also meets the band.</p></details>
+</div>
 </div>
 
 <div class="widget" id="nv" data-wid="kvl-kcl">
@@ -88,6 +106,7 @@ html.embed.w-unknown .widget{display:block;border:1px solid #eee;padding:1rem 1.
 <button data-p="12,10000,10000,1000,10000">R3 = 1 kΩ</button>
 <button data-p="5,10000,10000,10000,1000">5 V, R4 = 1 kΩ</button>
 <button data-p="12,4700,10000,22000,10000">Stiffer R1</button>
+<button data-p="12,10000,10000,20000,10000">Load reference design</button>
 </div>
 <div class="readout">
 <div>Node A<b id="nv-va"></b></div>
@@ -101,6 +120,17 @@ html.embed.w-unknown .widget{display:block;border:1px solid #eee;padding:1rem 1.
 <p class="legend"><span style="background:#1d4ed8"></span>node voltage <span style="background:#b45309"></span>branch current</p>
 <p class="verdict" id="nv-verdict"></p>
 <div class="try"><b>Try this:</b> (1) Leave the source at 12 V and change only R3. Both node voltages and every branch current should move. (2) Read the currents: into each node they still match the current out. (3) Drop R4 toward 1 kΩ and watch node B collapse.</div>
+<div class="design">
+<b>Design challenge:</b> <p>Bias this two-node front end from 12 V so node A sits at 6 V and node B at 3 V. Keep every branch current at or under 1 mA so a small sensor supply can feed it.</p>
+<ul class="spec">
+<li>Source: 12 V</li>
+<li>Node A: 6.0 V, node B: 3.0 V</li>
+<li>Every branch current ≤ 1 mA</li>
+</ul>
+<p class="deliver">Produce: R1, R2, R3, and R4. One set that lands both nodes on the targets with room under 1 mA is 10 kΩ, 10 kΩ, 20 kΩ, and 10 kΩ. Check it in the widget above.</p>
+<details class="hint"><summary>Hint</summary><p>With R4 = R2, node B is half of node A when the currents balance. Set Va = 6 V so the drop on R1 is also 6 V, then pick R3 so the leftover current at node A equals Va/R3.</p></details>
+<details class="check"><summary>Check your design</summary><p>R1 = R2 = R4 = 10 kΩ and R3 = 20 kΩ. Va = 6.00 V and Vb = 3.00 V. I1 = (12 − 6)/10 kΩ = 0.600 mA, I2 = (6 − 3)/10 kΩ = 0.300 mA, I3 = 6/20 kΩ = 0.300 mA, and I4 = 3/10 kΩ = 0.300 mA. The widget rounds those to 0.6 mA and 0.3 mA. KCL holds at both nodes, and the largest branch is 0.600 mA.</p></details>
+</div>
 </div>
 
 <div class="widget" id="vd" data-wid="voltage-divider">
@@ -119,6 +149,7 @@ html.embed.w-unknown .widget{display:block;border:1px solid #eee;padding:1rem 1.
 <button data-p="5,10000,10000,10000">10 kΩ load</button>
 <button data-p="5,10000,10000,1000">1 kΩ load</button>
 <button data-p="12,22000,10000,10000">12 V, 22 kΩ over 10 kΩ</button>
+<button data-p="12.6,2800,1000,100000">Load reference design</button>
 </div>
 <div class="readout">
 <div>Unloaded output<b id="vd-un"></b></div>
@@ -132,6 +163,17 @@ html.embed.w-unknown .widget{display:block;border:1px solid #eee;padding:1rem 1.
 <p class="legend"><span style="background:#1d4ed8"></span>loaded output <span style="background:#94a3b8"></span>unloaded divider <span style="background:#ef4444"></span>this load</p>
 <p class="verdict" id="vd-verdict"></p>
 <div class="try"><b>Try this:</b> (1) Start with R1, R2, and the load all at 10 kΩ and read the sag against the dashed unloaded line. (2) Press the meter-load preset and watch the output climb back to 2.5 V. (3) Drag the dot left: a load near R2 is not a meter.</div>
+<div class="design">
+<b>Design challenge:</b> <p>A 12.6 V pack has to feed a 3.3 V sense pin through a divider. The pin looks like about 100 kΩ. Keep the unloaded output near 3.3 V and the sag under 1% once that pin is attached.</p>
+<ul class="spec">
+<li>Input: 12.6 V, target unloaded output: 3.3 V ± 0.1 V</li>
+<li>Load: 100 kΩ</li>
+<li>Sag under 1% of the unloaded voltage</li>
+</ul>
+<p class="deliver">Produce: R1 and R2. A 2.8 kΩ over 1.0 kΩ divider lands at 3.32 V unloaded and sags only 0.024 V into 100 kΩ. Check it in the widget above.</p>
+<details class="hint"><summary>Hint</summary><p>The unloaded ratio is R2/(R1+R2) = 3.3/12.6. Sag stays small when R2 is far below the 100 kΩ load, so pick R2 near 1 kΩ and set R1 from the ratio.</p></details>
+<details class="check"><summary>Check your design</summary><p>R1 = 2.8 kΩ, R2 = 1.0 kΩ, load = 100 kΩ. Unloaded, V = 12.6 × 1000/3800 = 3.316 V. With the load, R2 ∥ 100 kΩ = 990.1 Ω and V = 12.6 × 990.1/3790.1 = 3.292 V. Sag is 0.024 V, which is 0.73% of 3.316 V. The widget rounds that to 0.7%, under the 1% limit and under the widget's 5% warning.</p></details>
+</div>
 </div>
 
 <div class="widget" id="led" data-wid="led-limit">
@@ -150,6 +192,7 @@ html.embed.w-unknown .widget{display:block;border:1px solid #eee;padding:1rem 1.
 <button data-p="5,1.8,10">5 V red, 10 mA</button>
 <button data-p="3.3,3,5">3.3 V, Vf 3.0 V, 5 mA</button>
 <button data-p="12,3.2,20">12 V white, 20 mA</button>
+<button data-p="9,2,10">Load reference design</button>
 </div>
 <div class="readout">
 <div>Ideal R = (Vs − Vf) / I<b id="led-r"></b></div>
@@ -163,6 +206,17 @@ html.embed.w-unknown .widget{display:block;border:1px solid #eee;padding:1rem 1.
 <p class="legend"><span style="background:#111"></span>I versus R <span style="background:#f59e0b"></span>target current <span style="background:#ef4444"></span>ideal R <span style="background:#1d4ed8"></span>E24 next up <span style="background:#16a34a"></span>E12 nearest</p>
 <p class="verdict" id="led-verdict"></p>
 <div class="try"><b>Try this:</b> (1) Set 9 V, a forward drop of 2.0 V, and 20 mA. Compare the ideal resistance with the E24 value at or above it. (2) Read the E12 nearest, which can let the current go over the target. (3) Check that resistor power against a 1/8 W rating, then raise Vf toward Vs and watch the resistor shrink.</div>
+<div class="design">
+<b>Design challenge:</b> <p>An indicator LED on a 9 V rail has a 2.0 V forward drop and a 10 mA target. Choose the next E24 value at or above the ideal resistor so the current does not exceed 10 mA, and keep that resistor under a 1/8 W rating.</p>
+<ul class="spec">
+<li>Supply 9 V, forward drop 2.0 V, target 10 mA</li>
+<li>E24 value at or above the ideal resistance</li>
+<li>Resistor power under 0.125 W</li>
+</ul>
+<p class="deliver">Produce: the ideal resistance and the E24 part you would buy. The ideal value is 700 Ω; the next E24 up is 750 Ω, which draws 9.3 mA and only 0.065 W. Check it in the widget above.</p>
+<details class="hint"><summary>Hint</summary><p>R = (Vs − Vf)/I. Rounding down raises the current above the target. The widget's E12 nearest is the value that can do that. Power is (Vs − Vf) times the current of the part you actually fit.</p></details>
+<details class="check"><summary>Check your design</summary><p>Ideal R = (9 − 2)/0.010 = 700 Ω. The next E24 at or above 700 Ω is 750 Ω, so I = 7/750 = 9.33 mA and P = 7 × 9.33 mA = 0.065 W, under 0.125 W. The E12 nearest is 680 Ω, and 7/680 = 10.3 mA, which overshoots the target. The verdict stays clear of the 1/8 W warning on the E24 part.</p></details>
+</div>
 </div>
 
 <script src="../../../assets/ee-widgets.js"></script>
@@ -185,6 +239,7 @@ html.embed.w-unknown .widget{display:block;border:1px solid #eee;padding:1rem 1.
  window.addEventListener('load',post); window.addEventListener('resize',post);
  if(window.ResizeObserver){new ResizeObserver(post).observe(document.body)}
  document.body.addEventListener('input',post);
+document.body.addEventListener('toggle',function(ev){ if(ev.target&&ev.target.tagName==='DETAILS') requestAnimationFrame(post); },true);
  document.body.addEventListener('change',post);
  document.body.addEventListener('click',function(ev){ if(ev.target&&ev.target.closest&&ev.target.closest('button')) post(); });
  window.postWidgetHeight=post;

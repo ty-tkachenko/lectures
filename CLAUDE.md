@@ -190,6 +190,20 @@ The include renders `<figure class="widget-embed">`: a lazy iframe, an "Open ful
 
 On a reading page, the `<div class="widget" data-wid="...">` lives in `widgets/demo.html`, not in `index.md`. The reading page embeds it with the include. `?w=<id>` is the same contract on EE and RF demos: the head script sets `html.embed` and `data-w`, and the foot script shows only `.widget[data-wid="<id>"]`. `assets/css/widgets.css` is linked from the layout when `series: ee`. Each EE demo also links that sheet and inlines the same rules, plus the RF embed CSS, so a double-click still matches. Do not remove the inline CSS from `rf/` demos.
 
+### Design challenge
+
+Every interactive widget ends with the same block, immediately after `.try`. RF demos should copy this markup. Style it in the demo's CSS (and in `assets/css/widgets.css` for EE): a `#f0fdf4` panel with a 3 px `#16a34a` left border, the same padding and radius as `.try`. A `Load reference design` control is an ordinary preset `<button data-p="...">` in the existing presets row, not a new control type. Opening either `<details>` must post `widget-height` again so the iframe grows.
+
+```html
+<div class="design">
+  <b>Design challenge:</b> <p>Brief (2–3 sentences)</p>
+  <ul class="spec"><li>Requirement as a number</li></ul>
+  <p class="deliver">Produce: chosen values plus one sentence of justification. Check it in the widget above.</p>
+  <details class="hint"><summary>Hint</summary>…</details>
+  <details class="check"><summary>Check your design</summary>…</details>
+</div>
+```
+
 ### Iframe height
 
 `widgets/demo.html` posts `{type: "widget-height", id, height}` to the parent on load, on resize (`ResizeObserver`), and after a control change. `_layouts/default.html` listens once. It finds the `figure.widget-embed` iframe whose `contentWindow` is `event.source`, or whose `data-widget` / `?w=` id equals `data.id`, and sets that iframe's height in pixels, clamped at 2000. RF reading pages can delete their per-page copies of this listener.

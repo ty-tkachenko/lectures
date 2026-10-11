@@ -822,6 +822,11 @@
       q(doc, "ldo-vin").value = p[0];
       q(doc, "ldo-vout").value = p[1];
       q(doc, "ldo-i").value = p[2];
+      if (p.length > 3) q(doc, "ldo-iq").value = p[3];
+      if (p.length > 4) q(doc, "ldo-th").value = p[4];
+      if (p.length > 5) q(doc, "ldo-ta").value = p[5];
+      if (p.length > 6) q(doc, "ldo-vdo").value = p[6];
+      if (p.length > 7) q(doc, "ldo-tj").value = p[7];
       draw();
     });
     dragPlot(cv, hit, function (t) {

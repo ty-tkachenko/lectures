@@ -19,6 +19,12 @@ button:hover{background:#eff6ff}
 .readout b{display:block;font-size:1.1rem;color:#1d4ed8}
 canvas{width:100%;border-radius:8px;background:#fafafa}
 .try{font-size:.9rem;background:#fffbeb;border-left:3px solid #f59e0b;padding:.5rem .75rem;margin-top:.8rem}
+.design{font-size:.9rem;background:#f0fdf4;border-left:3px solid #16a34a;padding:.5rem .75rem;margin-top:.8rem}
+.design .spec{margin:.35rem 0 .35rem 1.1rem;padding:0}
+.design .spec li{margin:.12rem 0}
+.design .deliver{margin:.4rem 0}
+.design summary{cursor:pointer;font-weight:600;color:#166534}
+.design details{margin:.25rem 0}
 .verdict{font-weight:600}
 .legend{font-size:.85rem;color:#555}
 .legend span{display:inline-block;width:14px;height:3px;vertical-align:middle;margin:0 .3rem 0 .8rem}
@@ -52,6 +58,7 @@ html.embed.w-unknown .widget{display:block;border:1px solid #eee;padding:1rem 1.
 <button data-p="10000,100,2000,5">Same RC, 2 kHz</button>
 <button data-p="1600,100,100,5">1.6 kΩ, 100 nF, 100 Hz</button>
 <button data-p="100000,100,10,5">Slow 100 kΩ</button>
+<button data-p="10000,820,10,5">Load reference design</button>
 </div>
 <div class="readout">
 <div>Time constant τ = RC<b id="rc-tau"></b></div>
@@ -65,6 +72,17 @@ html.embed.w-unknown .widget{display:block;border:1px solid #eee;padding:1rem 1.
 <p class="legend"><span style="background:#111"></span>capacitor <span style="background:#94a3b8"></span>square wave</p>
 <p class="verdict" id="rc-verdict"></p>
 <div class="try"><b>Try this:</b> (1) The defaults are 10 kΩ and 100 nF, so τ is 1 ms, on a 100 Hz square wave. (2) Raise the frequency until half a period is shorter than τ. (3) The rounding is the circuit refusing to jump. Five time constants is close enough for most resets.</div>
+<div class="design">
+<b>Design challenge:</b> <p>A 10 kΩ reset pull-up has to charge a capacitor from a 10 Hz square wave and still reach the rails. Five time constants should fit inside one half-period, with τ itself around 8–10 ms.</p>
+<ul class="spec">
+<li>R = 10 kΩ, square wave 10 Hz, amplitude 5 V</li>
+<li>τ between 8 ms and 10 ms</li>
+<li>Half a period longer than 5τ, so the trace reaches the rail</li>
+</ul>
+<p class="deliver">Produce: the capacitance. 820 nF with 10 kΩ gives τ = 8.2 ms, and 50 ms of half-period still covers 5τ. Check it in the widget above.</p>
+<details class="hint"><summary>Hint</summary><p>τ = RC. Half a period at 10 Hz is 50 ms, so 5τ has to stay under 50 ms, which means τ under 10 ms. The stall verdict appears once half a period drops under 5τ.</p></details>
+<details class="check"><summary>Check your design</summary><p>C = 820 nF. τ = 10 kΩ × 820 nF = 8.20 ms. The frequency slider lands at 10.05 Hz, so a half-period is 49.8 ms and 5τ is 41.0 ms. The rail readout says yes, and the verdict does not call it stalled. 1 µF would put 5τ on a 50 ms half-period, which is not longer, so that rail readout stays no.</p></details>
+</div>
 </div>
 
 <div class="widget" id="kick" data-wid="rl-kickback">
@@ -87,6 +105,7 @@ html.embed.w-unknown .widget{display:block;border:1px solid #eee;padding:1rem 1.
 <button data-p="1,200,1,12,1">Same coil, diode on</button>
 <button data-p="1,200,20,12,0">Slower 20 µs turn-off</button>
 <button data-p="10,100,1,5,1">10 mH relay, diode on</button>
+<button data-p="10,100,1,5,1">Load reference design</button>
 </div>
 <div class="readout">
 <div>Spike L·ΔI/Δt, diode off<b id="kick-spike"></b></div>
@@ -100,6 +119,17 @@ html.embed.w-unknown .widget{display:block;border:1px solid #eee;padding:1rem 1.
 <p class="legend"><span style="background:#ef4444"></span>diode off <span style="background:#1d4ed8"></span>diode on, about one drop above the supply</p>
 <p class="verdict" id="kick-verdict"></p>
 <div class="try"><b>Try this:</b> (1) Leave the coil at 1 mH and the current at 200 mA. Turn the diode off and read the model spike for a 1 µs turn-off. (2) Turn the diode on and compare that spike with supply plus one diode drop. (3) Stretch the turn-off time and watch the undamped spike fall.</div>
+<div class="design">
+<b>Design challenge:</b> <p>A 10 mH relay coil carries 100 mA from a 5 V rail and the switch opens in about 1 µs. Without a catch diode the model spike is a kilovolt. Fit the diode so the switch only ever sees about one diode drop above the rail.</p>
+<ul class="spec">
+<li>L = 10 mH, I = 100 mA, Vs = 5 V, turn-off = 1 µs</li>
+<li>Diode on</li>
+<li>Clamped voltage at Vs + 0.7 V, not the undamped L·I/Δt spike</li>
+</ul>
+<p class="deliver">Produce: diode on or off, and the voltage the switch must survive. With the diode on that voltage is 5.7 V instead of 1000 V. Check it in the widget above.</p>
+<details class="hint"><summary>Hint</summary><p>The undamped model is V = L·I/Δt. The diode clamps to the supply plus its own forward drop, about 0.7 V. Turn the diode on before you read the clamp.</p></details>
+<details class="check"><summary>Check your design</summary><p>Diode on, L = 10 mH, I = 100 mA, Δt = 1 µs, Vs = 5 V. Without the diode, V = 0.010 × 0.100 / 1 µs = 1000 V. With it, the clamp is 5 + 0.7 = 5.7 V. The current then decays through the diode in about L·I/Vf = 1.43 ms. The verdict reports the clamp, not the kilovolt spike.</p></details>
+</div>
 </div>
 
 <div class="widget" id="z" data-wid="impedance-plot">
@@ -118,6 +148,7 @@ html.embed.w-unknown .widget{display:block;border:1px solid #eee;padding:1rem 1.
 <button data-p="1600,100,1000,10000">Same parts at 10 kHz</button>
 <button data-p="50,1000,1000,1000">50 Ω and 1 µF</button>
 <button data-p="10000,10,10000,100000">10 kΩ, 10 nF, 10 mH</button>
+<button data-p="1600,100,8000,1000">Load reference design</button>
 </div>
 <div class="readout">
 <div>R at the marker<b id="z-rout"></b></div>
@@ -131,6 +162,17 @@ html.embed.w-unknown .widget{display:block;border:1px solid #eee;padding:1rem 1.
 <p class="legend"><span style="background:#111"></span>R <span style="background:#1d4ed8"></span>capacitor <span style="background:#16a34a"></span>inductor <span style="background:#ef4444"></span>marker, on the resistor line</p>
 <p class="verdict" id="z-verdict"></p>
 <div class="try"><b>Try this:</b> (1) Set R to 1.6 kΩ and C to 100 nF. The frequency where the capacitor curve crosses the flat resistor line is the cutoff of the low-pass in the next widget. (2) The inductor rises the other way. (3) Drag the marker to 1 kHz and read Xc and XL.</div>
+<div class="design">
+<b>Design challenge:</b> <p>At 1 kHz, make the capacitor's reactance match a 1.6 kΩ resistor, and keep the inductor's reactance under 100 Ω so the coil is still a small series term. That crossing is the cutoff of the low-pass in the next widget.</p>
+<ul class="spec">
+<li>Marker at 1 kHz</li>
+<li>Xc within about 5% of 1.6 kΩ</li>
+<li>XL under 100 Ω</li>
+</ul>
+<p class="deliver">Produce: R, C, and L. 1.6 kΩ, 100 nF, and 8 mH put Xc at 1.59 kΩ and XL at 50 Ω. Check it in the widget above.</p>
+<details class="hint"><summary>Hint</summary><p>Xc = 1/(2πfC) and XL = 2πfL. A larger capacitor lowers Xc. Set C so Xc crosses 1.6 kΩ at 1 kHz, which is the same RC product as a 1 kHz low-pass.</p></details>
+<details class="check"><summary>Check your design</summary><p>R = 1.6 kΩ, C = 100 nF, L = 8 mH, marker at 1 kHz. Xc = 1/(2π × 1000 × 100 nF) = 1592 Ω, about 0.5% under 1.6 kΩ. XL = 2π × 1000 × 8 mH = 50.3 Ω, under 100 Ω. The RC cutoff 1/(2π × 1.6 kΩ × 100 nF) is 995 Hz.</p></details>
+</div>
 </div>
 
 <div class="widget" id="flt" data-wid="rc-filter">
@@ -150,6 +192,7 @@ html.embed.w-unknown .widget{display:block;border:1px solid #eee;padding:1rem 1.
 <button data-p="1600,100,lp,10">A decade above cutoff</button>
 <button data-p="1600,100,hp,1">High-pass at cutoff</button>
 <button data-p="10000,100,lp,0.1">10 kΩ, a decade below</button>
+<button data-p="1600,100,lp,10">Load reference design</button>
 </div>
 <div class="readout">
 <div>Cutoff fc<b id="flt-fc"></b></div>
@@ -163,6 +206,17 @@ html.embed.w-unknown .widget{display:block;border:1px solid #eee;padding:1rem 1.
 <p class="legend"><span style="background:#1d4ed8"></span>magnitude <span style="background:#f59e0b"></span>−3 dB and fc <span style="background:#94a3b8"></span>input <span style="background:#111"></span>output</p>
 <p class="verdict" id="flt-verdict"></p>
 <div class="try"><b>Try this:</b> (1) The defaults are 1.6 kΩ and 100 nF, cutoff near 1 kHz. Read the −3 dB line. (2) Switch to high-pass and watch the time plot keep the fast wiggle and lose the slow one. (3) Slide a decade above cutoff: the low-pass is down about 20 dB.</div>
+<div class="design">
+<b>Design challenge:</b> <p>Build a low-pass with cutoff near 1 kHz, using the same 1.6 kΩ and 100 nF that crossed on the reactance plot. At ten times that cutoff the gain should be about a tenth, which is −20 dB.</p>
+<ul class="spec">
+<li>Low-pass, R = 1.6 kΩ, C = 100 nF</li>
+<li>Cutoff near 1 kHz (995 Hz from 1/(2πRC))</li>
+<li>At 10× cutoff, |H| near 0.10, about −20 dB</li>
+</ul>
+<p class="deliver">Produce: R, C, and the low-pass choice. Those two parts put fc at 995 Hz, and a decade above it the gain is 0.0995. Check it in the widget above.</p>
+<details class="hint"><summary>Hint</summary><p>fc = 1/(2πRC). A first-order low-pass falls at 20 dB per decade, so |H| = 1/√(1+(f/fc)²) is about 0.1 when f = 10 fc. Set the marker to 10×.</p></details>
+<details class="check"><summary>Check your design</summary><p>Low-pass, R = 1.6 kΩ, C = 100 nF, marker at 10× cutoff. fc = 1/(2π × 1600 × 100 nF) = 994.7 Hz. At 9947 Hz, |H| = 1/√(1+100) = 0.0995, and 20·log10(0.0995) = −20.0 dB. The widget rounds that magnitude to 0.100 and the decibel readout to −20.0 dB. The −3 dB line stays at fc.</p></details>
+</div>
 </div>
 
 <script src="../../../assets/ee-widgets.js"></script>
@@ -185,6 +239,7 @@ html.embed.w-unknown .widget{display:block;border:1px solid #eee;padding:1rem 1.
  window.addEventListener('load',post); window.addEventListener('resize',post);
  if(window.ResizeObserver){new ResizeObserver(post).observe(document.body)}
  document.body.addEventListener('input',post);
+document.body.addEventListener('toggle',function(ev){ if(ev.target&&ev.target.tagName==='DETAILS') requestAnimationFrame(post); },true);
  document.body.addEventListener('change',post);
  document.body.addEventListener('click',function(ev){ if(ev.target&&ev.target.closest&&ev.target.closest('button')) post(); });
  window.postWidgetHeight=post;

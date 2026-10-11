@@ -128,7 +128,7 @@ $$
 
 Worked. $$L = 1\,\mathrm{mH}$$, $$R = 10\,\Omega$$, source $$5\,\mathrm{V}$$. The final current is $$5 / 10 = 0.50\,\mathrm{A}$$. The time constant is $$0.001 / 10 = 0.10\,\mathrm{ms}$$. At one time constant the current is $$0.50 \times 0.632 = 0.316\,\mathrm{A}$$.
 
-{% include widget.html widget="rc-scope" height=1080 title="RC charge and discharge on a square wave" %}
+{% include widget.html widget="rc-scope" height=1330 title="RC charge and discharge on a square wave" %}
 
 ## 4. Kickback, and the diode that catches it
 
@@ -156,7 +156,7 @@ On a 5 V supply the switch node sits near $$5.0 + 0.7 = 5.7\,\mathrm{V}$$ while 
 
 *The diode is backwards while the switch is on. When the switch opens, coil current circulates through the diode and the switch node only rises by about one forward drop above the supply.*
 
-{% include widget.html widget="rl-kickback" height=1120 title="Inductive kickback, with and without a diode" %}
+{% include widget.html widget="rl-kickback" height=1370 title="Inductive kickback, with and without a diode" %}
 
 ## 5. Reactance: ohms that depend on frequency
 
@@ -180,7 +180,7 @@ $$
 X_L = 2 \pi \times 1000 \times 0.010 = 62.8\,\Omega
 $$
 
-{% include widget.html widget="impedance-plot" height=1110 title="Impedance of R, C, and L versus frequency" %}
+{% include widget.html widget="impedance-plot" height=1340 title="Impedance of R, C, and L versus frequency" %}
 
 ## 6. RC low-pass and high-pass
 
@@ -218,7 +218,7 @@ $$
 
 The high-pass does the mirror image: about $$-20\,\mathrm{dB}$$ at a tenth of $$f_c$$, and it passes the fast tone.
 
-{% include widget.html widget="rc-filter" height=1180 title="RC low-pass and high-pass" %}
+{% include widget.html widget="rc-filter" height=1450 title="RC low-pass and high-pass" %}
 
 ## 7. Combining capacitors and inductors
 
@@ -324,3 +324,12 @@ Two circuits you can check with a scope, and one you only do at low voltage. Non
 | Switch node without diode | write what the scope says |  |
 
 The same three checks, on camera, are the [lab practical](practical-lab.html).
+
+## Design challenges
+
+Each widget ends with a design card. The numbers below are the targets. The check, and a reference preset, live in the widget.
+
+- [RC square wave]({{ '/ee/02-capacitors-and-inductors/widgets/demo.html?w=rc-scope' | relative_url }}). With 10 kΩ on a 10 Hz square wave, pick C so τ is 8–10 ms and five time constants still fit in a half-period.
+- [Kickback]({{ '/ee/02-capacitors-and-inductors/widgets/demo.html?w=rl-kickback' | relative_url }}). A 10 mH coil at 100 mA on 5 V opens in 1 µs. Turn the diode on and read the clamp instead of the kilovolt model.
+- [Reactance]({{ '/ee/02-capacitors-and-inductors/widgets/demo.html?w=impedance-plot' | relative_url }}). At 1 kHz, match Xc to 1.6 kΩ and keep XL under 100 Ω.
+- [RC filter]({{ '/ee/02-capacitors-and-inductors/widgets/demo.html?w=rc-filter' | relative_url }}). A low-pass near 1 kHz should be about −20 dB a decade above cutoff.
