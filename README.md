@@ -1,4 +1,4 @@
-# Avionics Notes
+# Hardware Engineering Fundamentals
 
 Interactive electronics and RF notes for the avionics team. Each module is one web page with explanations, simulations you can play with, worked examples from our own hardware, a lecture video, a lab video, and design exercises.
 
@@ -17,7 +17,7 @@ py -m http.server 8123
 
 Then open <http://localhost:8123/lectures/>.
 
-Fonts (Google Fonts) and math rendering (KaTeX) load from a CDN. Offline, the pages still work, with fallback fonts and raw math.
+Math rendering (KaTeX) loads from a CDN. Offline, the pages still work, with the math shown as raw LaTeX. There are no web fonts.
 
 ## Layout
 
@@ -25,7 +25,7 @@ Fonts (Google Fonts) and math rendering (KaTeX) load from a CDN. Offline, the pa
 index.html              landing page (built from assets/course.js)
 assets/
   course.js             module list, statuses and video links: edit this to publish a module
-  site.css              all styling (light and dark themes)
+  site.css              all styling
   site.js               header, sidebar, videos, exercise answer checks, prev/next links
   plot.js               small canvas toolkit for the interactive figures
 EE/NN_Name/index.html   one page per module
@@ -77,4 +77,4 @@ Copy an existing module folder (EE 1 is the reference) and keep the same structu
    `data-tol` is relative (`2%`) or absolute (`0.1`). Answers accept SI prefixes (`4.7k`, `2.5m`).
 6. End with **At the bench** (lab video slot plus a `<div class="lab">` procedure), a **Summary & cheat sheet**, optional **Go deeper** links (`<a data-deep="matching_theory.html#refl">`), and `<nav class="pager"></nav>`.
 
-Draw every figure with the theme colours from `Plot.col` (or CSS variables in SVG) so it works in both light and dark mode.
+Draw every figure with the theme colours from `Plot.col` (or CSS variables in SVG) so the figures match the page.

@@ -1,4 +1,4 @@
-/* Avionics Notes: small canvas toolkit shared by the interactive widgets.
+/* Hardware Engineering Fundamentals: small canvas toolkit shared by the interactive widgets.
    Colours come from the CSS tokens, so charts follow the light/dark theme automatically.
 
    Usage:
@@ -14,8 +14,8 @@ function readCols(){
   for (const k of NAMES) col[k.replace('-soft','Soft')] = cs.getPropertyValue('--' + k).trim();
 }
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-const FONT = '12px Inter, system-ui, -apple-system, "Segoe UI", sans-serif';
-const MONO = '11.5px "JetBrains Mono", ui-monospace, Consolas, monospace';
+const FONT = '12px system-ui, -apple-system, "Segoe UI", Arial, sans-serif';
+const MONO = '11.5px ui-monospace, "Cascadia Mono", Menlo, Consolas, monospace';
 
 function fit(cv){
   const dpr = window.devicePixelRatio || 1, w = cv.clientWidth, h = cv.clientHeight;
@@ -99,7 +99,7 @@ function mix(a, b, f){
   const c = k => ((pa>>k)&255)*(1-f) + ((pb>>k)&255)*f;
   return '#' + hex2(c(16)) + hex2(c(8)) + hex2(c(0));
 }
-function isDark(){ const t = document.documentElement.dataset.theme; return t ? t === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches; }
+function isDark(){ return false; }   // the site is light-only
 
 /* number formatting */
 function si(v, unit, digits=3){

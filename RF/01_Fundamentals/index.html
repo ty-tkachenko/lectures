@@ -5,8 +5,6 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>RF Fundamentals · RF 1</title>
 <meta name="description" content="RF module 1: decibels, when a wire becomes a transmission line, characteristic impedance, reflections and VSWR, TDR, ripple, dielectric loss and polarization.">
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&display=swap">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
@@ -24,10 +22,7 @@
   <div class="eyebrow">RF &amp; High-Speed Design · Module 1</div>
   <h1>RF fundamentals</h1>
   <p class="lede">At radio frequencies a wire stops being "just a wire". Signals travel as waves, reflect off anything that doesn't match, and lose energy into the board itself. These notes build the vocabulary and intuition the rest of the RF material depends on: decibels, transmission lines, reflections, and the materials signals travel through.</p>
-  <div class="meta">
-    <span class="pill">Builds on: EE modules 1–4</span>
-    <span class="pill">Bench: NanoVNA or any VNA, a few SMA cables</span>
-  </div>
+  <p class="meta">Builds on: EE modules 1–4. Bench: NanoVNA or any VNA, a few SMA cables.</p>
   <div class="resources" data-auto></div>
   <div class="objectives">
     <h3>What's covered</h3>
@@ -571,7 +566,7 @@
 <nav class="pager"></nav>
 </main>
 </div>
-<footer class="site">Avionics Notes · RF &amp; High-Speed Design</footer>
+<footer class="site">Hardware Engineering Fundamentals · RF &amp; High-Speed Design</footer>
 
 <script>
 'use strict';
@@ -762,12 +757,11 @@ const C0 = 299792458;
   const split = Plot.widget($('#cvSplit'), (ctx, W, H) => {
     const m2 = G[0]*G[0] + G[1]*G[1];
     const l = 0, r = W, y = 8, h = 26, wd = (r - l)*(1 - m2);
-    ctx.save(); rrect(ctx, l, y, r - l, h, 8); ctx.clip();
-    ctx.fillStyle = col.c1; ctx.fillRect(l, y, wd, h);
-    ctx.fillStyle = col.c2; ctx.fillRect(l + wd, y, r - l - wd, h);
-    ctx.restore();
-    if (wd > 120) text(ctx, 'delivered ' + fmt(100*(1 - m2), 3) + ' %', l + 10, y + h/2, {color:'#fff', bold:true});
-    if (r - l - wd > 120) text(ctx, 'reflected ' + fmt(100*m2, 3) + ' %', r - 10, y + h/2, {align:'right', color:'#fff', bold:true});
+    ctx.fillStyle = mix(col.c1, '#ffffff', .7); ctx.fillRect(l, y, wd, h);
+    ctx.fillStyle = mix(col.c2, '#ffffff', .6); ctx.fillRect(l + wd, y, r - l - wd, h);
+    ctx.strokeStyle = '#000'; ctx.lineWidth = 1; ctx.strokeRect(l + .5, y + .5, r - l - 1, h - 1);
+    if (wd > 120) text(ctx, 'delivered ' + fmt(100*(1 - m2), 3) + ' %', l + 10, y + h/2, {color:'#000'});
+    if (r - l - wd > 120) text(ctx, 'reflected ' + fmt(100*m2, 3) + ' %', r - 10, y + h/2, {align:'right', color:'#000'});
     text(ctx, 'where the incident power goes', l, y + h + 12, {color: col.muted});
   });
   calc();

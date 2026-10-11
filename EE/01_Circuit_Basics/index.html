@@ -5,8 +5,6 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Voltage, Current, Resistance & Power · EE 1</title>
 <meta name="description" content="EE module 1: what voltage and current are, Ohm's law, power ratings, wire resistance, batteries and the multimeter, explained with avionics examples.">
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&display=swap">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
@@ -25,10 +23,7 @@
   <div class="eyebrow">EE Fundamentals · Module 1</div>
   <h1>Voltage, current, resistance &amp; power</h1>
   <p class="lede">Everything on the rocket, from the flight computer to the igniter, runs on four quantities and one simple law. These notes aim to make them feel physical, so you can look at a circuit and predict what it does before you measure it.</p>
-  <div class="meta">
-    <span class="pill">Start here: no background needed</span>
-    <span class="pill">Bench: multimeter, bench supply, a few resistors</span>
-  </div>
+  <p class="meta">Start here: no background needed. Bench: multimeter, bench supply, a few resistors.</p>
   <div class="resources" data-auto></div>
   <div class="objectives">
     <h3>What's covered</h3>
@@ -507,7 +502,7 @@
 <nav class="pager"></nav>
 </main>
 </div>
-<footer class="site">Avionics Notes · EE Fundamentals</footer>
+<footer class="site">Hardware Engineering Fundamentals · EE Fundamentals</footer>
 
 <script>
 'use strict';
@@ -596,7 +591,7 @@ function setVerdict(el, cls, html){ el.className = 'verdict ' + cls; el.innerHTM
     ctx.save();
     ctx.shadowColor = 'rgba(0,0,0,.2)'; ctx.shadowBlur = 12; ctx.shadowOffsetY = 4;
     const gb = ctx.createLinearGradient(x0 - bw/2, 0, x0 + bw/2, 0);
-    gb.addColorStop(0, Plot.mix(col.accent, '#000000', .3)); gb.addColorStop(.42, Plot.mix(col.accent, '#ffffff', .12)); gb.addColorStop(1, Plot.mix(col.accent, '#000000', .4));
+    gb.addColorStop(0, Plot.mix('#4d535c', '#000000', .3)); gb.addColorStop(.42, Plot.mix('#4d535c', '#ffffff', .12)); gb.addColorStop(1, Plot.mix('#4d535c', '#000000', .4));
     ctx.fillStyle = gb; Plot.rrect(ctx, x0 - bw/2, yc - bh/2, bw, bh, 10); ctx.fill();
     ctx.restore();
     ctx.save(); Plot.rrect(ctx, x0 - bw/2, yc - bh/2, bw, bh, 10); ctx.clip();
@@ -785,7 +780,7 @@ function setVerdict(el, cls, html){ el.className = 'verdict ' + cls; el.innerHTM
     let g = `<defs>
       <linearGradient id="rbody" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${dark ? '#c9b48c' : '#e9d8b4'}"/><stop offset="1" stop-color="${dark ? '#9c8862' : '#c7ae80'}"/></linearGradient>
       <linearGradient id="rbodyV" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="${dark ? '#c9b48c' : '#e9d8b4'}"/><stop offset="1" stop-color="${dark ? '#9c8862' : '#c7ae80'}"/></linearGradient>
-      <linearGradient id="cell" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="${Plot.mix(col.accent,'#000000',.3)}"/><stop offset=".45" stop-color="${Plot.mix(col.accent,'#ffffff',.12)}"/><stop offset="1" stop-color="${Plot.mix(col.accent,'#000000',.4)}"/></linearGradient>
+      <linearGradient id="cell" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="${Plot.mix('#4d535c','#000000',.3)}"/><stop offset=".45" stop-color="${Plot.mix('#4d535c','#ffffff',.12)}"/><stop offset="1" stop-color="${Plot.mix('#4d535c','#000000',.4)}"/></linearGradient>
       <filter id="sh" x="-20%" y="-20%" width="140%" height="160%"><feDropShadow dx="0" dy="2" stdDeviation="2" flood-opacity=".2"/></filter>
     </defs>`;
     // wires

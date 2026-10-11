@@ -1,7 +1,7 @@
 // Course catalog: the single source of truth for menus, the landing page, prev/next links and progress.
 // Add a module here when its page exists and set status:'ready'. Paths are relative to the site root.
 window.COURSE = {
-  site: 'Avionics Notes',
+  site: 'Hardware Engineering Fundamentals',
   // Where the advanced theory pages live, relative to the site root (used by "Go deeper" links).
   deepBase: '../theory/',
   tracks: [

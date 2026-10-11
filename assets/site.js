@@ -1,4 +1,4 @@
-/* Avionics Notes: site engine.
+/* Hardware Engineering Fundamentals: site engine.
    Loaded in <head> (not deferred) so the theme applies before first paint.
    Builds the header, module sidebar, resource strip, videos, design-exercise answer checks and the
    prev/next pager from course.js.
@@ -13,22 +13,6 @@
 const doc = document.documentElement;
 const ROOT = doc.dataset.root || './';
 const MOD_ID = doc.dataset.module || null;
-const store = {
-  get(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } },
-  set(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
-};
-
-/* ---------- theme (runs immediately) ---------- */
-const THEME_KEY = 'avionics-theme';
-const savedTheme = store.get(THEME_KEY);
-if (savedTheme === 'light' || savedTheme === 'dark') doc.dataset.theme = savedTheme;
-function isDark(){ return doc.dataset.theme ? doc.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches; }
-function toggleTheme(){
-  doc.dataset.theme = isDark() ? 'light' : 'dark';
-  store.set(THEME_KEY, doc.dataset.theme);
-  window.dispatchEvent(new Event('themechange'));
-}
-matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => window.dispatchEvent(new Event('themechange')));
 
 /* ---------- catalog helpers ---------- */
 const C = window.COURSE || {tracks:[], videos:{}};
@@ -46,39 +30,31 @@ const I = {
   target:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r=".8" fill="currentColor"/></svg>',
   sheet:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/></svg>',
   read:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5.5C5.5 4 9 4 12 6c3-2 6.5-2 9-.5V19c-2.5-1.5-6-1.5-9 .5-3-2-6.5-2-9-.5z"/><path d="M12 6v13.5"/></svg>',
-  slider:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>',
-  theme:'<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor"/></svg>'
+  slider:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>'
 };
 window.SiteIcons = I;
 
-/* ---------- header ---------- */
+/* ---------- header: plain title, nav line, and the current track's module strip ---------- */
 function buildHeader(){
   const h = document.createElement('header');
   h.className = 'top';
   const here = MOD_ID && findModule(MOD_ID);
-  let crumbs = '';
-  if (here) crumbs = `<nav class="crumbs" aria-label="Breadcrumb"><span>/</span><a href="${ROOT}index.html#${here.track.id}">${here.track.title}</a><span>/</span><span>${here.mod.title}</span></nav>`;
-  h.innerHTML = `<a class="brand" href="${ROOT}index.html"><span class="mark">${I.mark}</span>${C.site || 'Avionics Notes'}</a>${crumbs}<span class="spacer"></span>`;
+  const nav = [`<a href="${ROOT}index.html"${here ? '' : ' class="current"'}>Home</a>`]
+    .concat(C.tracks.map(t => `<a href="${ROOT}index.html#${t.id}"${here && here.track === t ? ' class="current"' : ''}>${t.title}</a>`))
+    .join(' · ');
+  let strip = '';
   if (here){
-    const menu = document.createElement('details');
-    menu.className = 'menu';
-    let html = `<summary>All modules</summary><div class="panel">`;
-    for (const t of C.tracks){
-      html += `<h4>${t.title}</h4>`;
-      for (const m of t.modules){
-        const cls = [m.id === MOD_ID ? 'cur' : '', m.status !== 'ready' ? 'planned' : ''].join(' ');
-        html += `<a class="${cls}" href="${ROOT}${m.path}index.html"><span class="mn">${m.n}</span><span>${m.title}</span><span class="mk">${m.status !== 'ready' ? 'soon' : ''}</span></a>`;
-      }
-    }
-    menu.innerHTML = html + '</div>';
-    document.addEventListener('click', e => { if (!menu.contains(e.target)) menu.open = false; });
-    h.appendChild(menu);
+    strip = `<nav class="module-strip" aria-label="${here.track.title} modules">` + here.track.modules.map(m => {
+      const cls = m.id === MOD_ID ? 'current' : (m.status !== 'ready' ? 'soon' : '');
+      const tip = m.title + (m.status !== 'ready' ? ' (coming soon)' : '');
+      return `<a class="${cls}" href="${ROOT}${m.path}index.html" title="${tip}"${m.id === MOD_ID ? ' aria-current="page"' : ''}>${m.n}</a>`;
+    }).join('') + '</nav>';
   }
-  const tb = document.createElement('button');
-  tb.id = 'themeBtn'; tb.type = 'button'; tb.title = 'Toggle light / dark'; tb.setAttribute('aria-label','Toggle light or dark theme');
-  tb.innerHTML = I.theme; tb.onclick = toggleTheme;
-  h.appendChild(tb);
+  h.innerHTML = `<div class="site-title"><a href="${ROOT}index.html">${C.site || 'Hardware Engineering Fundamentals'}</a></div>` +
+    `<p class="nav">${nav}</p>${strip}<hr>`;
   document.body.prepend(h);
+  const f = document.querySelector('footer.site');
+  if (f && !f.previousElementSibling?.matches('hr')) f.insertAdjacentHTML('beforebegin', '<hr class="foot">');
 }
 
 /* ---------- videos ---------- */
@@ -129,7 +105,7 @@ function buildVideo(el){
 function wireJumps(){
   document.querySelectorAll('.vjump').forEach(a => {
     const t = a.dataset.t;
-    a.innerHTML = `${I.play.replace('<svg','<svg width="9" height="9"')} ${t}`;
+    a.textContent = `[video ${t}]`;
     a.title = 'Watch this part of the lecture video';
     a.href = '#lecture';
     a.addEventListener('click', e => {
@@ -202,7 +178,7 @@ function buildSide(){
   const items = secs.map(s => {
     const h = s.querySelector('h2');
     const num = s.hasAttribute('data-nonum') ? '' : ++n;
-    if (num !== '' && h && !h.querySelector('.num')) h.insertAdjacentHTML('afterbegin', `<span class="num">${String(num).padStart(2,'0')}</span>`);
+    if (num !== '' && h && !h.querySelector('.num')) h.insertAdjacentHTML('afterbegin', `<span class="num">${num}</span>`);
     const label = s.dataset.short || (h ? h.textContent.replace(/^\d+/, '').trim() : s.id);
     return {s, num, label};
   });
@@ -221,16 +197,14 @@ function buildSide(){
 function buildResources(){
   const el = document.querySelector('.resources[data-auto]');
   if (!el || !MOD_ID) return;
+  // One plain sentence: what this module comes with.
   const lec = videoFor(MOD_ID,'lecture'), lab = videoFor(MOD_ID,'lab');
-  const nW = document.querySelectorAll('.widget').length, nC = document.querySelectorAll('.chal, details.exercise').length;
-  const first = document.querySelector('section.sec[id]');
-  const items = [
-    [first ? '#' + first.id : '#', I.slider, 'Interactive notes', `${nW} interactive example${nW === 1 ? '' : 's'}`, ''],
-    ['#lecture', I.play, 'Lecture video', lec ? 'The walkthrough' : 'Coming soon', ''],
-    ['#bench', I.lab, 'Lab demo', lab ? 'Shown at the bench' : 'Coming soon', 'lab'],
-    ['#exercises', I.target, 'Design exercises', `${nC} optional problem${nC === 1 ? '' : 's'}`, 'chal-link']
-  ];
-  el.innerHTML = items.map(([h, ic, b, s, cls]) => `<a class="${cls}" href="${h}"><span class="ri">${ic}</span><span><b>${b}</b><small>${s}</small></span></a>`).join('');
+  const nW = [...document.querySelectorAll('.widget')].filter(w => w.querySelector('input, button, select')).length;
+  const nC = document.querySelectorAll('.chal, details.exercise').length;
+  el.innerHTML = `This module has ${nW} interactive figure${nW === 1 ? '' : 's'}, ` +
+    `a <a href="#lecture">lecture video</a>${lec ? '' : ' (coming soon)'}, ` +
+    `a <a href="#bench">lab demonstration</a>${lab ? '' : ' (coming soon)'}, ` +
+    `and <a href="#exercises">${nC} optional design exercise${nC === 1 ? '' : 's'}</a>.`;
 }
 function buildPager(){
   const el = document.querySelector('nav.pager');
@@ -247,13 +221,9 @@ window.renderHome = function(el){
   el.innerHTML = C.tracks.map(t => {
     const rows = t.modules.map(m => {
       const ready = m.status === 'ready';
-      const v = (C.videos || {})[m.id] || {};
-      const ic = ready
-        ? `<span class="ms"><i class="on" title="Interactive notes">${I.slider}</i><i class="${v.lecture ? 'on' : ''}" title="Lecture video${v.lecture ? '' : ' (coming soon)'}">${I.play}</i><i class="vlab ${v.lab ? 'on' : ''}" title="Lab demo${v.lab ? '' : ' (coming soon)'}">${I.lab}</i></span>`
-        : '<span class="ms soon">soon</span>';
-      return `<li><a class="${ready ? 'ready' : 'planned'}" href="${m.path}index.html"><span class="mn">${m.n}</span><span><span class="mt">${m.title}</span><span class="mb">${m.blurb}</span></span>${ic}</a></li>`;
+      return `<li><a class="${ready ? 'ready' : 'planned'}" href="${m.path}index.html"><span class="mn">${m.n}</span><span class="mt">${m.title}</span>${ready ? '' : '<span class="ms">in preparation</span>'}<span class="mb">${m.blurb}</span></a></li>`;
     }).join('');
-    return `<article class="track" id="${t.id}"><span class="eyebrow">${t.short}</span><h2>${t.title}</h2><p>${t.blurb}</p><ul class="mods">${rows}</ul></article>`;
+    return `<section class="track" id="${t.id}"><h2>${t.title}</h2><p>${t.blurb}</p><ul class="mods">${rows}</ul></section>`;
   }).join('');
 };
 

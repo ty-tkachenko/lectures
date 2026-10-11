@@ -3,69 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Avionics Notes</title>
-<meta name="description" content="Interactive electronics and RF notes for the avionics team of a liquid rocket club: explanations, simulations, lecture videos, lab demos and design exercises.">
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&display=swap">
+<title>Hardware Engineering Fundamentals</title>
+<meta name="description" content="Interactive electronics and RF notes for the avionics team: explanations, interactive figures, lecture and lab videos, and design exercises.">
 <link rel="stylesheet" href="assets/site.css">
 <script src="assets/course.js"></script>
 <script src="assets/site.js"></script>
 </head>
-<body>
-<div class="home">
-  <section class="home-hero">
-    <div>
-      <div class="eyebrow">Avionics team · Liquid rocket club</div>
-      <h1>Electronics and RF, from first principles to flight hardware</h1>
-      <p class="lede">Interactive notes on the electronics behind our rockets, from Ohm's law to the telemetry link. Every idea comes with a simulation you can play with, examples from our own hardware, and videos of it working at the bench.</p>
-    </div>
-    <svg viewBox="0 0 420 300" role="img" aria-label="Illustration: a rocket's avionics bay sending telemetry to a ground station">
-      <defs>
-        <linearGradient id="hb" x1="0" x2="1"><stop offset="0" stop-color="var(--line2)"/><stop offset=".5" stop-color="var(--raise)"/><stop offset="1" stop-color="var(--line2)"/></linearGradient>
-        <linearGradient id="hf" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--flame)"/><stop offset="1" stop-color="var(--flame)" stop-opacity="0"/></linearGradient>
-      </defs>
-      <g transform="rotate(18 150 150)">
-        <path d="M150 18c22 22 32 52 32 84v120h-64V102c0-32 10-62 32-84z" fill="url(#hb)" stroke="var(--line2)" stroke-width="2"/>
-        <rect x="124" y="118" width="52" height="58" rx="6" fill="var(--panel)" stroke="var(--accent)" stroke-width="2"/>
-        <rect x="132" y="128" width="36" height="10" rx="2" fill="var(--accent-soft)"/>
-        <rect x="132" y="143" width="16" height="8" rx="2" fill="var(--accent)"/>
-        <rect x="152" y="143" width="16" height="8" rx="2" fill="var(--c3)" opacity=".7"/>
-        <path d="M132 158h36M132 164h24" stroke="var(--line2)" stroke-width="2" stroke-linecap="round"/>
-        <path d="M118 196l-20 30h20zM182 196l20 30h-20z" fill="var(--accent)"/>
-        <path d="M128 222h44l-6 10h-32z" fill="var(--ink2)"/>
-        <path d="M134 232h32l-16 58z" fill="url(#hf)"/>
-        <line x1="150" y1="60" x2="150" y2="44" stroke="var(--flame)" stroke-width="2"/>
-      </g>
-      <g fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" opacity=".85">
-        <path d="M232 92a40 40 0 0 1 14 34"/><path d="M246 76a62 62 0 0 1 22 54" opacity=".6"/><path d="M260 60a84 84 0 0 1 30 72" opacity=".35"/>
-      </g>
-      <g transform="translate(330 196)">
-        <path d="M-6 76h52M20 76V40" stroke="var(--ink2)" stroke-width="3" stroke-linecap="round"/>
-        <path d="M-12 30a40 40 0 0 0 64 -26z" fill="var(--panel)" stroke="var(--ink2)" stroke-width="2.5"/>
-        <path d="M20 17l16 -26" stroke="var(--ink2)" stroke-width="2"/><circle cx="37" cy="-11" r="4" fill="var(--flame)"/>
-      </g>
-      <text x="356" y="290" text-anchor="middle" font-size="11" fill="var(--muted)">ground station</text>
-    </svg>
-  </section>
-
-  <div class="how">
-    <div><span class="hi">__SLIDER__</span><b>Interactive notes</b><span>Short explanations, each paired with a simulation you can drag around.</span></div>
-    <div><span class="hi">__PLAY__</span><b>Lecture videos</b><span>A walkthrough of each module's ideas, with links from every section to the right moment.</span></div>
-    <div><span class="hi" style="background:var(--flame-soft);color:var(--flame)">__LAB__</span><b>Lab demos</b><span>The same ideas at the bench, with real parts, meters and scopes.</span></div>
-    <div><span class="hi" style="background:var(--violet-soft);color:var(--violet)">__TARGET__</span><b>Design exercises</b><span>Real problems from our own hardware, with worked solutions.</span></div>
-  </div>
-
-  <div class="tracks" id="tracks"></div>
-</div>
-<footer class="site">Avionics Notes · written for the avionics team</footer>
+<body class="home-page">
+<main class="home">
+  <p>Notes on the electronics behind our rockets, from Ohm's law to the telemetry link. Each module is a single page of explanation with interactive figures and worked examples from our own hardware, a lecture video that walks through it, a lab video showing the ideas at the bench, and optional design exercises.</p>
+  <p>The two series are meant to be read in order. The RF notes assume EE modules 1–4 and 12.</p>
+  <div id="tracks"></div>
+</main>
+<hr class="foot">
+<footer class="site">Hardware Engineering Fundamentals. Written for the avionics team.</footer>
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-  const I = window.SiteIcons;
-  document.querySelectorAll('.how .hi').forEach(el => {
-    el.innerHTML = {__SLIDER__: I.slider, __PLAY__: I.play, __LAB__: I.lab, __TARGET__: I.target}[el.textContent.trim()] || '';
-  });
-  renderHome(document.getElementById('tracks'));
-});
+document.addEventListener('DOMContentLoaded', () => renderHome(document.getElementById('tracks')));
 </script>
 </body>
 </html>
