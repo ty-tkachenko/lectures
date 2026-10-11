@@ -13,7 +13,7 @@ window.COURSE = {
         {id:'ee01', n:1,  status:'ready',   path:'EE/01_Circuit_Basics/',         title:'Voltage, Current, Resistance & Power', blurb:'Ohm\'s law, power ratings, wire resistance, batteries and the multimeter.'},
         {id:'ee02', n:2,  status:'ready',   path:'EE/02_Circuit_Analysis/',       title:'Circuit Analysis', blurb:'Kirchhoff\'s laws, dividers, loading and Thévenin equivalents.'},
         {id:'ee03', n:3,  status:'ready',   path:'EE/03_Capacitors_Inductors/',   title:'Capacitors & Inductors', blurb:'Time constants, inrush, inductive kickback, real parts and time-domain decoupling.'},
-        {id:'ee04', n:4,  status:'planned', path:'EE/04_AC_and_Frequency/',       title:'AC Signals & Frequency Response', blurb:'Impedance, RC filters, Bode plots and decibels.'},
+        {id:'ee04', n:4,  status:'ready',   path:'EE/04_AC_and_Frequency/',       title:'AC Signals & Frequency Response', blurb:'Phasors, reactance, impedance, Bode plots, RMS and a capacitor\'s self-resonance.'},
         // Moving power: driving actuators
         {id:'ee05', n:5,  status:'planned', path:'EE/05_Diodes/',                 title:'Diodes', blurb:'Rectifiers, LEDs, Zener/TVS protection and reverse-polarity protection.'},
         {id:'ee06', n:6,  status:'planned', path:'EE/06_Transistors/',            title:'Transistors as Switches', blurb:'MOSFET drivers for solenoid valves and pyro channels.'},
@@ -60,5 +60,6 @@ window.COURSE.videos = {
   rf00: {lecture: '', lab: ''},
   ee02: {lecture: '', lab: ''},
   ee03: {lecture: '', lab: ''},
+  ee04: {lecture: '', lab: ''},
   rf01: {lecture: '', lab: ''}
 };

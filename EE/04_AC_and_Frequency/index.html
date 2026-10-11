@@ -4,61 +4,863 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>AC Signals &amp; Frequency Response · EE 4</title>
-<meta name="description" content="EE Fundamentals module 4: Impedance, RC filters, Bode plots and decibels. In development.">
+<meta name="description" content="EE module 4: phasors, reactance of L and C, impedance, RC filters, Bode plots, decibels, RMS and resonance, including why a capacitor stops being a capacitor.">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
 <link rel="stylesheet" href="../../assets/site.css">
 <script src="../../assets/course.js"></script>
 <script src="../../assets/site.js"></script>
+<script src="../../assets/plot.js"></script>
 </head>
 <body>
 <div class="layout">
 <aside class="side" aria-label="Module contents"></aside>
 <main class="content">
 
-<!-- Placeholder: replace this page with the module when it's written (see README.md, "Writing a module"). -->
 <header class="hero">
   <div class="eyebrow">EE Fundamentals · Module 4</div>
-  <h1>AC Signals &amp; Frequency Response</h1>
-  <p class="lede">Impedance, RC filters, Bode plots and decibels.</p>
+  <h1>AC signals &amp; frequency response</h1>
+  <p class="lede">Why does a 10 µF capacitor stop being a capacitor at 50 MHz? The ideal formula says its reactance there is a third of a milliohm, a near short. A real 10 µF part does not behave that way. This module builds the tools that explain it: sine waves as rotating arrows, the reactance of L and C, impedance, filters, and the one frequency where L and C cancel.</p>
+  <p class="meta">Builds on: EE modules 1–3. Bench: oscilloscope, function generator, a resistor, two capacitors, a small inductor.</p>
+  <div class="resources" data-auto></div>
+  <div class="objectives">
+    <h3>What's covered</h3>
+    <ul>
+      <li>A sinusoid as a rotating arrow, and phase as a delay measured in fractions of a cycle.</li>
+      <li>Reactance: \(X_L = \omega L\) and \(X_C = -1/(\omega C)\), from \(v = L\,di/dt\) and \(i = C\,dv/dt\) applied to a sine.</li>
+      <li>Impedance \(Z = R + jX\), read as how much current flows and how late it is.</li>
+      <li>A divider whose legs are impedances: magnitude and angle, decibels, and the Bode plot of an RC filter.</li>
+      <li>A fast edge as many frequencies at once, and RMS as the voltage that delivers the same power.</li>
+      <li>Bare resonance: L and C cancel at one frequency. A capacitor's self-resonance is the example.</li>
+    </ul>
+  </div>
+  <div class="video" data-video="lecture" id="lecture">
+    <div class="plan">
+      <p>Planned walkthrough of this page (≈ 32 min):</p>
+      <ol>
+        <li data-t="0:00">Why a 10 µF capacitor stops being one at 50 MHz</li>
+        <li data-t="2:00">A sine as a rotating arrow</li>
+        <li data-t="6:30">Reactance from the slope of a sine</li>
+        <li data-t="11:00">Impedance: how much current, and how late</li>
+        <li data-t="16:00">The impedance divider, decibels and Bode plots</li>
+        <li data-t="22:00">A fast edge contains many frequencies</li>
+        <li data-t="26:00">RMS</li>
+        <li data-t="28:30">Resonance and a capacitor's self-resonance</li>
+      </ol>
+    </div>
+  </div>
 </header>
 
-<section class="sec" id="status" data-nonum data-short="In development">
-<h2>In development</h2>
-<p>The rest of this module hasn't been written yet. The section below was moved here from Module 3 so that module's decoupling discussion can stay in the time domain. It will be rewritten into the impedance and resonance sections when this module is written in full.</p>
+<!-- ================= 1 THE QUESTION ================= -->
+<section class="sec" id="question" data-short="The question">
+<h2>The question <a class="vjump" data-t="0:00"></a></h2>
+<p>Module 3 treated capacitors and inductors in time. A capacitor's voltage cannot jump, because \(i = C\,dv/dt\), and an inductor's current cannot jump, because \(v = L\,di/dt\). Those two sentences are still the whole story. What changes in this module is the shape of the signal we apply them to: a sine wave, and then anything we can think of as a pile of sine waves.</p>
+<p>The question to keep in mind while the tools are built: take the 10 µF, 1206 capacitor from Module 3's decoupling figure. Its body is about 1 nH of inductance and about 5 mΩ of resistance, in series with the 10 µF. At 50 MHz, does that part still look like a capacitor? By the end of the module the two reactances are 0.318 mΩ for the capacitance and 0.314 Ω for the inductance, and the inductance has won by about a thousand to one. The part has become a small inductor. Q, bandwidth and matching are left to the RF notes. Here we only need to see the cancellation, and to read a complex ratio as a size and a delay.</p>
 </section>
 
-<section class="sec" id="srf-draft" data-short="Moved: self-resonance">
-<h2>Self-resonance, drafted from Module 3</h2>
-<div class="note warn">
-  <span class="ni">!</span>
-  <div><span class="nt">Moved, not yet integrated</span>This is the impedance-curve and self-resonance material taken out of Module 3. The frequency-domain figure that used to sit under Module 3's decoupling plot is not reproduced here; Module 4's impedance widget replaces it. The explanation and the question are kept so the content is not lost.</div>
+<!-- ================= 2 PHASORS ================= -->
+<section class="sec" id="phasors" data-short="Phasors">
+<h2>A sine is a rotating arrow <a class="vjump" data-t="2:00"></a></h2>
+<p>A sinusoid is what you get by watching one component of an arrow that spins at a steady rate. The arrow's length is the <strong>peak</strong>. It goes round \(f\) times a second, so a full turn takes the <strong>period</strong> \(T = 1/f\). The angle \(2\pi f\), in radians per second, is written \(\omega\). One cycle is \(2\pi\) radians, which is why \(\omega = 2\pi f\).</p>
+<div class="eq">$$v(t) = V_\text{peak}\sin(2\pi f t)$$<div class="n">the vertical part of an arrow of length \(V_\text{peak}\), spinning \(f\) times a second</div></div>
+<p><strong>Phase</strong> is where the arrow is in its turn, and the useful way to say it is as a delay in fractions of a cycle. A quarter cycle is \(90^\circ\), an eighth of a cycle is \(45^\circ\), a full cycle is \(360^\circ\) and is the same arrow you started with. "The current lags by \(90^\circ\)" means the current's arrow is a quarter turn behind the voltage's, so the current reaches its peak a quarter period later. At 1 kHz that quarter period is 250 µs. The number of degrees is just the fraction written in a different unit.</p>
+
+<div class="widget wide" id="w-ph">
+  <div class="wh"><span class="tag">Interactive</span><b>One spinning arrow, and the sine it draws</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label for="phLag">Current lag <b id="phLagv"></b></label><input id="phLag" type="range" min="-180" max="180" step="5" value="90"></div>
+      <p class="small">The picture is slowed to about one turn every five seconds, so the arrow can be watched. A 1 kHz sine does the same thing a thousand times a second. Both arrows are drawn the same length; only the delay is real.</p>
+    </div>
+    <div>
+      <canvas id="cvPh" style="height:320px" aria-label="A rotating arrow and the sine wave traced by its vertical component, with a second arrow delayed by the lag you set"></canvas>
+      <div class="legend"><span style="--c:var(--c1)">voltage</span><span style="--c:var(--c2)">current</span></div>
+      <div class="readout">
+        <div class="stat"><div class="k">Delay</div><div class="v" id="phTurns"></div></div>
+        <div class="stat"><div class="k">At 1 kHz</div><div class="v" id="phUs"></div></div>
+      </div>
+      <div class="verdict" id="phVerdict"></div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>Set the lag to 0. The two arrows sit on top of each other, and the two sines peak together.</li>
+    <li>Set it to 90°. The current arrow is a quarter turn behind. Find the moment when the voltage arrow is straight up: the current arrow is flat, so the current is zero.</li>
+    <li>Set it to −90°. Same picture, with the names swapped. That is a capacitor. +90° is an inductor.</li>
+  </ol></div>
 </div>
-<p>A bigger capacitor isn't automatically better, because a real capacitor is a capacitor in series with its ESR and its ESL. At low frequency the capacitance dominates and the impedance falls as frequency rises. At the <strong>self-resonant frequency</strong> (SRF) the capacitance and the ESL cancel, leaving only the ESR. Above it, the ESL dominates and the part behaves as an inductor:</p>
-<div class="eq">$$f_\text{SRF} = \frac{1}{2\pi\sqrt{L_\text{ESL}\,C}}$$</div>
-<p>A chip's current bursts have most of their energy at tens to hundreds of megahertz, usually above the SRF of every capacitor on the board. Up there, what decides how well a capacitor decouples is its inductance: its own ESL, which grows with package size, plus the trace and vias connecting it to the pin. That's why a 100 nF capacitor in a small package right at the pin beats a 10 µF part in a larger package, and why a capacitor a centimetre away does little for fast edges whatever its value. Larger capacitors still have a job: they cover the slower, larger demands that the small ones run out of charge for, so boards use both. Combining values brings its own problems (parallel capacitors can resonate with each other), which Module 12 covers along with placement.</p>
-<p>The mirror image for an inductor: the turns of a winding have capacitance between them. Above its self-resonant frequency an inductor behaves as a capacitor.</p>
+
 <details class="exercise">
-  <summary><span class="ek">Check your understanding</span><span class="et">Swapping in a bigger decoupling capacitor</span></summary>
+  <summary><span class="ek">Check your understanding</span><span class="et">Why the current peaks at the voltage's zero</span></summary>
   <div class="eb">
-    <p>A chip has a 100 nF 0402 decoupling capacitor right at its power pin. To "add more capacitance", someone replaces it with a 10 µF 1206 in the same spot.</p>
-    <div class="choice"><p>Does the chip's supply get cleaner during its fast current bursts?</p>
+    <p>For a capacitor, the current reaches its peak at the moment the voltage sine crosses zero. Someone asks why, and is offered the formula \(X_C = 1/(\omega C)\) as the answer.</p>
+    <div class="choice"><p>What is the mechanism, before any reactance formula?</p>
     <ol class="opts">
-      <li>Much cleaner: it's a hundred times the capacitance.<div class="why">At the frequencies in a fast edge, capacitance isn't what limits a decoupling capacitor.</div></li>
-      <li data-correct>No better, and probably worse: above their self-resonant frequency both parts act as inductors, and the larger 1206 has more inductance.<div class="why">For fast edges, the inductance of the part and its connection decides.</div></li>
-      <li>Exactly the same, because they're in the same position.<div class="why">Same position, but not the same package.</div></li>
-      <li>Better only if it's an electrolytic.<div class="why">Electrolytics have even more inductance.</div></li>
+      <li>The capacitor uses up the voltage, so the current has to peak to make up for it.<div class="why">A capacitor doesn't destroy voltage. Current and voltage are two views of the same arrow, taken a quarter turn apart.</div></li>
+      <li>Charge piles up only at the peak, so the current is largest there.<div class="why">The peak is where the voltage has stopped changing, so charge has stopped arriving. The current is zero at the peak, not largest.</div></li>
+      <li data-correct>Current is \(C\) times the slope of the voltage. A sine is steepest as it crosses zero and flat at its peak, so the current peaks a quarter cycle before the voltage does.<div class="why">The quarter-cycle lead is the delay between "steepest" and "tallest" on a sine. Reactance is that fact written as a ratio of peaks.</div></li>
+      <li>It only happens at one special frequency, the cutoff.<div class="why">The shape is the same at every frequency. Frequency changes how large the current is for a given voltage, not where in the cycle the peak sits.</div></li>
     </ol>
-    <div class="solution"><p>A chip's current bursts have most of their energy at tens to hundreds of megahertz, above the self-resonant frequency of both capacitors. There, each behaves as a small inductor: its ESL plus the trace and vias to the pin. The 1206 has more ESL than the 0402, so it does slightly worse on fast edges, despite its hundred times larger value. The 10 µF is still useful, for slower demands, alongside the 100 nF, not instead of it. Module 3's time-domain figure shows the same comparison as a deeper dip; this section is the frequency reason.</p></div>
+    <div class="solution"><p>Watch the voltage arrow. When it lies flat, its whole tip-speed is vertical, so the voltage is changing as fast as it ever does, and \(i = C\,dv/dt\) is at its peak. A quarter turn later the arrow is straight up: the voltage is at its peak and, for that instant, not changing, so the current is zero. The current waveform is the same sine, a quarter cycle earlier.</p></div>
     </div>
   </div>
 </details>
+</section>
+
+<!-- ================= 3 REACTANCE ================= -->
+<section class="sec" id="reactance" data-short="Reactance">
+<h2>Reactance from the slope of a sine <a class="vjump" data-t="6:30"></a></h2>
+<p>Resistance is the ratio of voltage to current, and for a resistor the two are in step. A capacitor and an inductor still have a ratio of peaks, but the peaks don't line up. That ratio is the <strong>reactance</strong>. The sign we attach to it records which waveform is late.</p>
+<h3>An inductor</h3>
+<p>Let the current be a sine of peak \(I\), the vertical part of an arrow of length \(I\). The arrow's tip travels a circle of circumference \(2\pi I\) once per cycle, so the tip moves at \(2\pi f I = \omega I\). At the moment the arrow lies flat, that whole speed is vertical: the current is changing at \(\omega I\), the fastest it gets. A quarter cycle later the arrow is straight up, the current is at its peak, and for that instant it isn't changing at all.</p>
+<p>The inductor's law is \(v = L\,di/dt\). The voltage is therefore largest exactly when the current is changing fastest, which is when the current itself is zero, and the voltage is zero when the current is at its peak. The voltage is the same sine, a quarter cycle <em>earlier</em>, with peak \(L\omega I\). The ratio of the two peaks is</p>
+<div class="eq">$$X_L = \omega L = 2\pi f L$$<div class="n">ohms; the current lags the voltage by a quarter of a cycle</div></div>
+<p>A larger \(L\), or a faster spin, means a steeper current for the same arrow and so a larger voltage. For a fixed voltage the current has to get smaller. An inductor passes less current as the frequency goes up, and it passes DC as if it were a wire: a steady current has no slope, so it takes no voltage.</p>
+<h3>A capacitor</h3>
+<p>Swap the roles. A voltage sine of peak \(V\) has its steepest slope \(\omega V\), and \(i = C\,dv/dt\) says the current's peak is \(C\omega V\). The current is largest when the voltage crosses zero, so the current <em>leads</em> by a quarter cycle. The ratio of voltage peak to current peak is \(1/(\omega C)\). We write it negative:</p>
+<div class="eq">$$X_C = -\frac{1}{\omega C} = -\frac{1}{2\pi f C}$$<div class="n">the size is \(1/(\omega C)\); the minus sign means the current is early</div></div>
+<p>The minus sign is a bookkeeping choice that the next section makes precise. Positive reactance means the current is late, which is an inductor. Negative reactance means the current is early, which is a capacitor. The size is what sets the current: a bigger capacitor, or a higher frequency, gives a larger current for the same voltage. At DC the slope is zero, the current is zero, and a capacitor is an open circuit, as Module 3 already had for settled DC.</p>
+
+<div class="example">
+  <span class="xk">Worked example</span>
+  <p>A 100 nF capacitor at 1 kHz. \(\omega = 2\pi \times 1000\), so</p>
+  <p>\(|X_C| = 1/(2\pi \times 1000 \times 100\times 10^{-9}) = 1.59\,\text{kΩ}\).</p>
+  <p>A 10 mH inductor at the same frequency: \(X_L = 2\pi \times 1000 \times 0.010 = 62.8\,\Omega\). Ten times the frequency makes the capacitor's reactance ten times smaller and the inductor's ten times larger. That opposite slope, against frequency, is the whole of the next figure.</p>
+</div>
+
+<details class="exercise">
+  <summary><span class="ek">Check your understanding</span><span class="et">Doubling the frequency</span></summary>
+  <div class="eb">
+    <p>An inductor is across a sine-wave voltage source. You double the frequency and leave the voltage peak alone.</p>
+    <div class="choice"><p>What happens to the current, and why?</p>
+    <ol class="opts">
+      <li>It doubles, because a higher frequency pushes charge through faster.<div class="why">Frequency here is how fast the current has to change, not a second source of push. A steeper demanded slope takes more voltage, so a fixed voltage allows less current.</div></li>
+      <li>Nothing. Reactance is a property of the inductor, like its resistance.<div class="why">The inductance is a property of the part. The reactance is that inductance times how fast the current is changing, and that just changed.</div></li>
+      <li data-correct>It halves. The same current change now has to happen in half the time, so the slope doubles, and \(v = L\,di/dt\) at a fixed voltage allows only half the current.<div class="why">\(X_L = 2\pi f L\) is that sentence as a ratio. Twice \(f\), twice \(X_L\), half the current.</div></li>
+      <li>It falls to a quarter, because both the slope and the number of cycles doubled.<div class="why">The peak slope of a sine is \(\omega\) times the peak, one factor of frequency, not two. Power would bring in a square. Current does not.</div></li>
+    </ol>
+    <div class="solution"><p>The arrow spins twice as fast, so at the flat position its tip is moving twice as fast and \(di/dt\) is twice as large for the same current. The inductor's voltage is \(L\) times that slope. Holding the voltage fixed means the current peak has to halve. A capacitor does the opposite: twice the frequency, twice the current, because the voltage's slope doubled and \(i = C\,dv/dt\).</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 4 IMPEDANCE ================= -->
+<section class="sec" id="impedance" data-short="Impedance">
+<h2>How much current, and how late <a class="vjump" data-t="11:00"></a></h2>
+<p>A resistor and a reactance in series each have a voltage, and the two voltages don't peak together. The resistor's voltage is in step with the current. The reactance's voltage is a quarter cycle early or late. Adding them as ordinary numbers would be like adding a northwards displacement to an eastwards one and calling it the distance walked. You add them as arrows: one along the current, of length \(IR\), and one at right angles, of length \(I|X|\). The total arrow has length \(I\sqrt{R^2 + X^2}\) and sits at an angle \(\arctan(X/R)\) from the current.</p>
+<p>That pair, a size and an angle, is the <strong>impedance</strong>. Writing the right-angle part with a \(j\) is shorthand for "a quarter turn ahead":</p>
+<div class="eq">$$Z = R + jX \qquad |Z| = \sqrt{R^2 + X^2}$$<div class="n">\(|Z|\) is volts per amp. The angle of \(Z\) is how late the current is.</div></div>
+<p>Take the voltage as the reference arrow. Then \(|I| = |V|/|Z|\), and the current sits at minus the angle of \(Z\). A positive angle, an inductor, means the current is late. A negative angle, a capacitor, means the current is early. \(j\) itself is a quarter-cycle lead; a minus sign in front of it is a quarter-cycle lag. So \(Z\) really does answer the two questions you ask of any two-terminal part: how much current, and how late.</p>
+<p>This is also the shape of the ratios in the RF notes. A reflection coefficient is one voltage arrow divided by another. Dividing arrows gives a magnitude and an angle, the same two numbers a divider gives below. Nothing new has to be invented when that ratio appears.</p>
+
+<div class="widget wide" id="w-z">
+  <div class="wh"><span class="tag">Interactive</span><b>Impedance against frequency, including a real capacitor's ESR and ESL</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label>Part</label><div class="seg" id="zP">
+        <button type="button" data-v="r">1 kΩ</button>
+        <button type="button" data-v="l">10 µH</button>
+        <button type="button" data-v="c">100 nF ideal</button>
+        <button type="button" data-v="10n">10 nF 0402</button>
+        <button type="button" data-v="100n">100 nF 0402</button>
+        <button type="button" data-v="10u" class="on">10 µF 1206</button>
+        <button type="button" data-v="100u">100 µF electrolytic</button>
+      </div></div>
+      <div class="ctrl"><label for="zF">Frequency <b id="zFv"></b></label><input id="zF" type="range" min="2" max="9" step="0.01" value="7.699"></div>
+      <p class="small">Real capacitors use the same ESR and ESL as Module 3's decoupling figure: 10 µF in a 1206 is 5 mΩ and 1 nH. The dashed curve is the ideal capacitance alone.</p>
+    </div>
+    <div>
+      <canvas id="cvZ" style="height:300px" aria-label="Log-log plot of impedance magnitude against frequency, with a marker at the frequency you set"></canvas>
+      <div class="legend"><span style="--c:var(--c1)">impedance</span><span class="dash" style="--c:var(--muted)">ideal capacitor</span></div>
+      <div class="readout">
+        <div class="stat"><div class="k">|Z|</div><div class="v" id="zMag"></div></div>
+        <div class="stat"><div class="k">Current is</div><div class="v" id="zLate"></div></div>
+        <div class="stat"><div class="k">Self-resonance</div><div class="v" id="zSrf"></div></div>
+      </div>
+      <div class="verdict" id="zVerdict"></div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>Stay on the 10 µF part and sweep the frequency. Below about 1.6 MHz the curve falls, like a capacitor. Above it the curve rises, like an inductor. 50 MHz is well up that slope.</li>
+    <li>Switch to the ideal 100 nF. The curve never turns up. Then switch to the 100 nF 0402 and find the bottom of the dip: that is the self-resonant frequency, near 25 MHz.</li>
+    <li>Compare the 100 nF 0402 with the 10 µF 1206 at 50 MHz. The smaller capacitor has the lower impedance, because it has less inductance.</li>
+  </ol></div>
+</div>
+
+<div class="example">
+  <span class="xk">Worked example</span>
+  <p>The 10 µF capacitor at 50 MHz, with the 1 nH and 5 mΩ from the figure.</p>
+  <p>\(|X_C| = 1/(2\pi \times 50\times 10^6 \times 10\times 10^{-6}) = 0.318\,\text{mΩ}\).</p>
+  <p>\(X_L = 2\pi \times 50\times 10^6 \times 1\times 10^{-9} = 0.314\,\Omega\).</p>
+  <p>The net reactance is \(0.314 - 0.000318 = 0.314\,\Omega\), and \(|Z| = \sqrt{(0.005)^2 + (0.314)^2} = 0.314\,\Omega\). The angle is \(\arctan(0.314/0.005) \approx 89^\circ\): the current is almost a quarter cycle late, which is what an inductor does. The ideal formula was not wrong about the capacitance. It left out the inductance that is in series with it.</p>
+</div>
+
+<div class="note myth">
+  <span class="ni">!</span>
+  <div><span class="nt">Misconception: "a bigger capacitor is a better short at every frequency"</span>Ideal \(1/(\omega C)\) does keep falling forever. A real capacitor's impedance falls only until its capacitance and its own inductance cancel, and rises after that. Past that frequency a smaller part in a smaller package, with less inductance, can have the lower impedance. Module 3's time-domain figure showed the same 10 µF part losing to a 100 nF placed at the pin. This is the frequency picture of that dip.</div>
+</div>
+
+<details class="exercise">
+  <summary><span class="ek">Check your understanding</span><span class="et">It must be a short, the reactance is 0.3 mΩ</span></summary>
+  <div class="eb">
+    <p>A board review says: at 50 MHz a 10 µF capacitor has \(X_C = 0.32\,\text{mΩ}\), so it shorts 50 MHz to ground and no further decoupling is worth thinking about.</p>
+    <div class="choice"><p>Where does that claim go wrong?</p>
+    <ol class="opts">
+      <li>The arithmetic. \(1/(\omega C)\) at 50 MHz is several ohms, not a fraction of a milliohm.<div class="why">The arithmetic is right. \(1/(2\pi \times 50\,\text{MHz} \times 10\,\mu\text{F})\) really is 0.318 mΩ. The capacitance is not the whole part.</div></li>
+      <li>50 MHz is too low for impedance to matter. Capacitors only misbehave above 1 GHz.<div class="why">This part's inductance already exceeds its capacitance near 1.6 MHz. 50 MHz is about thirty times higher.</div></li>
+      <li data-correct>It treats the capacitor as pure C. The 1 nH of the package has a reactance of 0.314 Ω at 50 MHz, about a thousand times the capacitive reactance, so the series combination is an inductor.<div class="why">The missed mechanism is the ESL in series with the capacitance. Above self-resonance the part's impedance rises with frequency.</div></li>
+      <li>The ESR of 5 mΩ shorts the capacitance, so the reactance formula never applies.<div class="why">5 mΩ is in series, not across the capacitor, and at 50 MHz it is still far smaller than the inductive reactance. It sets the impedance at resonance, not at 50 MHz.</div></li>
+    </ol>
+    <div class="solution"><p>Series impedances add as arrows. At 50 MHz the capacitive arrow is 0.318 mΩ long and the inductive arrow is 0.314 Ω long, in the opposite direction. The inductive arrow is what remains. A claim that uses only \(1/(\omega C)\) is a claim about an ideal capacitor, and this part stopped being one at its self-resonant frequency, near 1.6 MHz.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 5 DIVIDER, dB, BODE ================= -->
+<section class="sec" id="filters" data-short="Filters &amp; Bode">
+<h2>The impedance divider <a class="vjump" data-t="16:00"></a></h2>
+<p>Module 2's divider, \(V_\text{out} = V_\text{in}\, R_2/(R_1+R_2)\), is a ratio of two impedances. Nothing in the derivation required the impedances to be resistors. Replace the lower resistor with a capacitor and the output is</p>
+<div class="eq">$$H = \frac{Z_C}{R + Z_C}$$<div class="n">a magnitude, how much gets through, and an angle, how late it is</div></div>
+<p>At the frequency where \(|X_C| = R\), call it \(f_c\), the two arrows in the denominator are the same length and at right angles, so the denominator is longer than \(R\) by \(\sqrt{2}\). The magnitude is \(1/\sqrt{2} \approx 0.707\), and the angle is \(-45^\circ\): the output peaks an eighth of a cycle after the input. That frequency is</p>
+<div class="eq">$$f_c = \frac{1}{2\pi R C}$$<div class="n">where \(|X_C| = R\); one eighth of a cycle late, and the power at the output has halved</div></div>
+<p>Well below \(f_c\) the capacitor's reactance is much larger than \(R\), the divider ratio is nearly 1, and a low-pass filter lets the signal through. Well above \(f_c\) the reactance is much smaller than \(R\), and the magnitude falls. A decade above \(f_c\), \(f/f_c = 10\), the magnitude is \(1/\sqrt{1+10^2} \approx 0.0995\), close to a factor of ten. Swap the two parts, capacitor on top and resistor to ground, and you have the high-pass: the same \(f_c\), with the low frequencies attenuated and the output early instead of late.</p>
+<h3>Decibels</h3>
+<p>A ratio of voltages in decibels is \(20\log_{10}(V_\text{out}/V_\text{in})\). A ratio of powers is \(10\log_{10}(P_\text{out}/P_\text{in})\). The 20 and the 10 are the same rule, because power goes as voltage squared and a square inside a log comes out front as a factor of two: \(10\log_{10}(V^2) = 20\log_{10} V\).</p>
+<p>Halving the power is \(10\log_{10}(1/2) = -3.01\,\text{dB}\). At \(f_c\) the voltage is \(1/\sqrt{2}\), so the power, which follows voltage squared, has halved. That is why \(f_c\) is called the −3 dB frequency even though the voltage has only fallen to 71 %. A factor of ten in voltage is \(20\log_{10}(10) = 20\,\text{dB}\). Doubling a voltage is \(20\log_{10} 2 = 6.02\,\text{dB}\), and four times the power, not a doubling.</p>
+<p>Plot magnitude in dB against frequency on a log scale and the decade of "about a factor of ten" becomes a straight slope of −20 dB per decade, for a filter with one capacitor. Phase goes on the same frequency axis, from near \(0^\circ\) well below \(f_c\) to near \(-90^\circ\) well above it, passing through \(-45^\circ\) at \(f_c\). That pair of curves is a <strong>Bode plot</strong>.</p>
+
+<div class="widget wide" id="w-bode">
+  <div class="wh"><span class="tag">Interactive</span><b>An RC divider: magnitude in dB, and phase</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label>Arrangement</label><div class="seg" id="bM"><button type="button" data-v="lp" class="on">Low-pass</button><button type="button" data-v="hp">High-pass</button></div></div>
+      <div class="ctrl"><label for="bR">R <b id="bRv"></b></label><input id="bR" type="range" min="2.5" max="4.5" step="0.01" value="3.204"></div>
+      <div class="ctrl"><label>C</label><div class="seg" id="bC"><button type="button" data-v="1e-8">10 nF</button><button type="button" data-v="1e-7" class="on">100 nF</button><button type="button" data-v="1e-6">1 µF</button></div></div>
+      <div class="ctrl"><label for="bF">Probe frequency <b id="bFv"></b></label><input id="bF" type="range" min="1" max="5" step="0.01" value="4"></div>
+      <p class="small">The marker is the probe. The dashed line is \(f_c\), and the faint line is −3 dB. Defaults: 1.6 kΩ and 100 nF, so \(f_c\) is 995 Hz.</p>
+    </div>
+    <div>
+      <canvas id="cvBode" style="height:340px" aria-label="Bode plot of an RC filter, magnitude in decibels above and phase in degrees below"></canvas>
+      <div class="legend"><span style="--c:var(--c1)">response</span><span class="dash" style="--c:var(--c2)">cutoff</span></div>
+      <div class="readout">
+        <div class="stat"><div class="k">Cutoff</div><div class="v" id="bFc"></div></div>
+        <div class="stat"><div class="k">Gain at probe</div><div class="v" id="bDb"></div></div>
+        <div class="stat"><div class="k">Phase at probe</div><div class="v" id="bPh"></div></div>
+      </div>
+      <div class="verdict" id="bVerdict"></div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>With the defaults, put the probe on the cutoff (about 1 kHz). Gain is −3 dB and phase is −45°, an eighth of a cycle.</li>
+    <li>Move the probe to 10 kHz, a decade above the cutoff. The gain is about −20 dB: the output is a tenth of the input.</li>
+    <li>Switch to high-pass. The same cutoff, the slope climbs instead of falling, and the phase is positive: the output is early.</li>
+  </ol></div>
+</div>
+
+<div class="example">
+  <span class="xk">Worked example</span>
+  <p>Low-pass, \(R = 1.6\,\text{kΩ}\), \(C = 100\,\text{nF}\).</p>
+  <p>\(f_c = 1/(2\pi \times 1600 \times 100\times 10^{-9}) = 995\,\text{Hz}\). At 995 Hz the output is 0.707 of the input, −3.0 dB, and −45° late. A 995 Hz cycle is 1.006 ms long, so an eighth of it is 126 µs: that is how late the output peak is.</p>
+  <p>At 10 kHz, \(f/f_c = 10.05\), so \(|H| = 1/\sqrt{1 + 10.05^2} = 0.0990\), which is \(20\log_{10}(0.0990) = -20.1\,\text{dB}\). The phase is \(-\arctan(10.05) = -84^\circ\). One decade, one factor of about ten, −20 dB. That is the slope.</p>
+</div>
+
+<details class="exercise">
+  <summary><span class="ek">Check your understanding</span><span class="et">Doubling the voltage is +3 dB</span></summary>
+  <div class="eb">
+    <p>A note says the amplifier doubles the voltage, "so that's +3 dB".</p>
+    <div class="choice"><p>What did the note confuse?</p>
+    <ol class="opts">
+      <li>The sign. A bigger signal is a negative number of decibels.<div class="why">Decibels follow the ratio. A ratio above 1 is positive. The sign isn't the mistake.</div></li>
+      <li data-correct>Power and voltage. +3 dB is a doubling of power, \(10\log_{10} 2\). Voltage uses \(20\log_{10}\), so doubling the voltage is +6 dB, and four times the power.<div class="why">The missed mechanism is \(P = V^2/R\). The square doubles the coefficient in front of the log, so a factor of two in voltage is 6 dB, not 3.</div></li>
+      <li>Nothing. 3 dB means "twice" for either voltage or power.<div class="why">The cutoff is the counterexample sitting on this page: −3 dB is 0.707 in voltage and exactly half in power.</div></li>
+      <li>The base of the log. Decibels use natural logs, so the factor is 2.3 rather than 3.<div class="why">Decibels are defined with \(\log_{10}\). \(10\log_{10} 2\) is 3.01 with no further conversion.</div></li>
+    </ol>
+    <div class="solution"><p>\(10\log_{10} 2 = 3.01\), a doubling of power. Because power is proportional to voltage squared, the same doubling of voltage is \(20\log_{10} 2 = 6.02\,\text{dB}\) and multiplies the power by four. The −3 dB point of the RC filter is the power statement: voltage at \(1/\sqrt{2}\), power at one half.</p></div>
+    </div>
+  </div>
+</details>
+
+<details class="exercise">
+  <summary><span class="ek">Check your understanding</span><span class="et">The capacitor isn't really 100 nF</span></summary>
+  <div class="eb">
+    <p>The low-pass above was designed for a cutoff near 1 kHz with a 100 nF X7R ceramic. Module 3's DC-bias curve says that at the DC voltage across it, the capacitance is about half the nameplate value.</p>
+    <div class="choice"><p>What happens to the filter?</p>
+    <ol class="opts">
+      <li>The cutoff falls to about 500 Hz, because a worse capacitor must pass less signal.<div class="why">Less capacitance is a larger reactance at a given frequency, so the frequency where that reactance equals R moves up, not down.</div></li>
+      <li>Nothing that matters. The cutoff is set by R, and R didn't change.<div class="why">\(f_c = 1/(2\pi RC)\). R and C are symmetric in that product. Halving either one doubles the cutoff.</div></li>
+      <li data-correct>The cutoff rises to about 2 kHz. The assumption that broke is that the capacitor is 100 nF at this voltage. Half the capacitance, twice the frequency where \(|X_C| = R\).<div class="why">Design to the capacitance you actually have at the DC bias, the same way Module 12 says to design to a datasheet's minimum rather than its typical value.</div></li>
+      <li>The slope changes from −20 dB/decade to −10, because half the capacitor does half the filtering.<div class="why">One capacitor still contributes one factor of \(1/f\) above the cutoff, which is −20 dB/decade. Bias moves the corner. It doesn't change the slope.</div></li>
+    </ol>
+    <div class="solution"><p>\(1/(2\pi \times 1600 \times 50\,\text{nF}) = 1.99\,\text{kHz}\). A signal you placed at 1 kHz, expecting it to be the −3 dB point, is now below the corner and comes through at almost full size. The nameplate capacitance was an assumption about the part, and the bias broke it.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 6 SPECTRUM ================= -->
+<section class="sec" id="spectrum" data-short="Spectrum">
+<h2>A fast edge contains many frequencies <a class="vjump" data-t="22:00"></a></h2>
+<p>A sine is one frequency. A square wave is not, and you can see why by building one. Start with a sine at the square wave's frequency. Add a sine at three times that frequency, one third as tall. Add a fifth harmonic, one fifth as tall, and so on, odd numbers only. Each new term steepens the edges and flattens the top. Take the higher terms away and the corners round off. The heights that do this, falling as \(1, 1/3, 1/5, \ldots\), are what add up to a square wave. The picture is the demonstration. There is no integral to evaluate.</p>
+<p>So a fast edge is many frequencies at once, and the faster the edge, the higher those frequencies reach. A practical estimate is \(0.35\) divided by the rise time. A 10 ns edge has content out to about 35 MHz. The 2 ns edges of Module 3's current burst reach about 175 MHz. That is why a decoupling story that starts with \(v = L\,di/dt\) ends up caring about tens and hundreds of megahertz: the burst is full of them. A pure 1 kHz sine of the same height has a gentle slope and none of that high-frequency content. The coupling from a noisy edge into a nearby node follows \(i = C\,dv/dt\), and \(dv/dt\) is large only on the edge.</p>
+
+<div class="widget wide" id="w-harm">
+  <div class="wh"><span class="tag">Interactive</span><b>A square wave built from odd harmonics</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label for="hN">Odd harmonics included <b id="hNv"></b></label><input id="hN" type="range" min="1" max="15" step="1" value="1"></div>
+      <p class="small">The first sine is drawn a little taller than the square wave, by \(4/\pi\), so that the finished sum lands on the square wave rather than inside it. Each later odd harmonic is \(1/n\) as tall as that first one. Harmonics you haven't included yet are shown faint.</p>
+    </div>
+    <div>
+      <canvas id="cvHarm" style="height:300px" aria-label="Partial sum of odd harmonics approaching a square wave, and the size of each harmonic"></canvas>
+      <div class="legend"><span style="--c:var(--c1)">sum</span><span class="dash" style="--c:var(--muted)">square wave</span></div>
+      <div class="verdict" id="hVerdict"></div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>Leave it at one harmonic. A sine cannot have a flat top and a steep edge at the same time.</li>
+    <li>Add the third and the fifth. The top flattens and the edges steepen. The wiggles that remain are the harmonics you haven't added.</li>
+    <li>Take it to 15. The edge is the last thing to settle. A sharp corner is the high-frequency part of the sum.</li>
+  </ol></div>
+</div>
+
+<details class="exercise">
+  <summary><span class="ek">Check your understanding</span><span class="et">Same height, very different coupling</span></summary>
+  <div class="eb">
+    <p>Two signals on a long trace have the same peak voltage. One is a 1 kHz sine. The other is a 1 kHz square wave. A high-impedance node nearby picks up the square wave's edges and barely notices the sine.</p>
+    <div class="choice"><p>Why does the edge couple across when the sine does not?</p>
+    <ol class="opts">
+      <li>The square wave has more voltage. Peak voltage is what \(i = C\,dv/dt\) responds to.<div class="why">The peaks were equal. Current through a capacitance follows the slope of the voltage, and the two slopes are not equal.</div></li>
+      <li>Square waves are at a higher frequency, so the parasitic capacitance has a lower reactance.<div class="why">Both signals repeat at 1 kHz. The square wave additionally contains 3 kHz, 5 kHz and on up. It is those extra frequencies, not a different fundamental, that have the steep slope.</div></li>
+      <li data-correct>The edge is a stack of higher harmonics, so \(dv/dt\) on the edge is far larger than the slope of the sine. Current through the small capacitance between the traces follows that slope.<div class="why">A fast edge contains many frequencies. The coupling mechanism is still \(i = C\,dv/dt\) from Module 3; the edge is where the large \(dv/dt\) is.</div></li>
+      <li>The sine cancels itself over a cycle, and the square wave does not.<div class="why">Both have zero average if they swing equally above and below zero. Cancellation over a cycle says nothing about a current spike that lasts for the length of the edge.</div></li>
+    </ol>
+    <div class="solution"><p>Build the square wave as in the figure and the steep part is made of the high harmonics. Those are missing from the sine, whose steepest slope is only \(\omega\) times its peak. A few picofarads between two traces turn that slope into a current. Slow the edge down, the high harmonics shrink, and the coupled spike shrinks with them.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 7 RMS ================= -->
+<section class="sec" id="rms" data-short="RMS">
+<h2>RMS <a class="vjump" data-t="26:00"></a></h2>
+<p>Power in a resistor is \(v^2/R\) at each instant. A sine is at its peak only for a moment, and it spends time near zero, so it heats the resistor less than a DC voltage equal to its peak. Over a cycle, \(\sin^2\) and \(\cos^2\) are the same shape shifted by a quarter turn, and they add up to 1 at every instant. Each of them therefore averages to \(1/2\). The average of \(v^2\) is \(V_\text{peak}^2/2\), and the steady voltage that would deliver that same average power is</p>
+<div class="eq">$$V_\text{rms} = \frac{V_\text{peak}}{\sqrt{2}}$$<div class="n">for a sine. Average of \(\sin^2\) is \(1/2\), so the equivalent DC voltage is the peak over \(\sqrt{2}\).</div></div>
+<p>A 5 V peak sine has \(V_\text{rms} = 5/\sqrt{2} = 3.54\,\text{V}\). Across 100 Ω it dissipates \(3.54^2/100 = 0.125\,\text{W}\), half of the \(0.25\,\text{W}\) that 5 V DC would dissipate in the same resistor. Resistor ratings, heating, and the power a supply has to provide all follow RMS. A meter on its AC voltage range is built to report RMS for this reason.</p>
+
+<details class="exercise">
+  <summary><span class="ek">Check your understanding</span><span class="et">5 V peak heats like 5 V DC</span></summary>
+  <div class="eb">
+    <p>A 5 V peak sine is put across a 100 Ω resistor rated 1/4 W. The claim is that the resistor is at its limit, because \(5^2/100 = 0.25\,\text{W}\).</p>
+    <div class="choice"><p>What does the claim miss?</p>
+    <ol class="opts">
+      <li>The rating. A 1/4 W resistor may not be run at 1/4 W.<div class="why">The rating is a real limit, but the claim is wrong about the power before it ever gets there. The sine is not dissipating 0.25 W.</div></li>
+      <li>The shape. A sine's average voltage is \(2/\pi\) of its peak, so the power is \((5 \times 2/\pi)^2/100\).<div class="why">Power follows the average of \(v^2\), not the square of the average voltage. The average of a sine that swings both ways is zero, which would imply no heating at all.</div></li>
+      <li data-correct>The average of \(v^2\). A sine is at 5 V only for an instant, and the average of \(\sin^2\) over a cycle is \(1/2\), so the heating matches 3.54 V DC: 0.125 W, half of what the peak suggests.<div class="why">RMS is the DC voltage with the same average of \(v^2\). Using the peak in \(P = V^2/R\) counts the crest as if it lasted the whole cycle.</div></li>
+      <li>Nothing. Peak voltage is what \(P = V^2/R\) asks for, and 0.25 W is right on the rating.<div class="why">\(P = V^2/R\) is an instantaneous statement. Over a cycle you have to average \(v^2\), and that average is half the square of the peak.</div></li>
+    </ol>
+    <div class="solution"><p>\(V_\text{rms} = 5/\sqrt{2} = 3.536\,\text{V}\), and \(P = V_\text{rms}^2/R = 0.125\,\text{W}\). The resistor is at half its rating, not at it. The missed step is replacing the average of the square with the square of the peak.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 8 RESONANCE ================= -->
+<section class="sec" id="resonance" data-short="Resonance">
+<h2>Where L and C cancel <a class="vjump" data-t="28:30"></a></h2>
+<p>Put an inductor and a capacitor in series. The inductor's voltage is a quarter cycle one way from the current, and the capacitor's voltage is a quarter cycle the other way. The two voltage arrows point in opposite directions. At one frequency they are the same length and cancel:</p>
+<div class="eq">$$\omega L = \frac{1}{\omega C} \qquad f_0 = \frac{1}{2\pi\sqrt{LC}}$$<div class="n">below \(f_0\) the pair behaves as a capacitor; above it, as an inductor</div></div>
+<p>What remains at \(f_0\) is whatever resistance is in the loop. Below \(f_0\) the capacitor's reactance is the larger of the two, so the pair behaves as a capacitor. Above \(f_0\) the inductor's reactance is larger and the pair behaves as an inductor. That is the whole of resonance as this module needs it. The sharpness of the dip, the energy stored against the energy lost, and using resonance to match a load are the RF notes' subject, not this one.</p>
+<p>A real capacitor is this circuit. Its capacitance, its ESL and its ESR are already in series inside the package. The frequency where the first two cancel is the <strong>self-resonant frequency</strong>. There the impedance falls to just the ESR, the lowest it ever gets. Above it the ESL wins and the part is an inductor. The mirror image holds for an inductor: the turns of a winding have capacitance between them, and above its self-resonant frequency an inductor behaves as a capacitor.</p>
+<div class="eq">$$f_\text{SRF} = \frac{1}{2\pi\sqrt{L_\text{ESL}\,C}}$$</div>
+<p>For the 10 µF part with 1 nH of ESL, \(f_\text{SRF} = 1/(2\pi\sqrt{10^{-9}\times 10^{-5}}) = 1.59\,\text{MHz}\). At 50 MHz, about thirty times higher, the inductive reactance is 0.314 Ω and the capacitive reactance is 0.318 mΩ. That is the opening question, answered: the capacitor stopped being a capacitor at 1.59 MHz. The 100 nF 0402 from the same Module 3 figure, with 0.4 nH of ESL, resonates near 25.2 MHz. At 50 MHz its impedance is about 0.1 Ω, against about 0.3 Ω for the 10 µF, because 0.4 nH beats 1 nH once both parts are acting as inductors.</p>
+
+<details class="exercise">
+  <summary><span class="ek">Check your understanding</span><span class="et">Swapping in a bigger decoupling capacitor</span></summary>
+  <div class="eb">
+    <p>A chip has a 100 nF 0402 decoupling capacitor right at its power pin. To add more capacitance, someone replaces it with a 10 µF 1206 in the same spot. The chip's current bursts have edges of a few nanoseconds.</p>
+    <div class="choice"><p>Does the supply at the pin get cleaner during those bursts?</p>
+    <ol class="opts">
+      <li>Much cleaner. A hundred times the capacitance has a hundred times less reactance.<div class="why">That is the ideal \(1/(\omega C)\) story, and both of these parts are above their self-resonance at the frequencies in a fast edge. Capacitance is not what limits them there.</div></li>
+      <li data-correct>No better, and probably worse. Above self-resonance both parts act as inductors, and the 1206's 1 nH beats the 0402's 0.4 nH in the wrong direction.<div class="why">For a fast edge the inductance of the part and its connection decides. The 10 µF is still useful for slower demands, alongside the 100 nF, not instead of it.</div></li>
+      <li>Exactly the same, because they sit in the same position.<div class="why">Same position, different package. The ESL went from 0.4 nH to 1 nH, and the self-resonant frequency fell from about 25 MHz to about 1.6 MHz.</div></li>
+      <li>Better, but only if the 10 µF is an electrolytic. Electrolytics are made for bulk decoupling.<div class="why">The electrolytic in Module 3's figure has still more ESL, about 5 nH, and a self-resonance near 200 kHz. It is the worst of the three for a nanosecond edge.</div></li>
+    </ol>
+    <div class="solution"><p>A few-nanosecond edge has content up to a couple of hundred megahertz, on the \(0.35/t_r\) estimate. That is above the self-resonance of both capacitors, so each behaves as its ESL. The 1206 has more of it. Module 3's time-domain figure shows the same comparison as a deeper dip when the 10 µF replaces the 100 nF. The 10 µF still has a job, for the slower current that a 100 nF runs out of charge for. It doesn't replace the small part.</p></div>
+    </div>
+  </div>
+</details>
+
+<details class="exercise">
+  <summary><span class="ek">Check your understanding</span><span class="et">At resonance the capacitor disappears</span></summary>
+  <div class="eb">
+    <p>A colleague looks at the impedance curve, sees it bottom out at the self-resonant frequency, and concludes that at that one frequency the capacitor has cancelled itself and can no longer decouple.</p>
+    <div class="choice"><p>What actually happens at \(f_\text{SRF}\)?</p>
+    <ol class="opts">
+      <li>The impedance is infinite, because two opposite reactances leave an open circuit.<div class="why">Opposite and equal reactances cancel, and what remains is the resistance that was always in series. Cancelling the reactances removes impedance. It doesn't create it.</div></li>
+      <li>Nothing is left to store charge, so the pin is unprotected exactly at that frequency.<div class="why">The capacitance is still there. Its voltage arrow is cancelled by the ESL's voltage arrow, so the outside world sees only the ESR. Charge is still moving in and out of the capacitor.</div></li>
+      <li data-correct>The capacitive and inductive reactances are equal and opposite, so they cancel and the impedance falls to the ESR. That is the lowest impedance the part reaches, which is the best it decouples, not the worst.<div class="why">The failure is above resonance, where the impedance turns up because the ESL dominates. The bottom of the curve is a minimum, not a hole where the part stops existing.</div></li>
+      <li>The ESR and the ESL swap places, so the part becomes a resistor of \(X_L\) ohms.<div class="why">ESR doesn't move with frequency. At resonance the reactances cancel and the resistor is all that is left; its value is the ESR, a few milliohms for this ceramic, not \(X_L\).</div></li>
+    </ol>
+    <div class="solution"><p>Series L and C cancel when their reactances match, and a resistance in that loop is unchanged by the cancellation. On the impedance plot the dip bottoms at the ESR. Decoupling is worst where the curve has climbed again, well above \(f_\text{SRF}\), which is the 50 MHz end of the opening example.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= EXERCISES ================= -->
+<section class="sec" id="exercises" data-nonum data-short="Exercises">
+<h2>Exercises</h2>
+<p>Each one checks a result from the page. The figures above are there to sanity-check the size of an answer before you trust it.</p>
+
+<div class="chal">
+  <div class="ch"><span class="cn">Exercise 1</span><span class="cd">Analysis · ●●○</span><span class="ctitle">The 10 µF capacitor at 50 MHz</span></div>
+  <div class="cbody">
+    <p>Use the 10 µF, 1206 model from Module 3 and from the impedance figure: 10 µF in series with 1.0 nH and 5 mΩ. The frequency is 50 MHz.</p>
+    <div class="given"><b>Given</b>
+      <span>Capacitance</span><span>10 µF</span>
+      <span>ESL</span><span>1.0 nH</span>
+      <span>ESR</span><span>5 mΩ</span>
+      <span>Frequency</span><span>50 MHz</span>
+    </div>
+    <div class="check" data-ans="0.00031831" data-tol="2%" data-unit="Ω"><p>(a) What is the ideal capacitive reactance, as a positive number of ohms? Prefixes work: <code>0.318m</code> is 0.318 mΩ.</p>
+      <div class="miss" data-val="0.002"><p>That's \(1/(fC)\), without the \(2\pi\). A full cycle is \(2\pi\) radians, and \(\omega\) counts radians per second.</p></div>
+      <div class="miss" data-val="3142"><p>That's \(\omega C\), the reciprocal of the reactance. Reactance is volts per amp, \(1/(\omega C)\).</p></div>
+      <div class="hint">\(|X_C| = 1/(2\pi f C)\).</div>
+      <div class="solution"><p>\(2\pi \times 50\times 10^6 \times 10\times 10^{-6} = 3142\), and \(1/3142 = 3.183\times 10^{-4}\,\Omega = 0.318\,\text{mΩ}\).</p></div></div>
+    <div class="check" data-ans="0.31416" data-tol="2%" data-unit="Ω"><p>(b) What is the reactance of the 1.0 nH at 50 MHz?</p>
+      <div class="miss" data-val="0.000318"><p>That's the capacitor's reactance from (a). The inductance uses \(X_L = 2\pi f L\), which grows with frequency.</p></div>
+      <div class="hint">\(X_L = 2\pi f L\).</div>
+      <div class="solution"><p>\(2\pi \times 50\times 10^6 \times 1\times 10^{-9} = 0.314\,\Omega\). About a thousand times (a), so in series the inductance is the part you have to keep.</p></div></div>
+    <div class="check" data-ans="1.5915e6" data-tol="2%" data-unit="Hz"><p>(c) At what frequency do those two reactances cancel?</p>
+      <div class="miss" data-val="5e7"><p>50 MHz is the frequency in the question, not the frequency where the part resonates. At 50 MHz the inductance has already won.</p></div>
+      <div class="miss" data-val="1e7"><p>That's \(1/\sqrt{LC}\), without the \(2\pi\). \(f_0 = 1/(2\pi\sqrt{LC})\).</p></div>
+      <div class="hint">\(f_\text{SRF} = 1/(2\pi\sqrt{L_\text{ESL} C})\).</div>
+      <div class="solution"><p>\(\sqrt{10^{-9}\times 10^{-5}} = 10^{-7}\), and \(1/(2\pi \times 10^{-7}) = 1.592\,\text{MHz}\). Above this the 10 µF part is an inductor.</p></div></div>
+    <details><summary>Discussion</summary><p>The ESR barely moves the magnitude at 50 MHz: \(\sqrt{0.005^2 + 0.314^2}\) is still 0.314 Ω. It matters at the bottom of the dip, where the reactances have cancelled and 5 mΩ is the whole impedance. Designing as if the part were ideal C, all the way to 50 MHz, is the same kind of mistake as designing to a datasheet's typical value (Module 12): the formula describes a part you don't have.</p></details>
+  </div>
+</div>
+
+<div class="chal">
+  <div class="ch"><span class="cn">Exercise 2</span><span class="cd">Analysis · ●●○</span><span class="ctitle">An RC low-pass</span></div>
+  <div class="cbody">
+    <p>A low-pass filter is a 1.6 kΩ resistor in series and a 100 nF capacitor to ground. The source is a sine.</p>
+    <div class="given"><b>Given</b>
+      <span>R</span><span>1.6 kΩ</span>
+      <span>C</span><span>100 nF</span>
+      <span>Probe frequencies</span><span>the cutoff, and 10 kHz</span>
+    </div>
+    <div class="check" data-ans="994.7" data-tol="2%" data-unit="Hz"><p>(a) What is the −3 dB frequency?</p>
+      <div class="miss" data-val="6250"><p>That's \(1/(RC)\), without the \(2\pi\). The cutoff is where \(1/(2\pi f C) = R\).</p></div>
+      <div class="miss" data-val="1592"><p>That's the capacitor's reactance at 1 kHz, in ohms, not a frequency. Set that reactance equal to 1.6 kΩ and solve for \(f\).</p></div>
+      <div class="hint">\(f_c = 1/(2\pi RC)\).</div>
+      <div class="solution"><p>\(RC = 1.6\times 10^{-4}\,\text{s}\), and \(1/(2\pi \times 1.6\times 10^{-4}) = 995\,\text{Hz}\).</p></div></div>
+    <div class="check" data-ans="-20.09" data-tol="0.5" data-unit="dB"><p>(b) What is the gain at 10 kHz, in dB? Include the sign.</p>
+      <div class="miss" data-val="-10"><p>That's \(10\log_{10}\) of the voltage ratio. Voltage uses \(20\log_{10}\). Ten times less voltage is −20 dB; ten times less power would be −10 dB.</p></div>
+      <div class="miss" data-val="-3"><p>−3 dB is the cutoff, near 1 kHz. 10 kHz is about a decade higher, and one decade of a single-capacitor filter is −20 dB.</p></div>
+      <div class="miss" data-val="20.1"><p>The output is smaller than the input, so the gain is negative. +20 dB would be a factor of ten bigger.</p></div>
+      <div class="miss" data-val="-40"><p>−40 dB is two decades, a factor of about 100. 10 kHz is one decade above 1 kHz.</p></div>
+      <div class="hint">\(|H| = 1/\sqrt{1+(f/f_c)^2}\), then \(20\log_{10}|H|\).</div>
+      <div class="solution"><p>\(f/f_c = 10.05\), so \(|H| = 1/\sqrt{1+10.05^2} = 0.0990\), and \(20\log_{10}(0.0990) = -20.1\,\text{dB}\).</p></div></div>
+    <div class="check" data-ans="-45" data-tol="1" data-unit="°"><p>(c) What is the phase at the cutoff, in degrees? Negative means the output is late.</p>
+      <div class="miss" data-val="-90"><p>−90° is the capacitor alone, well above the cutoff, where the resistor has dropped out of the divider. At the cutoff the two impedances are equal and the angle is halfway there.</p></div>
+      <div class="miss" data-val="45"><p>The sign says who is late. In a low-pass the output peaks after the input, so the angle is negative. +45° would be the high-pass at its cutoff.</p></div>
+      <div class="solution"><p>At \(f_c\) the denominator's two arrows are equal and at right angles, so the output sits at −45°: an eighth of a cycle late. On a 995 Hz sine that is about 126 µs.</p></div></div>
+  </div>
+</div>
+
+<div class="chal">
+  <div class="ch"><span class="cn">Exercise 3</span><span class="cd">Analysis · ●○○</span><span class="ctitle">Heating from a sine</span></div>
+  <div class="cbody">
+    <p>A sine of 5 V peak is applied across a 100 Ω resistor.</p>
+    <div class="given"><b>Given</b>
+      <span>Peak voltage</span><span>5 V</span>
+      <span>Resistance</span><span>100 Ω</span>
+    </div>
+    <div class="check" data-ans="3.5355" data-tol="2%" data-unit="V"><p>(a) What is the RMS voltage?</p>
+      <div class="miss" data-val="5"><p>5 V is the peak. The sine is only there for an instant. RMS is the peak divided by \(\sqrt{2}\), because the average of \(\sin^2\) is 1/2.</p></div>
+      <div class="miss" data-val="2.5"><p>Dividing the peak by 2 would be right if the average of \(\sin^2\) were 1/4. It is 1/2, so the factor is \(\sqrt{2}\), not 2.</p></div>
+      <div class="miss" data-val="7.07"><p>That's the peak times \(\sqrt{2}\). RMS is smaller than the peak, not larger. The sine spends time below its peak.</p></div>
+      <div class="hint">\(V_\text{rms} = V_\text{peak}/\sqrt{2}\).</div>
+      <div class="solution"><p>\(5/\sqrt{2} = 3.536\,\text{V}\).</p></div></div>
+    <div class="check" data-ans="0.125" data-tol="2%" data-unit="W"><p>(b) What average power does the resistor dissipate?</p>
+      <div class="miss" data-val="0.25"><p>That's \(V_\text{peak}^2/R\), which counts the crest as if it lasted the whole cycle. Use the RMS voltage. The average of \(\sin^2\) being 1/2 makes this exactly half of 0.25 W.</p></div>
+      <div class="miss" data-val="0.0625"><p>That's \((V_\text{peak}/2)^2/R\). The equivalent DC voltage is \(V_\text{peak}/\sqrt{2}\), not \(V_\text{peak}/2\).</p></div>
+      <div class="hint">\(P = V_\text{rms}^2 / R\).</div>
+      <div class="solution"><p>\(3.536^2 / 100 = 12.5/100 = 0.125\,\text{W}\). A DC 5 V across the same resistor would be 0.25 W.</p></div></div>
+  </div>
+</div>
+
+<div class="chal">
+  <div class="ch"><span class="cn">Exercise 4</span><span class="cd">Analysis · ●●●</span><span class="ctitle">Three resonant frequencies</span></div>
+  <div class="cbody">
+    <p>Each part is \(f_0 = 1/(2\pi\sqrt{LC})\). The first is a discrete inductor and capacitor. The other two are capacitors resonating with their own ESL, the same models as the impedance figure.</p>
+    <div class="given"><b>Given</b>
+      <span>(a)</span><span>10 µH in series with 100 pF</span>
+      <span>(b)</span><span>100 nF 0402, ESL 0.4 nH</span>
+      <span>(c)</span><span>10 µF, but the layout adds inductance until the series L is 10 nH instead of 1 nH</span>
+    </div>
+    <div class="check" data-ans="5.033e6" data-tol="2%" data-unit="Hz"><p>(a) Resonant frequency of 10 µH and 100 pF?</p>
+      <div class="miss" data-val="3.162e7"><p>That's \(1/\sqrt{LC}\), missing the \(2\pi\). A cycle is \(2\pi\) radians.</p></div>
+      <div class="hint">\(f_0 = 1/(2\pi\sqrt{LC})\).</div>
+      <div class="solution"><p>\(\sqrt{10\times 10^{-6}\times 100\times 10^{-12}} = \sqrt{10^{-15}} = 3.162\times 10^{-8}\), and \(1/(2\pi \times 3.162\times 10^{-8}) = 5.03\,\text{MHz}\).</p></div></div>
+    <div class="check" data-ans="2.5165e7" data-tol="2%" data-unit="Hz"><p>(b) Self-resonant frequency of the 100 nF 0402?</p>
+      <div class="miss" data-val="1.592e6"><p>That's the 10 µF, 1 nH part from Exercise 1. This capacitor is a hundred times smaller and its ESL is 0.4 nH, so it resonates much higher.</p></div>
+      <div class="miss" data-val="1.581e8"><p>That's \(1/\sqrt{LC}\) without the \(2\pi\). Divide by \(2\pi\).</p></div>
+      <div class="solution"><p>\(\sqrt{0.4\times 10^{-9}\times 10^{-7}} = \sqrt{4\times 10^{-17}} = 6.325\times 10^{-9}\), and \(1/(2\pi \times 6.325\times 10^{-9}) = 25.2\,\text{MHz}\).</p></div></div>
+    <div class="check" data-ans="5.033e5" data-tol="2%" data-unit="Hz"><p>(c) Self-resonant frequency of the 10 µF once the series inductance is 10 nH?</p>
+      <div class="miss" data-val="1.592e6"><p>That's the 1 nH figure. Inductance grew by 10, and \(f_0\) depends on \(\sqrt{L}\), so it moves, but not by the full factor of 10.</p></div>
+      <div class="miss" data-val="1.592e5"><p>Dividing by 10 treats \(f_0\) as proportional to \(1/L\). The inductance sits under a square root, so the frequency falls by \(\sqrt{10} \approx 3.16\).</p></div>
+      <div class="solution"><p>Ten times the inductance divides the 1.59 MHz result by \(\sqrt{10}\): \(1.592/\sqrt{10} = 0.503\,\text{MHz}\). Extra trace between the capacitor and the pin moves the frequency where the part stops being a capacitor downwards. That is the frequency-domain version of Module 3's "1 cm away" dip.</p></div></div>
+  </div>
+</div>
+</section>
+
+<!-- ================= BENCH ================= -->
+<section class="sec" id="bench" data-nonum data-short="At the bench">
+<h2>At the bench</h2>
+<div class="video" data-video="lab">
+  <div class="plan">
+    <p>Planned lab demo (≈ 15 min, filmed at the bench):</p>
+    <ol>
+      <li>Two-channel measurement of an RC low-pass: amplitude and the eighth-cycle delay</li>
+      <li>Moving the cutoff by swapping the capacitor</li>
+      <li>A square wave and a sine through the same filter</li>
+      <li>A series LC dip near 160 kHz</li>
+    </ol>
+  </div>
+</div>
+<div class="lab">
+  <h3>Filters on the scope</h3>
+  <div class="parts"><span>Oscilloscope with two 10× probes</span><span>Function generator</span><span>1.6 kΩ resistor</span><span>100 nF and 10 µF capacitors</span><span>10 µH inductor</span><span>Breadboard</span></div>
+  <p class="small">Read the oscilloscope section in Module 14 before this lab. Triggering, the 10× setting and the ground clip are assumed below.</p>
+  <ol>
+    <li><b>Write your prediction first.</b> A low-pass of 1.6 kΩ and 100 nF has its cutoff at 995 Hz. At 100 Hz the output should be essentially the input. At 1 kHz the output should be about 0.71 of the input and peak about 125 µs later, an eighth of the 1 ms period. At 10 kHz the output should be about a tenth of the input. Then build it, put the generator on channel 1 and the capacitor on channel 2, and measure all three.</li>
+    <li><b>Write your prediction first.</b> Swap the 100 nF for 10 µF. The cutoff falls by 100, to about 10 Hz, so a 1 kHz sine is two decades above it and the output should drop to about 1 % of the input, near −40 dB. Write that, then measure.</li>
+    <li><b>Write your prediction first.</b> Put the 100 nF back. A 1 kHz square wave should come out with its corners rounded over roughly one time constant, \(RC = 160\,\mu\text{s}\), because the harmonics that sharpen the corner are the ones the filter removes. A 1 kHz sine of the same height should still come out as a sine, at about 0.71 of the input. Write both shapes, then look at both.</li>
+    <li><b>Write your prediction first.</b> Series 10 µH and 100 nF, fed from the generator through the 1.6 kΩ, and measure across the LC pair. They cancel near \(1/(2\pi\sqrt{10\,\mu\text{H}\times 100\,\text{nF}}) = 159\,\text{kHz}\), so the voltage across the pair should dip there and be larger both at 20 kHz and at 1 MHz. Write which frequency you expect the dip at, then sweep.</li>
+  </ol>
+  <div class="record"><b>Comparison.</b> Set what you measured next to what you wrote down. A cutoff within the capacitor's tolerance of 1 kHz, an output near a tenth at 10 kHz, a 10 µF that knocks the 1 kHz sine down by about forty decibels, rounded square-wave corners, and a series-LC dip near 160 kHz, are what the predictions were aiming at. If the phase or the dip is not where you put it, check the probe's 10× setting and which node you are actually on before you change the circuit.</div>
+</div>
+</section>
+
+<!-- ================= SUMMARY ================= -->
+<section class="sec" id="summary" data-nonum data-short="Summary">
+<h2>Summary &amp; cheat sheet</h2>
+<ol class="takeaways">
+  <li>A sine is the vertical part of a spinning arrow. Phase is a delay in fractions of a cycle: 90° is a quarter period, 45° is an eighth.</li>
+  <li>A sine's steepest slope is \(\omega\) times its peak, and the slope is zero at the peak. That one fact, with \(v = L\,di/dt\) and \(i = C\,dv/dt\), gives both reactances and both quarter-cycle shifts.</li>
+  <li>\(X_L = \omega L\), and the current is a quarter cycle late. \(X_C = -1/(\omega C)\), and the current is a quarter cycle early. The sign says who is late.</li>
+  <li>\(Z = R + jX\) answers how much current (\(|I| = |V|/|Z|\)) and how late (the angle of \(Z\)).</li>
+  <li>An RC divider has magnitude and angle. \(f_c = 1/(2\pi RC)\) is the −3 dB point: voltage at 0.707, power halved, phase ±45°. One decade away is about −20 dB for a single capacitor.</li>
+  <li>Decibels: \(20\log_{10}\) for voltage, \(10\log_{10}\) for power. Doubling a voltage is +6 dB. Doubling a power is +3 dB.</li>
+  <li>A fast edge is many odd harmonics at once. Faster edges reach higher frequencies; \(0.35/t_r\) is a practical estimate.</li>
+  <li>For a sine, \(V_\text{rms} = V_\text{peak}/\sqrt{2}\), because the average of \(\sin^2\) is 1/2. Heating follows RMS.</li>
+  <li>Series L and C cancel at \(f_0 = 1/(2\pi\sqrt{LC})\). A capacitor's self-resonance is that cancellation between C and its ESL, and above it the part is an inductor.</li>
+</ol>
+<div class="cheat">
+  <div><b>Sine</b>\(v = V_\text{peak}\sin(2\pi f t)\)<br><span class="small">\(\omega = 2\pi f\); 90° = a quarter cycle</span></div>
+  <div><b>Reactance</b>\(X_L = \omega L\)<br>\(X_C = -1/(\omega C)\)</div>
+  <div><b>Impedance</b>\(Z = R + jX\)<br>\(|Z| = \sqrt{R^2+X^2}\)</div>
+  <div><b>Who is late</b>+X: current lags<br>−X: current leads</div>
+  <div><b>RC filter</b>\(f_c = 1/(2\pi RC)\)<br><span class="small">−3 dB, ±45°, then −20 dB/decade</span></div>
+  <div><b>Decibels</b>\(20\log_{10}(V_2/V_1)\)<br><span class="small">power: \(10\log_{10}\). ×2 in V is +6 dB</span></div>
+  <div><b>RMS, sine</b>\(V_\text{rms} = V_\text{peak}/\sqrt{2}\)<br><span class="small">\(P = V_\text{rms}^2/R\)</span></div>
+  <div><b>Resonance</b>\(f_0 = 1/(2\pi\sqrt{LC})\)<br><span class="small">a capacitor's SRF uses its ESL</span></div>
+</div>
+<h3>Further reading</h3>
+<ul class="small">
+  <li><em>The Art of Electronics</em> (Horowitz &amp; Hill), chapter 1.7: RC filters, frequency response and decibels, which is this module's divider and Bode plot in their language.</li>
+  <li><em>Practical Electronics for Inventors</em> (Scherz &amp; Monk), chapter 2: AC, reactance, impedance and resonance, with worked numbers alongside the argument.</li>
+</ul>
 </section>
 
 <nav class="pager"></nav>
 </main>
 </div>
 <footer class="site">Hardware Engineering Fundamentals · EE Fundamentals</footer>
+<script>
+'use strict';
+const $ = s => document.querySelector(s);
+const {col, si, fmt} = Plot;
+function seg(id, cb){
+  const el = $(id);
+  el.addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    el.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
+    cb();
+  });
+  return () => el.querySelector('button.on').dataset.v;
+}
+function setVerdict(el, cls, html){ el.className = 'verdict ' + cls; el.innerHTML = html; }
+function deg(rad){ return rad * 180 / Math.PI; }
+
+/* ============ 1. Phasor: a slowed-down spinning arrow ============ */
+(() => {
+  const lagEl = $('#phLag');
+  lagEl.addEventListener('input', () => {});
+  Plot.animate($('#cvPh'), (ctx, W, H, t) => {
+    const lagDeg = +lagEl.value;
+    const turns = lagDeg / 360;
+    const cyc = (t * 0.2) % 1;
+    const th = cyc * 2 * Math.PI;
+    const lagR = lagDeg * Math.PI / 180;
+    $('#phLagv').textContent = (lagDeg > 0 ? '+' : '') + lagDeg + '°';
+    const absT = Math.abs(turns);
+    const cycTxt = absT.toFixed(3).replace(/0+$/, '').replace(/\.$/, '');
+    const word = Math.abs(lagDeg) < 3 ? 'in step' : (lagDeg > 0 ? cycTxt + ' cycle late' : cycTxt + ' cycle early');
+    $('#phTurns').textContent = word;
+    const us = Math.abs(turns) * 1000;
+    $('#phUs').textContent = Math.abs(lagDeg) < 3 ? '0 µs' : fmt(us, 2) + ' µs';
+    const vEl = $('#phVerdict');
+    if (Math.abs(lagDeg) < 8) setVerdict(vEl, 'ok', '<b>In step.</b> A resistor. The current peaks when the voltage peaks.');
+    else if (Math.abs(Math.abs(lagDeg) - 90) < 8) setVerdict(vEl, lagDeg > 0 ? 'warn' : 'ok', lagDeg > 0
+      ? '<b>A quarter cycle late.</b> An inductor: the voltage peaks, and the current is still crossing zero.'
+      : '<b>A quarter cycle early.</b> A capacitor: the current peaks as the voltage crosses zero.');
+    else if (Math.abs(Math.abs(lagDeg) - 180) < 8) setVerdict(vEl, 'bad', '<b>Half a cycle.</b> The current is upside down relative to the voltage. A single L or C only manages a quarter cycle; half a cycle takes both, or an inverting stage.');
+    else setVerdict(vEl, 'ok', `<b>${word}.</b> ${fmt(Math.abs(lagDeg), 3)}° is ${cycTxt} of a cycle. At 1 kHz the period is 1 ms, so this delay is ${fmt(us, 2)} µs.`);
+
+    const stacked = W < 520;
+    const cx = stacked ? W/2 : Math.min(130, W*0.28);
+    const cy = stacked ? 108 : H/2 - 6;
+    const rad = Math.min(86, (stacked ? Math.min(W, 220) : 240)/2 - 24);
+    ctx.strokeStyle = col.line2; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.arc(cx, cy, rad, 0, 2*Math.PI); ctx.stroke();
+    Plot.line(ctx, [[cx - rad, cy], [cx + rad, cy]], col.line, 1);
+    Plot.line(ctx, [[cx, cy - rad], [cx, cy + rad]], col.line, 1);
+    const tip = (ang, r) => [cx + r*Math.cos(ang), cy - r*Math.sin(ang)];
+    const [vx, vy] = tip(th, rad);
+    const [ix, iy] = tip(th - lagR, rad * 0.72);
+    Plot.arrow(ctx, cx, cy, vx, vy, col.c1, 2.2);
+    Plot.arrow(ctx, cx, cy, ix, iy, col.c2, 2);
+    Plot.dot(ctx, vx, vy, 3.5, col.c1);
+    Plot.dot(ctx, ix, iy, 3.5, col.c2);
+    Plot.text(ctx, 'V', vx + 8, vy - 8, {color: col.c1});
+    Plot.text(ctx, 'I', ix + 8, iy + 8, {color: col.c2});
+
+    const P = stacked
+      ? {l: 32, r: W - 10, t: cy + rad + 28, b: H - 22}
+      : {l: Math.max(cx + rad + 36, W*0.46), r: W - 12, t: 16, b: H - 36};
+    if (P.b - P.t < 40 || P.r - P.l < 40) return;
+    const X = Plot.lin(0, 1, P.l, P.r), Y = Plot.lin(-1.35, 1.35, P.b, P.t);
+    Plot.axes(ctx, P, X, Y, {xt: [0, 0.25, 0.5, 0.75, 1], yt: [-1, 0, 1], xl: 'cycles', yl: '', xf: q => fmt(q, 2), yf: q => fmt(q, 2)});
+    const pts = (shift, n) => {
+      const a = [];
+      for (let i = 0; i <= n; i++){
+        const x = i/n;
+        a.push([X(x), Y(Math.sin(2*Math.PI*x - shift))]);
+      }
+      return a;
+    };
+    Plot.clip(ctx, P);
+    Plot.line(ctx, pts(0, 180), col.c1, 2);
+    Plot.line(ctx, pts(lagR, 180), col.c2, 2);
+    ctx.restore();
+    const xI = (cyc - turns) % 1;
+    const xIn = xI < 0 ? xI + 1 : xI;
+    Plot.dot(ctx, X(cyc), Y(Math.sin(th)), 4, col.c1);
+    Plot.dot(ctx, X(xIn), Y(Math.sin(2*Math.PI*xIn - lagR)), 4, col.c2);
+  });
+})();
+
+/* ============ 2. Impedance vs frequency ============ */
+(() => {
+  // Same ESR/ESL models as Module 3's decoupling figure.
+  const PARTS = {
+    r:    {name:'1 kΩ', kind:'R', R:1000},
+    l:    {name:'10 µH', kind:'L', L:10e-6},
+    c:    {name:'100 nF ideal', kind:'C', C:1e-7},
+    '10n':  {name:'10 nF 0402', kind:'real', C:1e-8, r:0.05, l:0.4e-9},
+    '100n': {name:'100 nF 0402', kind:'real', C:1e-7, r:0.03, l:0.4e-9},
+    '10u':  {name:'10 µF 1206', kind:'real', C:1e-5, r:0.005, l:1e-9},
+    '100u': {name:'100 µF electrolytic', kind:'real', C:1e-4, r:0.15, l:5e-9}
+  };
+  const partSel = seg('#zP', upd);
+  const FMIN = 100, FMAX = 1e9, ZMIN = 1e-3, ZMAX = 1e6;
+  let s = {};
+  function zOf(p, f){
+    const w = 2*Math.PI*f;
+    if (p.kind === 'R') return {R:p.R, X:0, srf:null, xc:null};
+    if (p.kind === 'L') return {R:0, X:w*p.L, srf:null, xc:null};
+    if (p.kind === 'C') return {R:0, X:-1/(w*p.C), srf:null, xc:1/(w*p.C)};
+    const xc = 1/(w*p.C), xl = w*p.l;
+    return {R:p.r, X:xl - xc, srf:1/(2*Math.PI*Math.sqrt(p.l*p.C)), xc};
+  }
+  function upd(){
+    const p = PARTS[partSel()], f = Math.pow(10, +$('#zF').value);
+    const z = zOf(p, f);
+    const mag = Math.hypot(z.R, z.X);
+    const ang = Math.atan2(z.X, Math.max(z.R, 1e-15));
+    s = {p, f, z, mag, ang};
+    $('#zFv').textContent = si(f, 'Hz');
+    $('#zMag').textContent = si(mag, 'Ω');
+    const cyc = ang/(2*Math.PI);
+    $('#zLate').textContent = Math.abs(deg(ang)) < 5 ? 'in step' : (cyc > 0 ? fmt(cyc, 2) + ' cyc late' : fmt(-cyc, 2) + ' cyc early');
+    $('#zSrf').textContent = z.srf ? si(z.srf, 'Hz') : '—';
+    const v = $('#zVerdict');
+    if (p.kind === 'R') setVerdict(v, 'ok', `<b>A resistor.</b> ${si(mag, 'Ω')} at every frequency, and the current is in step with the voltage.`);
+    else if (p.kind === 'L') setVerdict(v, 'warn', `<b>An inductor.</b> ${si(mag, 'Ω')} and rising. The current is a quarter cycle late.`);
+    else if (p.kind === 'C') setVerdict(v, 'ok', `<b>An ideal capacitor.</b> ${si(mag, 'Ω')} and still falling. The current is a quarter cycle early. A real part turns up once its ESL wins.`);
+    else if (f < z.srf/3) setVerdict(v, 'ok', `<b>Still a capacitor.</b> ${si(mag, 'Ω')}, and the curve is still falling. Self-resonance is at ${si(z.srf, 'Hz')}.`);
+    else if (f < z.srf*3) setVerdict(v, 'warn', `<b>Near self-resonance.</b> The capacitive and inductive reactances are cancelling. The impedance bottoms near the ESR, ${si(p.r, 'Ω')}, at ${si(z.srf, 'Hz')}.`);
+    else setVerdict(v, 'bad', `<b>An inductor now.</b> ${si(mag, 'Ω')} and rising. Above ${si(z.srf, 'Hz')} the ESL dominates, and more capacitance would not bring this impedance down.`);
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvZ'), (ctx, W, H) => {
+    const {p, f, z, mag} = s; if (!p) return;
+    const P = {l: 52, r: W - 14, t: 14, b: H - 36};
+    const X = Plot.log(FMIN, FMAX, P.l, P.r), Y = Plot.log(ZMIN, ZMAX, P.b, P.t);
+    const xt = Plot.logTicks(FMIN, FMAX).filter((_, i) => W > 520 || i % 2 === 0);
+    Plot.axes(ctx, P, X, Y, {xt, yt: Plot.logTicks(ZMIN, ZMAX), xl: 'frequency', yl: 'ohms', xf: t => si(t, 'Hz').replace(' ', ''), yf: t => si(t, 'Ω').replace(' ', ''), xgrid: true});
+    const curve = (fn) => {
+      const pts = [];
+      for (let i = 0; i <= 160; i++){
+        const fq = Math.pow(10, Math.log10(FMIN) + (Math.log10(FMAX)-Math.log10(FMIN))*i/160);
+        const m = fn(fq);
+        if (m > 0) pts.push([X(fq), Y(m)]);
+      }
+      return pts;
+    };
+    Plot.clip(ctx, P);
+    if (z.xc != null && p.kind === 'real') Plot.line(ctx, curve(fq => 1/(2*Math.PI*fq*p.C)), col.muted, 1.4, [5, 4]);
+    Plot.line(ctx, curve(fq => { const u = zOf(p, fq); return Math.hypot(u.R, u.X); }), col.c1, 2.2);
+    if (z.srf && z.srf > FMIN && z.srf < FMAX) Plot.line(ctx, [[X(z.srf), P.t], [X(z.srf), P.b]], col.c2, 1, [4, 3]);
+    ctx.restore();
+    if (f >= FMIN && f <= FMAX) Plot.dot(ctx, X(f), Y(Math.min(Math.max(mag, ZMIN), ZMAX)), 5, col.c1);
+  });
+  $('#zF').addEventListener('input', upd);
+  upd();
+})();
+
+/* ============ 3. RC Bode plot ============ */
+(() => {
+  const mode = seg('#bM', upd), cap = seg('#bC', upd);
+  const FMIN = 10, FMAX = 1e5;
+  let s = {};
+  function resp(f, R, C, hp){
+    const ratio = 2*Math.PI*f*R*C;
+    const den = Math.sqrt(1 + ratio*ratio);
+    const mag = hp ? ratio/den : 1/den;
+    const ph = hp ? Math.atan2(1, ratio) : -Math.atan(ratio);
+    return {mag, ph, db: 20*Math.log10(Math.max(mag, 1e-8))};
+  }
+  function upd(){
+    const R = Math.pow(10, +$('#bR').value), C = +cap(), hp = mode() === 'hp';
+    const f = Math.pow(10, +$('#bF').value);
+    const fc = 1/(2*Math.PI*R*C);
+    const y = resp(f, R, C, hp);
+    s = {R, C, hp, f, fc, y};
+    $('#bRv').textContent = si(R, 'Ω');
+    $('#bFv').textContent = si(f, 'Hz');
+    $('#bFc').textContent = si(fc, 'Hz');
+    $('#bDb').textContent = fmt(y.db, 3) + ' dB';
+    $('#bPh').textContent = fmt(deg(y.ph), 3) + '°';
+    const where = f < fc/3 ? 'well below the cutoff' : f > fc*3 ? 'well above the cutoff' : 'near the cutoff';
+    const v = $('#bVerdict');
+    if (hp) setVerdict(v, 'ok', `<b>High-pass, ${where}.</b> Output is ${fmt(y.mag, 3)} of the input, ${fmt(deg(y.ph), 3)}° early. The cutoff is ${si(fc, 'Hz')}.`);
+    else setVerdict(v, Math.abs(y.db) > 20 ? 'warn' : 'ok', `<b>Low-pass, ${where}.</b> Output is ${fmt(y.mag, 3)} of the input, ${fmt(-deg(y.ph), 3)}° late. The cutoff is ${si(fc, 'Hz')}.`);
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvBode'), (ctx, W, H) => {
+    const {R, C, hp, f, fc, y} = s; if (!R) return;
+    const gap = 28;
+    const top = {l: 46, r: W - 12, t: 12, b: H*0.46};
+    const bot = {l: 46, r: W - 12, t: H*0.46 + gap, b: H - 36};
+    const X = Plot.log(FMIN, FMAX, top.l, top.r);
+    const Ym = Plot.lin(-40, 5, top.b, top.t);
+    const Yp = Plot.lin(-90, 90, bot.b, bot.t);
+    const xt = Plot.logTicks(FMIN, FMAX);
+    Plot.axes(ctx, top, X, Ym, {xt: [], yt: [-40, -20, -3, 0], yl: 'dB', yf: t => fmt(t, 2)});
+    Plot.axes(ctx, bot, X, Yp, {xt, yt: [-90, -45, 0, 45, 90], xl: 'frequency', yl: 'deg', xf: t => si(t, 'Hz').replace(' ', ''), yf: t => fmt(t, 2), xgrid: true});
+    const n = 160;
+    const magPts = [], phPts = [];
+    for (let i = 0; i <= n; i++){
+      const fq = Math.pow(10, Math.log10(FMIN) + (Math.log10(FMAX)-Math.log10(FMIN))*i/n);
+      const r = resp(fq, R, C, hp);
+      magPts.push([X(fq), Ym(Math.max(-40, Math.min(5, r.db)))]);
+      phPts.push([X(fq), Yp(deg(r.ph))]);
+    }
+    const drawFc = (P) => { if (fc > FMIN && fc < FMAX) Plot.line(ctx, [[X(fc), P.t], [X(fc), P.b]], col.c2, 1, [4, 3]); };
+    Plot.clip(ctx, top);
+    Plot.line(ctx, [[top.l, Ym(-3)], [top.r, Ym(-3)]], col.line2, 1, [3, 3]);
+    drawFc(top);
+    Plot.line(ctx, magPts, col.c1, 2.2);
+    ctx.restore();
+    Plot.clip(ctx, bot);
+    Plot.line(ctx, [[bot.l, Yp(0)], [bot.r, Yp(0)]], col.line, 1);
+    drawFc(bot);
+    Plot.line(ctx, phPts, col.c1, 2.2);
+    ctx.restore();
+    if (f >= FMIN && f <= FMAX){
+      Plot.dot(ctx, X(f), Ym(Math.max(-40, Math.min(5, y.db))), 4.5, col.c1);
+      Plot.dot(ctx, X(f), Yp(deg(y.ph)), 4.5, col.c1);
+    }
+  });
+  $('#bR').addEventListener('input', upd);
+  $('#bF').addEventListener('input', upd);
+  upd();
+})();
+
+/* ============ 4. Square wave from odd harmonics ============ */
+(() => {
+  const nEl = $('#hN');
+  let s = {n:1};
+  function upd(){
+    const n = +nEl.value;
+    s = {n};
+    $('#hNv').textContent = String(n);
+    const v = $('#hVerdict');
+    if (n === 1) setVerdict(v, 'warn', '<b>One frequency.</b> A sine has a round top and a gentle slope. The square wave drawn faintly is the shape the later harmonics are needed for.');
+    else if (n < 6) setVerdict(v, 'ok', `<b>${n} odd harmonics.</b> The top is flattening and the edges are steepening. The remaining ripple is the harmonics not included yet.`);
+    else setVerdict(v, 'ok', `<b>${n} odd harmonics.</b> The top is close to flat. The edge is still the part being built: a sharp corner is the high-frequency end of the sum.`);
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvHarm'), (ctx, W, H) => {
+    const {n} = s; if (!n) return;
+    const stacked = W < 480;
+    const P = stacked
+      ? {l: 36, r: W - 12, t: 12, b: H*0.52}
+      : {l: 36, r: W*0.62, t: 12, b: H - 36};
+    const X = Plot.lin(0, 1, P.l, P.r), Y = Plot.lin(-1.45, 1.45, P.b, P.t);
+    Plot.axes(ctx, P, X, Y, {xt:[0, 0.5, 1], yt:[-1, 0, 1], xl: stacked ? '' : 'cycles', yf:t => fmt(t, 2), xf:t => fmt(t, 2)});
+    const sq = [], sum = [];
+    for (let i = 0; i <= 240; i++){
+      const x = i/240;
+      const sqv = Math.sin(2*Math.PI*x) >= 0 ? 1 : -1;
+      let y = 0;
+      for (let k = 0; k < n; k++){
+        const h = 2*k + 1;
+        y += Math.sin(2*Math.PI*h*x)/h;
+      }
+      y *= 4/Math.PI;
+      sq.push([X(x), Y(sqv)]);
+      sum.push([X(x), Y(Math.max(-1.4, Math.min(1.4, y)))]);
+    }
+    Plot.clip(ctx, P);
+    Plot.line(ctx, sq, col.muted, 1.3, [5, 4]);
+    Plot.line(ctx, sum, col.c1, 2.2);
+    ctx.restore();
+    const B = stacked
+      ? {l: 36, r: W - 12, t: H*0.52 + 22, b: H - 8}
+      : {l: W*0.62 + 28, r: W - 12, t: 12, b: H - 36};
+    if (B.b - B.t < 30 || B.r - B.l < 30) return;
+    const nShow = 15;
+    const Xb = Plot.lin(0.5, nShow + 0.5, B.l, B.r);
+    Plot.line(ctx, [[B.l, B.b], [B.r, B.b]], col.line2, 1);
+    for (let k = 0; k < nShow; k++){
+      const h = 2*k + 1;
+      const x0 = Xb(h) - Math.min(8, (B.r-B.l)/nShow*0.35);
+      const bw = Math.min(16, (B.r-B.l)/nShow*0.7);
+      const bh = (1/h) / 1.15 * (B.b - B.t);
+      ctx.fillStyle = k < n ? col.c1 : col.line;
+      ctx.fillRect(x0, B.b - bh, bw, bh);
+    }
+    Plot.text(ctx, 'harmonic', (B.l+B.r)/2, B.t + 8, {align:'center', color: col.muted});
+  });
+  nEl.addEventListener('input', upd);
+  upd();
+})();
+</script>
 </body>
 </html>

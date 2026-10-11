@@ -26,7 +26,7 @@ Kirchhoff's laws · series and parallel · the voltage divider (battery-voltage 
 Storing energy in fields · RC and RL time constants · charging, discharging, and inrush current · inductive kickback, and why a solenoid valve's coil needs a flyback diode · real capacitors: ESR, ESL, DC-bias derating, tolerance · real inductors: DCR, saturation and current ratings · decoupling capacitors in the time domain
 
 **[Module 4: AC Signals & Frequency Response](04_AC_and_Frequency/)**
-Sinusoids, amplitude, frequency, phase · RMS · impedance of R, L and C · a capacitor's self-resonance · RC low-pass and high-pass filters · Bode plots and decibels · resonance · *the bridge to the RF notes*
+Why a 10 µF capacitor stops being one at 50 MHz · phasors: a sine as a rotating arrow, phase as a fraction of a cycle · reactance of L and C from v = L di/dt and i = C dv/dt · impedance as how much current, and how late · RC filters, decibels and Bode plots · a fast edge as many frequencies · RMS · resonance, with a capacitor's self-resonance as the example · *the bridge to the RF notes*
 
 ### Part II: Moving Power: Driving Actuators
 
