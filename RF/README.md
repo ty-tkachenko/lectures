@@ -4,7 +4,7 @@ Interactive notes on how radio-frequency hardware works. They start from the phy
 
 **Who it's for:** avionics team members who want to work on the radio, GPS and high-speed parts of our hardware. The [EE notes](../EE/) modules 1–3 are what Module 1 assumes. EE Module 4 (reactance) is what Module 2 will assume. No prior RF or electromagnetics background is needed.
 
-**Status.** Only **Module 1** is written. Module 0, Modules 2–11 and the case study are placeholders: the pages exist so the navigation works, and the topic lists below are the plan for those pages, not a description of notes you can read yet. There is no separate theory site; further reading is Pozar, cited on the written pages.
+**Status.** **Modules 0 and 1** are written. Modules 2–11 and the case study are placeholders: the pages exist so the navigation works, and the topic lists below are the plan for those pages, not a description of notes you can read yet. There is no separate theory site; further reading is Pozar, cited on the written pages.
 
 **How to read it:** the modules are meant to be read in order, since each one builds on the last. Modules 0–2 are the foundation and everything later depends on them. After that, 3–8 cover hardware and system design, 9 covers antennas, and 10–11 cover signals and software. The case study pulls it all together.
 
@@ -14,7 +14,7 @@ Interactive notes on how radio-frequency hardware works. They start from the phy
 
 ### Part I: Foundations
 
-**[Module 0: Mindset Shift, Why RF Is Different](00_Mindset/)** *(not written yet)*
+**[Module 0: Mindset Shift, Why RF Is Different](00_Mindset/)** *(written)*
 The lumped-to-distributed transition · skin effect and return current · "ground is not ground" · energy flows in the fields · the RF designer's mental model
 
 **[Module 1: RF Fundamentals](01_Fundamentals/)** *(written)*

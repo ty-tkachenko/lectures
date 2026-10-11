@@ -34,7 +34,7 @@ window.COURSE = {
       id: 'rf', title: 'RF & High-Speed Design', short: 'RF', path: 'RF/',
       blurb: 'How radio hardware works and how to design it, from transmission lines to the telemetry link. Builds on EE modules 1–4 and 12.',
       modules: [
-        {id:'rf00', n:0, status:'planned', path:'RF/00_Mindset/',                  title:'Mindset Shift: Why RF Is Different', blurb:'Lumped vs distributed, return current, and "ground is not ground".'},
+        {id:'rf00', n:0, status:'ready', path:'RF/00_Mindset/',                  title:'Mindset Shift: Why RF Is Different', blurb:'Lumped vs distributed, return current, and "ground is not ground".'},
         {id:'rf01', n:1, status:'ready',   path:'RF/01_Fundamentals/',             title:'RF Fundamentals', blurb:'Decibels, transmission lines, Z₀, reflections, VSWR and TDR.'},
         {id:'rf02', n:2, status:'planned', path:'RF/02_Lines_and_Matching/',       title:'Transmission Lines & Matching', blurb:'Microstrip, the Smith chart, matching networks and S-parameters.'},
         {id:'rf03', n:3, status:'planned', path:'RF/03_Components/',               title:'RF Components & Circuit Blocks', blurb:'LNAs, PAs, filters, mixers, switches and couplers.'},
@@ -57,6 +57,7 @@ window.COURSE = {
 //   lecture: you walking through the page's content     lab: you at the bench doing the demo
 window.COURSE.videos = {
   ee01: {lecture: '', lab: ''},
+  rf00: {lecture: '', lab: ''},
   ee02: {lecture: '', lab: ''},
   ee03: {lecture: '', lab: ''},
   rf01: {lecture: '', lab: ''}
