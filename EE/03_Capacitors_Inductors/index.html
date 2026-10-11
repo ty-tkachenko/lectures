@@ -102,7 +102,7 @@
   <span class="xk">Worked example</span>
   <p>A 100 µF capacitor sits across a 5 V supply that suddenly stops delivering current, while the circuit keeps drawing 20 mA. Rearranging \(i = C\,dv/dt\), the voltage falls at</p>
   <p>\(\dfrac{dv}{dt} = \dfrac{i}{C} = \dfrac{0.02}{100 \times 10^{-6}} = 200\ \text{V/s}\), or 0.2 V every millisecond.</p>
-  <p>That's the idea behind a <strong>hold-up capacitor</strong>: it keeps a circuit running through a brief interruption, such as a loose connector or the supply sagging while a motor starts.</p>
+  <p>That's the idea behind a <strong>hold-up capacitor</strong>: it keeps a circuit running through a brief interruption, such as a loose connector or the supply sagging while a motor starts. The voltage to start from is the lowest the capacitor will actually be sitting at, not the battery's nominal voltage. Exercise 1 is the worked case.</p>
 </div>
 
 <details class="exercise">
@@ -590,20 +590,30 @@
 <div class="chal">
   <div class="ch"><span class="cn">Exercise 1</span><span class="cd">Design · ●●○</span><span class="ctitle">Sizing a hold-up capacitor</span></div>
   <div class="cbody">
-    <p>A board runs from a 2S battery through a linear regulator. When a motor on the same battery starts, the battery's voltage can drop out for up to 5 ms, and a diode stops the board's input capacitor from discharging back into the motor. You want the board to keep running through the dropout. A linear regulator draws the same current at its input as it delivers at its output.</p>
+    <p>A board runs from a 2S pack through a series diode and a linear regulator. When a motor on the same pack starts, the pack can drop out for up to 5 ms. The diode stops the board's input capacitor from discharging back into the motor, and it also sits in series while the pack is healthy, so the capacitor never charges all the way up to the pack voltage. You want the board to keep running through the dropout. A linear regulator draws the same current at its input as it delivers at its output. Design to the worst case you can actually count on, the way a datasheet's guaranteed minimum is what you design to rather than its typical value (Module 2).</p>
     <div class="given"><b>Given</b>
-      <span>Input voltage before the dropout</span><span>7.4 V</span>
-      <span>Regulator's minimum input voltage</span><span>3.6 V</span>
+      <span>Pack, nominal</span><span>7.4 V (3.7 V per cell). Not the number to design to.</span>
+      <span>Pack while sagged</span><span>6.6 V</span>
+      <span>Series diode</span><span>0.7 V (a Schottky would be about 0.3 V; the larger drop is the worse case)</span>
+      <span>Regulator's minimum input</span><span>3.6 V</span>
       <span>Board current</span><span>80 mA</span>
       <span>Dropout length</span><span>5 ms</span>
     </div>
-    <div class="check" data-ans="3.8" data-tol="2%" data-unit="V"><p>(a) How far can the input capacitor's voltage fall before the regulator stops working?</p>
-      <div class="solution"><p>7.4 − 3.6 = 3.8 V.</p></div></div>
-    <div class="check" data-ans="105" data-tol="3%" data-unit="µF"><p>(b) What's the minimum capacitance at the regulator's input?</p>
+    <div class="check" data-ans="5.9" data-tol="2%" data-unit="V"><p>(a) What voltage is the input capacitor actually sitting at, just before the dropout?</p>
+      <div class="miss" data-val="7.4"><p>That's the nominal pack voltage. The pack is sagged, and the diode drops voltage of its own.</p></div>
+      <div class="miss" data-val="6.6"><p>That's the sagged pack, but the diode is still in series with the capacitor.</p></div>
+      <div class="solution"><p>6.6 − 0.7 = 5.9 V. The nominal 7.4 V never appears on the capacitor in the case you have to survive.</p></div></div>
+    <div class="check" data-ans="2.3" data-tol="2%" data-unit="V"><p>(b) How far can that capacitor's voltage fall before the regulator stops working?</p>
+      <div class="miss" data-val="3.8"><p>That's 7.4 − 3.6, the nominal pack with the diode ignored. The capacitor doesn't start at 7.4 V.</p></div>
+      <div class="miss" data-val="3.0"><p>That's 6.6 − 3.6, which counts the sag and still ignores the diode drop.</p></div>
+      <div class="solution"><p>5.9 − 3.6 = 2.3 V. A Schottky at 0.3 V would leave 6.3 − 3.6 = 2.7 V of room. The ordinary diode is the tighter case, so ΔV is 2.3 V.</p></div></div>
+    <div class="check" data-ans="174" data-tol="3%" data-unit="µF"><p>(c) What's the minimum capacitance at the regulator's input?</p>
+      <div class="miss" data-val="105"><p>That's \(I t\) divided by 3.8 V, the nominal pack with no diode. It is too small for the voltage the capacitor actually starts from.</p></div>
+      <div class="miss" data-val="133"><p>That's \(I t\) divided by 3.0 V: sag counted, diode ignored.</p></div>
       <div class="miss" data-val="1333"><p>That's what you'd need on the 3.3 V output, where only 0.3 V of droop is allowed. The capacitor is on the input.</p></div>
-      <div class="hint">\(C = I\,t / \Delta V\).</div>
-      <div class="solution"><p>\(C = 0.08 \times 0.005 / 3.8 = 105\ \mu\text{F}\). A 220 µF electrolytic gives margin for tolerance, ageing and cold.</p></div></div>
-    <details><summary>Discussion: why put it before the regulator?</summary><p>On the 3.3 V output, the capacitor can only fall 0.3 V before the microcontroller stops, so the same job takes about 1300 µF. Before the regulator it can fall 3.8 V, so it needs twelve times less. The energy view says the same thing: the capacitor delivers \(\tfrac12 C (V_1^2 - V_2^2)\), and a large voltage swing makes most of its stored energy available. The diode matters too: without it, the capacitor would discharge into the starting motor instead of into the board.</p></details>
+      <div class="hint">\(C = I\,t / \Delta V\), with the ΔV from (b).</div>
+      <div class="solution"><p>\(C = 0.080 \times 0.005 / 2.3 = 174\ \mu\text{F}\), about 175 µF. A 220 µF electrolytic is the smallest common value with margin for tolerance, ageing and cold. Designing from the nominal 7.4 V and forgetting the diode would have specified 105 µF, and that part runs out before the 5 ms is over.</p></div></div>
+    <details><summary>Discussion: worst case, and why the capacitor goes before the regulator</summary><p>The 7.4 V figure is a nominal, in the same sense as a datasheet "typical" (Module 2): useful as a label, not as a number the circuit is guaranteed to see. The case to design to is a sagged pack and the diode you added to stop the capacitor feeding the motor. Between the two diode drops, 0.7 V and a Schottky's 0.3 V, the larger one leaves less room (2.3 V rather than 2.7 V) and so asks for more capacitance (174 µF rather than about 150 µF). On the 3.3 V output the capacitor can only fall 0.3 V before the microcontroller stops, so the same 80 mA for 5 ms takes \(0.080 \times 0.005 / 0.3 = 1330\ \mu\text{F}\), about eight times the input-side part. The energy view says why the input side still wins: the capacitor delivers \(\tfrac12 C(V_1^2 - V_2^2)\), and swinging from 5.9 V to 3.6 V makes more of the stored energy available than swinging from 3.3 V to 3.0 V. The diode's other job remains: without it, the capacitor would discharge into the starting motor instead of into the board.</p></details>
   </div>
 </div>
 
