@@ -239,11 +239,11 @@
 <!-- ================= 5 DIVIDER ================= -->
 <section class="sec" id="divider" data-short="The voltage divider">
 <h2>The voltage divider <a class="vjump" data-t="13:00"></a></h2>
-<p>Battery-powered boards usually measure their own battery voltage: to log it, to warn before the pack runs flat, or to refuse to start a high-current task on a weak pack. The measurement is made by the microcontroller's <strong>analog-to-digital converter</strong> (ADC): a circuit inside the chip that reads the voltage on one of its pins and turns it into a number the firmware can use. A typical ADC pin accepts 0 to 3.3 V. A 2S LiPo reaches 8.4 V, and putting 8.4 V on the pin damages it.</p>
+<p>Battery-powered boards usually measure their own battery voltage: to log it, to warn before the pack runs flat, or to refuse to start a high-current task on a weak pack. The measurement is made by an <strong>analog-to-digital converter</strong> (ADC): a circuit that reads the voltage on its input and turns it into a number that software can use. A typical ADC input accepts 0 to 3.3 V. A 2S LiPo reaches 8.4 V, and putting 8.4 V on the input damages it.</p>
 <p>The fix is two resistors in series across the battery. The same current flows through both, so the voltage splits in proportion to their resistances, and the junction between them sits at a fixed fraction of the input:</p>
 <div class="eq">$$V_\text{out} = V_\text{in}\,\frac{R_2}{R_1 + R_2}$$<div class="n">R1 from the input to the output, R2 from the output to ground</div></div>
-<p>That fraction is the <strong>divider ratio</strong>. The firmware reads \(V_\text{out}\) and multiplies by \((R_1 + R_2)/R_2\) to get the battery voltage back.</p>
-<p>The equation assumes nothing is connected to the output, yet the ADC pin is connected to it. It still works because an ADC input draws almost no current. Electrically it looks like a very large resistance from the pin to ground, typically tens of megohms or more. Next to R2, which is around 10 kΩ, that's a path almost no current takes, so practically all of R1's current still flows through R2 and the voltage at the junction doesn't change. A multimeter on its voltage setting reads a circuit without disturbing it for the same reason: its input is about 10 MΩ. Section 6 looks at what happens when the thing you connect isn't so large compared with the divider.</p>
+<p>That fraction is the <strong>divider ratio</strong>. The software reads \(V_\text{out}\) and multiplies by \((R_1 + R_2)/R_2\) to get the battery voltage back.</p>
+<p>The equation assumes nothing is connected to the output, yet the ADC input is connected to it. It still works because an ADC input draws almost no current. Electrically it looks like a very large resistance from the pin to ground, typically tens of megohms or more. Next to R2, which is around 10 kΩ, that's a path almost no current takes, so practically all of R1's current still flows through R2 and the voltage at the junction doesn't change. A multimeter on its voltage setting reads a circuit without disturbing it for the same reason: its input is about 10 MΩ. Section 6 looks at what happens when the thing you connect isn't so large compared with the divider.</p>
 
 <div class="widget wide" id="w-div">
   <div class="wh"><span class="tag">Interactive</span><b>Design a battery-voltage monitor</b></div>
@@ -256,7 +256,7 @@
       <p class="small">ADC input range 0 to 3.3 V, 12 bits (0 to 4095).</p>
     </div>
     <div>
-      <canvas id="cvDiv" style="height:290px" aria-label="Schematic of a battery feeding a two-resistor divider whose midpoint goes to an ADC pin, with a gauge showing the ADC voltage now and at full charge"></canvas>
+      <canvas id="cvDiv" style="height:290px" aria-label="Schematic of a battery feeding a two-resistor divider whose midpoint goes to an ADC input, with a gauge showing the ADC voltage now and at full charge"></canvas>
       <div class="readout">
         <div class="stat"><div class="k">V<sub>out</sub> now</div><div class="v" id="dVo"></div></div>
         <div class="stat" id="dFullS"><div class="k">V<sub>out</sub> at full charge</div><div class="v" id="dFull"></div></div>
@@ -302,7 +302,7 @@
 <!-- ================= 6 LOADING ================= -->
 <section class="sec" id="loading" data-short="Loading">
 <h2>Loading <a class="vjump" data-t="17:00"></a></h2>
-<p>The divider equation assumes nothing is connected to the output. In reality something always is: an ADC pin, a multimeter, a data logger. Whatever you connect draws some current, and it sits <em>in parallel with R2</em>. That lowers the bottom half of the divider, so the output drops. This is called <strong>loading</strong>. For an ADC pin on a 10 kΩ divider the effect is too small to notice, but with larger resistors or a hungrier instrument it isn't.</p>
+<p>The divider equation assumes nothing is connected to the output. In reality something always is: an ADC input, a multimeter, a data logger. Whatever you connect draws some current, and it sits <em>in parallel with R2</em>. That lowers the bottom half of the divider, so the output drops. This is called <strong>loading</strong>. For an ADC input on a 10 kΩ divider the effect is too small to notice, but with larger resistors or a hungrier instrument it isn't.</p>
 <div class="eq">$$V_\text{out} = V_\text{in}\,\frac{R_2 \parallel R_L}{R_1 + R_2 \parallel R_L}$$<div class="n">R<sub>L</sub> is the load: the input resistance of whatever reads the divider</div></div>
 <p>If \(R_L\) is huge compared with R2, then \(R_2 \parallel R_L \approx R_2\) and nothing changes. You saw that in the series and parallel figure: a big resistor in parallel barely matters. The trouble starts when the load is within a factor of a hundred or so of the divider's resistors.</p>
 
@@ -418,7 +418,7 @@
 <section class="sec" id="superposition" data-short="Superposition">
 <h2>Superposition <a class="vjump" data-t="24:00"></a></h2>
 <p>Circuits made of resistors and sources are <strong>linear</strong>: double every source and every voltage and current doubles. That gives you <strong>superposition</strong>. With several sources, the voltage at any point is the sum of what each source would produce on its own, with all the others switched off (voltage sources replaced by wires, current sources by open circuits).</p>
-<p>A common use on the test stand: a load-cell amplifier puts out a signal between −2.5 V and +2.5 V, but the ADC only accepts 0 to 3.3 V. Two equal resistors, one from the signal and one from the 3.3 V supply, meet at the ADC pin. Each source sees a simple divider when the other is switched off:</p>
+<p>A common use on the test stand: a load-cell amplifier puts out a signal between −2.5 V and +2.5 V, but the ADC only accepts 0 to 3.3 V. Two equal resistors, one from the signal and one from the 3.3 V supply, meet at the ADC input. Each source sees a simple divider when the other is switched off:</p>
 <div class="eq">$$V_\text{out} = \underbrace{V_\text{sig}\,\frac{R_2}{R_1 + R_2}}_\text{signal alone} + \underbrace{V_\text{ref}\,\frac{R_1}{R_1 + R_2}}_\text{reference alone} = \frac{V_\text{sig}}{2} + 1.65\ \text{V}$$<div class="n">with R1 = R2; each term is the other source switched off</div></div>
 <p>The signal is halved and shifted up by 1.65 V, so −2.5 to +2.5 V lands on 0.4 to 2.9 V, safely inside the ADC's range.</p>
 
@@ -468,12 +468,12 @@
 <!-- ================= 9 SCHEMATICS & DATASHEETS ================= -->
 <section class="sec" id="reading" data-short="Schematics &amp; datasheets">
 <h2>Reading schematics and datasheets <a class="vjump" data-t="27:00"></a></h2>
-<p>A schematic shows how parts are <em>connected</em>, not where they sit on the board. Here is the battery monitor from Section 5 as it would appear in a microcontroller board's schematic, with the conventions that trip people up most often marked:</p>
+<p>A schematic shows how parts are <em>connected</em>, not where they sit on the board. Here is the battery monitor from Section 5 as it would appear in a real schematic, with the conventions that trip people up most often marked:</p>
 
 <div class="widget">
   <div class="wh"><span class="tag">Diagram</span><b>The battery monitor as drawn in a real schematic</b></div>
   <div class="wb">
-  <svg viewBox="0 0 640 270" role="img" aria-label="Schematic: a VBAT power label feeds R7 33k and R8 10k to ground; the midpoint, net VBAT_SENSE, has C12 100 nF to ground and runs to pin PA0 of U1. An SPI clock net crosses the sense wire without a junction dot. Numbered callouts mark the conventions.">
+  <svg viewBox="0 0 640 270" role="img" aria-label="Schematic: a VBAT power label feeds R7 33k and R8 10k to ground; the midpoint, net VBAT_SENSE, has C12 100 nF to ground and runs to input AIN0 of U1, an ADC. An SPI clock net crosses the sense wire without a junction dot. Numbered callouts mark the conventions.">
     <g stroke="var(--ink)" stroke-width="2" fill="none" stroke-linejoin="round">
       <!-- VBAT power flag -->
       <path d="M110 30h-24l-8 9l8 9h24z" stroke-width="1.5"/>
@@ -483,14 +483,14 @@
       <!-- R8 vertical -->
       <path d="M140 140v6l6 3l-12 6l12 6l-12 6l12 6l-12 6l6 3v20"/>
       <path d="M140 109v31"/>
-      <!-- sense net to MCU -->
+      <!-- sense net to the ADC -->
       <path d="M140 125h330"/>
       <!-- C12 -->
       <path d="M260 125v35M246 160h28M246 168h28M260 168v24"/>
       <!-- grounds -->
       <path d="M128 199h24M132 204h16M137 209h6"/>
       <path d="M248 192h24M252 197h16M257 202h6"/>
-      <!-- MCU -->
+      <!-- ADC -->
       <rect x="470" y="70" width="120" height="160" stroke-width="1.5"/>
       <!-- SPI clock crossing -->
       <path d="M360 60v150h110"/>
@@ -502,9 +502,9 @@
     <text x="280" y="160" font-size="12">C12</text><text x="280" y="175" font-size="12">100n</text>
     <text x="300" y="117" font-size="11" font-family="var(--mono)">VBAT_SENSE</text>
     <text x="370" y="56" font-size="11" font-family="var(--mono)">SPI_SCK</text>
-    <text x="530" y="62" font-size="12" text-anchor="middle" font-weight="600">U1  MCU</text>
-    <text x="478" y="129" font-size="11" font-family="var(--mono)">PA0/ADC_IN0</text>
-    <text x="478" y="214" font-size="11" font-family="var(--mono)">PB3/SPI1_SCK</text>
+    <text x="530" y="62" font-size="12" text-anchor="middle" font-weight="600">U1  ADC</text>
+    <text x="478" y="129" font-size="11" font-family="var(--mono)">AIN0</text>
+    <text x="478" y="214" font-size="11" font-family="var(--mono)">SCLK</text>
     <!-- callouts -->
     <g font-size="11" font-weight="700" text-anchor="middle" fill="#fff">
       <circle cx="60" cy="39" r="9" fill="var(--c2)"/><text x="60" y="43">1</text>
@@ -524,7 +524,7 @@
   <li><strong>Junction dots.</strong> A dot means the wires are connected. Here three wires meet at the top of R8, and the capacitor joins at a second dot.</li>
   <li><strong>Crossings without a dot are not connected.</strong> The SPI clock passes straight over the sense net. Good schematics avoid four-way junctions entirely, so a crossing is never ambiguous.</li>
   <li><strong>Ground symbols</strong> are all one node, like power labels. Boards often have several named grounds (GND, AGND, PGND, chassis), and which ones are joined, and where, is a deliberate design decision (Module 12).</li>
-  <li><strong>Net labels.</strong> VBAT_SENSE names the node, so you can find it in the layout and in the firmware's pin map. Two labels with the same name are connected, even if they're drawn pages apart.</li>
+  <li><strong>Net labels.</strong> VBAT_SENSE names the node, so you can find it in the layout and refer to it by name. Two labels with the same name are connected, even if they're drawn pages apart.</li>
 </ol>
 
 <h3>Datasheets</h3>
@@ -545,7 +545,7 @@
 
 <div class="note tip">
   <span class="ni">✓</span>
-  <div><span class="nt">Where loading hides in a datasheet</span>Microcontroller ADCs list a maximum <em>source impedance</em> (sometimes called external input impedance), often a few tens of kilohms for slow sampling and much less for fast. That's the 100× rule from the ADC's side: the Thévenin resistance of your divider has to stay below it, or the readings come out low. The 100 nF capacitor on the battery monitor gets around it by holding the voltage steady while the ADC samples, so slow signals like battery voltage can use larger resistors.</div>
+  <div><span class="nt">Where loading hides in a datasheet</span>ADC datasheets list a maximum <em>source impedance</em> (sometimes called external input impedance), often a few tens of kilohms for slow sampling and much less for fast. That's the 100× rule from the ADC's side: the Thévenin resistance of your divider has to stay below it, or the readings come out low. The 100 nF capacitor on the battery monitor gets around it by holding the voltage steady while the ADC samples, so slow signals like battery voltage can use larger resistors.</div>
 </div>
 </section>
 
@@ -564,7 +564,7 @@
       <span>R2 (bottom)</span><span>10 kΩ</span>
     </div>
     <div class="check" data-ans="0.238" data-tol="2%"><p>(a) What divider ratio \(R_2/(R_1 + R_2)\) do you need?</p>
-      <div class="miss" data-val="4.2"><p>That's the inverse: the factor the firmware multiplies by. The ratio is less than 1.</p></div>
+      <div class="miss" data-val="4.2"><p>That's the inverse: the factor the software multiplies by. The ratio is less than 1.</p></div>
       <div class="solution"><p>\(3.0 / 12.6 = 0.238\).</p></div></div>
     <div class="check" data-ans="32000" data-tol="2%" data-unit="Ω"><p>(b) With R2 = 10 kΩ, what's the smallest R1 that achieves it?</p>
       <div class="miss" data-val="42000"><p>That's the total, R1 + R2. Take away R2.</p></div>
@@ -572,7 +572,7 @@
       <div class="solution"><p>\(R_1 + R_2 = 10\,\text{k} / 0.238 = 42\ \text{k}\Omega\), so \(R_1 = 32\ \text{k}\Omega\). It isn't a standard value, so round <em>up</em> to 33 kΩ (E12), which gives 2.93 V at full charge. Rounding down would overshoot 3.0 V.</p></div></div>
     <div class="check" data-ans="293" data-tol="2%" data-unit="µA"><p>(c) With 33 kΩ and 10 kΩ, how much current does the divider draw from a full pack?</p>
       <div class="solution"><p>\(12.6\ \text{V} / 43\ \text{k}\Omega = 293\ \mu\text{A}\). Over a month in storage that's about 210 mAh.</p></div></div>
-    <details><summary>Discussion: what if the drain is too much?</summary><p>Scaling both resistors up by ten cuts the drain to 29 µA, but the Thévenin resistance becomes 77 kΩ, beyond what many ADCs accept as a source. A 100 nF capacitor at the ADC pin solves that for a slowly changing voltage like a battery. The other approach is to switch the divider with a MOSFET and only power it while measuring (Module 6). Either way, also check that the ADC pin is safe if the MCU is unpowered but the battery is connected: the divider can then push current into the pin's protection diodes.</p></details>
+    <details><summary>Discussion: what if the drain is too much?</summary><p>Scaling both resistors up by ten cuts the drain to 29 µA, but the Thévenin resistance becomes 77 kΩ, beyond what many ADCs accept as a source. A 100 nF capacitor at the ADC input solves that for a slowly changing voltage like a battery. The other approach is to switch the divider with a MOSFET and only power it while measuring (Module 6). Either way, also check that the ADC input is safe if the ADC is unpowered but the battery is connected: the divider can then push current into the pin's protection diodes.</p></details>
   </div>
 </div>
 
@@ -628,7 +628,7 @@
     <p>Planned lab demo (≈ 15 min, filmed at the bench):</p>
     <ol>
       <li>KCL and KVL checked with a meter on a breadboard network</li>
-      <li>Building the battery monitor and reading it with a microcontroller's ADC</li>
+      <li>Building the battery monitor and reading it with an ADC</li>
       <li>The 1 MΩ divider that reads wrong on a multimeter</li>
       <li>Measuring a sensor's Thévenin resistance with one load resistor</li>
       <li>Ground shift on the test stand: a valve and a transducer on a shared return</li>
@@ -868,11 +868,11 @@ const node = (ctx, x, y) => Plot.dot(ctx, x, y, 3.4, col.ink);
     $('#dFullS').className = 'stat ' + (Vf > 3.3 ? 'bad' : Vf > 3.1 ? 'warn' : '');
     $('#dDrainS').className = 'stat ' + (Id > 1e-3 ? 'warn' : '');
     const v = $('#dVerdict'), Rth = par(R1, R2);
-    if (Vf > 3.3) setVerdict(v, 'bad', `<b>Over range at full charge.</b> A full pack puts ${si(Vf, 'V')} on the ADC pin. Readings clip at 4095 and the pin can be damaged. Make R1 bigger or R2 smaller.`);
+    if (Vf > 3.3) setVerdict(v, 'bad', `<b>Over range at full charge.</b> A full pack puts ${si(Vf, 'V')} on the ADC input. Readings clip at 4095 and the input can be damaged. Make R1 bigger or R2 smaller.`);
     else if (Vf > 3.1) setVerdict(v, 'warn', `<b>Too little headroom.</b> ${si(Vf, 'V')} at full charge leaves almost no margin for resistor tolerance or a charger that overshoots.`);
     else if (Id > 1e-3) setVerdict(v, 'warn', `<b>Works, but wasteful.</b> The divider alone draws ${si(Id, 'A')}, about ${fmt(mAhMonth, 2)} mAh a month from a pack sitting on the shelf. Scale both resistors up.`);
     else if (Rth > 50e3) setVerdict(v, 'warn', `<b>Low drain, but high resistance.</b> The divider's output resistance (R1 ∥ R2 = ${si(Rth, 'Ω')}) is high enough that the ADC itself loads it. Read the next section, or add a capacitor at the pin.`);
-    else setVerdict(v, 'ok', `<b>Good design.</b> ${si(Vf, 'V')} at full charge, ${si(Id, 'A')} of drain, and an output resistance of ${si(Rth, 'Ω')}. Left connected, the divider takes about ${fmt(mAhMonth, 2)} mAh a month from the pack. Firmware multiplies the reading by ${fmt((R1 + R2)/R2, 4)}.`);
+    else setVerdict(v, 'ok', `<b>Good design.</b> ${si(Vf, 'V')} at full charge, ${si(Id, 'A')} of drain, and an output resistance of ${si(Rth, 'Ω')}. Left connected, the divider takes about ${fmt(mAhMonth, 2)} mAh a month from the pack. Software multiplies the reading by ${fmt((R1 + R2)/R2, 4)}.`);
     w.redraw();
   }
   const w = Plot.widget($('#cvDiv'), (ctx, W, H) => {
@@ -887,11 +887,11 @@ const node = (ctx, x, y) => Plot.dot(ctx, x, y, 3.4, col.ink);
     Plot.text(ctx, 'R1 ' + si(R1, 'Ω'), xD - 14, (yT + ym)/2, {align: 'right', mono: true});
     Plot.text(ctx, 'R2 ' + si(R2, 'Ω'), xD - 14, (ym + yB)/2, {align: 'right', mono: true});
     gnd(ctx, xD, yB); node(ctx, xD, yB);
-    // tap to the ADC pin
+    // tap to the ADC input
     const xA = Math.min(W - 100, xD + Math.max(80, W*0.22));
     Plot.wire(ctx, [[xD, ym], [xA, ym]]); node(ctx, xD, ym);
-    Plot.dashedBox(ctx, xA, ym - 34, Math.min(96, W - xA - 6), 68, 'MCU');
-    Plot.text(ctx, 'ADC pin', xA + 8, ym, {color: col.ink2});
+    Plot.dashedBox(ctx, xA, ym - 34, Math.min(96, W - xA - 6), 68, 'ADC');
+    Plot.text(ctx, 'input', xA + 8, ym, {color: col.ink2});
     const over = Vo > 3.3;
     Plot.text(ctx, 'V = ' + si(Vo, 'V'), (xD + xA)/2, ym - 12, {align: 'center', mono: true, color: over ? col.bad : col.c1});
     // gauge: where the ADC voltage sits in the 0 to 3.3 V range
