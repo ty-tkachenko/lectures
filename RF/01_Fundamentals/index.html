@@ -171,7 +171,13 @@
 <h3>Phase is just time delay, measured in cycles</h3>
 <p>The <strong>electrical length</strong> of a line is its delay expressed as a fraction of one cycle, in degrees:</p>
 <div class="eq">$$\theta = 360^\circ \cdot \frac{\ell}{\lambda} = 360^\circ \cdot f \cdot t_\text{delay}$$</div>
-<p>A line that delays the signal by a quarter of a period has an electrical length of 90°, whatever its physical length. That's why the same 2 cm trace is electrically short for a 10 MHz clock (well under a degree) and about 105° at 2.4 GHz on FR-4, where \(\varepsilon_\text{eff} \approx 3.3\). The same 2 cm in air, with no dielectric slowing the wave, is only about 58°. Matching networks, power splitters and antenna feeds are all built from lines of precise electrical length, and Module 2 relies on this idea throughout. (A related idea, <em>group delay</em>, describes how long the information in a modulated signal takes to get through, and comes back with filters in Module 3.)</p>
+<p>A line that delays the signal by a quarter of a period has an electrical length of 90°, whatever its physical length. That's why the same 2 cm trace is electrically short for a 10 MHz clock (well under a degree) and about 105° at 2.4 GHz on FR-4, where \(\varepsilon_\text{eff} \approx 3.3\). The same 2 cm in air, with no dielectric slowing the wave, is only about 58°. Matching networks, power splitters and antenna feeds are all built from lines of precise electrical length, and Module 2 relies on this idea throughout.</p>
+<h3 id="delay">Phase delay and group delay</h3>
+<p>There are two ways to turn that phase into a time. <strong>Phase delay</strong> \(\tau_p = \theta/\omega\) is how late one never-ending sine wave is. <strong>Group delay</strong> \(\tau_g = d\theta/d\omega\) is how late the envelope arrives, which is the information riding on the carrier. On a plain line, \(\theta\) grows in exact proportion to frequency, so the two times are the same: the line just holds the whole signal back by \(\ell/v\). In a dispersive part, a filter near the edge of its passband, \(\theta\) is not a straight line in frequency. Different frequencies in the signal arrive at different times and the data smears. Filter datasheets plot group delay for that reason (Module 3).</p>
+<div class="example">
+  <span class="xk">Worked example</span>
+  <p>A 2 cm trace at 915 MHz on FR-4, \(\varepsilon_\text{eff} = 3.3\). The wavelength on the board is \(c/(f\sqrt{3.3}) = 18.0\) cm, so \(\theta = 360^\circ \times 2.0/18.0 = 40^\circ\). The delay is \(\ell\sqrt{\varepsilon_\text{eff}}/c = 121\) ps. One cycle at 915 MHz lasts 1.093 ns, and 121 ps is that same 40° of the cycle. This is not the 2 cm trace at 2.4 GHz above, which is about 105°.</p>
+</div>
 <div class="note">
   <span class="ni">↯</span>
   <div><span class="nt">It isn't only radios: fast digital edges count too</span>A digital edge with rise time \(t_r\) contains significant energy up to roughly \(0.35/t_r\). A 1 ns edge on an SPI or Ethernet line behaves like a 350 MHz signal, so a long trace or ribbon cable starts acting like a transmission line, ringing and all. This is where RF and high-speed digital design meet.</div>
@@ -269,7 +275,7 @@
       <div class="ctrl"><label>Load</label>
         <div class="seg" id="rPre"><button type="button" data-v="50" class="on">Matched</button><button type="button" data-v="1e9">Open</button><button type="button" data-v="0">Short</button><button type="button" data-v="100">100 Ω</button><button type="button" data-v="25">25 Ω</button></div></div>
       <div class="ctrl"><label for="rR">Load resistance R <b id="rRv"></b></label><input id="rR" type="range" min="0" max="300" step="1" value="50"></div>
-      <p class="small">These loads are real resistances. A detuned antenna also has reactance, so Γ is a complex number and the standing-wave nulls shift along the line. That case is Module 2, after EE Module 4.</p>
+      <p class="small">These loads are real resistances. A detuned antenna also has reactance, so Γ is a complex number and the standing-wave nulls shift along the line. That case is <a href="../02_Lines_and_Matching/index.html#complex">Module 2</a>, after EE Module 4.</p>
     </div>
     <div>
       <canvas id="cvRefl" style="height:240px" aria-label="Incident, reflected and total voltage along the line, with the standing-wave envelope"></canvas>
@@ -772,7 +778,7 @@
 <h2>Summary &amp; cheat sheet</h2>
 <ol class="takeaways">
   <li>Decibels turn multiplication into addition. dB is a ratio; dBm is an absolute power. Combine powers in milliwatts, not dBm.</li>
-  <li>Once a connection is longer than about λ/10, it's a transmission line. Electrical length is just delay measured in cycles.</li>
+  <li>Once a connection is longer than about λ/10, it's a transmission line. Electrical length is delay measured in cycles. On a plain line, phase delay and group delay are that same time.</li>
   <li>Z₀ is set by a line's cross-section, not its length, and you can't measure it with an ohmmeter.</li>
   <li>A mismatch reflects \(|\Gamma|^2\) of the power. VSWR, return loss and Γ all describe the same thing.</li>
   <li>TDR shows reflections in time; a VNA shows them as ripple in frequency. They're two views of the same physics.</li>

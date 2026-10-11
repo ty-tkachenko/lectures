@@ -2,9 +2,9 @@
 
 Interactive notes on how radio-frequency hardware works. They start from the physics of waves on conductors and build up to transmission lines, matching, components, PCB layout, measurement, system budgets, EMC, antennas, modulation and radio-control firmware. They end with a review of a real telemetry link.
 
-**Who it's for:** avionics team members who want to work on the radio, GPS and high-speed parts of our hardware. The [EE notes](../EE/) modules 1–3 are what Module 1 assumes. EE Module 4 (reactance) is what Module 2 will assume. No prior RF or electromagnetics background is needed.
+**Who it's for:** avionics team members who want to work on the radio, GPS and high-speed parts of our hardware. The [EE notes](../EE/) modules 1–3 are what Module 1 assumes. EE Module 4 (reactance) is what Module 2 assumes. No prior RF or electromagnetics background is needed.
 
-**Status.** **Modules 0 and 1** are written. Modules 2–11 and the case study are placeholders: the pages exist so the navigation works, and the topic lists below are the plan for those pages, not a description of notes you can read yet. There is no separate theory site; further reading is Pozar, cited on the written pages.
+**Status.** **Modules 0, 1 and 2** are written. Modules 3–11 and the case study are placeholders: the pages exist so the navigation works, and the topic lists below are the plan for those pages, not a description of notes you can read yet. There is no separate theory site; further reading is Pozar, cited on the written pages.
 
 **How to read it:** the modules are meant to be read in order, since each one builds on the last. Modules 0–2 are the foundation and everything later depends on them. After that, 3–8 cover hardware and system design, 9 covers antennas, and 10–11 cover signals and software. The case study pulls it all together.
 
@@ -20,7 +20,7 @@ The lumped-to-distributed transition · skin effect and return current · "groun
 **[Module 1: RF Fundamentals](01_Fundamentals/)** *(written)*
 Transmission lines and Z₀ · reflection and transmission coefficients · VSWR · time-domain reflectometry · reflections in time vs. frequency · dB, dBm, dBc · polarization · dielectric constant and loss tangent · phase and group delay
 
-**[Module 2: Transmission Lines, Propagation & Matching](02_Lines_and_Matching/)** *(not written yet)*
+**[Module 2: Transmission Lines, Propagation & Matching](02_Lines_and_Matching/)** *(written)*
 Propagation modes · microstrip, stripline, CPW, GCPW · the Smith chart · lumped-element matching · input impedance and quarter-wave transformers · S-parameters · return loss and insertion loss · bandwidth
 
 ### Part II: Hardware

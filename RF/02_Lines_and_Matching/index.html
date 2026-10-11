@@ -4,31 +4,1039 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Transmission Lines &amp; Matching · RF 2</title>
-<meta name="description" content="RF & High-Speed Design module 2: Microstrip, the Smith chart, matching networks and S-parameters. In development.">
+<meta name="description" content="RF module 2: propagation modes, PCB line types, the Smith chart as a map of Γ, L-network and quarter-wave matching, and S-parameters.">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
 <link rel="stylesheet" href="../../assets/site.css">
 <script src="../../assets/course.js"></script>
 <script src="../../assets/site.js"></script>
+<script src="../../assets/plot.js"></script>
 </head>
 <body>
 <div class="layout">
 <aside class="side" aria-label="Module contents"></aside>
 <main class="content">
 
-<!-- Placeholder: replace this page with the module when it's written (see README.md, "Writing a module"). -->
 <header class="hero">
   <div class="eyebrow">RF &amp; High-Speed Design · Module 2</div>
-  <h1>Transmission Lines &amp; Matching</h1>
-  <p class="lede">Microstrip, the Smith chart, matching networks and S-parameters.</p>
+  <h1>Transmission lines and matching</h1>
+  <p class="lede">Module 1 found reflections. This module controls them: which line to use, how to read the map of Γ, and how a few parts or a length of line can make a load look like 50 Ω.</p>
+  <p class="meta">Builds on: Modules 0 and 1, and reactance from EE Module 4: an inductor is \(+j2\pi f L\) and a capacitor is \(-j/(2\pi f C)\). Complex loads, which Module 1 left as real resistances, are here.</p>
+  <div class="resources" data-auto></div>
+  <div class="objectives">
+    <h3>What's covered</h3>
+    <ul>
+      <li>Which field shapes a line can carry, and the frequency where a second shape appears.</li>
+      <li>Microstrip, stripline, CPW and grounded CPW, and how close the via fence has to be.</li>
+      <li>The Smith chart as the unit disc of Γ, and why a length of line spins the point.</li>
+      <li>Matching with an L-network or a quarter-wave section, and why a high-Q match is narrow.</li>
+      <li>S-parameters as power in and power out, and what return loss and insertion loss are saying.</li>
+    </ul>
+  </div>
+  <div class="video" data-video="lecture" id="lecture">
+    <div class="plan">
+      <p>Planned walkthrough of this page (≈ 40 min):</p>
+      <ol>
+        <li data-t="0:00">Modes, and the frequency where a line stops being simple</li>
+        <li data-t="6:00">The four PCB lines and the via fence</li>
+        <li data-t="12:00">The Smith chart, from Γ</li>
+        <li data-t="22:00">A complex load, and where the standing-wave null moves</li>
+        <li data-t="26:00">L-networks, both of them</li>
+        <li data-t="33:00">The quarter-wave transformer</li>
+        <li data-t="37:00">S-parameters and bandwidth</li>
+      </ol>
+    </div>
+  </div>
 </header>
 
-<section class="sec" id="status" data-nonum data-short="In development">
-<h2>In development</h2>
-<p>This module hasn't been written yet. The other modules are listed in the strip at the top of the page, and the links below go to the neighbouring ones.</p>
+<section class="sec" id="modes" data-short="Modes">
+<h2>Propagation modes <a class="vjump" data-t="0:00"></a></h2>
+<p>A <strong>mode</strong> is one shape the electric and magnetic fields can hold while they travel. A line is simple only while a single shape is allowed. A second shape, once it can fit, takes some of the power and the one-number description \(Z_0\) stops being the whole story.</p>
+<ul>
+  <li><strong>TEM</strong> (transverse electromagnetic): E and H both point across the line, with nothing pointing along it. It needs two conductors, the signal and the return, and it works down to DC. Coax and stripline carry TEM.</li>
+  <li><strong>Quasi-TEM:</strong> almost that. Microstrip and coplanar lines have part of the field in the air and part in the board, so a pure TEM wave cannot exist, but \(Z_0\) and \(\varepsilon_\text{eff}\) still describe it well. The small difference makes \(\varepsilon_\text{eff}\) creep up a little with frequency. That creep is dispersion, and it is why phase delay and group delay come apart in a filter (Module 1).</li>
+  <li><strong>TE and TM:</strong> one of the fields has a component along the direction of travel. These live in a hollow pipe with no centre conductor. They exist only above a <strong>cutoff</strong>, where the pipe is wide enough for the wave to fit.</li>
+</ul>
+<p>For a rectangular air-filled guide of inside width \(a\) and height \(b\), each mode has a cutoff</p>
+<div class="eq">$$f_{c,mn} = \frac{c}{2}\sqrt{\left(\frac{m}{a}\right)^2 + \left(\frac{n}{b}\right)^2}$$<div class="n">m and n count half-wave patterns across the width and the height. The lowest mode is TE₁₀, and its cutoff is c/(2a): half a wavelength across the wide wall.</div></div>
+<div class="example">
+  <span class="xk">Worked example</span>
+  <p>WR-90 waveguide has \(a = 22.86\) mm. With \(c = 3\times 10^8\) m/s, \(f_c = 3\times 10^8 / (2 \times 0.02286) = 6.56\) GHz. It is used from 8.2 to 12.4 GHz, above TE₁₀ and below the next mode.</p>
+</div>
+<p>TEM lines have no lower cutoff. They do have an upper one, where the next mode fits:</p>
+<ul>
+  <li><strong>Coax.</strong> The first extra mode is roughly \(f_c \approx c / (\pi \sqrt{\varepsilon_r}\,(D+d)/2)\). An SMA connector (\(D \approx 4.2\) mm, \(d = 1.27\) mm, PTFE \(\varepsilon_r = 2.05\)) reaches that near 24 GHz, which is why SMAs are rated to 18–26.5 GHz.</li>
+  <li><strong>Microstrip.</strong> On a thick board, energy can leak into a surface wave in the dielectric slab. A rough threshold is \(c / (4 h \sqrt{\varepsilon_r - 1})\): about 25 GHz for 1.6 mm FR-4 with \(\varepsilon_r = 4.4\). High-frequency boards are thin partly for this reason.</li>
+</ul>
+<div class="note rule">
+  <span class="ni">1</span>
+  <div><span class="nt">One mode</span>A line is a single \(Z_0\) only between its lower cutoff (none, for TEM) and the frequency where the next mode appears. Stay inside that window.</div>
+</div>
+</section>
+
+<section class="sec" id="pcb" data-short="PCB lines">
+<h2>Microstrip, stripline, CPW and GCPW <a class="vjump" data-t="6:00"></a></h2>
+<p>On a board the choice is where the fields go. That decides the loss, how much the line radiates, and whether a part can sit on the trace.</p>
+<img src="img/pcb-line-types.svg" alt="End-on views of microstrip, stripline, coplanar waveguide and grounded coplanar waveguide, with their electric and magnetic fields.">
+<p class="small">The four PCB lines, end on. Microstrip and CPW leave part of the field in the air. Stripline keeps it inside the board. Grounded CPW adds a plane below, tied to the side grounds by vias.</p>
+<div class="tablewrap"><table>
+  <tr><th></th><th>Microstrip</th><th>Stripline</th><th>CPW</th><th>GCPW</th></tr>
+  <tr><td>Where</td><td>top layer, ground below</td><td>buried between two grounds</td><td>top layer, grounds beside it</td><td>grounds beside and below</td></tr>
+  <tr><td>Mode</td><td>quasi-TEM</td><td>true TEM</td><td>quasi-TEM</td><td>quasi-TEM</td></tr>
+  <tr><td>\(\varepsilon_\text{eff}\)</td><td>between 1 and \(\varepsilon_r\)</td><td>\(= \varepsilon_r\)</td><td>between 1 and \(\varepsilon_r\)</td><td>between 1 and \(\varepsilon_r\)</td></tr>
+  <tr><td>Radiation</td><td>some</td><td>almost none</td><td>some</td><td>low, if the fence is tight</td></tr>
+  <tr><td>Parts on the line</td><td>easy</td><td>needs a via</td><td>easy</td><td>easy</td></tr>
+  <tr><td>Typical use</td><td>most RF boards</td><td>long runs, isolation</td><td>thin boards, probing</td><td>most modern RF boards</td></tr>
+</table></div>
+<p>Microstrip when parts sit on the line and the frequency is moderate. GCPW when you need isolation, or when a 50 Ω microstrip on a thick board would be awkwardly wide: the side grounds let a narrower trace hit 50 Ω. Stripline when you cannot afford to radiate. The cost of stripline is a via at each end (Module 4).</p>
+<p><strong>Via fences.</strong> In GCPW the side grounds are tied to the plane below by a row of vias. If the vias are far apart, the gap between them can resonate and leak. Keep the pitch at or under <strong>λ/10</strong> at the highest frequency that matters, harmonics included. <strong>λ/20</strong> is the conservative pitch.</p>
+<img src="img/gcpw-via-fence.svg" alt="Top view of grounded coplanar waveguide: a centre trace, a gap each side, and a row of ground vias along each gap.">
+<p class="small">Via pitch \(s\). It has to stay under λ/10, or λ/20 to be conservative, at the highest frequency you care about.</p>
+<div class="example">
+  <span class="xk">Worked example</span>
+  <p>At 2.4 GHz on FR-4 with \(\varepsilon_\text{eff} = 3.4\) (the same figure as Module 0), \(\lambda = 6.8\) cm. λ/10 is 6.8 mm and λ/20 is 3.4 mm. At the third harmonic, 7.2 GHz, λ/10 is 2.3 mm. A fence drawn for the fundamental is three times too open for that harmonic.</p>
+</div>
+<details>
+  <summary>Go deeper: why stripline is true TEM</summary>
+  <p>In stripline every field line is inside one dielectric, so the wave has one speed everywhere in the cross-section and a pure TEM field can exist, with \(\varepsilon_\text{eff} = \varepsilon_r\) exactly. In microstrip, a field line that crosses from the board into the air would have to travel at two speeds at once. The fields adapt by growing a small component along the line, which is the "quasi". The practical result is that microstrip is slightly dispersive, and the \(Z_0\) formulas are approximations (Module 1's microstrip calculator uses Hammerstad–Wheeler, good to about a percent).</p>
+</details>
+</section>
+
+<section class="sec" id="smith" data-short="Smith chart">
+<h2>The Smith chart <a class="vjump" data-t="12:00"></a></h2>
+<p>A load impedance can be any resistance from 0 to infinity and any reactance from \(-\infty\) to \(+\infty\). That does not fit on a page. The chart plots the reflection coefficient instead. A passive load cannot send back more power than arrived, so \(|\Gamma| \le 1\), and every such load is a point inside a circle of radius 1.</p>
+<p>The grid is impedance, painted on afterwards. Normalise to the chart's \(Z_0\), usually 50 Ω:</p>
+<div class="eq">$$z = \frac{Z}{Z_0} = r + jx \qquad\qquad \Gamma = \frac{z - 1}{z + 1}$$<div class="n">Solving for z gives z = (1+Γ)/(1−Γ). For Z₀ = 50 Ω, 25 + j25 Ω is z = 0.5 + j0.5.</div></div>
+<p>The curves of constant \(r\) and constant \(x\) are circles, which is why the grid looks the way it does:</p>
+<ul>
+  <li><strong>Constant \(r\):</strong> centre \(\big(r/(1+r),\, 0\big)\), radius \(1/(1+r)\). They all touch the right-hand edge.</li>
+  <li><strong>Constant \(x\):</strong> centre \(\big(1,\, 1/x\big)\), radius \(1/|x|\). Only the arc inside the unit circle is drawn.</li>
+</ul>
+<img src="img/smith-grid.svg" alt="Constant-resistance circles touching the right edge, and constant-reactance arcs, inductive above the axis and capacitive below.">
+<p class="small">Overlay the two families and every point inside the circle has an r and an x.</p>
+<p>Read it from the wave, not as a list of landmarks to memorise. The centre is \(\Gamma = 0\), the matched load \(Z = Z_0\). The right-hand edge is \(\Gamma = +1\), the open, because an open forces the reflected voltage to equal the forward voltage (Module 1). The left-hand edge is \(\Gamma = -1\), the short. The horizontal diameter is pure resistance. The top half is \(+jx\), inductive; the bottom half is \(-jx\), capacitive. Distance from the centre is \(|\Gamma|\), so a circle about the centre is a circle of constant VSWR.</p>
+<p>Admittance \(y = 1/z = g + jb\) is the same chart rotated 180°. Parallel parts add in admittance, so a shunt element moves along a constant-\(g\) circle. The figure can draw that second grid in green.</p>
+
+<h3>Moving on the chart</h3>
+<p>Each part you add moves the point in a way you can predict, which is what makes the chart a tool.</p>
+<div class="tablewrap"><table>
+  <tr><th>What you add</th><th>How the point moves</th></tr>
+  <tr><td>series inductor</td><td>along its constant-r circle, toward +x (up)</td></tr>
+  <tr><td>series capacitor</td><td>along the same circle, toward −x (down)</td></tr>
+  <tr><td>shunt capacitor</td><td>along its constant-g circle, clockwise</td></tr>
+  <tr><td>shunt inductor</td><td>along that circle, counter-clockwise</td></tr>
+  <tr><td>a length of line of this \(Z_0\)</td><td>on a circle about the centre, at constant \(|\Gamma|\)</td></tr>
+</table></div>
+<img src="img/smith-moves.svg" alt="Five small Smith charts showing how a series inductor, a series capacitor, a shunt capacitor, a shunt inductor, and a length of line each move the point.">
+<p class="small">Series parts stay on an r circle, because a series element does not change the resistance. Shunt parts stay on a g circle. Line length stays on a circle about the centre, because a lossless line does not change \(|\Gamma|\).</p>
+<p>Why the line rotates by twice its electrical length: the wave travels to the load, phase \(\beta\ell\), and the echo travels back, another \(\beta\ell\). The reflection you measure at the input is the load's Γ with that round trip attached:</p>
+<div class="eq">$$\Gamma_\text{in} = \Gamma_L\, e^{-j 2\beta\ell}$$<div class="n">βℓ = 2π ℓ/λ. One full turn of the chart is λ/2 of line, because 2β(λ/2) = 2π. Toward the generator is clockwise.</div></div>
+<p>A quarter wave is half a turn. A lossless line never changes VSWR. It only changes where on the circle you are, which is a different impedance with the same \(|\Gamma|\).</p>
+<div class="example">
+  <span class="xk">Worked example</span>
+  <p>\(Z_L = 25 + j25\ \Omega\) on a 50 Ω chart. \(z = 0.5 + j0.5\), so</p>
+  <p>\(\Gamma = (z-1)/(z+1) = (-0.5 + j0.5)/(1.5 + j0.5) = -0.2 + j0.4\). That is \(|\Gamma| = 0.447\) at 117°, and VSWR \(= (1+0.447)/(1-0.447) = 2.62\).</p>
+  <p>λ/8 of 50 Ω line rotates Γ by \(2 \times 45^\circ = 90^\circ\) clockwise, and the input impedance is \(100 + j50\ \Omega\). Same VSWR, different impedance. The figure below will do this if you set the load and the length.</p>
+</div>
+<img src="img/smith-reading.svg" alt="Smith chart with z = 0.5 + j0.5, rotated 90 degrees clockwise by an eighth wavelength of line to z = 2 + j1.">
+<p class="small">25 + j25 Ω sits at Γ = 0.447∠117°. λ/8 of line spins it to 100 + j50 Ω, on the same VSWR circle.</p>
+
+<div class="widget wide" id="w-smith">
+  <div class="wh"><span class="tag">Interactive</span><b>Smith chart</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label>Load</label>
+        <div class="seg" id="scPre"><button type="button" data-r="50" data-x="0" class="on">50 Ω</button><button type="button" data-r="1e9" data-x="0">Open</button><button type="button" data-r="0" data-x="0">Short</button><button type="button" data-r="25" data-x="25">25+j25</button><button type="button" data-r="35" data-x="25">35+j25</button><button type="button" data-r="100" data-x="0">100 Ω</button></div></div>
+      <div class="ctrl"><label for="scR">Resistance R <b id="scRv"></b></label><input id="scR" type="range" min="0" max="300" step="1" value="50"></div>
+      <div class="ctrl"><label for="scX">Reactance X <b id="scXv"></b></label><input id="scX" type="range" min="-200" max="200" step="1" value="0"></div>
+      <div class="ctrl"><label for="scL">Line toward the generator <b id="scLv"></b></label><input id="scL" type="range" min="0" max="0.5" step="0.001" value="0"></div>
+      <div class="ctrl"><label>Chart \(Z_0\)</label>
+        <div class="seg" id="scZ"><button type="button" data-v="50" class="on">50 Ω</button><button type="button" data-v="75">75 Ω</button></div></div>
+      <div class="ctrl"><label><input id="scAdm" type="checkbox"> Admittance grid</label></div>
+      <p class="small">Drag the dot. Reactance is EE Module 4; the slider is the complex load Module 1 did not draw. The purple dot is what the generator sees through the length of line.</p>
+    </div>
+    <div>
+      <canvas id="cvSmith" style="height:340px" aria-label="Smith chart with the load and the impedance seen through a length of line"></canvas>
+      <div class="readout">
+        <div class="stat"><div class="k">z = Z/Z₀</div><div class="v" id="scZed"></div></div>
+        <div class="stat"><div class="k">Γ</div><div class="v" id="scG"></div></div>
+        <div class="stat"><div class="k">VSWR / RL</div><div class="v" id="scV"></div></div>
+        <div class="stat"><div class="k">Z<sub>in</sub></div><div class="v" id="scZin"></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>Start at the short and add 0.25 λ. The dot walks halfway round, to the open. A short through λ/4 looks open.</li>
+    <li>Set 25+j25 and 0.125 λ. Z<sub>in</sub> should read 100 + j50 Ω, and VSWR should not change.</li>
+    <li>Switch the chart to 75 Ω without moving the 50 Ω load. The centre is the chart's Z₀, not the number 50.</li>
+  </ol></div>
+</div>
+</section>
+
+<section class="sec" id="complex" data-short="Complex loads">
+<h2>A load with reactance <a class="vjump" data-t="22:00"></a></h2>
+<p>Module 1 kept every load real, so Γ was a real number: in step with the forward wave, or exactly opposite. A detuned antenna is not like that. \(Z_L = R + jX\), and</p>
+<div class="eq">$$\Gamma = \frac{Z_L - Z_0}{Z_L + Z_0}$$<div class="n">is a complex number. Its magnitude is still the fraction of voltage that comes back. Its angle is the timing of that echo.</div></div>
+<p>The standing-wave envelope is unchanged in one respect and moved in another. The peak is still proportional to \(1+|\Gamma|\) and the null to \(1-|\Gamma|\), so VSWR \(= (1+|\Gamma|)/(1-|\Gamma|)\) exactly as in Module 1. What the angle does is slide the null along the line. At the load the reflected wave is no longer exactly adding or exactly cancelling. A probe finds the null somewhere else.</p>
+<p>That is also why VSWR, which throws the angle away, cannot tell a 35 + j25 Ω antenna from any other load with the same \(|\Gamma|\). The chart keeps the angle. The figure below is the Module 1 standing wave with the reactance put back.</p>
+
+<div class="widget wide" id="w-cpx">
+  <div class="wh"><span class="tag">Interactive</span><b>Standing wave of a complex load</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label>Load</label>
+        <div class="seg" id="cxPre"><button type="button" data-r="50" data-x="0" class="on">50 Ω</button><button type="button" data-r="1e9" data-x="0">Open</button><button type="button" data-r="0" data-x="0">Short</button><button type="button" data-r="100" data-x="0">100 Ω</button><button type="button" data-r="35" data-x="25">35+j25</button></div></div>
+      <div class="ctrl"><label for="cxR">Resistance R <b id="cxRv"></b></label><input id="cxR" type="range" min="0" max="200" step="1" value="50"></div>
+      <div class="ctrl"><label for="cxX">Reactance X <b id="cxXv"></b></label><input id="cxX" type="range" min="-100" max="100" step="1" value="0"></div>
+      <p class="small">X = 0 is Module 1. The 35+j25 preset is the detuned antenna that module left out. EE Module 4 is where \(+jX\) and \(-jX\) come from.</p>
+    </div>
+    <div>
+      <canvas id="cvCpx" style="height:240px" aria-label="Standing wave on a line with a complex load; the null is not at the load"></canvas>
+      <div class="legend"><span style="--c:var(--c1)">incident</span><span style="--c:var(--c2)">reflected</span><span style="--c:var(--ink)">total</span><span class="dash" style="--c:var(--c3)">envelope</span></div>
+      <div class="readout">
+        <div class="stat"><div class="k">|Γ| ∠</div><div class="v" id="cxG"></div></div>
+        <div class="stat"><div class="k">VSWR</div><div class="v" id="cxS"></div></div>
+        <div class="stat"><div class="k">Return loss</div><div class="v" id="cxRL"></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>Open and short both have |Γ| = 1, so the envelope touches zero. The null of the short is at the load; the null of the open is λ/4 away.</li>
+    <li>Set 35+j25. |Γ| is 0.33 and VSWR is 1.98, not 1. The null is not at the load and not a quarter wave from it.</li>
+    <li>Slide X through zero at R = 100. VSWR stays 2:1. Only the null moves. VSWR never stored the angle.</li>
+  </ol></div>
+</div>
+</section>
+
+<section class="sec" id="lmatch" data-short="L-networks">
+<h2>Matching with an L-network <a class="vjump" data-t="26:00"></a></h2>
+<p>A matching network sits between the source and the load so the source sees \(Z_0\). Inductors and capacitors absorb no power if they are ideal, so the power that would have reflected is delivered instead.</p>
+<p>The smallest network that can match any resistance to any other is one series part and one shunt part, an <strong>L-network</strong>. On the chart it is two moves. A series part slides along a constant-r circle. A shunt part slides along a constant-g circle. One of those circles, \(g = 1\), passes through the centre, so the second move can land on the match.</p>
+<p>There are usually two L-networks. The <strong>low-pass</strong> one is series L and shunt C, and it also softens harmonics. The <strong>high-pass</strong> one is series C and shunt L, and it also blocks DC.</p>
+<p>For a real load the values follow from one condition. Put the series reactance \(X\) next to the lower resistance \(R_\text{low}\). The shunt part is a pure susceptance, so it does not change the conductance. After the series part, the conductance has to already equal \(1/R_\text{high}\):</p>
+<div class="eq">$$\frac{R_\text{low}}{R_\text{low}^2 + X^2} = \frac{1}{R_\text{high}} \qquad\Rightarrow\qquad |X| = R_\text{low}\sqrt{\frac{R_\text{high}}{R_\text{low}} - 1}$$</div>
+<p>Call that square root \(Q\). It is fixed by the ratio of the two resistances; you do not choose it. Then \(|X_\text{series}| = Q\, R_\text{low}\) on the low-resistance side, and the shunt reactance that cancels the leftover susceptance is \(|X_\text{shunt}| = R_\text{high}/Q\) on the high-resistance side. Turn them into parts with \(L = X/(2\pi f)\) and \(C = 1/(2\pi f |X|)\).</p>
+<div class="example">
+  <span class="xk">Worked example</span>
+  <p>Match 25 Ω to 50 Ω at 900 MHz.</p>
+  <ol>
+    <li>\(Q = \sqrt{50/25 - 1} = 1\).</li>
+    <li>\(|X_\text{series}| = 25\ \Omega\), next to the 25 Ω load. \(|X_\text{shunt}| = 50\ \Omega\), on the 50 Ω side.</li>
+    <li>Low-pass: series \(L = 25/(2\pi \times 900\times 10^6) = 4.42\) nH, shunt \(C = 1/(2\pi \times 900\times 10^6 \times 50) = 3.54\) pF.</li>
+    <li>High-pass: series \(C = 1/(2\pi \times 900\times 10^6 \times 25) = 7.07\) pF, shunt \(L = 50/(2\pi \times 900\times 10^6) = 8.84\) nH.</li>
+    <li>Check the low-pass network at the junction: \(25 + j25\) in parallel with \(-j50\) is exactly 50 Ω.</li>
+  </ol>
+</div>
+<img src="img/l-match-25-to-50.svg" alt="Low-pass and high-pass L-networks matching 25 ohms to 50 ohms at 900 MHz, and their paths on a Smith chart from z = 0.5 to the centre.">
+<p class="small">Both solutions. The series part, next to the 25 Ω load, moves z = 0.5 onto the g = 1 circle. The shunt part slides along that circle to the centre.</p>
+<p>If the load already has reactance, cancel it first and then match the resistance, or let the same two parts absorb it. The figure solves that general case. Real chip parts are not ideal, so the network is tuned on a VNA (Module 5).</p>
+
+<div class="widget wide" id="w-lm">
+  <div class="wh"><span class="tag">Interactive</span><b>L-network</b></div>
+  <div class="wb">
+    <div class="ctrl"><label>Example</label>
+      <div class="seg" id="lmPre"><button type="button" class="on" data-l="50,900,25,0">25 Ω at 900 MHz</button><button type="button" data-l="50,900,25,25">25+j25</button><button type="button" data-l="50,915,35,25">35+j25</button><button type="button" data-l="50,915,10,30">10+j30</button></div></div>
+    <div class="wcols">
+      <div>
+        <div class="ctrl"><label for="lmRs">Source R <b id="lmRsv"></b></label><input id="lmRs" type="range" min="10" max="150" step="1" value="50"></div>
+        <div class="ctrl"><label for="lmF">Frequency <b id="lmFv"></b></label><input id="lmF" type="range" min="100" max="3000" step="5" value="900"></div>
+        <div class="ctrl"><label for="lmRl">Load R <b id="lmRlv"></b></label><input id="lmRl" type="range" min="1" max="200" step="1" value="25"></div>
+        <div class="ctrl"><label for="lmXl">Load X <b id="lmXlv"></b></label><input id="lmXl" type="range" min="-80" max="80" step="1" value="0"></div>
+      </div>
+      <div>
+        <canvas id="cvLm" style="height:340px" aria-label="Smith-chart path of each L-network, and return loss against frequency"></canvas>
+      </div>
+    </div>
+    <div id="lmOut"></div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>The 25 Ω example should show 4.42 nH with 3.54 pF, and 7.07 pF with 8.84 nH.</li>
+    <li>25+j25 needs only the shunt capacitor of the low-pass network: the series inductor's job is already done by the load.</li>
+    <li>Drop the load to a few ohms and watch the 10 dB band shrink. Q went up because the resistance ratio did.</li>
+  </ol></div>
+</div>
+
+<h3>Why a bigger ratio is narrower</h3>
+<p>Away from the design frequency the inductor's reactance grows and the capacitor's shrinks, so the match walks off the centre. Higher Q walks faster. For these low-pass L-networks the band where return loss stays at least 10 dB is:</p>
+<div class="tablewrap"><table>
+  <tr><th>Match</th><th>Q</th><th>Return loss ≥ 10 dB</th><th>Fractional bandwidth</th></tr>
+  <tr><td>25 Ω → 50 Ω at 900 MHz</td><td>1.0</td><td>216–1254 MHz</td><td>115%</td></tr>
+  <tr><td>2 Ω → 50 Ω at 915 MHz</td><td>4.9</td><td>849–976 MHz</td><td>14%</td></tr>
+  <tr><td>2 Ω → 10 Ω → 50 Ω, two steps, at 915 MHz</td><td>2 each</td><td>782–1217 MHz</td><td>48%</td></tr>
+</table></div>
+<img src="img/match-bandwidth.svg" alt="Return loss against frequency for a wide 25-to-50 ohm match, a narrow 2-to-50 ohm match, and a wider two-step 2-to-10-to-50 ohm match.">
+<p class="small">Splitting a large ratio into two lower-Q steps widens the 10 dB band. The intermediate resistance in the last row is the geometric mean, \(\sqrt{2 \times 50} = 10\ \Omega\).</p>
+<p>A π or a T network adds a third part so you can choose a Q higher than the L-network's minimum. That is useful when you want the match itself to reject harmonics, as at a power-amplifier output. It is a narrower response on purpose.</p>
+<details>
+  <summary>Go deeper: node Q</summary>
+  <p>At the junction between the two parts, the circuit looks like a resistance with a reactance in series, or a conductance with a susceptance in shunt. The ratio \(|X|/R\) at that node is the Q of the network, and it is the constant-Q arc the path crosses on the chart. Those arcs pass through the open and the short. Staying near the horizontal axis, at low Q, is what keeps the match wide when the frequency moves.</p>
+</details>
+</section>
+
+<section class="sec" id="quarter" data-short="Quarter-wave">
+<h2>Quarter-wave lines <a class="vjump" data-t="33:00"></a></h2>
+<p>A length of line changes the impedance the source sees. The surprising case is the one to derive, not memorise: a short circuit, seen through a quarter wavelength, looks like an open circuit.</p>
+<p>The wave travels λ/4 to the short, which is 90° of delay, flips sign at the short (180°, because the voltage there must stay zero), and travels λ/4 back, another 90°. The round trip is 360°. The echo arrives in step with the outgoing wave, so the voltages add and the currents cancel. A large voltage and no current is an open circuit. The same walk the other way turns an open into a short: the open reflection has no sign flip, the round trip is 180°, and the voltages cancel.</p>
+<img src="img/quarter-wave-short-open.svg" alt="Voltage and current along a shorted quarter-wave line, and the same move as a half turn along the rim of the Smith chart from the short to the open.">
+<p class="small">Zero voltage at the short becomes a voltage maximum at the input. On the chart that is half a turn along the rim, from the left edge to the right edge.</p>
+<p>The input impedance of a lossless line of length \(\ell\) and impedance \(Z_0\), ending in \(Z_L\), is</p>
+<div class="eq">$$Z_\text{in} = Z_0\frac{Z_L + j Z_0 \tan\beta\ell}{Z_0 + j Z_L \tan\beta\ell}$$<div class="n">βℓ = 2πℓ/λ on the line. At βℓ = 90°, the tangent grows without bound and Z_in = Z₀²/Z_L.</div></div>
+<div class="tablewrap"><table>
+  <tr><th>Line</th><th>\(Z_\text{in}\)</th><th>Why</th></tr>
+  <tr><td>any length, \(Z_L = Z_0\)</td><td>\(Z_0\)</td><td>nothing reflects, so the line is invisible</td></tr>
+  <tr><td>λ/2, any load</td><td>\(Z_L\)</td><td>a full turn of the chart, back where you started</td></tr>
+  <tr><td>λ/4</td><td>\(Z_0^2 / Z_L\)</td><td>half a turn: the load is inverted</td></tr>
+  <tr><td>shorted, length \(\ell\)</td><td>\(j Z_0 \tan\beta\ell\)</td><td>an inductor below λ/4, a capacitor from λ/4 to λ/2</td></tr>
+  <tr><td>open, length \(\ell\)</td><td>\(-j Z_0 \cot\beta\ell\)</td><td>a capacitor below λ/4</td></tr>
+</table></div>
+<p>Because a quarter-wave section inverts, a section of impedance \(Z_1 = \sqrt{Z_0 R_L}\) makes a resistance \(R_L\) look like \(Z_0\). That is a quarter-wave transformer.</p>
+<div class="example">
+  <span class="xk">Worked example</span>
+  <p>Match 100 Ω to 50 Ω at 915 MHz on 1.6 mm FR-4.</p>
+  <ol>
+    <li>\(Z_1 = \sqrt{50 \times 100} = 70.7\ \Omega\).</li>
+    <li>A 70.7 Ω microstrip on that board (\(\varepsilon_r = 4.4\)) is about 1.6 mm wide, with \(\varepsilon_\text{eff} \approx 3.17\).</li>
+    <li>Length: \(\lambda/4 = 3\times 10^8 / (915\times 10^6 \sqrt{3.17}) / 4 = 46\) mm.</li>
+    <li>Check: \(70.7^2 / 100 = 50\ \Omega\).</li>
+  </ol>
+</div>
+<p>One section gives return loss of at least 20 dB over about 37% bandwidth for this 100-to-50 Ω case. Two sections at the binomial impedances 59.5 Ω then 84.1 Ω widen that to about 72%, at twice the length. The figure compares them. Both are narrowband in the same way a stub is: a line that is λ/4 at 915 MHz is λ/2 at 1830 MHz, and a shorted stub that looked open at the fundamental looks like a short again at the second harmonic.</p>
+
+<div class="widget wide" id="w-qw">
+  <div class="wh"><span class="tag">Interactive</span><b>Quarter-wave transformer</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label for="qwR">Load resistance <b id="qwRv"></b></label><input id="qwR" type="range" min="0" max="1000" step="0.1" value="650.5"></div>
+      <div class="ctrl"><label for="qwF">Design frequency <b id="qwFv"></b></label><input id="qwF" type="range" min="100" max="3000" step="5" value="915"></div>
+      <div class="ctrl"><label for="qwE">ε<sub>eff</sub> of the section <b id="qwEv"></b></label><input id="qwE" type="range" min="1" max="6" step="0.01" value="3.17"></div>
+      <p class="small">The load slider is logarithmic, from 5 Ω to 500 Ω. 651 is 100 Ω, the worked example. The length uses \(c = 2.998\times 10^8\) m/s.</p>
+    </div>
+    <div>
+      <canvas id="cvQw" style="height:260px" aria-label="Return loss against frequency for no match, one quarter-wave section, and two binomial sections"></canvas>
+      <div class="legend"><span style="--c:var(--muted)">no transformer</span><span style="--c:var(--c1)">one section</span><span style="--c:var(--good)">two sections</span><span class="dash" style="--c:var(--warn)">20 dB</span></div>
+      <div class="readout">
+        <div class="stat"><div class="k">One section</div><div class="v" id="qwZ1"></div></div>
+        <div class="stat"><div class="k">Two sections</div><div class="v" id="qwZ2"></div></div>
+        <div class="stat"><div class="k">λ/4 length</div><div class="v" id="qwLen"></div></div>
+        <div class="stat"><div class="k">20 dB bandwidth</div><div class="v" id="qwBw"></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>At 100 Ω and 915 MHz the single section is 70.7 Ω and 46 mm long on ε_eff = 3.17, and its 20 dB band is about 37% against about 72% for two sections.</li>
+    <li>Set the load to 50 Ω. Both curves sit at the top: there is nothing to transform.</li>
+    <li>Move off 915 MHz in your head to 1830 MHz, which is 2 on the axis. A single section that inverted the load at f₀ has repeated it, and the return loss is back where the bare load was.</li>
+  </ol></div>
+</div>
+<p>The same inversion shows up as a stub. A shorted λ/4 stub from a signal line to ground looks open at the design frequency, so it does not load the RF, while it is a DC and ESD path to ground. A bias tee uses that: RF-ground the far end of a high-impedance λ/4 line with a large capacitor, and the RF end looks open, so DC can enter and the signal does not see the supply. A Wilkinson divider and many baluns (Module 3) are built from the same quarter-wave piece.</p>
+</section>
+
+<section class="sec" id="sparam" data-short="S-parameters">
+<h2>S-parameters <a class="vjump" data-t="37:00"></a></h2>
+<p>A filter, an amplifier or a cable is a box with ports. Send a wave into one port, terminate every other port in \(Z_0\), and measure the wave that comes out of each port. The ratios are the scattering parameters. A VNA measures them, and datasheets publish them.</p>
+<div class="tablewrap"><table>
+  <tr><th></th><th>Ratio</th><th>In words</th></tr>
+  <tr><td>\(S_{11}\)</td><td>out of port 1 / into port 1</td><td>input match. This is Γ at the input.</td></tr>
+  <tr><td>\(S_{21}\)</td><td>out of port 2 / into port 1</td><td>forward gain, or loss</td></tr>
+  <tr><td>\(S_{12}\)</td><td>out of port 1 / into port 2</td><td>reverse leakage</td></tr>
+  <tr><td>\(S_{22}\)</td><td>out of port 2 / into port 2</td><td>output match</td></tr>
+</table></div>
+<p>The first index is where the wave comes out. The second is where it went in. The definition forces the other port to be matched, so nothing comes back in from that side. If you leave a mismatched antenna on port 2, the number on the screen is not \(S_{21}\).</p>
+<img src="img/two-port-s-parameters.svg" alt="A two-port with incident waves a1 and a2 and outgoing waves b1 and b2, and the four S-parameters.">
+<p class="small">\(b_1\) and \(b_2\) are the waves leaving. \(a_1\) and \(a_2\) are the waves arriving. \(S\) turns \(a\) into \(b\).</p>
+<p>Scale the waves so that \(|a|^2\) is incident power and \(|b|^2\) is outgoing power (\(a = V^+/\sqrt{Z_0}\)). Then</p>
+<div class="eq">$$\begin{pmatrix} b_1 \\ b_2 \end{pmatrix} = \begin{pmatrix} S_{11} & S_{12} \\ S_{21} & S_{22} \end{pmatrix}\begin{pmatrix} a_1 \\ a_2 \end{pmatrix}$$</div>
+<p>Two checks read a datasheet quickly. A <strong>reciprocal</strong> part has \(S_{21} = S_{12}\): cables, filters, attenuators, antennas. Amplifiers are built so that \(S_{12} \ll S_{21}\). A <strong>lossless</strong> passive part has \(|S_{11}|^2 + |S_{21}|^2 = 1\) when port 2 is matched: everything is either reflected or transmitted. Whatever is missing became heat, or was radiated.</p>
+<div class="example">
+  <span class="xk">Worked example</span>
+  <p>At 915 MHz a filter datasheet says \(S_{11} = -15\) dB and \(S_{21} = -0.8\) dB.</p>
+  <ol>
+    <li>Reflected: \(|S_{11}|^2 = 10^{-15/10} = 0.0316\), so 3.16%.</li>
+    <li>Transmitted: \(|S_{21}|^2 = 10^{-0.8/10} = 0.832\), so 83.2%.</li>
+    <li>Lost inside: 13.7%. That is the share that is neither reflected nor transmitted, and it becomes heat.</li>
+  </ol>
+</div>
+
+<div class="widget wide" id="w-sp">
+  <div class="wh"><span class="tag">Interactive</span><b>Where the power went</b></div>
+  <div class="wb">
+    <div class="wcols">
+      <div>
+        <div class="ctrl"><label for="sp11">S<sub>11</sub> <b id="sp11v"></b></label><input id="sp11" type="range" min="-40" max="0" step="0.1" value="-15"></div>
+        <div class="ctrl"><label for="sp21">S<sub>21</sub> <b id="sp21v"></b></label><input id="sp21" type="range" min="-30" max="0" step="0.1" value="-0.8"></div>
+      </div>
+      <div>
+        <canvas id="cvSp" style="height:90px" aria-label="Bar splitting incident power into reflected, transmitted and lost"></canvas>
+        <div class="readout">
+          <div class="stat"><div class="k">Return loss</div><div class="v" id="spRL"></div></div>
+          <div class="stat"><div class="k">Insertion loss</div><div class="v" id="spIL"></div></div>
+          <div class="stat"><div class="k">Reflected</div><div class="v" id="spR"></div></div>
+          <div class="stat"><div class="k">Transmitted</div><div class="v" id="spT"></div></div>
+          <div class="stat"><div class="k">Lost</div><div class="v" id="spL"></div></div>
+        </div>
+        <div class="verdict" id="spV"></div>
+      </div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>The datasheet pair, −15 dB and −0.8 dB, leaves about 14% inside the part. That is heat.</li>
+    <li>Set S<sub>11</sub> to −3 dB and S<sub>21</sub> to −1 dB. Reflected plus transmitted is more than the power that arrived. A passive part cannot do that.</li>
+  </ol></div>
+</div>
+
+<h3>Return loss and insertion loss</h3>
+<div class="eq">$$\text{RL} = -20\log_{10}|S_{11}|\ \text{dB} \qquad\qquad \text{IL} = -20\log_{10}|S_{21}|\ \text{dB}$$</div>
+<p>Return loss is how much weaker the reflection is than the incident wave. Bigger is better: 10 dB is acceptable for many antennas, 15–20 dB is a good filter or connector. Insertion loss is how much the signal drops going through. Smaller is better. A good SMA cable at 1 GHz is a few tenths of a decibel. A SAW filter is often 1–3 dB. The plotted \(S_{21}\) is negative; the same −0.8 dB on the plot is 0.8 dB of insertion loss. It is not a gain.</p>
+<img src="img/filter-s11-s21.svg" alt="S21 and S11 of a 915 MHz band-pass filter, with insertion loss, return loss, the 3 dB bandwidth and the stopbands marked.">
+<p class="small">A simulated 915 MHz band-pass filter. Insertion loss is −S₂₁ in the passband, return loss is −S₁₁, and the −3 dB points set the bandwidth. Ripple in the passband is the same two-reflection mechanism as Module 1.</p>
+<p>Datasheets also give a Touchstone file (<span class="small">.s2p</span>) that a simulator can read. Note the reference impedance, almost always 50 Ω, and where the reference planes are. The measurement includes every pad and connector between those planes.</p>
+</section>
+
+<section class="sec" id="bandwidth" data-short="Bandwidth">
+<h2>Q and bandwidth</h2>
+<p><strong>Bandwidth</strong> is the range of frequencies over which a thing still works, and "works" has to be stated. A 3 dB bandwidth is where the response is within 3 dB of its peak, half the power, and it is used for filters and resonators. A 10 dB return-loss bandwidth is where VSWR stays under about 2:1, and it is used for antennas and matches. Fractional bandwidth is \(\Delta f / f_0\): 26 MHz at 915 MHz is 2.8%, which is narrow. An octave is not.</p>
+<p>The quality factor counts energy. A high-Q circuit stores a lot and loses little, so it rings for many cycles and responds only near one frequency:</p>
+<div class="eq">$$Q = 2\pi\,\frac{\text{energy stored}}{\text{energy lost per cycle}} = \frac{f_0}{\Delta f_{3\,\text{dB}}}$$<div class="n">The fraction lost per cycle is 2π/Q. That is the same accounting as Module 1's loss tangent: tan δ = 1/Q_d, so the fraction lost per cycle is 2π tan δ.</div></div>
+<div class="example">
+  <span class="xk">Worked example</span>
+  <p>A resonator with Q = 50 at 915 MHz has a 3 dB bandwidth of \(915/50 = 18.3\) MHz. The L-network's Q is this same ratio: a higher-Q match stores more energy in L and C relative to what it delivers each cycle, so it is narrower.</p>
+</div>
+<p>In a chain, the narrowest block sets the system. An antenna good from 880 to 960 MHz, a match good from 850 to 990 MHz and a filter passing 902–928 MHz leave a system bandwidth of 902–928 MHz. Widening the antenna does not widen the radio.</p>
+<details>
+  <summary>Go deeper: the Bode–Fano limit</summary>
+  <p>There is a hard limit on matching a load that has reactance. For a resistance \(R\) in parallel with a capacitance \(C\), any lossless network obeys</p>
+  <p>\(\displaystyle\int_0^{\infty} \ln\frac{1}{|\Gamma(\omega)|}\,d\omega \le \frac{\pi}{RC}\).</p>
+  <p>You have a fixed budget of match. You can spend it as a deep match over a narrow band or a shallow match over a wide band, not both. With \(R = 50\ \Omega\), \(C = 2\) pF and a flat \(|\Gamma| = 0.1\) (20 dB return loss), the integral caps the width at about 2.2 GHz, however clever the network. A small antenna looks like a large reactance, which is why it is narrow.</p>
+</details>
+</section>
+
+<section class="sec" id="exercises" data-nonum data-short="Understanding">
+<h2>Check your understanding</h2>
+<p>Explain the mechanism, find the flaw in a plausible claim, or say which assumption broke. They stay closed until you want them.</p>
+
+<h3>Explain it from the mechanism</h3>
+<details class="exercise">
+  <summary><span class="ek">Check your understanding</span><span class="et">Why λ/4 of line turns a short into an open</span></summary>
+  <div class="eb">
+    <div class="choice"><p>A short at the end of a line has zero voltage. Through λ/4 of that line, the input looks like an open. Why?</p>
+      <ol class="opts">
+        <li>The copper stops conducting at a quarter wavelength, so the current cannot arrive.<div class="why">The short is still a short. The current there is in fact a maximum. What changed is the round trip back to the input.</div></li>
+        <li data-correct>The wave takes 90° to reach the short, flips sign because the voltage at a short is zero (180°), and takes 90° to come back. The echo arrives in step, so the voltages add and the currents cancel. Voltage with no current is an open.<div class="why">360° of round-trip phase, including the sign flip. The chart shows the same fact as half a turn from the left edge to the right edge.</div></li>
+        <li>λ/4 is the length at which Z₀ becomes infinite.<div class="why">Z₀ is the cross-section (Module 1). The length changes Z_in, the impedance you see, not Z₀.</div></li>
+        <li>The short reflects with Γ = +1, and λ/4 adds nothing.<div class="why">A short reflects with Γ = −1. The quarter wave is what rotates that point to Γ = +1 at the input.</div></li>
+      </ol>
+      <div class="solution"><p>Count the phase of the echo. Outward 90°, reflection −1 which is 180°, home 90°: 360°. In step means the voltages reinforce and the currents oppose. No current at the input, with voltage present, is an open circuit. An open load has no sign flip, so the same length totals 180° and the voltages cancel: a short.</p></div>
+    </div>
+  </div>
+</details>
+<details class="exercise">
+  <summary><span class="ek">Check your understanding</span><span class="et">Why the chart spins by twice the line length</span></summary>
+  <div class="eb">
+    <div class="choice"><p>Adding a length ℓ of lossless 50 Ω line rotates Γ by \(2\beta\ell\), not by \(\beta\ell\). Where does the factor of two come from?</p>
+      <ol class="opts">
+        <li>The chart's angle is defined as twice the electrical length, by convention.<div class="why">The factor is the trip. The chart just draws the Γ you measure.</div></li>
+        <li>Loss doubles the phase. A lossless line would rotate by βℓ.<div class="why">A lossless line is the case with the factor of two. Loss shrinks |Γ|; it is not where the 2 comes from.</div></li>
+        <li data-correct>The wave goes to the load and the echo comes back. Each way contributes βℓ, so the reflection observed at the input carries e^{−j2βℓ}.<div class="why">One full turn is therefore λ/2 of line, not λ. A quarter wave is half a turn.</div></li>
+        <li>Voltage and current each contribute a phase of βℓ, and they add.<div class="why">Γ is a ratio of voltages. The second βℓ is the return journey of that voltage wave, not a separate current phase.</div></li>
+      </ol>
+      <div class="solution"><p>Γ at the load is the echo born there. By the time you observe it at the input, that echo is older by the propagation delay, and it is being compared with a forward wave that has not yet made the trip. The difference is two travels, \(2\beta\ell\). A lossless line keeps \(|\Gamma|\) and only changes the angle, which is why the point stays on a circle about the centre.</p></div>
+    </div>
+  </div>
+</details>
+<details class="exercise">
+  <summary><span class="ek">Check your understanding</span><span class="et">Why the series part sits on the low resistance</span></summary>
+  <div class="eb">
+    <div class="choice"><p>Matching 25 Ω to 50 Ω, the series L or C goes next to the 25 Ω, and the shunt part on the 50 Ω side. Why that way round?</p>
+      <ol class="opts">
+        <li>The series part has to be next to the source, because that is where the power is.<div class="why">The source is the 50 Ω side. The series part is on the other side. Power direction does not set the order; the conductance does.</div></li>
+        <li>Either order works, and the two L-networks are those two orders.<div class="why">Low-pass and high-pass are the two sign choices, series L with shunt C, or series C with shunt L. Both still put the series part on the low-resistance side.</div></li>
+        <li data-correct>A shunt part cannot change the conductance. So the series part has to leave a conductance of 1/R_high before the shunt is added, and that is only possible when it is attached to the smaller resistance.<div class="why">From R/(R²+X²) = 1/R_high you need R &lt; R_high, or X² would be negative.</div></li>
+        <li>The chart's g = 1 circle only exists on the left half, where the resistances are small.<div class="why">The g = 1 circle passes through the centre and the open and the short. The series part's job is to reach that circle from r = R_low/Z₀.</div></li>
+      </ol>
+      <div class="solution"><p>After the series reactance, \(G = R/(R^2+X^2)\) has to equal \(1/R_\text{high}\), because the shunt susceptance will not change it. That equation has a real X only when \(R\) is the smaller of the two resistances. So the series part stands on the low side, and \(|X| = R\sqrt{R_\text{high}/R - 1}\).</p></div>
+    </div>
+  </div>
+</details>
+
+<h3>Find the flaw</h3>
+<details class="exercise">
+  <summary><span class="ek">Check your understanding</span><span class="et">"The centre of the chart is 0 Ω"</span></summary>
+  <div class="eb">
+    <p>Someone points at the middle of a Smith chart and says that point is 0 Ω, the short, because it is the origin.</p>
+    <div class="choice"><p>What was missed?</p>
+      <ol class="opts">
+        <li>The centre is infinite ohms, the open.<div class="why">The open is the right-hand edge, Γ = +1. The centre is the one point with no reflection.</div></li>
+        <li data-correct>The chart's coordinates are Γ, not ohms. The centre is Γ = 0, which is Z = Z₀, the matched load. The short is the left-hand edge, Γ = −1.<div class="why">On a 50 Ω chart the centre is 50 Ω. On a 75 Ω chart it is 75 Ω. The number lives in the normalisation, not in the middle of the page.</div></li>
+        <li>The centre is 0 Ω only on a 50 Ω chart.<div class="why">0 Ω is the left edge on every chart. The centre is always the Z₀ the chart was normalised to.</div></li>
+        <li>The short is the centre because a short has |Γ| = 0.<div class="why">A short has |Γ| = 1. |Γ| = 0 is the match, and |Γ| is the distance from the centre, so the short is on the rim.</div></li>
+      </ol>
+      <div class="solution"><p>Γ = (Z − Z₀)/(Z + Z₀) is zero only at Z = Z₀. The chart plots that Γ, so the middle of the disc is the match. Z = 0 gives Γ = −1, the left edge.</p></div>
+    </div>
+  </div>
+</details>
+<details class="exercise">
+  <summary><span class="ek">Check your understanding</span><span class="et">"35 + j25 is nearly 50 Ω, so it is matched"</span></summary>
+  <div class="eb">
+    <p>An antenna measures 35 + j25 Ω. A teammate says 35 is close to 50 and the match is fine.</p>
+    <div class="choice"><p>What was missed?</p>
+      <ol class="opts">
+        <li>35 Ω would be a perfect match if the reactance were ignored, and the reactance only affects the phase of the radio.<div class="why">The radio does not ignore the reactance. Γ uses the whole Z_L. The phase of Γ moves the standing-wave null; it does not make |Γ| zero.</div></li>
+        <li>The load is worse than a short, because 25 Ω of reactance reflects everything.<div class="why">A pure reactance reflects everything. This load has 35 Ω of resistance, so it absorbs some power. |Γ| is 0.33, not 1.</div></li>
+        <li data-correct>Normalised, z = 0.70 + j0.50, and Γ = (z−1)/(z+1) has magnitude 0.33. VSWR is 1.98. The reactance reflects power a resistance of 35 Ω alone would not.<div class="why">"Near 50" compared the real part with 50 and dropped j25. The wave sees both.</div></li>
+        <li>35 + j25 Ω is off the Smith chart, so the chart cannot describe it.<div class="why">|Γ| = 0.33 is well inside the rim. Every passive impedance is on the chart.</div></li>
+      </ol>
+      <div class="solution"><p>\(z = (35+j25)/50 = 0.70 + j0.50\). \(|\Gamma| = 0.329\), the angle is 105°, and VSWR \(= (1+0.329)/(1-0.329) = 1.98\). About 11% of the incident power reflects. The figure in the complex-load section draws the shifted null.</p></div>
+    </div>
+  </div>
+</details>
+<details class="exercise">
+  <summary><span class="ek">Check your understanding</span><span class="et">"S₂₁ = −0.8 dB means 0.8 dB of gain"</span></summary>
+  <div class="eb">
+    <p>A filter plot shows S₂₁ = −0.8 dB in the passband. Someone logs it as 0.8 dB of gain, because the trace is not zero.</p>
+    <div class="choice"><p>What was missed?</p>
+      <ol class="opts">
+        <li>Any negative S-parameter is a gain, and the sign is a plotting convention.<div class="why">The sign is the measurement. Negative decibels of S₂₁ mean |S₂₁| &lt; 1, so less power comes out than went in.</div></li>
+        <li data-correct>S₂₁ in decibels is \(20\log|S_{21}|\). −0.8 dB means the output wave is weaker than the input wave. Insertion loss is the positive number, 0.8 dB. A passive filter does not have gain.<div class="why">The same −0.8 dB is 83% of the power transmitted. The rest is reflection and heat, as in the worked example.</div></li>
+        <li>−0.8 dB is a power ratio of one half, so the filter loses half the power.<div class="why">Half power is −3 dB. −0.8 dB is 10^(−0.8/10) = 0.83 of the power, a small insertion loss.</div></li>
+        <li>S₂₁ is the input match, so −0.8 dB is a poor return loss.<div class="why">S₂₁ is forward transmission. The input match is S₁₁, and its return loss would be −S₁₁ in dB.</div></li>
+      </ol>
+      <div class="solution"><p>Return loss \(= -S_{11}\) in dB, bigger better. Insertion loss \(= -S_{21}\) in dB, smaller better. −0.8 dB on the S₂₁ plot is 0.8 dB of insertion loss, which is \(10^{-0.08} = 83\%\) of the power getting through. It is not a gain, and it is not 3 dB.</p></div>
+    </div>
+  </div>
+</details>
+
+<h3>What assumption broke?</h3>
+<details class="exercise">
+  <summary><span class="ek">Check your understanding</span><span class="et">A stub that was open at 915 MHz</span></summary>
+  <div class="eb">
+    <p>A shorted quarter-wave stub is used so an antenna is a DC short for ESD but invisible to a 915 MHz signal. At 1830 MHz the same stub is a short circuit across the line and the second harmonic disappears into it.</p>
+    <div class="choice"><p>Which assumption failed?</p>
+      <ol class="opts">
+        <li>The stub's copper became a short only at the harmonic, because of skin effect.<div class="why">The far end was a short at every frequency. What changed is the electrical length.</div></li>
+        <li data-correct>λ/4 was assumed at every frequency. Electrical length is proportional to frequency, so the stub is λ/2 at 1830 MHz, a full turn of the chart, and a short seen through λ/2 is a short again.<div class="why">The open-looking input was a half-turn from the left edge to the right edge. A full turn lands back on the left edge.</div></li>
+        <li>The harmonic is above the coax cutoff, so the line stopped being TEM.<div class="why">1830 MHz is far below the roughly 24 GHz extra mode of an SMA. The stub would do this on any TEM line.</div></li>
+        <li>A shorted stub looks open at every multiple of λ/4.<div class="why">Odd multiples of λ/4 invert the short into an open. Even multiples repeat the short. The second harmonic is the even case.</div></li>
+      </ol>
+      <div class="solution"><p>The assumption was "this length is λ/4", with the frequency left off. Length in degrees is \(360^\circ \times f \times \ell / v\). Double f and the stub is 180° instead of 90°. Z_in of a shorted λ/2 line is a short. A stub that grounds ESD also swallows the even harmonics unless you meant it to.</p></div>
+    </div>
+  </div>
+</details>
+<details class="exercise">
+  <summary><span class="ek">Check your understanding</span><span class="et">S₂₁ read with the antenna still attached</span></summary>
+  <div class="eb">
+    <p>A filter's datasheet S₂₁ was measured into 50 Ω. On the board, port 2 feeds an antenna with VSWR 2:1, and someone treats the datasheet S₂₁ as the power the antenna receives.</p>
+    <div class="choice"><p>What assumption broke?</p>
+      <ol class="opts">
+        <li>S₂₁ includes the antenna gain, so the datasheet already knew which antenna you would use.<div class="why">S₂₁ stops at the reference plane of port 2. The antenna is a separate reflection.</div></li>
+        <li>VSWR 2:1 means half the power is reflected, so the datasheet number should be halved.<div class="why">VSWR 2 is |Γ| = 1/3, and the reflected power is |Γ|² = 11%, not a half. And the filter and the antenna interact; you cannot just scale S₂₁.</div></li>
+        <li data-correct>The definition of S₂₁ sets a₂ = 0: nothing comes back into port 2. A mismatched antenna sends a wave back in, and that wave reflects again off the filter. The datasheet number is not the power delivered.<div class="why">S-parameters are measured one port at a time, with every other port matched. Leave the match off and you are no longer reading S.</div></li>
+        <li>The VNA cannot measure S₂₁ above 915 MHz.<div class="why">The frequency is not what failed. The termination at the unused port is.</div></li>
+      </ol>
+      <div class="solution"><p>\(S_{21} = b_2/a_1\) only while \(a_2 = 0\). An antenna at VSWR 2 has \(|\Gamma| = 1/3\), so a wave does come back into port 2. Part of it reflects off the filter's S₂₂ and adds to what the antenna receives. The datasheet S₂₁ is the right number only into a matched load. The antenna's own Γ has to be included, which is what the chart and the match are for.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<section class="sec" id="bench" data-nonum data-short="At the bench">
+<h2>At the bench</h2>
+<div class="video" data-video="lab">
+  <div class="plan">
+    <p>Planned lab (≈ 25 min, a NanoVNA or any VNA, one cable, an open, a short and a 50 Ω load):</p>
+    <ol>
+      <li>Predict where the three standards sit on the chart</li>
+      <li>Add about λ/4 of cable and predict where the short moves</li>
+      <li>Compare with the screen</li>
+    </ol>
+  </div>
+</div>
+<div class="lab">
+  <h3>Three standards, then a quarter wave</h3>
+  <div class="parts"><span>A VNA, calibrated at the end of one cable</span><span>Open, short, 50 Ω load</span><span>A second short cable, roughly λ/4 at the frequency you choose</span></div>
+  <ol>
+    <li><b>Write your prediction first.</b> On a 50 Ω chart, where do the open, the short and the load sit? What is |Γ| for each?</li>
+    <li><b>Look.</b> The load is near the centre. The open is at the right edge, the short at the left. If they are not, the calibration plane is not at the connector you think it is (Module 5).</li>
+    <li><b>Write your prediction first.</b> Insert the extra cable, still shorted at the far end. Which way does the dot move, and about how far if you know the cable's electrical length?</li>
+    <li><b>Look.</b> The dot walks clockwise, toward the generator, by twice the electrical length of the cable. Near λ/4 it arrives at the open point. |Γ| stays near 1 if the cable is short and good. VSWR did not improve. Only the angle changed.</li>
+  </ol>
+  <div class="record"><b>What you should see:</b> three landmarks on the rim and at the centre, then a clockwise walk when you add cable in front of the short. A dot that shrinks toward the centre as you add cable is loss, not a match.</div>
+</div>
+</section>
+
+<section class="sec" id="summary" data-nonum data-short="Summary">
+<h2>Summary &amp; cheat sheet</h2>
+<ol class="takeaways">
+  <li>A line is one mode, and one Z₀, only up to the frequency where the next mode fits. Coax and stripline are TEM. Microstrip is quasi-TEM.</li>
+  <li>Keep a GCPW via fence at or under λ/10, and λ/20 if you want margin, at the highest frequency including harmonics.</li>
+  <li>The Smith chart is the disc \(|\Gamma| \le 1\). The centre is the match. A lossless line rotates Γ by \(−2\beta\ell\) and does not change VSWR.</li>
+  <li>An L-network matches two resistances with Q fixed by their ratio. The series part sits on the lower resistance. Higher Q is a narrower match.</li>
+  <li>A quarter wave inverts: \(Z_\text{in} = Z_0^2/Z_L\). A short becomes an open. The same trick is narrowband, and it undoes itself at the second harmonic.</li>
+  <li>S₂₁ is transmission, not gain, when it is negative in dB. Whatever is neither reflected nor transmitted is lost. Q = 2π × stored / lost per cycle = f₀/Δf.</li>
+</ol>
+<div class="cheat">
+  <div><b>Chart</b>\(\Gamma = (z-1)/(z+1)\)<br><span class="small">centre = Z₀ · full turn = λ/2</span></div>
+  <div><b>Line</b>\(\Gamma_\text{in} = \Gamma_L e^{-j2\beta\ell}\)<br><span class="small">λ/4 inverts · Z_in = Z₀²/Z_L</span></div>
+  <div><b>L-network</b>\(Q = \sqrt{R_h/R_l - 1}\)<br><span class="small">|X_s| = Q R_l · |X_sh| = R_h/Q</span></div>
+  <div><b>25 → 50 Ω, 900 MHz</b>4.42 nH, 3.54 pF<br><span class="small">or 7.07 pF, 8.84 nH</span></div>
+  <div><b>S and Q</b>RL = −20 log|S₁₁|<br><span class="small">IL = −20 log|S₂₁| · Q = f₀/Δf</span></div>
+  <div><b>Fence</b>pitch ≤ λ/10<br><span class="small">2.4 GHz FR-4: 6.8 mm · λ/20 = 3.4 mm</span></div>
+</div>
+<h3>Where this continues</h3>
+<p class="small">Module 3 is the parts you match: amplifiers, filters, couplers. Module 5 is the VNA calibration this bench assumed. Module 1 is the real-load reflection this module generalised.</p>
+<div class="deeper">
+  <a href="../01_Fundamentals/index.html#refl">Reflections with a real load<small>Module 1. Γ, VSWR, and the standing wave before the angle mattered</small></a>
+  <a href="../01_Fundamentals/index.html#delay">Phase delay and group delay<small>Module 1. Why a plain line delays the carrier and the envelope by the same time</small></a>
+  <a href="#smith">The chart on this page<small>Γ as the coordinate, and the 25 + j25 Ω example</small></a>
+</div>
+<h3>Further reading</h3>
+<ul class="small">
+  <li><em>Microwave Engineering</em> (Pozar), chapters 2, 4 and 5: lines and the input-impedance formula, S-parameters, the Smith chart and L-section matching.</li>
+</ul>
 </section>
 
 <nav class="pager"></nav>
 </main>
 </div>
 <footer class="site">Hardware Engineering Fundamentals · RF &amp; High-Speed Design</footer>
+
+<script>
+'use strict';
+const $ = s => document.querySelector(s);
+const {col, si, fmt, lin, axes, line, text, dot, rgba, clip} = Plot;
+const C0 = 299792458;
+const cx = (a,b=0) => [a,b];
+const cadd = (a,b) => [a[0]+b[0], a[1]+b[1]];
+const csub = (a,b) => [a[0]-b[0], a[1]-b[1]];
+const cmul = (a,b) => [a[0]*b[0]-a[1]*b[1], a[0]*b[1]+a[1]*b[0]];
+const cdiv = (a,b) => { const d = b[0]*b[0]+b[1]*b[1]; return [(a[0]*b[0]+a[1]*b[1])/d, (a[1]*b[0]-a[0]*b[1])/d]; };
+const cabs = a => Math.hypot(a[0], a[1]);
+const carg = a => Math.atan2(a[1], a[0]);
+const cexpj = t => [Math.cos(t), Math.sin(t)];
+const cinv = a => cdiv(cx(1), a);
+const zToG = z => cdiv(csub(z, cx(1)), cadd(z, cx(1)));
+const gToZ = g => cdiv(cadd(cx(1), g), csub(cx(1), g));
+function zin(ZL, Z0, bl){
+  const t = Math.tan(bl);
+  if (ZL[0] >= 1e8) return cdiv(cx(0, -Z0), cx(t, 0));
+  return cmul(cx(Z0), cdiv(cadd(ZL, cx(0, Z0*t)), cadd(cx(Z0), cmul(cx(0, t), ZL))));
+}
+function fmtZ(R, X){
+  if (!isFinite(R) || R > 1e7) return '∞';
+  if (Math.abs(X) < 0.05) return fmt(R, 3) + ' Ω';
+  return fmt(R, 3) + (X < 0 ? ' − j' : ' + j') + fmt(Math.abs(X), 3);
+}
+function deg(rad){
+  let d = rad * 180 / Math.PI;
+  d = ((d + 180) % 360 + 360) % 360 - 180;
+  return Math.round(d);
+}
+
+function g2p(ox, oy, R, g){ return [ox + R*g[0], oy - R*g[1]]; }
+function smithGrid(ctx, ox, oy, R, adm){
+  ctx.save();
+  ctx.beginPath(); ctx.arc(ox, oy, R, 0, 2*Math.PI); ctx.clip();
+  function family(sgn, color){
+    ctx.strokeStyle = color; ctx.lineWidth = 1;
+    [0.2, 0.5, 1, 2, 5].forEach(r => {
+      const c = g2p(ox, oy, R, [sgn*r/(1+r), 0]);
+      ctx.beginPath(); ctx.arc(c[0], c[1], R/(1+r), 0, 2*Math.PI); ctx.stroke();
+    });
+    [0.2, 0.5, 1, 2, 5].forEach(xv => {
+      [1, -1].forEach(s => {
+        const c = g2p(ox, oy, R, [sgn, s/xv]);
+        ctx.beginPath(); ctx.arc(c[0], c[1], R/xv, 0, 2*Math.PI); ctx.stroke();
+      });
+    });
+    ctx.beginPath(); ctx.moveTo(ox - R, oy); ctx.lineTo(ox + R, oy); ctx.stroke();
+  }
+  family(1, col.line);
+  if (adm) family(-1, rgba(col.good, .75));
+  ctx.restore();
+  ctx.strokeStyle = col.ink2; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.arc(ox, oy, R, 0, 2*Math.PI); ctx.stroke();
+  text(ctx, 'short', ox - R + 4, oy + 14, {color: col.muted});
+  text(ctx, 'open', ox + R - 28, oy + 14, {color: col.muted});
+}
+
+/* Smith chart */
+(() => {
+  let R = 50, X = 0;
+  const z0now = Plot.seg('#scZ', upd);
+  function setRX(r, x){
+    R = r; X = x;
+    if (r < 1e6) $('#scR').value = Math.max(0, Math.min(300, Math.round(r)));
+    $('#scX').value = Math.max(-200, Math.min(200, Math.round(x)));
+  }
+  $('#scPre').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    $('#scPre').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
+    setRX(+b.dataset.r, +b.dataset.x); upd();
+  });
+  function gamma(){
+    const z0 = +z0now();
+    if (R >= 1e6) return {g: cx(1, 0), z0};
+    return {g: zToG(cx(R/z0, X/z0)), z0};
+  }
+  let view = null;
+  function upd(){
+    const z0 = +z0now(), ell = +$('#scL').value;
+    const {g} = gamma();
+    const m = cabs(g);
+    const gin = cmul(g, cexpj(-4*Math.PI*ell));
+    let Zin = cmul(gToZ(gin), cx(z0));
+    if (Math.hypot(1 - gin[0], gin[1]) < 1e-3) Zin = cx(1e9, 0);
+    view = {g, gin, m, ell, z0};
+    $('#scRv').textContent = R >= 1e6 ? '∞' : fmt(R, 3) + ' Ω';
+    $('#scXv').textContent = (X < 0 ? '−' : '+') + 'j' + fmt(Math.abs(X), 3);
+    $('#scLv').textContent = fmt(ell, 3) + ' λ';
+    $('#scZed').textContent = R >= 1e6 ? '∞' : fmtZ(R/z0, X/z0).replace(' Ω','');
+    $('#scG').textContent = fmt(m, 3) + ' ∠ ' + deg(carg(g)) + '°';
+    const vswr = m >= 0.999 ? '∞' : fmt((1+m)/(1-m), 3);
+    const rl = m < 1e-4 ? '∞' : fmt(-20*Math.log10(m), 3) + ' dB';
+    $('#scV').textContent = vswr + ' / ' + rl;
+    $('#scZin').textContent = fmtZ(Zin[0], Zin[1]);
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvSmith'), (ctx, W, H) => {
+    if (!view) return;
+    const {g, gin, m, ell} = view;
+    const Rpx = Math.min(W, H) * 0.46;
+    const ox = W/2, oy = H/2;
+    smithGrid(ctx, ox, oy, Rpx, $('#scAdm').checked);
+    ctx.save();
+    ctx.strokeStyle = col.c3; ctx.setLineDash([4, 3]); ctx.lineWidth = 1.25;
+    ctx.beginPath(); ctx.arc(ox, oy, Rpx*Math.min(m, 1), 0, 2*Math.PI); ctx.stroke();
+    ctx.restore();
+    if (ell > 0.001 && m > 0.01){
+      const a0 = -carg(g);
+      const sweep = 4*Math.PI*ell;
+      ctx.save(); ctx.strokeStyle = col.c4; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.arc(ox, oy, Rpx*Math.min(m, 1), a0, a0 + sweep, false); ctx.stroke(); ctx.restore();
+      const p = g2p(ox, oy, Rpx, gin);
+      dot(ctx, p[0], p[1], 6, col.c4);
+    }
+    const pl = g2p(ox, oy, Rpx, g);
+    dot(ctx, pl[0], pl[1], 6, col.c2);
+    text(ctx, 'load', pl[0] + 8, pl[1] - 8, {color: col.c2});
+  });
+  function fromPointer(e){
+    const cv = $('#cvSmith'), r = cv.getBoundingClientRect();
+    const px = (e.clientX - r.left) * (cv.clientWidth / r.width);
+    const py = (e.clientY - r.top) * (cv.clientHeight / r.height);
+    const Rpx = Math.min(cv.clientWidth, cv.clientHeight) * 0.46;
+    const ox = cv.clientWidth/2, oy = cv.clientHeight/2;
+    let g = cx((px - ox)/Rpx, -(py - oy)/Rpx);
+    const m = cabs(g);
+    if (m > 0.992) g = cmul(g, cx(0.992/m));
+    const z = gToZ(g), z0 = +z0now();
+    $('#scPre').querySelectorAll('button').forEach(b => b.classList.remove('on'));
+    setRX(Math.max(0, z[0]*z0), z[1]*z0);
+    upd();
+  }
+  const cv = $('#cvSmith');
+  cv.addEventListener('pointerdown', e => { cv.setPointerCapture(e.pointerId); fromPointer(e); });
+  cv.addEventListener('pointermove', e => { if (cv.hasPointerCapture(e.pointerId)) fromPointer(e); });
+  ['#scR', '#scX', '#scL'].forEach(id => $(id).addEventListener('input', () => {
+    if (id !== '#scL'){
+      $('#scPre').querySelectorAll('button').forEach(b => b.classList.remove('on'));
+      R = +$('#scR').value; X = +$('#scX').value;
+    }
+    upd();
+  }));
+  $('#scAdm').addEventListener('change', upd);
+  upd();
+})();
+
+/* complex standing wave */
+(() => {
+  let R = 50, X = 0, G = [0, 0];
+  function setRX(r, x){
+    R = r; X = x;
+    if (r < 1e6) $('#cxR').value = Math.max(0, Math.min(200, Math.round(r)));
+    $('#cxX').value = Math.max(-100, Math.min(100, Math.round(x)));
+  }
+  $('#cxPre').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    $('#cxPre').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
+    setRX(+b.dataset.r, +b.dataset.x); calc();
+  });
+  function calc(){
+    if (R >= 1e6) G = [1, 0];
+    else G = zToG(cx(R/50, X/50));
+    const m = cabs(G);
+    $('#cxRv').textContent = R >= 1e6 ? '∞' : R + ' Ω';
+    $('#cxXv').textContent = (X < 0 ? '−' : '+') + 'j' + Math.abs(X);
+    $('#cxG').textContent = fmt(m, 3) + ' ∠ ' + deg(carg(G)) + '°';
+    $('#cxS').textContent = m >= 0.999 ? '∞' : fmt((1+m)/(1-m), 3) + ' : 1';
+    $('#cxRL').textContent = m < 1e-4 ? '∞ dB' : fmt(-20*Math.log10(m), 3) + ' dB';
+  }
+  ['#cxR', '#cxX'].forEach(id => $(id).addEventListener('input', () => {
+    $('#cxPre').querySelectorAll('button').forEach(b => b.classList.remove('on'));
+    R = +$('#cxR').value; X = +$('#cxX').value; calc();
+  }));
+  Plot.animate($('#cvCpx'), (ctx, W, H, t) => {
+    const P = {l: 16, r: W - 16, t: 16, b: H - 22}, ym = (P.t+P.b)/2, A = (P.b-P.t)/4.4;
+    const ph = 2*Math.PI*t/2.2, nl = 1.75;
+    line(ctx, [[P.l, ym], [P.r, ym]], col.line2, 1);
+    const N = 280, inc = [], ref = [], tot = [], envU = [], envL = [];
+    for (let i = 0; i <= N; i++){
+      const x = P.l + (P.r-P.l)*i/N, dd = nl*(1 - i/N), b = 2*Math.PI*dd;
+      const vi = Math.cos(ph + b);
+      const vr = G[0]*Math.cos(ph - b) - G[1]*Math.sin(ph - b);
+      const er = Math.cos(b) + (G[0]*Math.cos(-b) - G[1]*Math.sin(-b));
+      const ei = Math.sin(b) + (G[0]*Math.sin(-b) + G[1]*Math.cos(-b));
+      const env = Math.hypot(er, ei);
+      inc.push([x, ym - A*vi]); ref.push([x, ym - A*vr]); tot.push([x, ym - A*(vi+vr)]);
+      envU.push([x, ym - A*env]); envL.push([x, ym + A*env]);
+    }
+    ctx.save(); ctx.fillStyle = rgba(col.c3, .08); ctx.beginPath();
+    envU.forEach((p,i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]));
+    for (let i = envL.length - 1; i >= 0; i--) ctx.lineTo(envL[i][0], envL[i][1]);
+    ctx.fill(); ctx.restore();
+    line(ctx, envU, col.c3, 1.4, [5, 4]); line(ctx, envL, col.c3, 1.4, [5, 4]);
+    line(ctx, inc, rgba(col.c1, .75), 1.5); line(ctx, ref, rgba(col.c2, .85), 1.5); line(ctx, tot, col.ink, 2.4);
+    text(ctx, 'source →', P.l, H - 8, {color: col.muted});
+    text(ctx, 'load', P.r - 28, H - 8, {color: col.muted});
+  });
+  calc();
+})();
+
+/* L-network */
+(() => {
+  function lmatch(RL, XL, Z0){
+    const sols = [];
+    if (RL > 0 && RL*RL + XL*XL - Z0*RL >= -1e-9){
+      const rad = Math.sqrt(Math.max(0, RL*RL + XL*XL - Z0*RL));
+      for (const s of [1, -1]){
+        const B = (XL + s*Math.sqrt(RL/Z0)*rad) / (RL*RL + XL*XL);
+        if (Math.abs(B) < 1e-15) continue;
+        const Xs = 1/B + XL*Z0/RL - Z0/(B*RL);
+        sols.push({type:'shunt-at-load', X: Xs, B});
+      }
+    }
+    if (RL > 0 && RL <= Z0 + 1e-9){
+      for (const s of [1, -1]){
+        const Xs = s*Math.sqrt(Math.max(0, RL*(Z0-RL))) - XL;
+        const B = s*Math.sqrt(Math.max(0, (Z0-RL)/RL)) / Z0;
+        sols.push({type:'series-at-load', X: Xs, B});
+      }
+    }
+    const out = [];
+    for (const so of sols){
+      if (!out.some(o => Math.abs(o.X - so.X) < 1e-6*Z0 && Math.abs(o.B - so.B) < 1e-9/Z0)) out.push(so);
+    }
+    return out;
+  }
+  function lmZin(sol, ZL, fr){
+    const X = Math.abs(sol.X) < 1e-9 ? 0 : (sol.X > 0 ? sol.X*fr : sol.X/fr);
+    const B = Math.abs(sol.B) < 1e-15 ? 0 : (sol.B > 0 ? sol.B*fr : sol.B/fr);
+    if (sol.type === 'series-at-load'){
+      const Z1 = cadd(ZL, cx(0, X));
+      return cinv(cadd(cinv(Z1), cx(0, B)));
+    }
+    const Y1 = cadd(cinv(ZL), cx(0, B));
+    return cadd(cinv(Y1), cx(0, X));
+  }
+  function nodeQ(sol, ZL){
+    const qL = Math.abs(ZL[1]) / ZL[0];
+    if (sol.type === 'series-at-load'){
+      const Z1 = cadd(ZL, cx(0, sol.X));
+      return Math.max(qL, Math.abs(Z1[1]) / Z1[0]);
+    }
+    const Y1 = cadd(cinv(ZL), cx(0, sol.B));
+    return Math.max(qL, Math.abs(Y1[1]) / Y1[0]);
+  }
+  function band(sol, ZL, Z0){
+    const thr = Math.pow(10, -10/20);
+    const gm = fr => { const z = lmZin(sol, ZL, fr); return cabs(cdiv(csub(z, cx(Z0)), cadd(z, cx(Z0)))); };
+    let lo = 1, hi = 1, st = 0.001;
+    while (lo > 0.05 && gm(lo - st) <= thr) lo -= st;
+    while (hi < 4 && gm(hi + st) <= thr) hi += st;
+    return {lo, hi};
+  }
+  function partText(sol, w){
+    const ser = Math.abs(sol.X) < 1e-6 ? 'no series part' : (sol.X > 0 ? 'series L ' + si(sol.X/w, 'H') : 'series C ' + si(-1/(w*sol.X), 'F'));
+    const sh = Math.abs(sol.B) < 1e-12 ? 'no shunt part' : (sol.B > 0 ? 'shunt C ' + si(sol.B/w, 'F') : 'shunt L ' + si(-1/(w*sol.B), 'H'));
+    const order = sol.type === 'series-at-load' ? sh + ', then ' + ser + ' at the load' : ser + ' at the source, then ' + sh + ' at the load';
+    return order;
+  }
+  const cols = () => [col.c1, col.c2, col.c4, col.c5];
+  let state = null;
+  function upd(){
+    const Rs = +$('#lmRs').value, f = +$('#lmF').value * 1e6, RL = +$('#lmRl').value, XL = +$('#lmXl').value;
+    $('#lmRsv').textContent = Rs + ' Ω';
+    $('#lmFv').textContent = $('#lmF').value + ' MHz';
+    $('#lmRlv').textContent = RL + ' Ω';
+    $('#lmXlv').textContent = (XL < 0 ? '−' : '+') + 'j' + Math.abs(XL);
+    const ZL = cx(RL, XL), sols = lmatch(RL, XL, Rs), w0 = 2*Math.PI*f;
+    state = {Rs, f, ZL, sols};
+    const out = $('#lmOut');
+    if (Math.abs(RL - Rs) < 1e-6 && Math.abs(XL) < 1e-6){
+      out.innerHTML = '<p class="small">Already matched. No network.</p>';
+    } else if (!sols.length){
+      out.innerHTML = '<p class="small">No L-network for this load. A resistance this far above the source, with this reactance, needs the shunt on the load side, and the numbers did not close.</p>';
+    } else {
+      out.innerHTML = sols.map((s, i) => {
+        const bw = band(s, ZL, Rs), Q = nodeQ(s, ZL);
+        const a = (bw.lo*f/1e6).toFixed(0), b = bw.hi >= 3.99 ? '>' + (4*f/1e6).toFixed(0) : (bw.hi*f/1e6).toFixed(0);
+        return '<p class="small"><b>Network ' + (i+1) + '.</b> ' + partText(s, w0) + '. Node Q ' + fmt(Q, 3) + '. Return loss ≥ 10 dB from ' + a + ' to ' + b + ' MHz.</p>';
+      }).join('');
+    }
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvLm'), (ctx, W, H) => {
+    if (!state) return;
+    const {Rs, f, ZL, sols} = state;
+    const narrow = W < 560;
+    const sR = narrow ? Math.min(W, H*0.55)*0.42 : Math.min(H, W*0.42)*0.46;
+    const ox = narrow ? W/2 : sR + 28, oy = narrow ? sR + 16 : H/2;
+    smithGrid(ctx, ox, oy, sR, true);
+    const toP = Z => g2p(ox, oy, sR, zToG(cdiv(Z, cx(Rs))));
+    sols.forEach((s, i) => {
+      const pts = [];
+      for (let k = 0; k <= 40; k++){
+        const t = k/40;
+        pts.push(toP(s.type === 'series-at-load' ? cadd(ZL, cx(0, t*s.X)) : cinv(cadd(cinv(ZL), cx(0, t*s.B)))));
+      }
+      for (let k = 0; k <= 40; k++){
+        const t = k/40;
+        pts.push(toP(s.type === 'series-at-load'
+          ? cinv(cadd(cinv(cadd(ZL, cx(0, s.X))), cx(0, t*s.B)))
+          : cadd(cinv(cadd(cinv(ZL), cx(0, s.B))), cx(0, t*s.X))));
+      }
+      line(ctx, pts, cols()[i % 4], 2);
+    });
+    const pl = toP(ZL);
+    dot(ctx, pl[0], pl[1], 5, col.c2);
+    const top = narrow ? oy + sR + 28 : 16;
+    const bot = H - 28;
+    const left = narrow ? 36 : ox + sR + 36;
+    const right = W - 8;
+    if (right - left < 80 || bot - top < 40) return;
+    const P = {l: left, r: right, t: top, b: bot};
+    const X = lin(0.2, 2.2, P.l, P.r), Y = lin(0, 40, P.b, P.t);
+    axes(ctx, P, X, Y, {xt: [0.5, 1, 1.5, 2], xf: v => fmt(v*f/1e6, 3), yt: [0, 10, 20, 40], yf: v => v + '', xl: 'MHz'});
+    line(ctx, [[P.l, Y(10)], [P.r, Y(10)]], col.warn, 1, [3, 3]);
+    sols.forEach((s, i) => {
+      const pts = [];
+      for (let k = 0; k <= 160; k++){
+        const fr = 0.2 + 2*k/160;
+        const z = lmZin(s, ZL, fr);
+        const g = cabs(cdiv(csub(z, cx(Rs)), cadd(z, cx(Rs))));
+        const rl = Math.min(40, -20*Math.log10(Math.max(g, 1e-4)));
+        pts.push([X(fr), Y(rl)]);
+      }
+      line(ctx, pts, cols()[i % 4], 2);
+    });
+  });
+  $('#lmPre').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    $('#lmPre').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
+    const [a, f, r, x] = b.dataset.l.split(',');
+    $('#lmRs').value = a; $('#lmF').value = f; $('#lmRl').value = r; $('#lmXl').value = x;
+    upd();
+  });
+  ['#lmRs','#lmF','#lmRl','#lmXl'].forEach(id => $(id).addEventListener('input', () => {
+    $('#lmPre').querySelectorAll('button').forEach(b => b.classList.remove('on'));
+    upd();
+  }));
+  upd();
+})();
+
+/* quarter-wave */
+(() => {
+  function qwG(RL, Z0, secs, fr){
+    let Z = cx(RL, 0);
+    for (let i = secs.length - 1; i >= 0; i--) Z = zin(Z, secs[i], Math.PI/2*fr);
+    return cabs(cdiv(csub(Z, cx(Z0)), cadd(Z, cx(Z0))));
+  }
+  function qwBW(RL, Z0, secs){
+    const thr = 0.1;
+    let lo = 1, hi = 1, st = 0.001;
+    while (lo > st && qwG(RL, Z0, secs, lo - st) <= thr) lo -= st;
+    while (hi < 2 && qwG(RL, Z0, secs, hi + st) <= thr) hi += st;
+    return hi - lo;
+  }
+  let s = null;
+  function upd(){
+    const Z0 = 50;
+    const RL = 5 * Math.pow(100, +$('#qwR').value/1000);
+    const f0 = +$('#qwF').value * 1e6;
+    const ee = +$('#qwE').value;
+    const Z1 = Math.sqrt(Z0*RL);
+    const b1 = Math.pow(Z0, 0.75)*Math.pow(RL, 0.25);
+    const b2 = Math.pow(Z0, 0.25)*Math.pow(RL, 0.75);
+    const len = C0/(f0*Math.sqrt(ee))/4;
+    s = {RL, Z0, Z1, b1, b2, f0};
+    $('#qwRv').textContent = fmt(RL, 3) + ' Ω';
+    $('#qwFv').textContent = $('#qwF').value + ' MHz';
+    $('#qwEv').textContent = fmt(ee, 3);
+    $('#qwZ1').textContent = fmt(Z1, 3) + ' Ω';
+    $('#qwZ2').textContent = fmt(b1, 3) + ', ' + fmt(b2, 3) + ' Ω';
+    $('#qwLen').textContent = fmt(len*1000, 3) + ' mm';
+    const same = Math.abs(RL - Z0) < 0.4;
+    $('#qwBw').textContent = same ? '—' : Math.round(100*qwBW(RL, Z0, [Z1])) + '% / ' + Math.round(100*qwBW(RL, Z0, [b1, b2])) + '%';
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvQw'), (ctx, W, H) => {
+    if (!s) return;
+    const P = {l: 44, r: W - 12, t: 16, b: H - 32};
+    const X = lin(0, 3, P.l, P.r), Y = lin(0, 40, P.b, P.t);
+    axes(ctx, P, X, Y, {xt: [0, 1, 2, 3], xf: v => v + ' f₀', yt: [0, 20, 40], yf: v => v + ' dB'});
+    line(ctx, [[P.l, Y(20)], [P.r, Y(20)]], col.warn, 1, [4, 3]);
+    function curve(secs, color){
+      const pts = [];
+      for (let k = 0; k <= 240; k++){
+        const fr = 0.02 + 2.98*k/240;
+        const g = secs ? qwG(s.RL, s.Z0, secs, fr) : Math.abs((s.RL - s.Z0)/(s.RL + s.Z0));
+        pts.push([X(fr), Y(Math.min(40, -20*Math.log10(Math.max(g, 1e-4))))]);
+      }
+      line(ctx, pts, color, 2);
+    }
+    curve(null, col.muted);
+    curve([s.Z1], col.c1);
+    curve([s.b1, s.b2], col.good);
+  });
+  ['#qwR','#qwF','#qwE'].forEach(id => $(id).addEventListener('input', upd));
+  upd();
+})();
+
+/* S-parameter power */
+(() => {
+  function upd(){
+    const a = +$('#sp11').value, b = +$('#sp21').value;
+    const r = Math.pow(10, a/10), t = Math.pow(10, b/10), loss = 1 - r - t;
+    $('#sp11v').textContent = fmt(a, 3) + ' dB';
+    $('#sp21v').textContent = fmt(b, 3) + ' dB';
+    $('#spRL').textContent = fmt(-a, 3) + ' dB';
+    $('#spIL').textContent = fmt(-b, 3) + ' dB';
+    $('#spR').textContent = fmt(100*r, 3) + ' %';
+    $('#spT').textContent = fmt(100*t, 3) + ' %';
+    $('#spL').textContent = loss < -1e-6 ? 'impossible' : fmt(100*loss, 3) + ' %';
+    state = {r, t, loss};
+    Plot.verdict($('#spV'), loss < -1e-4 ? 'bad' : 'ok',
+      loss < -1e-4
+        ? '<b>More than 100%.</b> Reflected plus transmitted exceeds the power that arrived. A passive part cannot do that.'
+        : '<b>Accounted for.</b> Reflected, transmitted and lost add to the power that arrived at port 1, with port 2 matched.');
+    w.redraw();
+  }
+  let state = {r: 0, t: 0, loss: 0};
+  const w = Plot.widget($('#cvSp'), (ctx, W, H) => {
+    const y = 18, h = 28, l = 8, wd = W - 16;
+    let x = l;
+    [[state.r, col.c2, 'reflected'], [state.t, col.c1, 'transmitted'], [Math.max(0, state.loss), col.warn, 'lost']].forEach(([fr, c, name]) => {
+      const wseg = wd * Math.min(1, Math.max(0, fr));
+      ctx.fillStyle = rgba(c, .85); ctx.fillRect(x, y, wseg, h);
+      if (wseg > 70) text(ctx, name, x + 6, y + h/2, {color: '#fff'});
+      x += wseg;
+    });
+    ctx.strokeStyle = col.ink2; ctx.strokeRect(l + .5, y + .5, wd - 1, h);
+    text(ctx, 'power arriving at port 1', l, H - 10, {color: col.muted});
+  });
+  ['#sp11','#sp21'].forEach(id => $(id).addEventListener('input', upd));
+  upd();
+})();
+</script>
 </body>
 </html>
