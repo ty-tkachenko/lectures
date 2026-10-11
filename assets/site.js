@@ -253,7 +253,7 @@ function buildResources(){
   el.innerHTML = `This module has ${nW} interactive figure${nW === 1 ? '' : 's'}, ` +
     `a <a href="#lecture">lecture video</a>${lec ? '' : ' (coming soon)'}, ` +
     `a <a href="#bench">lab demonstration</a>${lab ? '' : ' (coming soon)'}, ` +
-    `and <a href="#exercises">${nC} design exercise${nC === 1 ? '' : 's'}</a>.`;
+    `and <a href="#exercises">${nC} exercise${nC === 1 ? '' : 's'}</a>.`;
 }
 function buildPager(){
   const el = document.querySelector('nav.pager');

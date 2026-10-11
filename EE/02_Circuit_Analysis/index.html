@@ -116,15 +116,15 @@
 </div>
 
 <details class="exercise">
-  <summary><span class="ek">Design exercise</span><span class="et">Where should the fuse go?</span></summary>
+  <summary><span class="ek">Check your understanding</span><span class="et">Where should the fuse go?</span></summary>
   <div class="eb">
     <p>A battery feeds several loads through a fuse in the positive lead. The battery's negative terminal is also connected to the metal chassis near the battery. Someone suggests moving the fuse into the ground return instead.</p>
     <div class="choice"><p>Does a fuse in the ground return protect as well as one in the positive lead?</p>
     <ol class="opts">
-      <li>Yes, in every case: KCL says the return carries the same current as the feed.<div class="why">True for current that flows through the loads and back. Think about a fault that takes a different path home.</div></li>
+      <li>Yes, in every case: KCL says the return carries the same current as the feed.<div class="why">That is true of current that goes out through the loads and back on the return wire. A short from the positive wire to the chassis is a new loop, and its current returns through the chassis instead of the return wire.</div></li>
       <li data-correct>It protects against overloads, but a short from the positive wire to the chassis returns through the chassis and bypasses it.<div class="why">KCL applies to every path, and a fault can create a new one that doesn't go through the return wire.</div></li>
       <li>No: the ground wire carries no current, so the fuse would never blow.<div class="why">The ground return carries the sum of all the load currents (KCL).</div></li>
-      <li>Only if its rating is halved.<div class="why">The rating isn't the issue. Think about which paths the fault current can take.</div></li>
+      <li>Only if its rating is halved.<div class="why">The rating is not the difference between the two positions. A chassis short returns to the battery without ever entering the ground wire, so a fuse in that wire does not see the fault at any rating.</div></li>
     </ol>
     <div class="solution"><p>For normal operation and overloads, KCL makes the two positions equivalent: everything that leaves on the feed comes back on the return. But the dangerous fault is usually a damaged positive wire touching the chassis. That current returns through the chassis straight to the battery's negative terminal, never passing through a fuse in the return wire. That's why fuses go in the positive lead, as close to the battery as possible.</p></div>
     </div>
@@ -175,7 +175,7 @@
 </div>
 
 <details class="exercise">
-  <summary><span class="ek">Design exercise</span><span class="et">Finding a bad connection with a voltmeter</span></summary>
+  <summary><span class="ek">Check your understanding</span><span class="et">Finding a bad connection with a voltmeter</span></summary>
   <div class="eb">
     <p>A solenoid valve opens sluggishly. Its loop runs from the battery through a feed wire, a connector, the valve and a return wire. You have a multimeter.</p>
     <div class="choice"><p>What's the quickest way to find a bad connection?</p>
@@ -231,7 +231,7 @@
 </div>
 
 <details class="exercise">
-  <summary><span class="ek">Design exercise</span><span class="et">A second load on a long cable</span></summary>
+  <summary><span class="ek">Check your understanding</span><span class="et">A second load on a long cable</span></summary>
   <div class="eb">
     <p>At the end of Module 1's 30 m cable, a second identical solenoid is connected in parallel with the first, so that both are meant to pull in together.</p>
     <div class="choice"><p>What happens to the current through the first solenoid?</p>
@@ -298,7 +298,7 @@
 </div>
 
 <details class="exercise">
-  <summary><span class="ek">Design exercise</span><span class="et">The wrong resistor in the divider</span></summary>
+  <summary><span class="ek">Check your understanding</span><span class="et">The wrong resistor in the divider</span></summary>
   <div class="eb">
     <p>The battery monitor above should use R1 = 22 kΩ and R2 = 10 kΩ, and the software multiplies the ADC reading by 3.2. A board is assembled with 22 kΩ in both positions.</p>
     <div class="choice"><p>What happens on that board?</p>
@@ -354,6 +354,21 @@
   <span class="ni">!</span>
   <div><span class="nt">Misconception: "the meter is wrong"</span>When a high-value divider reads low on your multimeter, the meter is reporting the voltage correctly. It's the circuit that changed when you connected the meter. Every measurement loads the thing it measures a little; the skill is knowing when "a little" is too much. Probing a megohm node with a 10 MΩ meter, or a 1 MΩ scope probe, commonly produces readings that suggest a fault that isn't there.</div>
 </div>
+<details class="exercise">
+  <summary><span class="ek">Check your understanding</span><span class="et">"The meter needs calibrating"</span></summary>
+  <div class="eb">
+    <p>A 1 MΩ / 1 MΩ divider from 10 V reads 4.76 V on a 10 MΩ meter, not 5 V. A teammate sends the meter off for calibration.</p>
+    <div class="choice"><p>What is wrong with that response?</p>
+    <ol class="opts">
+      <li>Nothing. A meter that reads 4.76 V on a 5 V node is 5 % low and out of specification.<div class="why">The node is not at 5 V once the meter is connected. The meter is reporting the voltage that is actually there.</div></li>
+      <li>The meter is right and the resistors are the wrong value.<div class="why">Two equal resistors would give 5 V with nothing else connected. The extra path is the meter's own 10 MΩ, in parallel with the lower resistor.</div></li>
+      <li data-correct>Connecting the meter puts 10 MΩ across a source whose resistance is 500 kΩ, so the meter and the divider form a new divider and the node really does fall.<div class="why">The reading changed because the circuit changed. Recalibrating the meter would not put the node back to 5 V.</div></li>
+      <li>Meters always read 5 % low on megohm circuits, and you add 5 % back in software.<div class="why">The error is \(R_\text{th}/(R_\text{th}+R_\text{meter})\), which depends on both resistances. It is not a fixed 5 % of every megohm circuit.</div></li>
+    </ol>
+    <div class="solution"><p>The unloaded midpoint is 5 V, and the divider's output resistance is \(1\ \text{M}\Omega \parallel 1\ \text{M}\Omega = 500\ \text{k}\Omega\). The meter is a 10 MΩ load on that resistance, so it reads \(5 \times 10/(0.5+10) = 4.76\ \text{V}\). The mechanism is loading, not a bad meter. The same divider built from 10 kΩ resistors has an output resistance of 5 kΩ, two thousand times smaller than the meter, and reads 5 V.</p></div>
+    </div>
+  </div>
+</details>
 </section>
 
 <!-- ================= 7 THEVENIN ================= -->
@@ -422,7 +437,7 @@
 <p>The same two points are how you measure an equivalent without opening the box. \(V_\text{oc}\) is a voltmeter with nothing else connected. A dead short would give \(I_\text{sc}\) and thus \(R_\text{th} = V_\text{oc}/I_\text{sc}\), but deliberately shorting a source is rarely a good idea. Connect a known load instead and the drop from \(V_\text{oc}\) is the share \(R_\text{th}\) takes in the divider above, which you solve for \(R_\text{th}\). It's how you find a battery's internal resistance, or the output resistance of a sensor with no datasheet.</p>
 
 <details class="exercise">
-  <summary><span class="ek">Design exercise</span><span class="et">How much will a heavier load pull it down?</span></summary>
+  <summary><span class="ek">Check your understanding</span><span class="et">How much will a heavier load pull it down?</span></summary>
   <div class="eb">
     <p>You connect a 10 kΩ resistor across a sensor's output and its reading drops by 1 %.</p>
     <div class="choice"><p>Roughly how much will it drop with a 1 kΩ load instead?</p>
@@ -432,7 +447,22 @@
       <li data-correct>About 9 %.<div class="why">A 1 % drop at 10 kΩ means the output resistance is about 100 Ω. Against 1 kΩ that's about a tenth.</div></li>
       <li>About 50 %.<div class="why">That would need an output resistance close to 1 kΩ.</div></li>
     </ol>
-    <div class="solution"><p>Think Thévenin: the sensor is a voltage source with a small resistance inside it, and the load forms a divider with that resistance. A 1 % drop with 10 kΩ means the internal resistance is about 1 % of 10 kΩ, roughly 100 Ω. With 1 kΩ the fraction lost is \(100/(100 + 1000) \approx 9\ \%\). No formula needed beyond the divider: the drop is the share of the voltage the source's own resistance takes.</p></div>
+    <div class="solution"><p>The sensor is a voltage source with a small resistance inside it, and the load forms a divider with that resistance. A 1 % drop with 10 kΩ means the internal resistance is about 1 % of 10 kΩ, roughly 100 Ω. With 1 kΩ the fraction lost is \(100/(100 + 1000) \approx 9\ \%\). The drop is the share of the voltage the source's own resistance takes.</p></div>
+    </div>
+  </div>
+</details>
+<details class="exercise">
+  <summary><span class="ek">Check your understanding</span><span class="et">Why the parallel combination?</span></summary>
+  <div class="eb">
+    <p>For a divider, \(R_\text{th} = R_1 \parallel R_2\). The question is where that parallel combination comes from, not what the formula says.</p>
+    <div class="choice"><p>Which account actually produces the parallel pair?</p>
+    <ol class="opts">
+      <li>The two resistors are drawn one above the other, and parts drawn in parallel are in parallel.<div class="why">On the page R1 and R2 are in series across the supply. The parallel view appears only after you change what the source is doing.</div></li>
+      <li>Any two resistors' Thévenin resistance is their parallel combination, whatever the circuit.<div class="why">That happens to be true of this divider. A resistor in series with the port, with nothing else, would be just that resistor.</div></li>
+      <li data-correct>Replace the source by a wire and both resistors run from the output node to ground, so the resistance looking back is the two in parallel. The same number is \(V_\text{oc}/I_\text{sc}\).<div class="why">With the source off, the top of R1 is grounded. From the output, R1 and R2 are two paths to the same node.</div></li>
+      <li>The load is in parallel with R2, so \(R_\text{th}\) is R2.<div class="why">The load is what you connect afterwards. \(R_\text{th}\) is the resistance of the circuit before the load is attached.</div></li>
+    </ol>
+    <div class="solution"><p>Switching the voltage source off replaces it with a wire, which joins the top of R1 to the bottom of R2. Looking in from the output you see two resistances to ground, and two resistances to the same node are in parallel. Shorting the output instead of switching the source off gives \(I_\text{sc} = V_\text{in}/R_1\) and \(V_\text{oc} = V_\text{in} R_2/(R_1+R_2)\), and their ratio is the same parallel value. The formula is that geometry, written compactly.</p></div>
     </div>
   </div>
 </details>
@@ -476,7 +506,7 @@
 </div>
 
 <details class="exercise">
-  <summary><span class="ek">Design exercise</span><span class="et">When the reference voltage drifts</span></summary>
+  <summary><span class="ek">Check your understanding</span><span class="et">When the reference voltage drifts</span></summary>
   <div class="eb">
     <p>In the level shifter above (R1 = R2 = 10 kΩ), the 3.3 V reference sags to 3.0 V when a radio transmits.</p>
     <div class="choice"><p>What happens to the ADC voltage?</p>
@@ -577,8 +607,8 @@
 </section>
 
 <!-- ================= DESIGN EXERCISES ================= -->
-<section class="sec" id="exercises" data-nonum data-short="Design exercises">
-<h2>Design exercises</h2>
+<section class="sec" id="exercises" data-nonum data-short="Exercises">
+<h2>Exercises</h2>
 <p>Problems drawn from real hardware. Each takes a few steps. Enter numbers to check your reasoning as you go, or open the worked solutions and discussion. The figures above are useful for sanity-checking.</p>
 
 <div class="chal">

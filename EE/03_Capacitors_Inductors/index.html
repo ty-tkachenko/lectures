@@ -106,17 +106,32 @@
 </div>
 
 <details class="exercise">
-  <summary><span class="ek">Design exercise</span><span class="et">Bigger capacitor, or more allowed droop?</span></summary>
+  <summary><span class="ek">Check your understanding</span><span class="et">Bigger capacitor, or more allowed droop?</span></summary>
   <div class="eb">
     <p>A hold-up capacitor keeps a microcontroller running for a few milliseconds after its supply cuts out. You can make one change: double the capacitor, or use a chip that keeps working down to a lower voltage, so the rail can droop twice as far.</p>
     <div class="choice"><p>Which gives the longer hold-up time?</p>
     <ol class="opts">
-      <li>Doubling the capacitor.<div class="why">Compare how each change affects \(t = C\,\Delta V / I\).</div></li>
-      <li>Doubling the allowed droop.<div class="why">Compare how each change affects \(t = C\,\Delta V / I\).</div></li>
+      <li>Doubling the capacitor.<div class="why">Doubling C does double the hold-up time, and so does doubling the allowed droop. The charge the capacitor can give up is \(Q = C\,\Delta V\), so the two changes do the same thing.</div></li>
+      <li>Doubling the allowed droop.<div class="why">Doubling ΔV does double the hold-up time, and so does doubling C. Neither one is ahead of the other; \(t = C\,\Delta V/I\) is proportional to both.</div></li>
       <li data-correct>They give the same time.<div class="why">The time is proportional to both C and the allowed droop.</div></li>
       <li>Neither helps: the current sets the time.<div class="why">The current matters, but so do both of these.</div></li>
     </ol>
     <div class="solution"><p>The capacitor supplies a charge \(Q = C\,\Delta V\) before the rail falls too far, and the chip uses it at a rate I. Doubling C or doubling ΔV doubles the charge available, so both double the time. This is why hold-up capacitors go before the regulator when possible: there the allowed droop is several volts instead of a few hundred millivolts, worth as much as a far bigger capacitor.</p></div>
+    </div>
+  </div>
+</details>
+<details class="exercise">
+  <summary><span class="ek">Check your understanding</span><span class="et">"105 µF is enough, it's a 7.4 V pack"</span></summary>
+  <div class="eb">
+    <p>A board holds itself up through a 5 ms dropout with a capacitor ahead of a regulator that needs at least 3.6 V, while the board draws 80 mA. Someone computes \(C = 0.080 \times 0.005 / (7.4 - 3.6) = 105\ \mu\text{F}\) from the pack's nominal 7.4 V, and waves away the series diode as "only a diode".</p>
+    <div class="choice"><p>What does that calculation miss?</p>
+    <ol class="opts">
+      <li>Nothing. Nominal voltage is the voltage a 2S pack sits at, and a diode drop is too small to bother with.<div class="why">7.4 V is the label, not the voltage you can count on while the pack is sagging. The diode is in series with the capacitor, so its drop is subtracted before the capacitor ever charges.</div></li>
+      <li>The current is wrong: a regulator draws less at its input than at its output.<div class="why">A linear regulator passes the load current through from input to output. The current in the calculation is the right one; the voltage it starts from is not.</div></li>
+      <li data-correct>The capacitor starts from a sagged pack minus the diode drop, about 6.6 − 0.7 = 5.9 V, so it only has 2.3 V of room. 105 µF runs out before the 5 ms is over.<div class="why">Design to the lowest voltage the capacitor will actually be sitting at. The nominal figure is the same kind of number as a datasheet "typical".</div></li>
+      <li>Hold-up capacitors have to go on the regulator's output, so the input calculation is irrelevant.<div class="why">The input side is the better place, because the allowed swing is volts rather than a few hundred millivolts. It only works if that swing is the real one.</div></li>
+    </ol>
+    <div class="solution"><p>\(C = It/\Delta V\). Using 3.8 V of room asks for 105 µF; using 2.3 V asks for about 175 µF. The difference is the sag and the diode, both of which are in the circuit the capacitor has to survive. A Schottky at 0.3 V would be a milder case (about 150 µF). The ordinary diode is the one to design to unless that Schottky is actually fitted. Exercise 1 at the end is the same problem with the numbers to enter.</p></div>
     </div>
   </div>
 </details>
@@ -187,7 +202,7 @@
 </div>
 
 <details class="exercise">
-  <summary><span class="ek">Design exercise</span><span class="et">A delay on a slowly rising supply</span></summary>
+  <summary><span class="ek">Check your understanding</span><span class="et">A delay on a slowly rising supply</span></summary>
   <div class="eb">
     <p>A chip's enable pin is fed from its 3.3 V supply through 10 kΩ, with 1 µF to ground, so it turns on about 10 ms after the supply appears. On a new board the supply doesn't jump to 3.3 V; it ramps up slowly over 50 ms.</p>
     <div class="choice"><p>Does the RC still hold the chip off until the supply has settled?</p>
@@ -198,6 +213,21 @@
       <li>The delay becomes 60 ms: 50 ms of ramp plus 10 ms of RC.<div class="why">The RC delay doesn't wait for the ramp to finish before it starts.</div></li>
     </ol>
     <div class="solution"><p>An RC delay works because the capacitor can't follow a sudden step. A slow ramp isn't sudden: the capacitor voltage follows it, about one time constant behind. Here the pin crosses 2.0 V roughly 10 ms after the supply does, at which point the supply is only about 2.6 V on its way to 3.3 V. If the chip must wait for a settled supply, use a reset or supervisor chip that watches the supply voltage itself rather than relying on a fixed delay.</p></div>
+    </div>
+  </div>
+</details>
+<details class="exercise">
+  <summary><span class="ek">Check your understanding</span><span class="et">Why the curve bends over</span></summary>
+  <div class="eb">
+    <p>A capacitor charging through a resistor heads for the supply voltage on a curve, fast at first and slower later, rather than in a straight line.</p>
+    <div class="choice"><p>Why does it close the same fraction of the remaining gap every time constant?</p>
+    <ol class="opts">
+      <li>Because the formula contains an exponential, and exponentials bend.<div class="why">The formula is the compact way to write the fraction rule. It is not the reason the voltage bends.</div></li>
+      <li>Because the resistor heats up and its resistance rises as the capacitor charges.<div class="why">The curve has this shape with a constant resistance. Heating is a side effect, not the mechanism.</div></li>
+      <li data-correct>The charging current is the remaining gap divided by R, so it shrinks in proportion to the gap. A current proportional to the gap that's left closes a fixed fraction of it in each interval.<div class="why">Straight-line charging would need a constant current. Here the current falls as soon as the capacitor voltage rises.</div></li>
+      <li>Because a capacitor is nonlinear: it stores less charge per volt as it fills.<div class="why">An ideal capacitor is linear, Q = CV. The bending comes from the shrinking current, not from C changing.</div></li>
+    </ol>
+    <div class="solution"><p>The gap is \(V - v_C\), and all of it sits across the resistor, so \(i = (V - v_C)/R\). In a short interval the capacitor climbs by a fraction \(\Delta t/(RC)\) of that gap, whatever the gap currently is. Repeating a fixed fraction is the exponential: about 37 % of the gap left after one τ, and under 1 % after five. The same argument with the gap measured in current gives the RL curve, with \(\tau = L/R\).</p></div>
     </div>
   </div>
 </details>
@@ -214,12 +244,12 @@
   <div><span class="nt">How designs limit inrush</span>A precharge resistor that's connected first and bypassed a moment later, "anti-spark" connectors with a built-in resistor on one pin, or an electronic load switch that turns on slowly (Module 7). All of them do the same thing: they make the capacitor charge through more resistance, or more slowly, than the bare wiring would.</div>
 </div>
 <details class="exercise">
-  <summary><span class="ek">Design exercise</span><span class="et">What sets the size of the inrush spike?</span></summary>
+  <summary><span class="ek">Check your understanding</span><span class="et">What sets the size of the inrush spike?</span></summary>
   <div class="eb">
     <p>Plugging a battery into a board with a large input capacitor causes a big current spike.</p>
     <div class="choice"><p>Which change halves the peak current?</p>
     <ol class="opts">
-      <li>Halving the capacitance.<div class="why">Less capacitance shortens the surge, but think about the very first instant.</div></li>
+      <li>Halving the capacitance.<div class="why">At the first instant the capacitor voltage is still zero, so it looks like a short circuit. Capacitance sets how long the surge lasts, through τ = RC, not the peak current.</div></li>
       <li data-correct>Doubling the resistance in the path.<div class="why">At the first instant the empty capacitor is a short, so only the path resistance limits the current.</div></li>
       <li>Either one.<div class="why">Only one of them affects the peak. The other changes how long it lasts.</div></li>
       <li>Neither: the battery sets the peak.<div class="why">The battery's internal resistance is part of the path resistance, but you can add more.</div></li>
@@ -327,7 +357,7 @@
     <li>With no protection, look at the coil voltage: +12 V while the switch is on, then a large negative spike when it opens. Make the switch faster. What happens to the spike?</li>
     <li>Switch the plot to the switch voltage. The same spike appears there as a positive voltage, added to the 12 V supply.</li>
     <li>Add the flyback diode. The switch is safe, but how long does the current now take to die away?</li>
-    <li>A slower switch reduces the spike without a diode. Why isn't that a good fix? (Think about where the energy goes while it's half on.)</li>
+    <li>A slower switch reduces the spike without a diode. The coil's energy is then dumped in the switch while it is half on. Why is that a poor fix?</li>
   </ol></div>
 </div>
 
@@ -337,12 +367,12 @@
 </div>
 
 <details class="exercise">
-  <summary><span class="ek">Design exercise</span><span class="et">A faster switch, a bigger kick</span></summary>
+  <summary><span class="ek">Check your understanding</span><span class="et">A faster switch, a bigger kick</span></summary>
   <div class="eb">
     <p>Transistors that switch off faster waste less power while switching, so faster is usually better. This one drives a relay coil with no flyback diode.</p>
     <div class="choice"><p>What does a faster switch-off do to the voltage spike?</p>
     <ol class="opts">
-      <li>It makes the spike smaller, because the event is over sooner.<div class="why">Shorter, but think about what the coil does when the current is forced to fall faster.</div></li>
+      <li>It makes the spike smaller, because the event is over sooner.<div class="why">The coil's voltage is L times how fast the current falls. A shorter turn-off is a faster fall, so the voltage is larger, not smaller.</div></li>
       <li data-correct>It makes the spike larger.<div class="why">The coil generates \(L\,di/dt\), and a faster switch-off means a larger di/dt.</div></li>
       <li>It doesn't change it: the coil's stored energy is the same.<div class="why">The energy is the same, but it's released over a shorter time, so the voltage is higher.</div></li>
       <li>It depends only on the supply voltage.<div class="why">The supply voltage sets the current before switch-off, not how fast it's forced to stop.</div></li>
@@ -400,7 +430,7 @@
 </div>
 
 <details class="exercise">
-  <summary><span class="ek">Design exercise</span><span class="et">Which 10 µF capacitor is really 10 µF?</span></summary>
+  <summary><span class="ek">Check your understanding</span><span class="et">Which 10 µF capacitor is really 10 µF?</span></summary>
   <div class="eb">
     <p>Two capacitors, both marked 10 µF X5R, are fitted on a 5 V rail. One is a 0603 rated 6.3 V; the other is a 1206 rated 25 V.</p>
     <div class="choice"><p>Which has more capacitance at 5 V?</p>
@@ -458,7 +488,7 @@
 </div>
 
 <details class="exercise">
-  <summary><span class="ek">Design exercise</span><span class="et">More voltage across the same inductor</span></summary>
+  <summary><span class="ek">Check your understanding</span><span class="et">More voltage across the same inductor</span></summary>
   <div class="eb">
     <p>In a switching regulator, the inductor has a voltage across it for a fixed on-time each cycle, and its current ramps up during that time. The input voltage rises, so the voltage across the inductor during the on-time rises too, with the same on-time.</p>
     <div class="choice"><p>What happens to the inductor?</p>
@@ -513,7 +543,7 @@
 <p>A physically larger part has more inductance in its own body and leads, so the fast edge drops voltage there too, even though the part stores more charge for a slower demand. That is why the usual starting point is a small capacitor right at the pin, with a larger one nearby for the slower current. A 10 nF part at the pin runs out of charge during a 30 ns burst (\(\Delta V \approx It/C\)), which is the other way a decoupling capacitor fails, still in the time domain. How a capacitor's own inductance makes it stop acting as a capacitor above some frequency, and the impedance curves that show it, are Module 4. Parallel capacitors can also resonate with each other; Module 12 covers that with placement.</p>
 
 <details class="exercise">
-  <summary><span class="ek">Design exercise</span><span class="et">Moving the decoupling capacitor a centimetre away</span></summary>
+  <summary><span class="ek">Check your understanding</span><span class="et">Moving the decoupling capacitor a centimetre away</span></summary>
   <div class="eb">
     <p>A 100 nF capacitor sits beside a chip's power pin and keeps the supply dip small during the chip's fast current bursts. To make room, someone moves that same capacitor 1 cm away along the supply trace.</p>
     <div class="choice"><p>What happens to the dip?</p>
@@ -573,7 +603,7 @@
 </div>
 
 <details class="exercise">
-  <summary><span class="ek">Design exercise</span><span class="et">Is the ringing real?</span></summary>
+  <summary><span class="ek">Check your understanding</span><span class="et">Is the ringing real?</span></summary>
   <div class="eb">
     <p>A fast logic edge on your scope shows heavy ringing, and you need to know whether the circuit really rings or the probe is adding it.</p>
     <div class="choice"><p>Which quick test tells you?</p>
@@ -590,8 +620,8 @@
 </section>
 
 <!-- ================= DESIGN EXERCISES ================= -->
-<section class="sec" id="exercises" data-nonum data-short="Design exercises">
-<h2>Design exercises</h2>
+<section class="sec" id="exercises" data-nonum data-short="Exercises">
+<h2>Exercises</h2>
 <p>Problems drawn from real hardware. Each takes a few steps. Enter numbers to check your reasoning as you go, or open the worked solutions and discussion. The figures above are useful for sanity-checking.</p>
 
 <div class="chal">
