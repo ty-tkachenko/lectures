@@ -64,6 +64,34 @@
       repairParenMath(document.getElementById("content") || document.body);
     });
 
+    /* One listener for every embedded widget. Demos post
+       {type:'widget-height', id, height}. RF pages can drop their copies. */
+    window.addEventListener("message", function (e) {
+      var d = e.data;
+      if (!d || d.type !== "widget-height" || !(d.height > 0)) return;
+      var h = Math.min(Math.ceil(d.height) + 8, 2000);
+      var frames = document.querySelectorAll("figure.widget-embed iframe");
+      var i, frame, src, marked, fromSrc;
+      for (i = 0; i < frames.length; i++) {
+        if (frames[i].contentWindow === e.source) {
+          frames[i].style.height = h + "px";
+          return;
+        }
+      }
+      if (!d.id) return;
+      for (i = 0; i < frames.length; i++) {
+        frame = frames[i];
+        marked = frame.getAttribute("data-widget") || "";
+        src = frame.getAttribute("src") || "";
+        fromSrc = "";
+        var match = src.match(/[?&]w=([^&]+)/);
+        if (match) {
+          try { fromSrc = decodeURIComponent(match[1]); } catch (err) { fromSrc = match[1]; }
+        }
+        if (marked === d.id || fromSrc === d.id) frame.style.height = h + "px";
+      }
+    });
+
     /* Kramdown treats \( \) in source as escaped parentheses, so RF pages
        that wrote inline TeX that way lose the backslash. $$ is unaffected.
        Render a parenthetical group when it is doubled, as in ((V = IR)),

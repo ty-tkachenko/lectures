@@ -128,7 +128,7 @@ $$
 
 Worked. $$L = 1\,\mathrm{mH}$$, $$R = 10\,\Omega$$, source $$5\,\mathrm{V}$$. The final current is $$5 / 10 = 0.50\,\mathrm{A}$$. The time constant is $$0.001 / 10 = 0.10\,\mathrm{ms}$$. At one time constant the current is $$0.50 \times 0.632 = 0.316\,\mathrm{A}$$.
 
-{% include widget.html widget="rc-scope" height=960 title="RC charge and discharge on a square wave" %}
+{% include widget.html widget="rc-scope" height=1080 title="RC charge and discharge on a square wave" %}
 
 ## 4. Kickback, and the diode that catches it
 
@@ -156,7 +156,7 @@ On a 5 V supply the switch node sits near $$5.0 + 0.7 = 5.7\,\mathrm{V}$$ while 
 
 *The diode is backwards while the switch is on. When the switch opens, coil current circulates through the diode and the switch node only rises by about one forward drop above the supply.*
 
-{% include widget.html widget="rl-kickback" height=1100 title="Inductive kickback, with and without a diode" %}
+{% include widget.html widget="rl-kickback" height=1120 title="Inductive kickback, with and without a diode" %}
 
 ## 5. Reactance: ohms that depend on frequency
 
@@ -180,7 +180,7 @@ $$
 X_L = 2 \pi \times 1000 \times 0.010 = 62.8\,\Omega
 $$
 
-{% include widget.html widget="impedance-plot" height=960 title="Impedance of R, C, and L versus frequency" %}
+{% include widget.html widget="impedance-plot" height=1110 title="Impedance of R, C, and L versus frequency" %}
 
 ## 6. RC low-pass and high-pass
 
@@ -209,7 +209,7 @@ $$
 At ten times that, $$9.95\,\mathrm{kHz}$$, the low-pass magnitude is
 
 $$
-|H| = \frac{1}{\sqrt{1 + 10^{2}}} = 0.0995
+\lvert H \rvert = \frac{1}{\sqrt{1 + 10^{2}}} = 0.0995
 $$
 
 $$
@@ -218,7 +218,7 @@ $$
 
 The high-pass does the mirror image: about $$-20\,\mathrm{dB}$$ at a tenth of $$f_c$$, and it passes the fast tone.
 
-{% include widget.html widget="rc-filter" height=1280 title="RC low-pass and high-pass" %}
+{% include widget.html widget="rc-filter" height=1180 title="RC low-pass and high-pass" %}
 
 ## 7. Combining capacitors and inductors
 

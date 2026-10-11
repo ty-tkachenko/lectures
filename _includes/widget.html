@@ -18,7 +18,7 @@
 {%- capture widget_path -%}{{ page_url }}{{ widget_file }}?w={{ widget_id }}{%- endcapture -%}
 {%- assign widget_href = widget_path | relative_url -%}
 <figure class="widget-embed">
-  <iframe src="{{ widget_href }}" title="{{ widget_title | escape }}" loading="lazy" style="height:{{ widget_height }}px"></iframe>
+  <iframe src="{{ widget_href }}" title="{{ widget_title | escape }}" data-widget="{{ widget_id | escape }}" loading="lazy" style="height:{{ widget_height }}px"></iframe>
   <figcaption><a href="{{ widget_href }}" target="_blank" rel="noopener">Open full screen ↗</a></figcaption>
   <noscript><p><a href="{{ widget_href }}">Open the {{ widget_title | escape }} widget</a></p></noscript>
 </figure>

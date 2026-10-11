@@ -1,207 +1,194 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Circuit fundamentals widgets</title>
-  <link rel="stylesheet" href="../../../assets/css/widgets.css">
-  <style>
-/* Widget chrome copied from the RF demo pages (rf/00, rf/01, rf/02 widgets/demo.html).
-   Those files keep their CSS inline. This sheet is for EE pages and EE demos.
-   Lesson pages stay in the site serif. Standalone demos set class="widget-demo" on body. */
-
-body.widget-demo {
-  font-family: Inter, system-ui, sans-serif;
-  max-width: 820px;
-  margin: 2rem auto;
-  padding: 0 1rem;
-  color: #2b2b2b;
-  line-height: 1.6;
-  background: #fff;
-}
-
-.widget {
-  border: 1px solid #eee;
-  border-radius: 10px;
-  padding: 1rem 1.25rem;
-  margin: 2rem 0;
-  background: #fff;
-  font-family: Inter, system-ui, sans-serif;
-  color: #2b2b2b;
-  line-height: 1.6;
-}
-
-.widget h3 { margin: 0.2rem 0 0.8rem; }
-
-.widget label {
-  display: block;
-  font-size: 0.9rem;
-  color: #555;
-  margin: 0.5rem 0 0.2rem;
-}
-
-.widget label.inline { display: inline-block; margin-right: 1rem; }
-
-.widget input[type="range"] { width: 100%; }
-
-.widget select,
-.widget input[type="number"] { padding: 0.2rem; }
-
-.widget input[type="number"] { width: 6rem; }
-
-.widget button {
-  font: inherit;
-  font-size: 0.85rem;
-  padding: 0.2rem 0.6rem;
-  margin: 0.2rem 0.3rem 0.2rem 0;
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
-  background: #fff;
-  cursor: pointer;
-}
-
-.widget button:hover { background: #eff6ff; }
-
-.widget .row,
-.widget .controls {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0 1.25rem;
-}
-
-.widget .readout,
-.widget .widget-readout {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 0.5rem;
-  margin: 0.8rem 0;
-}
-
-.widget .readout div,
-.widget .widget-readout div {
-  background: #eff6ff;
-  border-radius: 8px;
-  padding: 0.4rem 0.6rem;
-  margin: 0;
-  font-size: 0.9rem;
-}
-
-.widget .readout b,
-.widget .readout strong,
-.widget .widget-readout b,
-.widget .widget-readout strong {
-  display: block;
-  font-size: 1.1rem;
-  color: #1d4ed8;
-}
-
-.widget canvas,
-.widget svg {
-  width: 100%;
-  height: auto;
-  display: block;
-  margin: 0.4rem 0;
-  border-radius: 8px;
-  background: #fafafa;
-}
-
-.widget .try {
-  font-size: 0.9rem;
-  background: #fffbeb;
-  border: 0;
-  border-left: 3px solid #f59e0b;
-  border-radius: 0;
-  padding: 0.5rem 0.75rem;
-  margin: 0.8rem 0 0;
-}
-
-.widget .verdict,
-.widget .widget-warn {
-  font-weight: 600;
-  border: 0;
-  background: transparent;
-  color: #b45309;
-  padding: 0.2rem 0;
-  margin: 0.4rem 0;
-}
-
-.widget .legend,
-.widget .noscript-note,
-.widget .widget-plot-label {
-  font-size: 0.85rem;
-  color: #555;
-  font-weight: normal;
-  font-style: normal;
-  margin: 0.35rem 0;
-}
-
-.widget .legend span {
-  display: inline-block;
-  width: 14px;
-  height: 3px;
-  vertical-align: middle;
-  margin: 0 0.3rem 0 0.8rem;
-}
-
-.widget .slider-row {
-  display: block;
-  margin: 0.15rem 0 0.35rem;
-}
-
-.widget .slider-row label {
-  display: block;
-  font-size: 0.9rem;
-  color: #555;
-  margin: 0.5rem 0 0.2rem;
-}
-
-.widget .slider-row .slider-value {
-  font-weight: 600;
-  color: #1d4ed8;
-  font-variant-numeric: tabular-nums;
-}
-
-.widget .slider-row input[type="range"] {
-  display: block;
-  width: 100%;
-  height: auto;
-  margin: 0.15rem 0 0.2rem;
-  grid-column: auto;
-}
-
-@media (max-width: 640px) {
-  .widget .row,
-  .widget .controls { grid-template-columns: 1fr; }
-}
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Circuit fundamentals widgets</title>
+<link rel="stylesheet" href="../../../assets/css/widgets.css">
+<style>
+body{font-family:Inter,system-ui,sans-serif;max-width:820px;margin:2rem auto;padding:0 1rem;color:#2b2b2b;line-height:1.6}
+.widget{border:1px solid #eee;border-radius:10px;padding:1rem 1.25rem;margin:2rem 0}
+.widget h3{margin:.2rem 0 .8rem}
+label{display:block;font-size:.9rem;color:#555;margin:.5rem 0 .2rem}
+label.inline{display:inline-block;margin-right:1rem}
+input[type=range]{width:100%}
+select,input[type=number]{padding:.2rem}
+input[type=number]{width:6rem}
+button{font:inherit;font-size:.85rem;padding:.2rem .6rem;margin:.2rem .3rem .2rem 0;border:1px solid #cbd5e1;border-radius:6px;background:#fff;cursor:pointer}
+button:hover{background:#eff6ff}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:0 1.25rem}
+.readout{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.5rem;margin:.8rem 0}
+.readout div{background:#eff6ff;border-radius:8px;padding:.4rem .6rem;font-size:.9rem}
+.readout b{display:block;font-size:1.1rem;color:#1d4ed8}
+canvas{width:100%;border-radius:8px;background:#fafafa}
+.try{font-size:.9rem;background:#fffbeb;border-left:3px solid #f59e0b;padding:.5rem .75rem;margin-top:.8rem}
+.verdict{font-weight:600}
+.legend{font-size:.85rem;color:#555}
+.legend span{display:inline-block;width:14px;height:3px;vertical-align:middle;margin:0 .3rem 0 .8rem}
 </style>
-</head>
-<body class="widget-demo">
-  <header id="demo-banner">
-    <h1>Circuit fundamentals widgets</h1>
-    <p>Open this page with <code>?w=</code> and an id from the module front matter to show one widget. The reading page embeds them that way.</p>
-  </header>
-  <div class="widget" data-widget="ohms-power" data-prompt="The defaults are the 5 V, 100 ohm, 0.25 W example. Drop the resistance or raise the voltage until the body is marked above its rating. Then raise the rating and see the warning clear."></div>
-  <div class="widget" data-widget="kvl-kcl" data-prompt="Leave the source at 12 V and change only R3. Both node voltages and every branch current should move, and the current into each node should still match the current out."></div>
-  <div class="widget" data-widget="voltage-divider" data-prompt="Start with R1, R2, and the load all at 10 kilohms and read the sag against the dashed unloaded line. Then move the load up toward 10 megohms and watch the output climb back to 2.5 V."></div>
-  <div class="widget" data-widget="led-limit" data-prompt="Set 9 V, a forward drop of 2.0 V, and 20 mA. Compare the ideal resistance with the E24 value at or above it, and with the E12 nearest value, which lets the current go over the target. Then check the resistor power against a 1/8 W rating."></div>
-  <script>
-    (function () {
-      var id = new URLSearchParams(location.search).get("w");
-      if (!id) return;
-      var banner = document.getElementById("demo-banner");
-      if (banner) banner.remove();
-      var found = false;
-      document.querySelectorAll(".widget[data-widget]").forEach(function (node) {
-        if (node.getAttribute("data-widget") === id) found = true;
-        else node.remove();
-      });
-      if (!found) {
-        var note = document.createElement("p");
-        note.textContent = "No widget named " + id + " on this page.";
-        document.body.appendChild(note);
-      }
-    })();
-  </script>
-  <script src="../../../assets/widgets.js"></script>
-</body>
-</html>
+<script>(function(){try{var w=new URLSearchParams(location.search).get('w');if(w){document.documentElement.className+=' embed';document.documentElement.setAttribute('data-w',w)}}catch(e){}})();</script>
+<style>
+html.embed,html.embed body{background:transparent}
+html.embed body{max-width:none;margin:0;padding:.25rem .6rem .5rem}
+html.embed body>h1{display:none}
+html.embed .widget{display:none;margin:0;border:0;padding:.25rem 0}
+html.embed .widget.w-only{display:block}
+html.embed.w-unknown .widget{display:block;border:1px solid #eee;padding:1rem 1.25rem;margin:1rem 0}
+.w-notice{font-size:.85rem;color:#b45309}
+</style>
+</head><body class="widget-demo">
+<h1>Circuit fundamentals widgets</h1>
+
+<div class="widget" id="op" data-wid="ohms-power">
+<h3>Power playground</h3>
+<p class="legend">Drag the red dot or use the sliders. Power in a resistor is V times I, and the rating is how much heat the body was built to shed.</p>
+<div class="row">
+<div><label>Voltage across the resistor: <span id="op-vv"></span></label><input id="op-v" type="range" min="0.5" max="24" step="0.1" value="5"></div>
+<div><label>Resistance: <span id="op-rv"></span></label><input id="op-r" type="range" min="10" max="10000" step="10" value="100"></div>
+</div>
+<div class="row">
+<div><label>Power rating
+<select id="op-rate"><option value="0.125">1/8 W</option><option value="0.25" selected>1/4 W</option><option value="0.5">1/2 W</option><option value="1">1 W</option><option value="2">2 W</option></select></label></div>
+<div></div>
+</div>
+<div>Presets:
+<button data-p="5,100,0.25">5 V, 100 Ω, 1/4 W</button>
+<button data-p="5,10,0.25">5 V across 10 Ω</button>
+<button data-p="12,220,0.25">12 V, 220 Ω</button>
+<button data-p="9,1000,0.125">9 V, 1 kΩ, 1/8 W</button>
+</div>
+<div class="readout">
+<div>Current<b id="op-i"></b></div>
+<div>Power P = V²/R<b id="op-p"></b></div>
+<div>Rating<b id="op-ratev"></b></div>
+<div>Fraction of the rating<b id="op-frac"></b></div>
+<div>Current at the rating<b id="op-imax"></b></div>
+<div>Margin under the rating<b id="op-margin"></b></div>
+</div>
+<canvas id="op-c" width="760" height="360" style="touch-action:none;cursor:crosshair"></canvas>
+<p class="legend"><span style="background:#111"></span>power <span style="background:#f59e0b"></span>rating <span style="background:#ef4444"></span>operating point</p>
+<p class="verdict" id="op-verdict"></p>
+<div class="try"><b>Try this:</b> (1) The defaults are the 5 V, 100 Ω, 1/4 W example, which sits exactly on the rating. (2) Drop the resistance or raise the voltage until the verdict says the body is over its rating. (3) Press the 1/2 W idea by choosing a higher rating and watch the warning clear.</div>
+</div>
+
+<div class="widget" id="nv" data-wid="kvl-kcl">
+<h3>Node-voltage circuit</h3>
+<p class="legend">Drag is the sliders here: every resistor is a branch. Node A is after R1. Node B is after R2. R3 and R4 return to 0 V.</p>
+<div class="row">
+<div><label>Source Vin: <span id="nv-vinv"></span></label><input id="nv-vin" type="range" min="1" max="24" step="0.1" value="12"></div>
+<div><label>R1: <span id="nv-r1v"></span></label><input id="nv-r1" type="range" min="100" max="100000" step="100" value="10000"></div>
+</div>
+<div class="row">
+<div><label>R2: <span id="nv-r2v"></span></label><input id="nv-r2" type="range" min="100" max="100000" step="100" value="10000"></div>
+<div><label>R3 (A to 0 V): <span id="nv-r3v"></span></label><input id="nv-r3" type="range" min="100" max="100000" step="100" value="10000"></div>
+</div>
+<div class="row">
+<div><label>R4 (B to 0 V): <span id="nv-r4v"></span></label><input id="nv-r4" type="range" min="100" max="100000" step="100" value="10000"></div>
+<div></div>
+</div>
+<div>Presets:
+<button data-p="12,10000,10000,10000,10000">12 V, all 10 kΩ</button>
+<button data-p="12,10000,10000,1000,10000">R3 = 1 kΩ</button>
+<button data-p="5,10000,10000,10000,1000">5 V, R4 = 1 kΩ</button>
+<button data-p="12,4700,10000,22000,10000">Stiffer R1</button>
+</div>
+<div class="readout">
+<div>Node A<b id="nv-va"></b></div>
+<div>Node B<b id="nv-vb"></b></div>
+<div>I through R1<b id="nv-i1"></b></div>
+<div>I through R2<b id="nv-i2"></b></div>
+<div>I through R3<b id="nv-i3"></b></div>
+<div>I through R4<b id="nv-i4"></b></div>
+</div>
+<canvas id="nv-c" width="760" height="320"></canvas>
+<p class="legend"><span style="background:#1d4ed8"></span>node voltage <span style="background:#b45309"></span>branch current</p>
+<p class="verdict" id="nv-verdict"></p>
+<div class="try"><b>Try this:</b> (1) Leave the source at 12 V and change only R3. Both node voltages and every branch current should move. (2) Read the currents: into each node they still match the current out. (3) Drop R4 toward 1 kΩ and watch node B collapse.</div>
+</div>
+
+<div class="widget" id="vd" data-wid="voltage-divider">
+<h3>Loaded divider</h3>
+<p class="legend">Drag the red dot or use the sliders. Rload is in parallel with R2. A 10 MΩ meter barely leaves the unloaded line.</p>
+<div class="row">
+<div><label>Input Vin: <span id="vd-vinv"></span></label><input id="vd-vin" type="range" min="1" max="24" step="0.1" value="5"></div>
+<div><label>Top resistor R1: <span id="vd-r1v"></span></label><input id="vd-r1" type="range" min="100" max="100000" step="100" value="10000"></div>
+</div>
+<div class="row">
+<div><label>Bottom resistor R2: <span id="vd-r2v"></span></label><input id="vd-r2" type="range" min="100" max="100000" step="100" value="10000"></div>
+<div><label>Load Rload: <span id="vd-rlv"></span></label><input id="vd-rl" type="range" min="0" max="1000" step="1" value="400"></div>
+</div>
+<div>Presets:
+<button data-p="5,10000,10000,10000000">10 kΩ / 10 kΩ, meter load</button>
+<button data-p="5,10000,10000,10000">10 kΩ load</button>
+<button data-p="5,10000,10000,1000">1 kΩ load</button>
+<button data-p="12,22000,10000,10000">12 V, 22 kΩ over 10 kΩ</button>
+</div>
+<div class="readout">
+<div>Unloaded output<b id="vd-un"></b></div>
+<div>Loaded output<b id="vd-ld"></b></div>
+<div>Sag<b id="vd-sag"></b></div>
+<div>Sag as a fraction<b id="vd-pct"></b></div>
+<div>R2 || Rload<b id="vd-par"></b></div>
+<div>Thevenin R (R1 || R2)<b id="vd-rth"></b></div>
+</div>
+<canvas id="vd-c" width="760" height="360" style="touch-action:none;cursor:crosshair"></canvas>
+<p class="legend"><span style="background:#1d4ed8"></span>loaded output <span style="background:#94a3b8"></span>unloaded divider <span style="background:#ef4444"></span>this load</p>
+<p class="verdict" id="vd-verdict"></p>
+<div class="try"><b>Try this:</b> (1) Start with R1, R2, and the load all at 10 kΩ and read the sag against the dashed unloaded line. (2) Press the meter-load preset and watch the output climb back to 2.5 V. (3) Drag the dot left: a load near R2 is not a meter.</div>
+</div>
+
+<div class="widget" id="led" data-wid="led-limit">
+<h3>LED resistor designer</h3>
+<p class="legend">Use the sliders or drag the plot. The resistor sets the current. The LED does not. Nearest E12 can land under the ideal resistance and let the current go high.</p>
+<div class="row">
+<div><label>Supply Vs: <span id="led-vsv"></span></label><input id="led-vs" type="range" min="3" max="24" step="0.1" value="9"></div>
+<div><label>LED forward drop Vf: <span id="led-vfv"></span></label><input id="led-vf" type="range" min="1.2" max="4" step="0.05" value="2"></div>
+</div>
+<div class="row">
+<div><label>Target current: <span id="led-iv"></span></label><input id="led-i" type="range" min="1" max="50" step="0.5" value="20"></div>
+<div></div>
+</div>
+<div>Presets:
+<button data-p="9,2,20">9 V, Vf 2.0 V, 20 mA</button>
+<button data-p="5,1.8,10">5 V red, 10 mA</button>
+<button data-p="3.3,3,5">3.3 V, Vf 3.0 V, 5 mA</button>
+<button data-p="12,3.2,20">12 V white, 20 mA</button>
+</div>
+<div class="readout">
+<div>Ideal R = (Vs − Vf) / I<b id="led-r"></b></div>
+<div>E24, next value up<b id="led-e24"></b></div>
+<div>Current with that E24<b id="led-i24"></b></div>
+<div>E12 nearest<b id="led-e12"></b></div>
+<div>Current with that E12<b id="led-i12"></b></div>
+<div>Power in the E24 part<b id="led-p"></b></div>
+</div>
+<canvas id="led-c" width="760" height="360" style="touch-action:none;cursor:crosshair"></canvas>
+<p class="legend"><span style="background:#111"></span>I versus R <span style="background:#f59e0b"></span>target current <span style="background:#ef4444"></span>ideal R <span style="background:#1d4ed8"></span>E24 next up <span style="background:#16a34a"></span>E12 nearest</p>
+<p class="verdict" id="led-verdict"></p>
+<div class="try"><b>Try this:</b> (1) Set 9 V, a forward drop of 2.0 V, and 20 mA. Compare the ideal resistance with the E24 value at or above it. (2) Read the E12 nearest, which can let the current go over the target. (3) Check that resistor power against a 1/8 W rating, then raise Vf toward Vs and watch the resistor shrink.</div>
+</div>
+
+<script src="../../../assets/ee-widgets.js"></script>
+<script>
+// ---- embed mode + iframe auto-height (same contract as the RF demos) ----
+(function(){
+ var html=document.documentElement, w=html.getAttribute('data-w');
+ if(w){
+  var el=document.querySelector('.widget[data-wid="'+w.replace(/["\\]/g,'')+'"]');
+  if(el){el.classList.add('w-only');var h=el.querySelector('h3');if(h)document.title=h.textContent}
+  else{html.classList.add('w-unknown');var n=document.createElement('p');n.className='w-notice';n.textContent='Unknown widget id "'+w+'". Showing all widgets.';document.body.insertBefore(n,document.body.firstChild)}
+ }
+ var last=0;
+ function post(){
+  var b=document.body,cs=getComputedStyle(b);
+  var hgt=Math.ceil(b.getBoundingClientRect().height+parseFloat(cs.marginTop)+parseFloat(cs.marginBottom));
+  if(hgt===last)return; last=hgt;
+  if(window.parent&&window.parent!==window){try{window.parent.postMessage({type:'widget-height',id:w||null,height:hgt},'*')}catch(e){}}
+ }
+ window.addEventListener('load',post); window.addEventListener('resize',post);
+ if(window.ResizeObserver){new ResizeObserver(post).observe(document.body)}
+ document.body.addEventListener('input',post);
+ document.body.addEventListener('change',post);
+ document.body.addEventListener('click',function(ev){ if(ev.target&&ev.target.closest&&ev.target.closest('button')) post(); });
+ window.postWidgetHeight=post;
+ post();
+})();
+</script>
+</body></html>

@@ -152,7 +152,7 @@ $$
 
 The load did not change. The pack being fuller, or having another cell, made the regulator hotter.
 
-{% include widget.html widget="ldo-dissipation" height=1650 title="LDO heat and junction temperature" %}
+{% include widget.html widget="ldo-dissipation" height=1260 title="LDO heat and junction temperature" %}
 
 {% capture deeper_iq %}
 Change only $$I_q$$, from 5 mA to 0.05 mA, a modern LDO. The quiescent heat at 8.4 V becomes $$8.4 \times 0.00005 = 0.0004\,\mathrm{W}$$. Total heat falls from 1.062 W to 1.020 W. At a 200 mA load you cannot save the board by shopping for a lower $$I_q$$. $$I_q$$ matters when the rocket is asleep and the load is microamps, because then the quiescent current *is* the battery drain.
@@ -310,7 +310,7 @@ $$
 
 Compare with the linear regulator on the same 2S pack: 1.062 W of heat versus 0.116 W. $$1.062 / 0.116 \approx 9$$. About nine times less heat in the converter, at this guess of efficiency. On the 3S pack the linear regulator was at 1.923 W and this buck estimate is still 0.116 W, because the estimate depends on efficiency and output power, not on how large $$V_{\mathrm{in}}$$ is.
 
-{% include widget.html widget="buck-converter" height=1320 title="Buck switch node and inductor current" %}
+{% include widget.html widget="buck-converter" height=1230 title="Buck switch node and inductor current" %}
 
 {% capture deeper_dcm %}
 Volt-second balance is why $$D = V_{\mathrm{out}}/V_{\mathrm{in}}$$ in continuous conduction. Over one cycle the inductor current has to end where it started, so the up-ramp and the down-ramp cancel. Up-ramp: $$(V_{\mathrm{in}}-V_{\mathrm{out}}) D / f_{\mathrm{sw}}$$. Down-ramp: $$V_{\mathrm{out}}(1-D)/f_{\mathrm{sw}}$$. Set them equal and $$D$$ falls out as $$V_{\mathrm{out}}/V_{\mathrm{in}}$$. Losses make the real duty a bit higher. A rough correction is $$D \approx V_{\mathrm{out}}/(\eta V_{\mathrm{in}})$$. The ripple formula on this page keeps the ideal $$D$$, so the up-ramp and down-ramp still match.
@@ -337,7 +337,7 @@ Use a linear regulator when the drop is small or the current is small, so the he
 | A radio, LNA, or ADC that hates ripple | Buck, then LDO | The buck does the big drop. The LDO drops a little and cleans up. |
 | Load current that sometimes almost disappears | Check continuous vs discontinuous | A small inductor can make the current hit zero. Ripple and noise change. |
 
-{% include widget.html widget="ldo-vs-buck" height=1020 title="LDO versus buck: heat as input voltage changes" %}
+{% include widget.html widget="ldo-vs-buck" height=1150 title="LDO versus buck: heat as input voltage changes" %}
 
 ## 6. A buck followed by an LDO
 

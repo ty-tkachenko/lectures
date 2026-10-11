@@ -97,7 +97,7 @@ $$
 
 A resistor turns that power into heat. The rating is how much heat it was built to shed. Common ratings are 1/8 W (0.125 W), 1/4 W (0.25 W), 1/2 W (0.5 W), 1 W, and 2 W. This 0.250 W example sits exactly on a 1/4 W part. A 1/2 W part has margin. Running at half the rating, so the part stays cooler, is a common practice. It is not a law.
 
-{% include widget.html widget="ohms-power" height=1060 title="Ohm's law and resistor heat" %}
+{% include widget.html widget="ohms-power" height=1040 title="Ohm's law and resistor heat" %}
 
 ## 4. Series and parallel
 
@@ -211,7 +211,7 @@ $$
 
 Check KCL at A: $$5.143 = 3.429 + 1.714$$. Check KCL at B: $$I_2 = I_4$$. Check KVL from the source through $$R_1$$ to A: $$5.143\,\mathrm{mA} \times 1\,\mathrm{k}\Omega + 6.857\,\mathrm{V} = 12.00\,\mathrm{V}$$.
 
-{% include widget.html widget="kvl-kcl" height=960 title="Two nodes: KCL and KVL" %}
+{% include widget.html widget="kvl-kcl" height=1080 title="Two nodes: KCL and KVL" %}
 
 {% capture deeper_nodes %}
 The two-node solve above used a shortcut, because $$R_2$$ and $$R_4$$ were equal. The general step is the same idea with conductances $$G = 1/R$$.
@@ -272,7 +272,7 @@ The sag is $$1.25\,\mathrm{mV}$$. A 10 MΩ meter does not bother a 10 kΩ divide
 
 The resistance the load "sees" looking back into the divider, with the source replaced by a short, is $$R_1 \parallel R_2$$. Here that is $$5\,\mathrm{k}\Omega$$. A stiff divider uses small resistors, draws more idle current, and sags less. A gentle divider does the opposite.
 
-{% include widget.html widget="voltage-divider" height=960 title="Voltage divider and the load that sags it" %}
+{% include widget.html widget="voltage-divider" height=1020 title="Voltage divider and the load that sags it" %}
 
 ## 7. Why one LED lives and the other dies
 
@@ -326,7 +326,7 @@ $$
 
 A small indicator cannot survive amperes. The same battery, same LED, plus $$360\,\Omega$$, gives 19 mA. The resistor is the whole difference.
 
-{% include widget.html widget="led-limit" height=860 title="LED current-limit resistor" %}
+{% include widget.html widget="led-limit" height=1110 title="LED current-limit resistor" %}
 
 {% capture deeper_eseries %}
 E12 and E24 are standard ratio series. Within a decade the values are spaced by a roughly constant percentage, which is why 330, 360, and 390 show up instead of 340 or 350. E12 is the 10% series. E24 is the 5% series. A 5% band on $$360\,\Omega$$ is $$\pm 18\,\Omega$$, so a real part can sit from about $$342\,\Omega$$ to $$378\,\Omega$$. At $$342\,\Omega$$ the example LED would take $$7.0 / 342 = 20.5\,\mathrm{mA}$$. If the datasheet maximum is 20 mA and you are unwilling to cross it, step up again or use a 1% value. The widget's "next up" is the starting pick, not the last word once tolerance is in the picture.

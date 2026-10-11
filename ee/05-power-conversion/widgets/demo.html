@@ -1,206 +1,179 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Power conversion widgets</title>
-  <link rel="stylesheet" href="../../../assets/css/widgets.css">
-  <style>
-/* Widget chrome copied from the RF demo pages (rf/00, rf/01, rf/02 widgets/demo.html).
-   Those files keep their CSS inline. This sheet is for EE pages and EE demos.
-   Lesson pages stay in the site serif. Standalone demos set class="widget-demo" on body. */
-
-body.widget-demo {
-  font-family: Inter, system-ui, sans-serif;
-  max-width: 820px;
-  margin: 2rem auto;
-  padding: 0 1rem;
-  color: #2b2b2b;
-  line-height: 1.6;
-  background: #fff;
-}
-
-.widget {
-  border: 1px solid #eee;
-  border-radius: 10px;
-  padding: 1rem 1.25rem;
-  margin: 2rem 0;
-  background: #fff;
-  font-family: Inter, system-ui, sans-serif;
-  color: #2b2b2b;
-  line-height: 1.6;
-}
-
-.widget h3 { margin: 0.2rem 0 0.8rem; }
-
-.widget label {
-  display: block;
-  font-size: 0.9rem;
-  color: #555;
-  margin: 0.5rem 0 0.2rem;
-}
-
-.widget label.inline { display: inline-block; margin-right: 1rem; }
-
-.widget input[type="range"] { width: 100%; }
-
-.widget select,
-.widget input[type="number"] { padding: 0.2rem; }
-
-.widget input[type="number"] { width: 6rem; }
-
-.widget button {
-  font: inherit;
-  font-size: 0.85rem;
-  padding: 0.2rem 0.6rem;
-  margin: 0.2rem 0.3rem 0.2rem 0;
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
-  background: #fff;
-  cursor: pointer;
-}
-
-.widget button:hover { background: #eff6ff; }
-
-.widget .row,
-.widget .controls {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0 1.25rem;
-}
-
-.widget .readout,
-.widget .widget-readout {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 0.5rem;
-  margin: 0.8rem 0;
-}
-
-.widget .readout div,
-.widget .widget-readout div {
-  background: #eff6ff;
-  border-radius: 8px;
-  padding: 0.4rem 0.6rem;
-  margin: 0;
-  font-size: 0.9rem;
-}
-
-.widget .readout b,
-.widget .readout strong,
-.widget .widget-readout b,
-.widget .widget-readout strong {
-  display: block;
-  font-size: 1.1rem;
-  color: #1d4ed8;
-}
-
-.widget canvas,
-.widget svg {
-  width: 100%;
-  height: auto;
-  display: block;
-  margin: 0.4rem 0;
-  border-radius: 8px;
-  background: #fafafa;
-}
-
-.widget .try {
-  font-size: 0.9rem;
-  background: #fffbeb;
-  border: 0;
-  border-left: 3px solid #f59e0b;
-  border-radius: 0;
-  padding: 0.5rem 0.75rem;
-  margin: 0.8rem 0 0;
-}
-
-.widget .verdict,
-.widget .widget-warn {
-  font-weight: 600;
-  border: 0;
-  background: transparent;
-  color: #b45309;
-  padding: 0.2rem 0;
-  margin: 0.4rem 0;
-}
-
-.widget .legend,
-.widget .noscript-note,
-.widget .widget-plot-label {
-  font-size: 0.85rem;
-  color: #555;
-  font-weight: normal;
-  font-style: normal;
-  margin: 0.35rem 0;
-}
-
-.widget .legend span {
-  display: inline-block;
-  width: 14px;
-  height: 3px;
-  vertical-align: middle;
-  margin: 0 0.3rem 0 0.8rem;
-}
-
-.widget .slider-row {
-  display: block;
-  margin: 0.15rem 0 0.35rem;
-}
-
-.widget .slider-row label {
-  display: block;
-  font-size: 0.9rem;
-  color: #555;
-  margin: 0.5rem 0 0.2rem;
-}
-
-.widget .slider-row .slider-value {
-  font-weight: 600;
-  color: #1d4ed8;
-  font-variant-numeric: tabular-nums;
-}
-
-.widget .slider-row input[type="range"] {
-  display: block;
-  width: 100%;
-  height: auto;
-  margin: 0.15rem 0 0.2rem;
-  grid-column: auto;
-}
-
-@media (max-width: 640px) {
-  .widget .row,
-  .widget .controls { grid-template-columns: 1fr; }
-}
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Power conversion widgets</title>
+<link rel="stylesheet" href="../../../assets/css/widgets.css">
+<style>
+body{font-family:Inter,system-ui,sans-serif;max-width:820px;margin:2rem auto;padding:0 1rem;color:#2b2b2b;line-height:1.6}
+.widget{border:1px solid #eee;border-radius:10px;padding:1rem 1.25rem;margin:2rem 0}
+.widget h3{margin:.2rem 0 .8rem}
+label{display:block;font-size:.9rem;color:#555;margin:.5rem 0 .2rem}
+label.inline{display:inline-block;margin-right:1rem}
+input[type=range]{width:100%}
+select,input[type=number]{padding:.2rem}
+input[type=number]{width:6rem}
+button{font:inherit;font-size:.85rem;padding:.2rem .6rem;margin:.2rem .3rem .2rem 0;border:1px solid #cbd5e1;border-radius:6px;background:#fff;cursor:pointer}
+button:hover{background:#eff6ff}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:0 1.25rem}
+.readout{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.5rem;margin:.8rem 0}
+.readout div{background:#eff6ff;border-radius:8px;padding:.4rem .6rem;font-size:.9rem}
+.readout b{display:block;font-size:1.1rem;color:#1d4ed8}
+canvas{width:100%;border-radius:8px;background:#fafafa}
+.try{font-size:.9rem;background:#fffbeb;border-left:3px solid #f59e0b;padding:.5rem .75rem;margin-top:.8rem}
+.verdict{font-weight:600}
+.legend{font-size:.85rem;color:#555}
+.legend span{display:inline-block;width:14px;height:3px;vertical-align:middle;margin:0 .3rem 0 .8rem}
 </style>
-</head>
-<body class="widget-demo">
-  <header id="demo-banner">
-    <h1>Power conversion widgets</h1>
-    <p>Open this page with <code>?w=</code> and an id from the module front matter to show one widget. The reading page embeds them that way.</p>
-  </header>
-  <div class="widget" data-widget="ldo-dissipation" data-prompt="Raise the input to 12 V and watch the heat take over the bar. Then drag the input down toward the output until the shaded dropout region covers the operating point. The defaults match the 8.4 V, 3.3 V, 200 mA example above."></div>
-  <div class="widget" data-widget="buck-converter" data-prompt="Shrink the inductor or the switching frequency and watch the current triangle grow. Keep going until the hint says the current falls to zero. That is discontinuous conduction. The defaults start in continuous conduction, near the 8.4 V to 3.3 V example."></div>
-  <div class="widget" data-widget="ldo-vs-buck" data-prompt="Sweep the input from 12 V down toward 3.3 V at 200 mA. The linear regulator's heat falls as the drop shrinks. The buck line stays nearly flat. That flat line is the point of a switcher on a 2S or 3S pack."></div>
-  <script>
-    (function () {
-      var id = new URLSearchParams(location.search).get("w");
-      if (!id) return;
-      var banner = document.getElementById("demo-banner");
-      if (banner) banner.remove();
-      var found = false;
-      document.querySelectorAll(".widget[data-widget]").forEach(function (node) {
-        if (node.getAttribute("data-widget") === id) found = true;
-        else node.remove();
-      });
-      if (!found) {
-        var note = document.createElement("p");
-        note.textContent = "No widget named " + id + " on this page.";
-        document.body.appendChild(note);
-      }
-    })();
-  </script>
-  <script src="../../../assets/widgets.js"></script>
-</body>
-</html>
+<script>(function(){try{var w=new URLSearchParams(location.search).get('w');if(w){document.documentElement.className+=' embed';document.documentElement.setAttribute('data-w',w)}}catch(e){}})();</script>
+<style>
+html.embed,html.embed body{background:transparent}
+html.embed body{max-width:none;margin:0;padding:.25rem .6rem .5rem}
+html.embed body>h1{display:none}
+html.embed .widget{display:none;margin:0;border:0;padding:.25rem 0}
+html.embed .widget.w-only{display:block}
+html.embed.w-unknown .widget{display:block;border:1px solid #eee;padding:1rem 1.25rem;margin:1rem 0}
+.w-notice{font-size:.85rem;color:#b45309}
+</style>
+</head><body class="widget-demo">
+<h1>Power conversion widgets</h1>
+
+<div class="widget" id="ldo" data-wid="ldo-dissipation">
+<h3>LDO heat and junction temperature</h3>
+<p class="legend">Drag the red dot along input voltage, or use the sliders. The pass element drops Vin − Vout at the load current, and that product is heat.</p>
+<div class="row">
+<div><label>Input Vin: <span id="ldo-vinv"></span></label><input id="ldo-vin" type="range" min="3" max="16" step="0.1" value="12.6"></div>
+<div><label>Output Vout: <span id="ldo-voutv"></span></label><input id="ldo-vout" type="range" min="1" max="12" step="0.1" value="3.3"></div>
+</div>
+<div class="row">
+<div><label>Load current: <span id="ldo-iv"></span></label><input id="ldo-i" type="range" min="10" max="1000" step="10" value="200"></div>
+<div><label>Quiescent current Iq: <span id="ldo-iqv"></span></label><input id="ldo-iq" type="range" min="0" max="20" step="0.1" value="5"></div>
+</div>
+<div class="row">
+<div><label>Thermal resistance θJA: <span id="ldo-thv"></span></label><input id="ldo-th" type="range" min="20" max="200" step="1" value="50"></div>
+<div><label>Ambient temperature: <span id="ldo-tav"></span></label><input id="ldo-ta" type="range" min="-20" max="85" step="1" value="25"></div>
+</div>
+<div class="row">
+<div><label>Dropout voltage: <span id="ldo-vdov"></span></label><input id="ldo-vdo" type="range" min="0.05" max="2" step="0.05" value="0.3"></div>
+<div><label>Junction limit: <span id="ldo-tjv"></span></label><input id="ldo-tj" type="range" min="60" max="175" step="5" value="125"></div>
+</div>
+<div>Presets:
+<button data-p="12.6,3.3,50">3S full, 3.3 V, 50 mA</button>
+<button data-p="12.6,3.3,200">3S full, 3.3 V, 200 mA</button>
+<button data-p="12.6,3.3,500">3S full, 3.3 V, 500 mA</button>
+<button data-p="9,3.3,200">3S empty (9.0 V), 200 mA</button>
+<button data-p="8.4,3.3,200">2S full, 3.3 V, 200 mA</button>
+</div>
+<div class="readout">
+<div>P<sub>diss</sub><b id="ldo-pd"></b></div>
+<div>Efficiency<b id="ldo-eta"></b></div>
+<div>Junction TJ<b id="ldo-tjout"></b></div>
+<div>Headroom Vin − Vout<b id="ldo-head"></b></div>
+<div>Power to the load<b id="ldo-pout"></b></div>
+<div>Power from the pack<b id="ldo-pin"></b></div>
+</div>
+<canvas id="ldo-c" width="760" height="380" style="touch-action:none;cursor:crosshair"></canvas>
+<p class="legend"><span style="background:#b45309"></span>heat in the regulator <span style="background:#1d4ed8"></span>power to the load <span style="background:#ef4444"></span>this Vin <span style="background:#b45309"></span>dropout band</p>
+<p class="verdict" id="ldo-verdict"></p>
+<div class="try"><b>Try this:</b> (1) Press 3S full into 3.3 V at 200 mA and read Pdiss, efficiency, and TJ against the junction limit. (2) Press 3S empty and watch the heat fall as the pack sags, then drag Vin down into the dropout band. (3) Step the load from 50 mA to 500 mA and watch TJ cross the limit at 50 °C/W.</div>
+</div>
+
+<div class="widget" id="buck" data-wid="buck-converter">
+<h3>Buck ripple and waveforms</h3>
+<p class="legend">Drag left for a smaller inductor, or use the sliders. The drawing is slowed down. A real cycle lasts 1/fsw.</p>
+<div class="row">
+<div><label>Input Vin: <span id="buck-vinv"></span></label><input id="buck-vin" type="range" min="4" max="16" step="0.1" value="8.4"></div>
+<div><label>Output Vout: <span id="buck-voutv"></span></label><input id="buck-vout" type="range" min="1" max="12" step="0.1" value="3.3"></div>
+</div>
+<div class="row">
+<div><label>Inductance: <span id="buck-lv"></span></label><input id="buck-l" type="range" min="1" max="47" step="0.1" value="15"></div>
+<div><label>Switching frequency: <span id="buck-fv"></span></label><input id="buck-f" type="range" min="100" max="2000" step="10" value="500"></div>
+</div>
+<div class="row">
+<div><label>Load current: <span id="buck-iv"></span></label><input id="buck-i" type="range" min="10" max="1000" step="10" value="200"></div>
+<div><label>Output capacitance (µF)</label><input id="buck-cout" type="number" min="1" max="470" step="1" value="22"></div>
+</div>
+<div class="row">
+<div><label>Capacitor ESR (mΩ)</label><input id="buck-esr" type="number" min="1" max="200" step="1" value="20"></div>
+<div></div>
+</div>
+<div>Presets:
+<button data-p="8.4,3.3,15,500,200">2S to 3.3 V, CCM</button>
+<button data-p="8.4,3.3,2.2,500,200">2.2 µH, into DCM</button>
+<button data-p="12.6,3.3,15,500,200">3S full to 3.3 V</button>
+<button data-p="8.4,3.3,15,500,20">Light load, 20 mA</button>
+</div>
+<div class="readout">
+<div>ΔI<sub>L</sub><b id="buck-dil"></b></div>
+<div>ΔVout (CCM estimate)<b id="buck-dv"></b></div>
+<div>Duty<b id="buck-d"></b></div>
+<div>Mode<b id="buck-mode"></b></div>
+<div>Peak current<b id="buck-peak"></b></div>
+<div>Valley current<b id="buck-valley"></b></div>
+</div>
+<canvas id="buck-c" width="760" height="400" style="touch-action:none;cursor:crosshair"></canvas>
+<p class="legend"><span style="background:#111"></span>switch node <span style="background:#1d4ed8"></span>inductor current</p>
+<p class="verdict" id="buck-verdict"></p>
+<div class="try"><b>Try this:</b> (1) The defaults start in continuous conduction, near the 8.4 V to 3.3 V example. Read ΔIL, ΔVout, and the duty. (2) Shrink the inductor or the switching frequency until the valley hits zero. (3) That is discontinuous conduction. The continuous-conduction ripple formula stops drawing the real shape.</div>
+</div>
+
+<div class="widget" id="cmp" data-wid="ldo-vs-buck">
+<h3>LDO versus buck</h3>
+<p class="legend">Drag the red dot from a full pack down toward the output. The buck line stays flat because this estimate depends on efficiency, not on how many volts are dropped.</p>
+<div class="row">
+<div><label>Input Vin: <span id="cmp-vinv"></span></label><input id="cmp-vin" type="range" min="3" max="16" step="0.1" value="12.6"></div>
+<div><label>Output Vout: <span id="cmp-voutv"></span></label><input id="cmp-vout" type="range" min="1.2" max="5" step="0.1" value="3.3"></div>
+</div>
+<div class="row">
+<div><label>Load current: <span id="cmp-ivv"></span></label><input id="cmp-i" type="range" min="10" max="1000" step="10" value="200"></div>
+<div><label>LDO quiescent current: <span id="cmp-iqv"></span></label><input id="cmp-iq" type="range" min="0" max="20" step="0.1" value="5"></div>
+</div>
+<div class="row">
+<div><label>Buck efficiency estimate (%)</label><input id="cmp-eta" type="number" min="50" max="98" step="1" value="85"></div>
+<div></div>
+</div>
+<div>Presets:
+<button data-p="12.6,3.3,200">3S full, 200 mA</button>
+<button data-p="8.4,3.3,200">2S full, 200 mA</button>
+<button data-p="4,3.3,200">Just above 3.3 V</button>
+<button data-p="12.6,5,200">3S full to 5 V</button>
+</div>
+<div class="readout">
+<div>LDO heat<b id="cmp-lin"></b></div>
+<div>LDO efficiency<b id="cmp-lineta"></b></div>
+<div>Buck heat<b id="cmp-buck"></b></div>
+<div>Buck input power<b id="cmp-pin"></b></div>
+<div>LDO heat / buck heat<b id="cmp-ratio"></b></div>
+<div>Load current<b id="cmp-iout"></b></div>
+</div>
+<canvas id="cmp-c" width="760" height="360" style="touch-action:none;cursor:crosshair"></canvas>
+<p class="legend"><span style="background:#111"></span>linear regulator heat <span style="background:#1d4ed8"></span>buck heat at the efficiency you set <span style="background:#ef4444"></span>this Vin</p>
+<p class="verdict" id="cmp-verdict"></p>
+<div class="try"><b>Try this:</b> (1) Sweep the input from 12.6 V down toward 3.3 V at 200 mA. (2) The linear regulator's heat falls as the drop shrinks. (3) The buck line stays nearly flat. That flat line is the point of a switcher on a 2S or 3S pack.</div>
+</div>
+
+<script src="../../../assets/ee-widgets.js"></script>
+<script>
+// ---- embed mode + iframe auto-height (same contract as the RF demos) ----
+(function(){
+ var html=document.documentElement, w=html.getAttribute('data-w');
+ if(w){
+  var el=document.querySelector('.widget[data-wid="'+w.replace(/["\\]/g,'')+'"]');
+  if(el){el.classList.add('w-only');var h=el.querySelector('h3');if(h)document.title=h.textContent}
+  else{html.classList.add('w-unknown');var n=document.createElement('p');n.className='w-notice';n.textContent='Unknown widget id "'+w+'". Showing all widgets.';document.body.insertBefore(n,document.body.firstChild)}
+ }
+ var last=0;
+ function post(){
+  var b=document.body,cs=getComputedStyle(b);
+  var hgt=Math.ceil(b.getBoundingClientRect().height+parseFloat(cs.marginTop)+parseFloat(cs.marginBottom));
+  if(hgt===last)return; last=hgt;
+  if(window.parent&&window.parent!==window){try{window.parent.postMessage({type:'widget-height',id:w||null,height:hgt},'*')}catch(e){}}
+ }
+ window.addEventListener('load',post); window.addEventListener('resize',post);
+ if(window.ResizeObserver){new ResizeObserver(post).observe(document.body)}
+ document.body.addEventListener('input',post);
+ document.body.addEventListener('change',post);
+ document.body.addEventListener('click',function(ev){ if(ev.target&&ev.target.closest&&ev.target.closest('button')) post(); });
+ window.postWidgetHeight=post;
+ post();
+})();
+</script>
+</body></html>

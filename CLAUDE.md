@@ -186,9 +186,13 @@ A module's interactive page is `widgets/demo.html` next to `index.md`. It accept
 | `src` | no | `widgets/demo.html` | Path relative to this page's directory. Resolved from `page.url`, then passed through `relative_url`, so the `/lectures` baseurl is included. |
 | `title` | no | the widget id | Accessible iframe title. |
 
-The include renders `<figure class="widget-embed">`: a lazy iframe, an "Open full screen" link (`target="_blank"`, `rel="noopener"`) to the same URL, and a plain link inside `<noscript>`. `figure.widget-embed` is styled in `assets/css/pages.css`.
+The include renders `<figure class="widget-embed">`: a lazy iframe, an "Open full screen" link (`target="_blank"`, `rel="noopener"`) to the same URL, and a plain link inside `<noscript>`. `figure.widget-embed` is styled in `assets/css/pages.css`. The `height` parameter is the initial fallback, before the demo reports its real height.
 
-On a reading page, the `<div class="widget">` lives in `widgets/demo.html`, not in `index.md`. The reading page embeds it with the include. `assets/css/widgets.css` is linked from the layout when `series: ee`, and each EE demo links that sheet plus a short inline copy of the same rules so a double-click still looks right. Do not remove the inline CSS from `rf/` demos.
+On a reading page, the `<div class="widget" data-wid="...">` lives in `widgets/demo.html`, not in `index.md`. The reading page embeds it with the include. `?w=<id>` is the same contract on EE and RF demos: the head script sets `html.embed` and `data-w`, and the foot script shows only `.widget[data-wid="<id>"]`. `assets/css/widgets.css` is linked from the layout when `series: ee`. Each EE demo also links that sheet and inlines the same rules, plus the RF embed CSS, so a double-click still matches. Do not remove the inline CSS from `rf/` demos.
+
+### Iframe height
+
+`widgets/demo.html` posts `{type: "widget-height", id, height}` to the parent on load, on resize (`ResizeObserver`), and after a control change. `_layouts/default.html` listens once. It finds the `figure.widget-embed` iframe whose `contentWindow` is `event.source`, or whose `data-widget` / `?w=` id equals `data.id`, and sets that iframe's height in pixels, clamped at 2000. RF reading pages can delete their per-page copies of this listener.
 
 ## Rules
 

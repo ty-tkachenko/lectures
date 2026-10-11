@@ -1,6 +1,8 @@
-/* Widget chrome copied from the RF demo pages (rf/00, rf/01, rf/02 widgets/demo.html).
-   Those files keep their CSS inline. This sheet is for EE pages and EE demos.
-   Lesson pages stay in the site serif. Standalone demos set class="widget-demo" on body. */
+/* RF widget chrome, copied from rf/02-lines-and-matching/widgets/demo.html.
+   Scoped to the demo page (body.widget-demo) so a lesson that links this
+   sheet keeps its own type, buttons, and labels. Demo pages also inline
+   these rules so a double-click matches with or without the link.
+   Embed mode (?w=) uses the same selectors as the RF demos. */
 
 body.widget-demo {
   font-family: Inter, system-ui, sans-serif;
@@ -12,36 +14,37 @@ body.widget-demo {
   background: #fff;
 }
 
-.widget {
+body.widget-demo .widget {
   border: 1px solid #eee;
   border-radius: 10px;
   padding: 1rem 1.25rem;
   margin: 2rem 0;
-  background: #fff;
+  background: transparent;
+  box-shadow: none;
   font-family: Inter, system-ui, sans-serif;
   color: #2b2b2b;
   line-height: 1.6;
 }
 
-.widget h3 { margin: 0.2rem 0 0.8rem; }
+body.widget-demo .widget h3 { margin: 0.2rem 0 0.8rem; }
 
-.widget label {
+body.widget-demo label {
   display: block;
   font-size: 0.9rem;
   color: #555;
   margin: 0.5rem 0 0.2rem;
 }
 
-.widget label.inline { display: inline-block; margin-right: 1rem; }
+body.widget-demo label.inline { display: inline-block; margin-right: 1rem; }
 
-.widget input[type="range"] { width: 100%; }
+body.widget-demo input[type="range"] { width: 100%; }
 
-.widget select,
-.widget input[type="number"] { padding: 0.2rem; }
+body.widget-demo select,
+body.widget-demo input[type="number"] { padding: 0.2rem; }
 
-.widget input[type="number"] { width: 6rem; }
+body.widget-demo input[type="number"] { width: 6rem; }
 
-.widget button {
+body.widget-demo button {
   font: inherit;
   font-size: 0.85rem;
   padding: 0.2rem 0.6rem;
@@ -49,28 +52,26 @@ body.widget-demo {
   border: 1px solid #cbd5e1;
   border-radius: 6px;
   background: #fff;
+  box-shadow: none;
   cursor: pointer;
 }
 
-.widget button:hover { background: #eff6ff; }
+body.widget-demo button:hover { background: #eff6ff; }
 
-.widget .row,
-.widget .controls {
+body.widget-demo .row {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0 1.25rem;
 }
 
-.widget .readout,
-.widget .widget-readout {
+body.widget-demo .readout {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 0.5rem;
   margin: 0.8rem 0;
 }
 
-.widget .readout div,
-.widget .widget-readout div {
+body.widget-demo .readout div {
   background: #eff6ff;
   border-radius: 8px;
   padding: 0.4rem 0.6rem;
@@ -78,26 +79,23 @@ body.widget-demo {
   font-size: 0.9rem;
 }
 
-.widget .readout b,
-.widget .readout strong,
-.widget .widget-readout b,
-.widget .widget-readout strong {
+body.widget-demo .readout b {
   display: block;
   font-size: 1.1rem;
   color: #1d4ed8;
+  font-weight: 700;
 }
 
-.widget canvas,
-.widget svg {
+body.widget-demo canvas {
   width: 100%;
   height: auto;
   display: block;
-  margin: 0.4rem 0;
   border-radius: 8px;
   background: #fafafa;
+  box-shadow: none;
 }
 
-.widget .try {
+body.widget-demo .try {
   font-size: 0.9rem;
   background: #fffbeb;
   border: 0;
@@ -107,27 +105,11 @@ body.widget-demo {
   margin: 0.8rem 0 0;
 }
 
-.widget .verdict,
-.widget .widget-warn {
-  font-weight: 600;
-  border: 0;
-  background: transparent;
-  color: #b45309;
-  padding: 0.2rem 0;
-  margin: 0.4rem 0;
-}
+body.widget-demo .verdict { font-weight: 600; }
 
-.widget .legend,
-.widget .noscript-note,
-.widget .widget-plot-label {
-  font-size: 0.85rem;
-  color: #555;
-  font-weight: normal;
-  font-style: normal;
-  margin: 0.35rem 0;
-}
+body.widget-demo .legend { font-size: 0.85rem; color: #555; }
 
-.widget .legend span {
+body.widget-demo .legend span {
   display: inline-block;
   width: 14px;
   height: 3px;
@@ -135,33 +117,32 @@ body.widget-demo {
   margin: 0 0.3rem 0 0.8rem;
 }
 
-.widget .slider-row {
+html.embed,
+html.embed body { background: transparent; }
+
+html.embed body {
+  max-width: none;
+  margin: 0;
+  padding: 0.25rem 0.6rem 0.5rem;
+}
+
+html.embed body > h1 { display: none; }
+
+html.embed .widget {
+  display: none;
+  margin: 0;
+  border: 0;
+  padding: 0.25rem 0;
+  box-shadow: none;
+}
+
+html.embed .widget.w-only { display: block; }
+
+html.embed.w-unknown .widget {
   display: block;
-  margin: 0.15rem 0 0.35rem;
+  border: 1px solid #eee;
+  padding: 1rem 1.25rem;
+  margin: 1rem 0;
 }
 
-.widget .slider-row label {
-  display: block;
-  font-size: 0.9rem;
-  color: #555;
-  margin: 0.5rem 0 0.2rem;
-}
-
-.widget .slider-row .slider-value {
-  font-weight: 600;
-  color: #1d4ed8;
-  font-variant-numeric: tabular-nums;
-}
-
-.widget .slider-row input[type="range"] {
-  display: block;
-  width: 100%;
-  height: auto;
-  margin: 0.15rem 0 0.2rem;
-  grid-column: auto;
-}
-
-@media (max-width: 640px) {
-  .widget .row,
-  .widget .controls { grid-template-columns: 1fr; }
-}
+.w-notice { font-size: 0.85rem; color: #b45309; }
