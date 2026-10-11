@@ -359,14 +359,19 @@
 <!-- ================= 7 THEVENIN ================= -->
 <section class="sec" id="thevenin" data-short="Thévenin equivalents">
 <h2>Thévenin equivalents <a class="vjump" data-t="20:30"></a></h2>
-<p>Loading problems are much simpler with one of the most useful results in circuit theory. <strong>Thévenin's theorem</strong> says that any circuit made of voltage sources, current sources and resistors, looked at from two terminals, behaves exactly like one voltage source \(V_\text{th}\) in series with one resistor \(R_\text{th}\). Whatever you connect to those terminals can't tell the difference.</p>
-<p>Module 1's battery model, an ideal source with an internal resistance, is already a Thévenin equivalent. Finding one takes two steps:</p>
+<p>Loading problems are much simpler once a whole circuit can be replaced by one source and one resistor. The reason that replacement works is that a linear port has a straight-line V–I graph, and a straight line is fixed by two points.</p>
+<p>Take any circuit made of resistors and sources, and look at it from two terminals. Linearity means that if you double the voltage you apply there, the current doubles, so voltage against current is a straight line. Two measurements pin the line down:</p>
 <ol>
-  <li><strong>\(V_\text{th}\)</strong> is the <em>open-circuit voltage</em>: what the terminals show with nothing connected.</li>
-  <li><strong>\(R_\text{th}\)</strong> is the resistance you see looking back into the terminals with every source switched off. Switching a voltage source off means replacing it with a wire (0 V); a current source becomes an open circuit (0 A).</li>
+  <li><strong>Open circuit.</strong> Nothing is connected, so the current is zero. The voltage on the terminals is \(V_\text{oc}\).</li>
+  <li><strong>Short circuit.</strong> A wire across the terminals forces the voltage to zero. The current in that wire is \(I_\text{sc}\).</li>
 </ol>
-<p>For a divider, switching the source off joins the top of R1 to ground, so looking back from the output you see R1 and R2 in parallel:</p>
-<div class="eq">$$V_\text{th} = V_\text{in}\,\frac{R_2}{R_1 + R_2} \qquad R_\text{th} = R_1 \parallel R_2$$</div>
+<p>The straight line through \((I = 0,\ V = V_\text{oc})\) and \((I = I_\text{sc},\ V = 0)\) is</p>
+<div class="eq">$$V = V_\text{oc} - I\,\frac{V_\text{oc}}{I_\text{sc}}$$<div class="n">the port's whole behaviour, fixed by the two endpoints</div></div>
+<p>That is an ideal voltage \(V_\text{oc}\) with a resistor \(R_\text{th} = V_\text{oc}/I_\text{sc}\) in series. Whatever you connect cannot tell the original circuit from this pair, because both produce the same line. The pair is the <strong>Thévenin equivalent</strong>: \(V_\text{th} = V_\text{oc}\) and \(R_\text{th} = V_\text{oc}/I_\text{sc}\). Module 1's battery, an ideal cell plus an internal resistance, is already in this form.</p>
+<p>There is a second way to the same resistor. Switch every source off, replacing a voltage source by a wire and a current source by an open circuit, and measure the resistance looking back into the terminals. With the sources gone, that resistance is \(V_\text{oc}/I_\text{sc}\).</p>
+<p>A divider shows both routes giving one answer. Open-circuit, the output is the unloaded divider, \(V_\text{th} = V_\text{in}\,R_2/(R_1+R_2)\). Short the output and R2 is bypassed, so \(I_\text{sc} = V_\text{in}/R_1\), and</p>
+<div class="eq">$$R_\text{th} = \frac{V_\text{th}}{I_\text{sc}} = \frac{R_1 R_2}{R_1 + R_2} = R_1 \parallel R_2$$<div class="n">the same parallel pair you see with the source replaced by a wire</div></div>
+<p>Switching the source off joins the top of R1 to ground, so from the output R1 and R2 are in parallel. Same resistor, read off the two ends of the straight line.</p>
 
 <div class="widget">
   <div class="wh"><span class="tag">Diagram</span><b>A divider and its Thévenin equivalent are indistinguishable from the outside</b></div>
@@ -414,7 +419,7 @@
   <p>The meter reads \(5 \times 10 / (0.5 + 10) = 4.76\ \text{V}\), a 4.8 % error. The meter is only 20× the source resistance, short of the 100× rule.</p>
 </div>
 
-<p>Thévenin also works the other way round, as a measurement. Measure the open-circuit voltage, then connect a known load and measure again. The drop tells you \(R_\text{th}\) without opening the box. It's how you find a battery's internal resistance, or the output resistance of a sensor with no datasheet. Equivalently, \(R_\text{th} = V_\text{oc}/I_\text{sc}\), the open-circuit voltage over the short-circuit current, though deliberately shorting a source is rarely a good idea.</p>
+<p>The same two points are how you measure an equivalent without opening the box. \(V_\text{oc}\) is a voltmeter with nothing else connected. A dead short would give \(I_\text{sc}\) and thus \(R_\text{th} = V_\text{oc}/I_\text{sc}\), but deliberately shorting a source is rarely a good idea. Connect a known load instead and the drop from \(V_\text{oc}\) is the share \(R_\text{th}\) takes in the divider above, which you solve for \(R_\text{th}\). It's how you find a battery's internal resistance, or the output resistance of a sensor with no datasheet.</p>
 
 <details class="exercise">
   <summary><span class="ek">Design exercise</span><span class="et">How much will a heavier load pull it down?</span></summary>
