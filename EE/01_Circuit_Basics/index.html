@@ -128,7 +128,7 @@
 <div class="eq">$$V = I\,R \qquad\Longleftrightarrow\qquad I = \frac{V}{R} \qquad\Longleftrightarrow\qquad R = \frac{V}{I}$$<div class="n">Ohm's law: volts = amps × ohms</div></div>
 <p>Resistance is measured in <strong>ohms</strong> (Ω). You'll see a huge range: milliohms for wires and current-sense shunts, tens of ohms for igniters and solenoid coils, kilohms for pull-up resistors and voltage dividers, and megohms for a multimeter's input.</p>
 
-<p>The simulator below is a battery and one resistor. Change either one and watch the current respond: with the voltage fixed, doubling the resistance halves the current, and the dots slow down accordingly.</p>
+<p>The simulator below is a battery and one resistor. Change either one and watch the current respond: with the voltage fixed, doubling the resistance halves the current. The dots stand for packets of charge. They always move at the same speed, so more current shows up as more dots passing each point every second, not as faster ones.</p>
 
 <div class="widget wide" id="w-ohm">
   <div class="wh"><span class="tag">Interactive</span><b>Circuit simulator: battery and one resistor</b></div>
@@ -553,7 +553,8 @@ function setVerdict(el, cls, html){ el.className = 'verdict ' + cls; el.innerHTM
     Plot.text(ctx, 'R = ' + si(R, 'Ω'), x1 + 18, yc - 18, {mono:true});
     Plot.text(ctx, 'P = ' + si(P, 'W'), x1 + 18, yc, {mono:true, color: rc});
     Plot.text(ctx, Math.round(load*100) + ' % of rating', x1 + 18, yc + 18, {color: rc});
-    // current: dots travel clockwise from the + plate (conventional current)
+    // current: dots travel clockwise from the + plate (conventional current) at a fixed speed.
+    // More current shows as more dots passing each point per second, not as faster dots.
     if (I > 0){
       const w = x1 - x0, h = y1 - y0, L = 2*(w + h);
       const at = d => {
@@ -563,10 +564,11 @@ function setVerdict(el, cls, html){ el.className = 'verdict ' + cls; el.innerHTM
         if (d < w) return [x1 - d, y1]; d -= w;
         return [x0, y1 - d];
       };
-      const speed = 25 + 180 * Math.min(1, Math.log10(1 + I*1e4) / Math.log10(1 + 2.4e4));
-      phase += speed * dt;
-      for (let d = 0; d < L; d += 22){
-        const [x, y] = at(d + phase - (yc - y0) + 2*w + h);
+      const f = Math.min(1, Math.log10(1 + I*1e4) / Math.log10(1 + 2.4e4));
+      const n = Math.max(3, Math.round(L / (90 - 76*f)));   // 90 px apart at a trickle, 14 px at amps
+      phase = (phase + 40 * dt) % L;
+      for (let k = 0; k < n; k++){
+        const [x, y] = at(k * L/n + phase - (yc - y0) + 2*w + h);
         if (x === x0 && Math.abs(y - yc) < 9) continue;
         if (x === x1 && Math.abs(y - yc) < 36) continue;
         Plot.dot(ctx, x, y, 2.4, col.c1);
@@ -575,7 +577,7 @@ function setVerdict(el, cls, html){ el.className = 'verdict ' + cls; el.innerHTM
     const xm = (x0 + x1)/2;
     Plot.arrow(ctx, xm - 22, y0 - 14, xm + 22, y0 - 14, col.c1);
     Plot.text(ctx, 'I = ' + si(I, 'A'), xm + 30, y0 - 14, {mono:true, color: col.c1});
-    Plot.text(ctx, 'dots: conventional current, + to −, speed not to scale', W/2, H - 12, {align:'center', color: col.muted});
+    Plot.text(ctx, 'dots: conventional current, + to −; more current = more dots, same speed', W/2, H - 12, {align:'center', color: col.muted});
   });
 })();
 
