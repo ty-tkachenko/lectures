@@ -476,13 +476,13 @@
   <h3>Making Ohm's law physical</h3>
   <div class="parts"><span>Multimeter</span><span>Current-limited bench supply</span><span>Resistors: 47 Ω ¼ W, 100 Ω, 1 kΩ, 10 kΩ</span><span>AA cell + 10 Ω load</span><span>5 m of thin hookup wire</span><span>Breadboard</span></div>
   <ol>
-    <li><b>Read and measure.</b> Read each resistor's colour code, then measure it with power off. Is it within the tolerance band (often ±1 % or ±5 %)?</li>
-    <li><b>Verify Ohm's law.</b> Put the 1 kΩ across the supply. Step the voltage from 0 to 10 V in 2 V steps, measuring the current in series each time. Plot I against V. The slope should be 1/R.</li>
-    <li><b>Feel the derating rule.</b> Set the supply to 3.4 V across the 47 Ω ¼ W resistor (≈ 0.25 W). After a minute, check its temperature with an IR thermometer, or carefully with a fingertip. It will be hot.</li>
-    <li><b>Measure internal resistance.</b> Measure the AA cell's open-circuit voltage. Connect the 10 Ω load and measure again. Calculate \(R_\text{int} = (V_\text{oc} - V_\text{load}) / I\).</li>
-    <li><b>The long-wire problem.</b> Pass 1 A through 5 m of thin wire (current-limit the supply). Measure the voltage drop end to end and calculate the wire's resistance per metre. Compare it with the AWG table.</li>
+    <li><b>Write your prediction first.</b> Read each resistor's colour code and write down the value and the tolerance band (often ±1 % or ±5 %) before the meter comes out. Then measure each one with the power off.</li>
+    <li><b>Write your prediction first.</b> For a 1 kΩ resistor, write the current you expect at 0, 2, 4, 6, 8 and 10 V, and the slope of I against V. Then put the resistor across the supply, measure the current in series at each step, and plot it.</li>
+    <li><b>Write your prediction first.</b> A 47 Ω ¼ W resistor at 3.4 V dissipates about 0.25 W, its full rating. Write whether you expect it to be warm or too hot to hold. Then set that voltage and, after a minute, check with an IR thermometer or carefully with a fingertip.</li>
+    <li><b>Write your prediction first.</b> A fresh AA cell has a few tenths of an ohm inside it. Write the open-circuit voltage you expect and the drop you expect across a 10 Ω load. Then measure both and calculate \(R_\text{int} = (V_\text{oc} - V_\text{load}) / I\).</li>
+    <li><b>Write your prediction first.</b> Look up the Ω/m of the thin wire's gauge and write the drop you expect along 5 m at 1 A. Then pass 1 A through it (current-limit the supply), measure the drop end to end, and find the Ω/m.</li>
   </ol>
-  <div class="record"><b>What you should see:</b> a straight V–I line whose slope is 1/R, an AA cell with a few tenths of an ohm inside it, and a thin wire whose Ω/m matches the gauge table to within a few percent.</div>
+  <div class="record"><b>Comparison.</b> Set what you measured next to what you wrote down. A straight V–I line whose slope is 1/R, an AA cell with a few tenths of an ohm inside it, and a thin wire whose Ω/m matches the gauge table to within a few percent, are what the predictions were aiming at. A miss is worth more than a lucky guess: note which assumption was wrong.</div>
 </div>
 </section>
 

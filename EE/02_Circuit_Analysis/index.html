@@ -666,12 +666,12 @@
   <h3>Kirchhoff, dividers and loading</h3>
   <div class="parts"><span>Multimeter</span><span>Bench supply</span><span>Resistors: 1 kΩ, 2.2 kΩ, 4.7 kΩ, 10 kΩ (×2), 1 MΩ (×2), 47 Ω ½ W</span><span>A 9 V battery</span><span>Breadboard</span></div>
   <ol>
-    <li><b>KVL.</b> Put 1 kΩ, 2.2 kΩ and 4.7 kΩ in series across a 10 V supply. Measure the voltage across each resistor. Do they add up to the supply? Predict each one with the divider equation first.</li>
-    <li><b>KCL.</b> Rearrange so the 2.2 kΩ and 4.7 kΩ are in parallel, in series with the 1 kΩ. Measure the current in each branch by breaking it and inserting the meter. Check that the branch currents add up to the supply current, and that they split in the current-divider ratio.</li>
-    <li><b>Loading.</b> Build a divider from the two 1 MΩ resistors across 10 V. Measure the midpoint. It should read about 4.76 V rather than 5 V. Now swap in the two 10 kΩ resistors and measure again.</li>
-    <li><b>Thévenin by measurement.</b> Measure the 9 V battery's open-circuit voltage, then connect a 47 Ω resistor across it (briefly: it draws about 190 mA) and measure again. Calculate its internal resistance from the drop and the current, as in Section 7.</li>
+    <li><b>Write your prediction first.</b> For 1 kΩ, 2.2 kΩ and 4.7 kΩ in series across 10 V, write the voltage you expect across each resistor from the divider equation, and check that your three numbers add to 10 V. Then build it and measure.</li>
+    <li><b>Write your prediction first.</b> Move the 2.2 kΩ and 4.7 kΩ into parallel, still in series with the 1 kΩ. Write the supply current and each branch current before you break a wire. Then measure each branch by inserting the meter, and check that the branches add up.</li>
+    <li><b>Write your prediction first.</b> A divider of two 1 MΩ resistors across 10 V, read by a 10 MΩ meter, should sit near 4.76 V rather than 5 V. Write that number, and the number you expect after swapping in two 10 kΩ resistors. Then build both and measure the midpoint.</li>
+    <li><b>Write your prediction first.</b> A 9 V battery's internal resistance is typically an ohm or two. Write the open-circuit voltage and the loaded voltage you expect with 47 Ω across it (about 190 mA; keep the connection brief). Then measure both and calculate \(R_\text{th}\) from the drop, as in Section 7.</li>
   </ol>
-  <div class="record"><b>What you should see:</b> drops that add up to the supply within your meter's accuracy, branch currents that add up at each node, a 1 MΩ divider that reads about 5 % low on a 10 MΩ meter while the 10 kΩ version reads correctly, and a 9 V battery with one or two ohms inside it.</div>
+  <div class="record"><b>Comparison.</b> Set what you measured next to what you wrote down. Drops that add up to the supply within the meter's accuracy, branch currents that add up at each node, a 1 MΩ divider about 5 % low on a 10 MΩ meter while the 10 kΩ version reads correctly, and a 9 V battery with one or two ohms inside it, are what the predictions were aiming at. Where a measurement misses, name the assumption that failed.</div>
 </div>
 </section>
 
