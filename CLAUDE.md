@@ -206,7 +206,7 @@ Every interactive widget ends with the same block, immediately after `.try`. RF 
 
 ### Iframe height
 
-`widgets/demo.html` posts `{type: "widget-height", id, height}` to the parent on load, on resize (`ResizeObserver`), and after a control change. `_layouts/default.html` listens once. It finds the `figure.widget-embed` iframe whose `contentWindow` is `event.source`, or whose `data-widget` / `?w=` id equals `data.id`, and sets that iframe's height in pixels, clamped at 2000. RF reading pages can delete their per-page copies of this listener.
+`widgets/demo.html` posts `{type: "widget-height", id, height}` to the parent on load, on resize (`ResizeObserver`), and after a control change. `_layouts/default.html` listens once. It finds the `figure.widget-embed` iframe whose `contentWindow` is `event.source`, or whose `data-widget` / `?w=` id equals `data.id`, and sets that iframe's height in pixels, clamped at 3200. RF reading pages can delete their per-page copies of this listener.
 
 ## Rules
 
