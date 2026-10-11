@@ -69,6 +69,11 @@ hr.foot{max-width:1000px;margin:2em auto 1em}
 aside.side{position:sticky;top:1em;align-self:start;max-height:calc(100vh - 2em);overflow:auto;font-size:.92em;padding-top:.3em}
 .side-mod{margin-bottom:.8em}
 .side-mod .eyebrow{display:block;font-size:.95em}
+.side-row{display:flex;justify-content:space-between;align-items:baseline;gap:.5em}
+.side-step{display:flex;gap:.25em;white-space:nowrap}
+.side-step a,.side-step span{display:inline-flex;align-items:center;justify-content:center;min-width:1.7em;min-height:1.7em;border:1px solid #999;text-decoration:none;line-height:1}
+.side-step a:hover{border-color:#000}
+.side-step span{color:#bbb;border-color:#ddd}
 .side-mod b{display:block;line-height:1.3}
 .side h4{font-size:1em;font-weight:normal;font-style:italic;margin:.8em 0 .2em;border-bottom:1px solid #c0c0c0}
 .side .toc{list-style:none;padding:0;margin:0}

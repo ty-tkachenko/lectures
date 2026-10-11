@@ -183,7 +183,16 @@ function buildSide(){
     return {s, num, label};
   });
   const here = MOD_ID && findModule(MOD_ID);
-  side.innerHTML = (here ? `<div class="side-mod"><span class="eyebrow">${here.track.short} · Module ${here.mod.n}</span><b>${here.mod.title}</b></div>` : '') +
+  // small previous/next arrows beside the module label
+  const step = (m, dir) => {
+    const lbl = (dir < 0 ? 'Previous' : 'Next') + ' module: ' + m.title + (m.status !== 'ready' ? ' (coming soon)' : '');
+    return `<a href="${ROOT}${m.path}index.html" title="${lbl}" aria-label="${lbl}">${dir < 0 ? '←' : '→'}</a>`;
+  };
+  const arrows = here ? `<span class="side-step">` +
+    (here.idx > 0 ? step(here.track.modules[here.idx - 1], -1) : '<span aria-hidden="true">←</span>') +
+    (here.idx < here.track.modules.length - 1 ? step(here.track.modules[here.idx + 1], 1) : '<span aria-hidden="true">→</span>') +
+    `</span>` : '';
+  side.innerHTML = (here ? `<div class="side-mod"><span class="side-row"><span class="eyebrow">${here.track.short} · Module ${here.mod.n}</span>${arrows}</span><b>${here.mod.title}</b></div>` : '') +
     `<h4>On this page</h4><ol class="toc">${items.map(it => `<li><a href="#${it.s.id}"><span class="tn">${it.num === '' ? '' : it.num}</span><span>${it.label}</span></a></li>`).join('')}</ol>`;
   const links = [...side.querySelectorAll('.toc a')];
   const io = new IntersectionObserver(entries => {
