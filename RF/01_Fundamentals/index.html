@@ -46,7 +46,7 @@
         <li data-t="22:00">TDR: seeing reflections in time</li>
         <li data-t="26:00">Ripple: the same reflections in frequency</li>
         <li data-t="29:00">Dk, Df and board loss</li>
-        <li data-t="32:00">Polarization and the rolling rocket</li>
+        <li data-t="32:00">Polarization, pitch, and the pattern null</li>
       </ol>
     </div>
   </div>
@@ -450,7 +450,8 @@
   <div class="wb wcols">
     <div>
       <div class="ctrl"><label>Ground antenna</label><div class="seg" id="oM"><button type="button" data-v="lin" class="on">Linear</button><button type="button" data-v="circ">Circular</button></div></div>
-      <div class="ctrl"><label for="oA">Rocket antenna tilt <b id="oAv"></b></label><input id="oA" type="range" min="0" max="90" step="1" value="30"></div>
+      <div class="ctrl"><label for="oA">Angle between polarizations <b id="oAv"></b></label><input id="oA" type="range" min="0" max="90" step="1" value="30"></div>
+      <p class="small">For an axial dipole this angle comes from pitch, the tilt of the airframe axis as seen from the ground. Rolling about that axis does not change it.</p>
     </div>
     <div>
       <canvas id="cvPol" style="height:220px" aria-label="Transmitted field direction compared with the receiving antenna"></canvas>
@@ -463,12 +464,12 @@
 </div>
 <div class="note rocket">
   <span class="ni">🚀</span>
-  <div><span class="nt">Why this matters on a rocket</span>The rocket pitches over after launch, may roll, and swings under the parachute during descent. A linear antenna on the airframe and a linear antenna at the ground station will drift in and out of alignment, and the link fades. A circularly polarized ground antenna trades a constant 3 dB for never hitting that deep null, which is usually a worthwhile trade. Antenna patterns and choices are covered in Module 9.</div>
+  <div><span class="nt">Why this matters on a rocket</span>An axial dipole, a straight antenna along the airframe, is linearly polarized along the rocket's axis. Rolling the rocket about that axis does not rotate the polarization: the axis, and so the electric-field direction, stays where it is. Pitch does change the angle between that axis and a fixed linear antenna on the ground, and the polarization loss in the formula above swings with it. The larger fade is usually not that angle. A dipole has a pattern null off the nose and off the tail, so when the ground station lies along the airframe the signal drops out even if the polarizations would otherwise match. A circularly polarized ground antenna still costs a constant 3 dB against the linear rocket antenna, at every orientation, and it removes the polarization null. It does not fill in the pattern null. Patterns are Module 9.</div>
 </div>
 <details class="exercise">
   <summary><span class="ek">Check your understanding</span><span class="et">Linear or circular at the ground station?</span></summary>
   <div class="eb">
-    <p>The rocket carries a linearly polarized antenna, and it rolls and pitches through every angle during the flight. The ground station can use a linear antenna (no loss when aligned, a deep null at 90°) or a circular one (a constant 3 dB loss at any angle).</p>
+    <p>The rocket carries an axial dipole. Pitch changes the angle between its polarization and a fixed linear antenna on the ground; roll about the airframe axis does not. The ground station can use a linear antenna (no loss when the polarizations line up, a deep null at 90°) or a circular one (a constant 3 dB loss at any orientation).</p>
     <div class="choice"><p>Which gives the more reliable link?</p>
     <ol class="opts">
       <li>Linear, because it has no loss when aligned.<div class="why">Alignment is the best case. When the two linear polarizations are at 90°, the received component is cos 90° = 0, a null of 20 dB or more in practice. A link has to survive that moment.</div></li>
@@ -476,7 +477,7 @@
       <li>They're equivalent on average.<div class="why">The average hides the outages. Crossed linear antennas drop the link at the worst angle even when the mean over a flight looks acceptable.</div></li>
       <li>Neither works once the rocket changes attitude.<div class="why">A circular ground antenna still receives the linear signal. The cost is a constant 3 dB, not a null, at every angle between the polarizations.</div></li>
     </ol>
-    <div class="solution"><p>A link budget is set by the worst case. With linear antennas at both ends, the loss swings from 0 dB to 20–30 dB as the rocket turns, and the link drops out each time it passes 90°. A circular ground antenna gives a steady 3 dB whatever the angle. That's a known cost you can budget for, which is why circular polarization at the ground station is so common.</p></div>
+    <div class="solution"><p>A link budget is set by the worst case. With linear antennas at both ends, pitch can swing the polarization loss from 0 dB to 20–30 dB. A circular ground antenna holds that part of the loss at 3 dB for any orientation of the linear rocket antenna: it receives half the power of a co-polarized linear wave, and the half does not depend on the angle. Roll of an axial dipole does not add a further polarization rotation. Neither choice fills the dipole's pattern null off the nose and tail. That fade is usually the deeper one, and it is a pattern question, covered in Module 9, not a polarization question.</p></div>
     </div>
   </div>
 </details>
@@ -1236,7 +1237,7 @@ const C0 = 299792458;
     line(ctx, [[xr - ux*r, cy - uy*r], [xr - ux*6, cy - uy*6]], col.ink2, 5); line(ctx, [[xr + ux*6, cy + uy*6], [xr + ux*r, cy + uy*r]], col.ink2, 5);
     const e = osc * r * 0.85;
     line(ctx, [[xr, cy], [xr + ux*e, cy + uy*e]], col.c2, 3.5); dot(ctx, xr + ux*e, cy + uy*e, 5, col.c2);
-    text(ctx, 'rocket antenna (tilted ' + Math.round(a*180/Math.PI) + '°)', xr, H - 8, {align:'center', color: col.ink2});
+    text(ctx, 'axial dipole, pitched ' + Math.round(a*180/Math.PI) + '°', xr, H - 8, {align:'center', color: col.ink2});
     // ground antenna
     ctx.fillStyle = col.sunk; ctx.beginPath(); ctx.arc(xg, cy, r + 12, 0, 2*Math.PI); ctx.fill();
     if (!circ){
