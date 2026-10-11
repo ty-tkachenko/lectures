@@ -30,7 +30,7 @@
     <ul>
       <li>Kirchhoff's current and voltage laws, and how a shared ground wire shifts every sensor reading on it.</li>
       <li>Series and parallel combinations, and the current divider.</li>
-      <li>The voltage divider, designed as a battery monitor for the flight computer.</li>
+      <li>The voltage divider, designed as a battery-voltage monitor.</li>
       <li>Loading: why the divider reads wrong once you connect something to it.</li>
       <li>Thévenin equivalents and superposition, the two tools that make bigger circuits manageable.</li>
       <li>Reading a schematic and a datasheet without being fooled by the word "typical".</li>
@@ -41,7 +41,7 @@
       <p>Planned walkthrough of this page (≈ 30 min):</p>
       <ol>
         <li data-t="0:00">Nodes, branches and loops: the vocabulary</li>
-        <li data-t="2:30">Kirchhoff's current law at the power bus</li>
+        <li data-t="2:30">Kirchhoff's current law at a junction</li>
         <li data-t="5:30">Kirchhoff's voltage law, and the ground wire that isn't at 0 V</li>
         <li data-t="9:30">Series, parallel and the current divider</li>
         <li data-t="13:00">Designing a battery-voltage monitor</li>
@@ -106,23 +106,23 @@
 <h2>Kirchhoff's current law <a class="vjump" data-t="2:30"></a></h2>
 <p>Module 1 said that current isn't used up. Applied to a node, that becomes <strong>Kirchhoff's current law</strong> (KCL): charge can't pile up on a wire, so the total current flowing into any node equals the total flowing out.</p>
 <div class="eq">$$\sum I_\text{in} = \sum I_\text{out}$$<div class="n">at every node, at every instant</div></div>
-<p>The avionics power bus is the textbook example. The battery feeds one wire into the bus, and the flight computer, radio and GPS each take their share from it. KCL says the battery wire carries the sum. And every one of those currents has to get back to the battery, so <b>the ground wire carries the sum too</b>. That second fact is easy to forget, and it matters in the next section.</p>
+<p>A battery feeding several loads is the textbook example. Current leaves the battery on one wire, reaches a junction, and each load takes its share from there. KCL says the battery wire carries the sum. And every one of those currents has to get back to the battery, so <b>the ground wire carries the sum too</b>. That second fact is easy to forget, and it matters in the next section.</p>
 
 <div class="example">
   <span class="xk">Worked example</span>
-  <p>In Module 1's power budget the flight computer drew 180 mA, the radio 120 mA and the GPS 30 mA. At the bus node:</p>
+  <p>Three loads draw 180 mA, 120 mA and 30 mA from one battery. At the junction:</p>
   <p>\(I_\text{battery} = 180 + 120 + 30 = 330\ \text{mA}\)</p>
-  <p>If you measure 330 mA in the battery lead and only 300 mA in the flight computer and radio leads together, KCL tells you the missing 30 mA is going somewhere. That's a useful debugging tool: currents that don't add up mean there's a path you didn't know about, often a leaky or shorted part.</p>
+  <p>If the battery lead measures 360 mA but the three load currents only add up to 330 mA, KCL tells you the extra 30 mA is going somewhere else. That's a useful debugging tool: currents that don't add up mean there's a path you didn't know about, often a leaky or shorted part.</p>
 </div>
 
 <details class="exercise">
   <summary><span class="ek">Design exercise</span><span class="et">How much is left on the fuse?</span><span class="eo">optional</span></summary>
   <div class="eb">
-    <p>The pad-box bus is fed through a 5 A fuse. On it are the flight computer (180 mA), the radio while transmitting (600 mA), a camera (900 mA) and two valve drivers that each draw 1.5 A when open. Everything can be on at once.</p>
+    <p>A battery feeds several loads through one 5 A fuse: a microcontroller board (180 mA), a radio module while transmitting (600 mA), a camera (900 mA) and two solenoid drivers that each draw 1.5 A when on. Everything can be on at once.</p>
     <div class="check" data-ans="0.32" data-tol="3%" data-unit="A"><p>How much current is left before the fuse's rating?</p>
-      <div class="miss" data-val="1.82"><p>There are <em>two</em> valve drivers, and both can be open at once.</p></div>
+      <div class="miss" data-val="1.82"><p>There are <em>two</em> solenoid drivers, and both can be on at once.</p></div>
       <div class="hint">KCL: the fuse carries the sum of every branch current.</div>
-      <div class="solution"><p>\(0.18 + 0.6 + 0.9 + 2 \times 1.5 = 4.68\ \text{A}\), leaving 0.32 A. That's far too close: fuses are typically run at no more than about 75 % of their rating, and valves draw more than their holding current for a moment as they open. Either a bigger fuse and wiring to match, or a separate fused feed for the valves.</p></div>
+      <div class="solution"><p>\(0.18 + 0.6 + 0.9 + 2 \times 1.5 = 4.68\ \text{A}\), leaving 0.32 A. That's far too close: fuses are typically run at no more than about 75 % of their rating, and solenoids draw more than their holding current for a moment as they pull in. Either a bigger fuse and wiring to match, or a separate fused feed for the solenoids.</p></div>
     </div>
   </div>
 </details>
@@ -134,18 +134,18 @@
 <p>Go around any loop, adding up the voltage across every component on the way. You always get back to zero, because you're back at the same node you started from. That's <strong>Kirchhoff's voltage law</strong> (KVL):</p>
 <div class="eq">$$\sum_\text{loop} V = 0 \qquad\text{or equivalently}\qquad \text{sum of rises} = \text{sum of drops}$$<div class="n">count a voltage as positive going − to + and negative going + to −; any consistent convention works</div></div>
 <p>In plain terms, the battery's voltage gets shared out between everything in the loop, and every volt is accounted for. Module 1's igniter cable was KVL already: the 12 V was split between the outgoing wire, the igniter and the return wire.</p>
-<p>The figure below puts KCL and KVL together on a real power bus: a 2S LiPo, a harness with a feed wire and a return (ground) wire, and four loads. The loads are modelled as drawing a fixed current, which is roughly how regulated electronics behave.</p>
+<p>The figure below puts KCL and KVL together: a 2S LiPo feeds four loads through one shared pair of wires, a feed wire out and a return (ground) wire back. Three of the loads are small; the fourth is a heavy load such as a motor or heater. The loads are modelled as drawing a fixed current, which is roughly how regulated electronics behave.</p>
 
 <div class="widget wide" id="w-bus">
-  <div class="wh"><span class="tag">Interactive</span><b>KCL and KVL on the avionics power bus</b></div>
+  <div class="wh"><span class="tag">Interactive</span><b>KCL and KVL with loads sharing one pair of wires</b></div>
   <div class="wb wcols">
     <div>
       <div class="ctrl"><label>Loads switched on</label>
-        <div class="seg" id="kLoads"><button type="button" data-v="fc" class="on" aria-pressed="true">Flight computer</button><button type="button" data-v="radio" class="on" aria-pressed="true">Radio (TX)</button><button type="button" data-v="gps" class="on" aria-pressed="true">GPS</button><button type="button" data-v="valve" aria-pressed="false">Valve</button></div></div>
+        <div class="seg" id="kLoads"><button type="button" data-v="l1" class="on" aria-pressed="true">Load 1</button><button type="button" data-v="l2" class="on" aria-pressed="true">Load 2</button><button type="button" data-v="l3" class="on" aria-pressed="true">Load 3</button><button type="button" data-v="heavy" aria-pressed="false">Heavy load</button></div></div>
       <div class="ctrl"><label for="kV">Battery open-circuit voltage <b id="kVv"></b></label><input id="kV" type="range" min="6" max="8.4" step="0.05" value="7.4"></div>
       <div class="ctrl"><label>Battery condition</label><div class="seg" id="kR"><button type="button" data-v="0.08" class="on">Fresh (80 mΩ)</button><button type="button" data-v="0.25">Cold or old (250 mΩ)</button></div></div>
-      <div class="ctrl"><label for="kL">Harness length, 22 AWG <b id="kLv"></b></label><input id="kL" type="range" min="0.2" max="3" step="0.1" value="1"></div>
-      <p class="small">Loads: flight computer 180 mA, radio 600 mA while transmitting, GPS 30 mA, valve 3 A. The regulators need at least 6.0 V at the bus.</p>
+      <div class="ctrl"><label for="kL">Wire length (each way), 22 AWG <b id="kLv"></b></label><input id="kL" type="range" min="0.2" max="3" step="0.1" value="1"></div>
+      <p class="small">Loads: 180 mA, 600 mA, 30 mA, and 3 A for the heavy load. The loads need at least 6.0 V to work.</p>
     </div>
     <div>
       <canvas id="cvBus" style="height:290px" aria-label="Schematic of a battery feeding four loads through a feed wire and a return wire, with a bar showing how the battery voltage is shared around the loop"></canvas>
@@ -160,20 +160,20 @@
   </div>
   <div class="try"><b>Things to try</b><ol>
     <li>With the default loads, check KCL: does the battery current equal the sum of the branch currents?</li>
-    <li>Open the valve. How far does the ground at the loads rise above the battery's negative terminal? Every sensor measured against that ground now reads off by that much.</li>
-    <li>With the valve open, make the battery cold and the harness 3 m long. Which part of the loop is eating the voltage?</li>
+    <li>Switch on the heavy load. How far does the ground at the loads rise above the battery's negative terminal? Any signal at the loads that's measured against the battery's ground now reads off by that much.</li>
+    <li>With the heavy load on, make the battery cold and the wires 3 m long. Which part of the loop is eating the voltage?</li>
   </ol></div>
 </div>
 
-<div class="note rocket">
-  <span class="ni">🚀</span>
-  <div><span class="nt">The ground that isn't at 0 V</span>The return wire carries the sum of every load current, so when the valve opens, the "ground" at the far end of the harness rises by \(I \times R_\text{return}\). A pressure transducer that shares that ground reports a pressure spike that never happened. It looks like a sensor fault, but it's KVL. The fixes are separate return wires for high-current loads, or measuring the sensor differentially. Exercise 3 at the end works through the numbers; Module 13 covers grounding properly.</div>
+<div class="note">
+  <span class="ni">i</span>
+  <div><span class="nt">The ground that isn't at 0 V</span>A shared return wire carries the sum of every load current, so when the heavy load switches on, the "ground" at the far end rises by \(I \times R_\text{return}\). A sensor that shares that ground, read by something at the battery end, reports a change that never happened. It looks like a sensor fault, but it's KVL. This is one reason power is often distributed in a star: each load gets its own feed and return from one central point, so a heavy load's current doesn't flow in anyone else's ground. Measuring sensors differentially is the other fix. Exercise 3 at the end works through the numbers; Module 13 covers grounding properly.</div>
 </div>
 
 <details class="exercise">
   <summary><span class="ek">Design exercise</span><span class="et">Find the bad crimp</span><span class="eo">optional</span></summary>
   <div class="eb">
-    <p>A valve on the test stand opens sluggishly. Its supply is 12.0 V at the battery, and with the valve energised (2.0 A) you measure 10.9 V across the valve itself, 0.3 V along the feed wire and 0.3 V along the return wire. The only other thing in the loop is a connector.</p>
+    <p>A solenoid valve opens sluggishly. Its supply is 12.0 V at the battery, and with the valve energised (2.0 A) you measure 10.9 V across the valve itself, 0.3 V along the feed wire and 0.3 V along the return wire. The only other thing in the loop is a connector.</p>
     <div class="check" data-ans="0.25" data-tol="3%" data-unit="Ω"><p>What's the connector's resistance?</p>
       <div class="miss" data-val="0.5"><p>0.5 is the voltage across the connector. Ohm's law turns it into a resistance.</p></div>
       <div class="hint">KVL first: the drops around the loop add up to 12.0 V. What's left for the connector?</div>
@@ -239,7 +239,7 @@
 <!-- ================= 5 DIVIDER ================= -->
 <section class="sec" id="divider" data-short="The voltage divider">
 <h2>The voltage divider <a class="vjump" data-t="13:00"></a></h2>
-<p>The flight computer should know its own battery voltage: to log it, to refuse to arm on a flat pack, and to warn the ground station during a long hold. But a 2S LiPo reaches 8.4 V and the microcontroller's ADC pin only accepts 0 to 3.3 V. Putting 8.4 V on that pin damages it.</p>
+<p>Battery-powered boards usually measure their own battery voltage: to log it, to warn before the pack runs flat, or to refuse to start a high-current task on a weak pack. But a 2S LiPo reaches 8.4 V and the microcontroller's ADC pin only accepts 0 to 3.3 V. Putting 8.4 V on that pin damages it.</p>
 <p>The fix is two resistors in series across the battery. The same current flows through both, so the voltage splits in proportion to their resistances, and the junction between them sits at a fixed fraction of the input:</p>
 <div class="eq">$$V_\text{out} = V_\text{in}\,\frac{R_2}{R_1 + R_2}$$<div class="n">R1 from the input to the output, R2 from the output to ground</div></div>
 <p>That fraction is the <strong>divider ratio</strong>. The firmware reads \(V_\text{out}\) and multiplies by \((R_1 + R_2)/R_2\) to get the battery voltage back.</p>
@@ -282,13 +282,13 @@
 <div class="example">
   <span class="xk">Worked example</span>
   <p>A 2S pack (8.4 V full) with R1 = 22 kΩ and R2 = 10 kΩ. The ratio is \(10 / 32 = 0.3125\), so at full charge the ADC sees \(8.4 \times 0.3125 = 2.63\ \text{V}\), comfortably below 3.3 V.</p>
-  <p>The divider draws \(8.4\ \text{V} / 32\ \text{k}\Omega = 0.26\ \text{mA}\). That's about 190 mAh a month, so a 2200 mAh pack left connected in a cupboard for a few months would be flat. Many flight computers switch the divider off with a small MOSFET when they aren't measuring (Module 6).</p>
+  <p>The divider draws \(8.4\ \text{V} / 32\ \text{k}\Omega = 0.26\ \text{mA}\). That's about 190 mAh a month, so a 2200 mAh pack left connected in a cupboard for a few months would be flat. Many designs switch the divider off with a small MOSFET when they aren't measuring (Module 6).</p>
 </div>
 
 <details class="exercise">
   <summary><span class="ek">Design exercise</span><span class="et">Read the battery back</span><span class="eo">optional</span></summary>
   <div class="eb">
-    <p>The flight computer uses the 22 kΩ / 10 kΩ divider above. During a pad hold the ADC reads 2.10 V.</p>
+    <p>A board uses the 22 kΩ / 10 kΩ divider above. The ADC reads 2.10 V.</p>
     <div class="check" data-ans="6.72" data-tol="1%" data-unit="V"><p>What's the battery voltage?</p>
       <div class="miss" data-val="4.62"><p>That's 2.10 × 22/10. The scale factor is the <em>total</em> resistance over R2: (22 + 10)/10.</p></div>
       <div class="miss" data-val="0.656"><p>You multiplied by the ratio instead of dividing by it. The battery is bigger than what the ADC sees.</p></div>
@@ -467,7 +467,7 @@
 <!-- ================= 9 SCHEMATICS & DATASHEETS ================= -->
 <section class="sec" id="reading" data-short="Schematics &amp; datasheets">
 <h2>Reading schematics and datasheets <a class="vjump" data-t="27:00"></a></h2>
-<p>A schematic shows how parts are <em>connected</em>, not where they sit on the board. Here is the battery monitor from Section 5 as it would appear in the flight computer's schematic, with the conventions that trip people up most often marked:</p>
+<p>A schematic shows how parts are <em>connected</em>, not where they sit on the board. Here is the battery monitor from Section 5 as it would appear in a microcontroller board's schematic, with the conventions that trip people up most often marked:</p>
 
 <div class="widget">
   <div class="wh"><span class="tag">Diagram</span><b>The battery monitor as drawn in a real schematic</b></div>
@@ -539,7 +539,7 @@
 
 <div class="note myth">
   <span class="ni">!</span>
-  <div><span class="nt">"Typical" is not a specification</span>A typical value is what the median part does at room temperature. Your part could be anywhere between the min and max, and at −20 °C on a cold pad it might sit at the edge. If a design only works with the typical value, it doesn't work.</div>
+  <div><span class="nt">"Typical" is not a specification</span>A typical value is what the median part does at room temperature. Your part could be anywhere between the min and max, and at −20 °C it might sit at the edge. If a design only works with the typical value, it doesn't work.</div>
 </div>
 
 <div class="note tip">
@@ -556,7 +556,7 @@
 <div class="chal">
   <div class="ch"><span class="cn">Exercise 1</span><span class="cd">Design · ●●○</span><span class="ctitle">A battery monitor for a 3S pack</span></div>
   <div class="cbody">
-    <p>The new flight computer runs from a 3S LiPo. Its ADC accepts 0 to 3.3 V, and you want the reading at full charge to be no more than 3.0 V, leaving headroom for resistor tolerance.</p>
+    <p>A new board runs from a 3S LiPo. Its ADC accepts 0 to 3.3 V, and you want the reading at full charge to be no more than 3.0 V, leaving headroom for resistor tolerance.</p>
     <div class="given"><b>Given</b>
       <span>Battery, full charge</span><span>3 × 4.2 V = 12.6 V</span>
       <span>Maximum ADC voltage at full charge</span><span>3.0 V</span>
@@ -627,7 +627,7 @@
     <p>Planned lab demo (≈ 15 min, filmed at the bench):</p>
     <ol>
       <li>KCL and KVL checked with a meter on a breadboard network</li>
-      <li>Building the battery monitor and reading it with the flight computer's ADC</li>
+      <li>Building the battery monitor and reading it with a microcontroller's ADC</li>
       <li>The 1 MΩ divider that reads wrong on a multimeter</li>
       <li>Measuring a sensor's Thévenin resistance with one load resistor</li>
       <li>Ground shift on the test stand: a valve and a transducer on a shared return</li>
@@ -715,9 +715,9 @@ function gnd(ctx, x, y){
 }
 const node = (ctx, x, y) => Plot.dot(ctx, x, y, 3.4, col.ink);
 
-/* ============ 1. KCL / KVL power bus ============ */
+/* ============ 1. KCL / KVL: loads sharing one pair of wires ============ */
 (() => {
-  const LOADS = [['fc', 'FC', 0.18], ['radio', 'Radio', 0.6], ['gps', 'GPS', 0.03], ['valve', 'Valve', 3.0]];
+  const LOADS = [['l1', 'Load 1', 0.18], ['l2', 'Load 2', 0.6], ['l3', 'Load 3', 0.03], ['heavy', 'Heavy', 3.0]];
   const OHM_PER_M = 0.0529;
   const on = toggles('#kLoads', upd), cond = seg('#kR', upd);
   let s = {};
@@ -733,11 +733,11 @@ const node = (ctx, x, y) => Plot.dot(ctx, x, y, 3.4, col.ink);
     $('#kGndS').className = 'stat ' + (dW > 0.05 ? 'warn' : '');
     const parts = LOADS.filter(([k]) => set.has(k)).map(([, , i]) => si(i, 'A'));
     $('#kEq').innerHTML = parts.length
-      ? `<b>KCL</b> at the bus: ${si(I, 'A')} in = ${parts.join(' + ')} out. ` +
+      ? `<b>KCL</b> at node A: ${si(I, 'A')} in = ${parts.join(' + ')} out. ` +
         `<b>KVL</b> around the loop: ${fmt(Voc, 3)} V = ${si(dInt, 'V')} (inside the battery) + ${si(dW, 'V')} (feed) + ${si(Vbus, 'V')} (loads) + ${si(dW, 'V')} (return).`
       : 'No loads on: no current flows, so nothing drops anywhere and the loads see the full battery voltage.';
     const v = $('#kVerdict');
-    if (Vbus < 6) setVerdict(v, 'bad', `<b>Brown-out.</b> Only ${si(Vbus, 'V')} reaches the loads, below the regulators' 6.0 V minimum. ${si(dInt + 2*dW, 'V')} is lost before the current even gets there.`);
+    if (Vbus < 6) setVerdict(v, 'bad', `<b>Brown-out.</b> Only ${si(Vbus, 'V')} reaches the loads, below the 6.0 V they need. ${si(dInt + 2*dW, 'V')} is lost before the current even gets there.`);
     else if (dW > 0.05) setVerdict(v, 'warn', `<b>Powered, but the ground has moved.</b> The return wire carries all ${si(I, 'A')}, so the loads' ground sits ${si(dW, 'V')} above the battery's negative terminal. Any sensor measured against the battery end will read off by that much.`);
     else setVerdict(v, 'ok', `<b>Healthy.</b> ${si(Vbus, 'V')} at the loads, and the ground shifts by only ${si(dW, 'V')}.`);
     w.redraw();
@@ -753,18 +753,18 @@ const node = (ctx, x, y) => Plot.dot(ctx, x, y, 3.4, col.ink);
     Plot.wire(ctx, [[xB, yc + 5], [xB, yBt]]);
     Plot.text(ctx, si(Ri, 'Ω'), xB + 12, 76, {mono: true, color: col.ink2});
     Plot.text(ctx, fmt(Voc, 3) + ' V', xB + 12, yc + 14, {mono: true, color: col.ink2});
-    // harness: feed and return wires drawn as resistors
+    // feed and return wires drawn as resistors
     Plot.resistor(ctx, xB, yT, xN, yT, {len: 38, amp: 5, color: col.c4});
     Plot.resistor(ctx, xN, yBt, xB, yBt, {len: 38, amp: 5, color: col.c4});
     Plot.text(ctx, 'feed ' + si(Rw, 'Ω'), (xB + xN)/2 + 8, yT - 14, {align: 'center', color: col.ink2});
     Plot.text(ctx, 'return ' + si(Rw, 'Ω'), (xB + xN)/2 + 8, yBt + 15, {align: 'center', color: col.ink2});
-    // loads hanging between the + bus (node A) and the load ground (node B)
+    // loads hanging between the + rail (node A) and the load ground (node B)
     const n = LOADS.length, x0 = xN + 30, x1 = W - 30, sp = (x1 - x0)/(n - 1);
     const bw = Math.min(56, sp - 4), bh = 44, by = 92;
     Plot.wire(ctx, [[xN, yT], [x1, yT]]); Plot.wire(ctx, [[x1, yBt], [xN, yBt]]);
     LOADS.forEach(([k, name, i], j) => {
       const x = x0 + j*sp, live = set.has(k), c = live ? col.ink : col.muted;
-      // a switch below the bus, closed when the load is on
+      // a switch below the + rail, closed when the load is on
       Plot.wire(ctx, [[x, yT], [x, yT + 14]]);
       Plot.dot(ctx, x, yT + 14, 2.2, col.ink);
       Plot.line(ctx, [[x, yT + 14], live ? [x, yT + 34] : [x + 11, yT + 31]], col.ink, 1.6);
