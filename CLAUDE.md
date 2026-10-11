@@ -192,13 +192,18 @@ On a reading page, the `<div class="widget" data-wid="...">` lives in `widgets/d
 
 ### Design challenge
 
-Every interactive widget ends with the same block, immediately after `.try`. RF demos should copy this markup. Style it in the demo's CSS (and in `assets/css/widgets.css` for EE): a `#f0fdf4` panel with a 3 px `#16a34a` left border, the same padding and radius as `.try`. A `Load reference design` control is an ordinary preset `<button data-p="...">` in the existing presets row, not a new control type. Opening either `<details>` must post `widget-height` again so the iframe grows.
+Every interactive widget ends with the same block, immediately after `.try`. Style it in the demo's CSS and in `assets/css/widgets.css`: a `#f0fdf4` panel with a 3 px `#16a34a` left border, the same padding and radius as `.try`. A `Load reference design` control is an ordinary preset button in the existing presets row (`class="dc-load"`, and `data-p="..."` on EE), not a new control type. Opening either `<details>` must post `widget-height` again so the iframe grows.
+
+The card carries `id="dc-<widget-id>"` and `data-dc="<widget-id>"`, where `<widget-id>` is the widget's `data-wid`. The module index "Design challenges" list links to the full-screen demo with that hash: `{{ '/…/widgets/demo.html?w=<widget-id>' | relative_url }}#dc-<widget-id>`. The hash lands on the card because the demo shows that widget and the card is the element with the id.
+
+A live `<p class="dc-status" aria-live="polite">` sits immediately after `.deliver` and before the hint. It updates on every control change and on load, and the existing `.verdict` stays. The line reads `Live check of the current settings: ` then either `✅ meets every requirement. ` or `not there yet. `, then each requirement as `✓ ` or `✗ ` joined by ` · `. Add class `pass` (and `data-pass="1"` on the card) only when every item passes; otherwise `data-pass="0"` and the amber color. Style: `.design .dc-status{font-size:.85rem;font-weight:600;margin:.4rem 0;color:#b45309}` and `.design .dc-status.pass{color:#15803d}`.
 
 ```html
-<div class="design">
+<div class="design" id="dc-<widget-id>" data-dc="<widget-id>">
   <b>Design challenge:</b> <p>Brief (2–3 sentences)</p>
   <ul class="spec"><li>Requirement as a number</li></ul>
   <p class="deliver">Produce: chosen values plus one sentence of justification. Check it in the widget above.</p>
+  <p class="dc-status" aria-live="polite"></p>
   <details class="hint"><summary>Hint</summary>…</details>
   <details class="check"><summary>Check your design</summary>…</details>
 </div>

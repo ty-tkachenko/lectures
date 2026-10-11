@@ -487,6 +487,6 @@ The buck scope comparison, short ground spring against a long ground lead, is in
 
 Each widget ends with a design card. The numbers below are the targets. The check, and a reference preset, live in the widget.
 
-- [LDO heat]({{ '/ee/05-power-conversion/widgets/demo.html?w=ldo-dissipation' | relative_url }}). 3.3 V at 150 mA from a 3S pack, 40 °C/W, 40 °C ambient, junction limit 110 °C. Stay under that limit at 12.6 V.
-- [Buck ripple]({{ '/ee/05-power-conversion/widgets/demo.html?w=buck-converter' | relative_url }}). 12.6 V to 3.3 V at 300 mA, continuous conduction, ΔIL under 0.20 A, and ΔVout under 20 mV.
-- [LDO versus buck]({{ '/ee/05-power-conversion/widgets/demo.html?w=ldo-vs-buck' | relative_url }}). At 200 mA and 85% buck efficiency, pick the regulator whose heat stays under 0.5 W from 12.6 V down to 9.0 V.
+- [LDO heat]({{ '/ee/05-power-conversion/widgets/demo.html?w=ldo-dissipation' | relative_url }}#dc-ldo-dissipation). 3.3 V at 150 mA from a 3S pack, 40 °C/W, 40 °C ambient, junction limit 110 °C. Stay under that limit at 12.6 V.
+- [Buck ripple]({{ '/ee/05-power-conversion/widgets/demo.html?w=buck-converter' | relative_url }}#dc-buck-converter). 12.6 V to 3.3 V at 300 mA, continuous conduction, ΔIL under 0.20 A, and ΔVout under 20 mV.
+- [LDO versus buck]({{ '/ee/05-power-conversion/widgets/demo.html?w=ldo-vs-buck' | relative_url }}#dc-ldo-vs-buck). At 200 mA and 85% buck efficiency, pick the regulator whose heat stays under 0.5 W from 12.6 V down to 9.0 V.

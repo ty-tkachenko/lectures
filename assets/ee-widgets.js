@@ -140,6 +140,19 @@
     el.textContent = msg;
     el.style.color = ok ? "#15803d" : "#b91c1c";
   }
+  function dcStatus(doc, wid, items) {
+    var root = doc.querySelector('.widget[data-wid="' + wid + '"]');
+    if (!root) return;
+    var st = root.querySelector(".dc-status");
+    if (!st) return;
+    var ok = items.length > 0 && items.every(function (it) { return it[0]; });
+    st.className = "dc-status" + (ok ? " pass" : "");
+    if (st.parentNode && st.parentNode.classList && st.parentNode.classList.contains("design")) {
+      st.parentNode.setAttribute("data-pass", ok ? "1" : "0");
+    }
+    st.textContent = "Live check of the current settings: " + (ok ? "✅ meets every requirement. " : "not there yet. ")
+      + items.map(function (it) { return (it[0] ? "✓ " : "✗ ") + it[1]; }).join(" · ");
+  }
   function onInputs(doc, ids, fn) {
     ids.forEach(function (id) {
       var el = q(doc, id);
@@ -239,6 +252,11 @@
       verdict(q(doc, "op-verdict"), !hot, hot
         ? "Over the rating. The body is being asked for more heat than it was built to shed."
         : "Inside the rating. Power is V²/R, and this part can shed it.");
+      dcStatus(doc, "ohms-power", [
+        [Math.abs(v - 12) < 0.05, "V " + fixed(v, 1) + " V"],
+        [i * 1000 >= 8 - 1e-6 && i * 1000 <= 15 + 1e-6, "I " + sig(i * 1000, 3) + " mA (8–15)"],
+        [finite(p) && p <= 0.25 + 1e-9, "P " + (finite(p) ? sig(p, 3) : "—") + " W (≤ 0.25)"]
+      ]);
       var x = ctx(cv), W = cv.width, H = cv.height;
       var L = 58, R = W - 20, T = 28, B = H - 36;
       var rMin = 10, rMax = 10000;
@@ -303,6 +321,11 @@
       verdict(q(doc, "vd-verdict"), ok, ok
         ? "The load is light next to R2. The unloaded formula is close."
         : "The load is heavy. Rload sits in parallel with R2, and the unloaded formula overstates the voltage.");
+      dcStatus(doc, "voltage-divider", [
+        [Math.abs(vin - 12.6) < 0.05 && d.unloaded >= 3.2 && d.unloaded <= 3.4, "unloaded " + fixed(d.unloaded, 3) + " V at " + fixed(vin, 2) + " V"],
+        [Math.abs(rl - 100000) / 100000 < 0.02, "load " + fmtOhms(rl)],
+        [ratio < 0.01, "sag " + fixed(100 * ratio, 1) + "%"]
+      ]);
       var x = ctx(cv), W = cv.width, H = cv.height;
       var L = 64, R = W - 20, T = 28, B = H - 36;
       var yMax = Math.max(vin, 0.1);
@@ -370,6 +393,11 @@
         ? "Vs is not above Vf, so this resistor formula does not set a current."
         : (hot ? "The E24 resistor is over a 1/8 W rating. " : "E24 next-up stays at or under the target. ")
           + (overE12 ? "The nearest E12 value lets the current go over the target." : "Check the E12 current before you use that coarser series."));
+      dcStatus(doc, "led-limit", [
+        [Math.abs(vs - 9) < 0.05 && Math.abs(vf - 2) < 0.05 && Math.abs(iT - 0.01) < 5e-5, "9 V, Vf " + fixed(vf, 1) + " V, target " + fixed(iT * 1000, 1) + " mA"],
+        [finite(i24) && e24.nextUp + 1e-6 >= lim.r && i24 <= iT + 1e-6, "E24 " + fmtOhms(e24.nextUp) + " → " + (finite(i24) ? sig(i24 * 1000, 3) : "—") + " mA"],
+        [finite(p24) && p24 < 0.125, "P " + (finite(p24) ? sig(p24, 3) : "—") + " W"]
+      ]);
       var x = ctx(cv), W = cv.width, H = cv.height;
       var L = 64, R = W - 20, T = 28, B = H - 36;
       if (!(lim.r > 0)) { label(x, 24, 40, "Set Vs above Vf."); return; }
@@ -430,6 +458,7 @@
       var x = ctx(cv);
       if (n.error) {
         verdict(q(doc, "nv-verdict"), false, n.error);
+        dcStatus(doc, "kvl-kcl", [[false, n.error]]);
         return;
       }
       setText(q(doc, "nv-va"), fixed(n.va, 3) + " V");
@@ -444,6 +473,12 @@
       verdict(q(doc, "nv-verdict"), ok, ok
         ? "KCL holds: current into node A equals current out, and the same at node B. KVL around the left loop is Vin = I1·R1 + Va."
         : "The branch currents do not balance. Check the resistor values.");
+      var iMaxmA = Math.max(n.i1, n.i2, n.i3, n.i4) * 1000;
+      dcStatus(doc, "kvl-kcl", [
+        [Math.abs(vin - 12) < 0.05, "Vin " + fixed(vin, 2) + " V"],
+        [Math.abs(n.va - 6) < 0.05 && Math.abs(n.vb - 3) < 0.05, "Va " + fixed(n.va, 2) + " V, Vb " + fixed(n.vb, 2) + " V"],
+        [iMaxmA <= 1 + 1e-6, "largest branch " + sig(iMaxmA, 3) + " mA"]
+      ]);
       var W = cv.width, H = cv.height;
       x.strokeStyle = "#111";
       x.lineWidth = 2;
@@ -512,6 +547,11 @@
         ? "Half a period is shorter than τ. The capacitor stops reaching the rails."
         : (reaches ? "Five time constants fit in a half-period. The capacitor reaches the rails."
           : "It gets part of the way. One time constant is about 63% of a step."));
+      dcStatus(doc, "rc-scope", [
+        [Math.abs(r - 10000) / 10000 < 0.02 && Math.abs(f - 10) < 0.3 && Math.abs(vH - 5) < 0.05, fmtOhms(r) + ", " + sig(f, 3) + " Hz, " + fixed(vH, 1) + " V"],
+        [tau >= 0.008 - 1e-6 && tau <= 0.010 + 1e-6, "τ " + sig(tau * 1000, 3) + " ms"],
+        [st.half > 5 * tau, "half " + sig(st.half * 1000, 3) + " ms vs 5τ " + sig(5 * tau * 1000, 3) + " ms"]
+      ]);
       var x = ctx(cv), W = cv.width, H = cv.height;
       var L = 58, R = W - 16, T = 24, B = H - 32;
       var tMax = 3 / f;
@@ -573,6 +613,12 @@
       verdict(q(doc, "kick-verdict"), diode, diode
         ? "The diode is on. The switch node only rises by about one forward drop above the supply."
         : "The diode is off. The model spike is L·ΔI/Δt. A real switch avalanches or fails before that if the number is huge.");
+      var kickScene = Math.abs(Lh - 0.01) < 1e-5 && Math.abs(i - 0.1) < 1e-4 && Math.abs(vs - 5) < 0.05 && Math.abs(dt - 1e-6) / 1e-6 < 0.08;
+      dcStatus(doc, "rl-kickback", [
+        [kickScene, sig(Lh * 1e3, 3) + " mH, " + sig(i * 1000, 3) + " mA, " + fixed(vs, 1) + " V, " + sig(dt * 1e6, 3) + " µs"],
+        [diode, diode ? "diode on" : "diode off"],
+        [diode && Math.abs(vf - 0.7) < 0.03, "clamp " + fixed(vDiode, 2) + " V, undamped spike " + sig(vSpike, 3) + " V"]
+      ]);
       var x = ctx(cv), W = cv.width, H = cv.height;
       var L = 58, R = W - 16, T = 24, B = H - 32;
       var tEnd = Math.max(5 * dt, diode ? decay * 1.4 : 4 * dt, 1e-6);
@@ -635,6 +681,12 @@
         ? "You are on the cutoff. Magnitude is about 0.707, which is −3 dB."
         : (hp ? "High-pass: the fast part of the input gets through, and the slow part does not."
           : "Low-pass: a decade above cutoff the magnitude is about 0.1, which is −20 dB."));
+      var fltParts = !hp && Math.abs(r - 1600) < 15 && Math.abs(c * 1e9 - 100) < 1.5;
+      dcStatus(doc, "rc-filter", [
+        [fltParts, (hp ? "high-pass" : "low-pass") + ", " + fmtOhms(r) + ", " + sig(c * 1e9, 3) + " nF"],
+        [fltParts && fc > 900 && fc < 1100, "fc " + sig(fc, 4) + " Hz"],
+        [!hp && f > 8 * fc && f < 12 * fc && mag > 0.08 && mag < 0.13, "|H| " + fixed(mag, 3) + " (" + fixed(db, 1) + " dB)"]
+      ]);
       var x = ctx(cv), W = cv.width, H = cv.height;
       var L = 64, R = W - 16, mid = 210, T = 22, B = H - 28;
       var f0 = fc / 100, f1 = fc * 100;
@@ -712,6 +764,11 @@
       setText(q(doc, "z-fc"), sig(fc, 4) + " Hz");
       setText(q(doc, "z-cross"), "Xc = R");
       verdict(q(doc, "z-verdict"), true, "Where the capacitor curve crosses the flat resistor line is the cutoff of an RC low-pass made from this R and C.");
+      dcStatus(doc, "impedance-plot", [
+        [Math.abs(f - 1000) / 1000 < 0.02, "marker " + sig(f, 4) + " Hz"],
+        [Math.abs(xc - 1600) / 1600 <= 0.05, "Xc " + fmtOhms(xc)],
+        [xl < 100, "XL " + fmtOhms(xl)]
+      ]);
       var x = ctx(cv), W = cv.width, H = cv.height;
       var L = 64, R = W - 16, T = 28, B = H - 34;
       var zMin = 1, zMax = 1e6, f0 = 10, f1 = 1e6;
@@ -787,6 +844,17 @@
         : drop ? "Dropout: Vin − Vout is under the dropout voltage. The output will sag."
         : hot ? "Above the junction limit. The package cannot shed this heat at this θJA."
         : "Inside the junction limit, and above dropout.");
+      var ldoPoint = Math.abs(s.vout - 3.3) < 0.05 && Math.abs(s.iout - 0.15) < 0.002 && Math.abs(s.iq - 0.005) < 2e-4;
+      var ldoTherm = Math.abs(s.theta - 40) < 0.5 && Math.abs(s.ta - 40) < 0.5 && Math.abs(s.tjmax - 110) < 0.5;
+      var pFull = ldoCalc(12.6, s.vout, s.iout, s.iq);
+      var pEmpty = ldoCalc(9, s.vout, s.iout, s.iq);
+      var tjFull = junction(pFull.pd, s.theta, s.ta);
+      var tjEmpty = junction(pEmpty.pd, s.theta, s.ta);
+      dcStatus(doc, "ldo-dissipation", [
+        [ldoPoint && Math.abs(s.vin - 12.6) < 0.05, "Vin " + fixed(s.vin, 2) + " V, " + fixed(s.vout, 2) + " V, " + sig(s.iout * 1000, 3) + " mA, Iq " + sig(s.iq * 1000, 3) + " mA"],
+        [ldoTherm && tjFull <= s.tjmax + 1e-6, "TJ " + fixed(tjFull, 1) + " °C at 12.6 V, limit " + fixed(s.tjmax, 0) + " °C, " + fixed(s.theta, 0) + " °C/W, " + fixed(s.ta, 0) + " °C"],
+        [12.6 - s.vout > s.vdo && 9 - s.vout > s.vdo && tjEmpty <= s.tjmax + 1e-6, "headroom " + fixed(12.6 - s.vout, 1) + " V and " + fixed(9 - s.vout, 1) + " V, empty-pack TJ " + fixed(tjEmpty, 1) + " °C"]
+      ]);
       var x = ctx(cv), W = cv.width, H = cv.height;
       var L = 58, R = 500, T = 28, B = H - 36;
       var vin0 = Math.max(0, s.vout - 1), vin1 = 16;
@@ -888,6 +956,13 @@
         ? "Vin has to be above Vout."
         : ccm.ccm ? "Continuous conduction. The current triangle stays above zero."
         : "Discontinuous conduction. The current returns to zero, and the continuous-conduction ripple formula no longer draws the shape.");
+      var buckPoint = Math.abs(s.vin - 12.6) < 0.05 && Math.abs(s.vout - 3.3) < 0.05 && Math.abs(s.iout - 300) < 1;
+      var capOk = Math.abs(s.cout - 22) < 0.5 && Math.abs(s.esr - 20) < 0.5;
+      dcStatus(doc, "buck-converter", [
+        [buckPoint, fixed(s.vin, 2) + " V to " + fixed(s.vout, 2) + " V at " + fixed(s.iout, 0) + " mA"],
+        [!bad && ccm.ccm && ccm.dIL < 0.20, bad ? "Vin has to be above Vout" : ((ccm.ccm ? "CCM" : "DCM") + ", ΔIL " + sig(ccm.dIL, 3) + " A")],
+        [capOk && !bad && ccm.ccm && rip.dV < 0.020, "ΔVout " + (bad || !ccm.ccm ? "—" : sig(rip.dV * 1000, 3) + " mV") + ", " + s.cout + " µF, " + s.esr + " mΩ"]
+      ]);
       var x = ctx(cv), W = cv.width, H = cv.height;
       var L = 58, R = W - 16, T = 36, B = H - 32, mid = (T + B) / 2;
       axes(x, L, T, R, B);
@@ -948,6 +1023,14 @@
       verdict(q(doc, "cmp-verdict"), !heavy, heavy
         ? "The linear regulator is making more than half a watt of heat. A buck, or a buck then an LDO, is the usual pick on a 2S or 3S pack."
         : "The drop is small enough that the linear regulator's heat is modest.");
+      var cmpPoint = Math.abs(vout - 3.3) < 0.05 && Math.abs(iout - 0.2) < 0.002 && Math.abs(iq - 0.005) < 2e-4 && Math.abs(eta - 0.85) < 0.005;
+      var linFull = ldoCalc(12.6, vout, iout, iq);
+      var linEmpty = ldoCalc(9, vout, iout, iq);
+      dcStatus(doc, "ldo-vs-buck", [
+        [cmpPoint, fixed(vout, 2) + " V, " + sig(iout * 1000, 3) + " mA, Iq " + sig(iq * 1000, 3) + " mA, η " + fixed(100 * eta, 0) + "%"],
+        [Math.abs(vin - 12.6) < 0.05, "showing " + fixed(vin, 2) + " V; at 9.0 V the LDO is " + sig(linEmpty.pd, 3) + " W"],
+        [buck.pdiss < 0.5 && linFull.pd > 0.5 && linEmpty.pd > 0.5, "buck " + sig(buck.pdiss, 3) + " W, LDO at 12.6 V " + sig(linFull.pd, 3) + " W"]
+      ]);
       var x = ctx(cv), W = cv.width, H = cv.height;
       var L = 58, R = W - 16, T = 28, B = H - 36;
       var vin0 = Math.max(vout, 1), vin1 = 16, pMax = 0.2, k, vv;
