@@ -152,7 +152,7 @@ $$
 
 The load did not change. The pack being fuller, or having another cell, made the regulator hotter.
 
-{% include widget.html widget="ldo-dissipation" height=1260 title="LDO heat and junction temperature" %}
+{% include widget.html widget="ldo-dissipation" height=1520 title="LDO heat and junction temperature" %}
 
 {% capture deeper_iq %}
 Change only $$I_q$$, from 5 mA to 0.05 mA, a modern LDO. The quiescent heat at 8.4 V becomes $$8.4 \times 0.00005 = 0.0004\,\mathrm{W}$$. Total heat falls from 1.062 W to 1.020 W. At a 200 mA load you cannot save the board by shopping for a lower $$I_q$$. $$I_q$$ matters when the rocket is asleep and the load is microamps, because then the quiescent current *is* the battery drain.
@@ -310,7 +310,7 @@ $$
 
 Compare with the linear regulator on the same 2S pack: 1.062 W of heat versus 0.116 W. $$1.062 / 0.116 \approx 9$$. About nine times less heat in the converter, at this guess of efficiency. On the 3S pack the linear regulator was at 1.923 W and this buck estimate is still 0.116 W, because the estimate depends on efficiency and output power, not on how large $$V_{\mathrm{in}}$$ is.
 
-{% include widget.html widget="buck-converter" height=1230 title="Buck switch node and inductor current" %}
+{% include widget.html widget="buck-converter" height=1540 title="Buck switch node and inductor current" %}
 
 {% capture deeper_dcm %}
 Volt-second balance is why $$D = V_{\mathrm{out}}/V_{\mathrm{in}}$$ in continuous conduction. Over one cycle the inductor current has to end where it started, so the up-ramp and the down-ramp cancel. Up-ramp: $$(V_{\mathrm{in}}-V_{\mathrm{out}}) D / f_{\mathrm{sw}}$$. Down-ramp: $$V_{\mathrm{out}}(1-D)/f_{\mathrm{sw}}$$. Set them equal and $$D$$ falls out as $$V_{\mathrm{out}}/V_{\mathrm{in}}$$. Losses make the real duty a bit higher. A rough correction is $$D \approx V_{\mathrm{out}}/(\eta V_{\mathrm{in}})$$. The ripple formula on this page keeps the ideal $$D$$, so the up-ramp and down-ramp still match.
@@ -337,7 +337,7 @@ Use a linear regulator when the drop is small or the current is small, so the he
 | A radio, LNA, or ADC that hates ripple | Buck, then LDO | The buck does the big drop. The LDO drops a little and cleans up. |
 | Load current that sometimes almost disappears | Check continuous vs discontinuous | A small inductor can make the current hit zero. Ripple and noise change. |
 
-{% include widget.html widget="ldo-vs-buck" height=1150 title="LDO versus buck: heat as input voltage changes" %}
+{% include widget.html widget="ldo-vs-buck" height=1390 title="LDO versus buck: heat as input voltage changes" %}
 
 ## 6. A buck followed by an LDO
 
@@ -482,3 +482,11 @@ Mild. Good first point. Then step the load if the part and the resistor allow it
 If $$V_{\mathrm{out}}$$ sags, you are in dropout or current limit. Stop and write that down. Do not expect the case temperature to equal $$T_J$$. Check whether the case gets warmer as the current rises, in the same direction as the prediction.
 
 The buck scope comparison, short ground spring against a long ground lead, is in the [lab practical](practical-lab.html). Do that one if you have a scope. It is not required to finish this table.
+
+## Design challenges
+
+Each widget ends with a design card. The numbers below are the targets. The check, and a reference preset, live in the widget.
+
+- [LDO heat]({{ '/ee/05-power-conversion/widgets/demo.html?w=ldo-dissipation' | relative_url }}). 3.3 V at 150 mA from a 3S pack, 40 °C/W, 40 °C ambient, junction limit 110 °C. Stay under that limit at 12.6 V.
+- [Buck ripple]({{ '/ee/05-power-conversion/widgets/demo.html?w=buck-converter' | relative_url }}). 12.6 V to 3.3 V at 300 mA, continuous conduction, ΔIL under 0.20 A, and ΔVout under 20 mV.
+- [LDO versus buck]({{ '/ee/05-power-conversion/widgets/demo.html?w=ldo-vs-buck' | relative_url }}). At 200 mA and 85% buck efficiency, pick the regulator whose heat stays under 0.5 W from 12.6 V down to 9.0 V.
