@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Voltage, Current, Resistance & Power · EE 1</title>
-<meta name="description" content="EE module 1: what voltage and current are, Ohm's law, power ratings, wire resistance, batteries and the multimeter, explained with avionics examples.">
+<meta name="description" content="EE module 1: what voltage and current are, Ohm's law, power ratings, wire resistance, batteries and the multimeter, explained with practical examples.">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
@@ -22,7 +22,7 @@
 <header class="hero">
   <div class="eyebrow">EE Fundamentals · Module 1</div>
   <h1>Voltage, current, resistance &amp; power</h1>
-  <p class="lede">Everything on the rocket, from the flight computer to the igniter, runs on four quantities and one simple law. These notes aim to make them feel physical, so you can look at a circuit and predict what it does before you measure it.</p>
+  <p class="lede">Every circuit, from a microcontroller board to a motor driver, runs on four quantities and one simple law. These notes aim to make them feel physical, so you can look at a circuit and predict what it does before you measure it.</p>
   <p class="meta">Start here: no background needed. Bench: multimeter, bench supply, a few resistors.</p>
   <div class="resources" data-auto></div>
   <div class="objectives">
@@ -30,8 +30,8 @@
     <ul>
       <li>What current and voltage physically are, and why voltage only means something between two points.</li>
       <li>Ohm's law, power, and sizing a resistor so it doesn't burn up.</li>
-      <li>Why a long launch cable can stop an igniter from firing.</li>
-      <li>Battery capacity, internal resistance, and the sag that resets flight computers.</li>
+      <li>Why a long cable can starve a load of current.</li>
+      <li>Battery capacity, internal resistance, and the sag that resets electronics.</li>
       <li>Measuring voltage, current and resistance without blowing the meter's fuse.</li>
     </ul>
   </div>
@@ -39,12 +39,12 @@
     <div class="plan">
       <p>Planned walkthrough of this page (≈ 25 min):</p>
       <ol>
-        <li data-t="0:00">Why the avionics team cares: a tour of the power paths on the rocket</li>
+        <li data-t="0:00">Why it matters: the power paths in a typical battery-powered device</li>
         <li data-t="2:30">Current is a flow, and it isn't used up</li>
         <li data-t="6:00">Voltage between two points, and what "ground" really means</li>
         <li data-t="9:30">Ohm's law, live in the circuit simulator</li>
         <li data-t="13:00">Power and the resistor that cooked itself</li>
-        <li data-t="16:00">The igniter-cable problem</li>
+        <li data-t="16:00">The long-cable problem</li>
         <li data-t="20:00">Battery sag and brown-outs</li>
         <li data-t="23:00">How not to blow up your multimeter</li>
       </ol>
@@ -110,7 +110,7 @@
 
 <div class="note myth">
   <span class="ni">!</span>
-  <div><span class="nt">"Ground" is not the Earth, and it's not magic</span>On the rocket, ground is just a copper net that every circuit agrees to measure from. It has resistance like any other wire. When large currents flow through it (a solenoid valve opening, for example), different points on "ground" can sit at different voltages. That's behind a whole family of avionics bugs, and we'll come back to it in Modules 12 and 13.</div>
+  <div><span class="nt">"Ground" is not the Earth, and it's not magic</span>In a real device, ground is just a copper net that every circuit agrees to measure from. It has resistance like any other wire. When large currents flow through it (a motor starting, for example), different points on "ground" can sit at different voltages. That's behind a whole family of hard-to-find bugs, and we'll come back to it in Modules 12 and 13.</div>
 </div>
 
 <div class="example">
@@ -126,7 +126,7 @@
 <h2>Resistance and Ohm's law <a class="vjump" data-t="9:30"></a></h2>
 <p>A <strong>resistor</strong> opposes current. Push harder (more voltage) and more current flows. Make the path narrower (more resistance) and less current flows. For most conductors at a steady temperature, the relationship is a straight line:</p>
 <div class="eq">$$V = I\,R \qquad\Longleftrightarrow\qquad I = \frac{V}{R} \qquad\Longleftrightarrow\qquad R = \frac{V}{I}$$<div class="n">Ohm's law: volts = amps × ohms</div></div>
-<p>Resistance is measured in <strong>ohms</strong> (Ω). You'll see a huge range: milliohms for wires and current-sense shunts, tens of ohms for igniters and solenoid coils, kilohms for pull-up resistors and voltage dividers, and megohms for a multimeter's input.</p>
+<p>Resistance is measured in <strong>ohms</strong> (Ω). You'll see a huge range: milliohms for wires and current-sense shunts, ohms to tens of ohms for heaters and solenoid coils, kilohms for pull-up resistors and voltage dividers, and megohms for a multimeter's input.</p>
 
 <p>The simulator below is a battery and one resistor. Change either one and watch the current respond: with the voltage fixed, doubling the resistance halves the current. The dots stand for packets of charge. They always move at the same speed, so more current shows up as more dots passing each point every second, not as faster ones.</p>
 
@@ -163,9 +163,9 @@
   <p>A shortcut worth memorising: <b>volts ÷ kilohms = milliamps</b>. Most signal-level circuits live in kΩ and mA, so you'll use it constantly.</p>
 </div>
 <details class="exercise">
-  <summary><span class="ek">Design exercise</span><span class="et">An "armed" indicator LED</span></summary>
+  <summary><span class="ek">Design exercise</span><span class="et">A power indicator LED</span></summary>
   <div class="eb">
-    <p>The pad box needs an LED that lights when the pyro channel is armed. It runs from 5 V. A red LED drops about 2 V across itself whenever it's on (you'll see why in Module 5), and you want 10 mA through it.</p>
+    <p>A board needs an LED that lights when it's powered. It runs from 5 V. A red LED drops about 2 V across itself whenever it's on (you'll see why in Module 5), and you want 10 mA through it.</p>
     <div class="check" data-ans="300" data-tol="3%" data-unit="Ω"><p>What series resistor sets 10 mA?</p>
       <div class="miss" data-val="500"><p>That would be right if the LED took no voltage. The resistor only sees what's left after the LED's 2 V.</p></div>
       <div class="hint">The resistor and LED share the 5 V. How much is left across the resistor?</div>
@@ -181,21 +181,21 @@
 <p>Every resistor turns electrical energy into heat. The rate at which it does so is the <strong>power</strong>, measured in <strong>watts</strong> (W), or joules per second. Multiply voltage (energy per charge) by current (charge per second) and you get energy per second:</p>
 <div class="eq">$$P = V\,I = I^2 R = \frac{V^2}{R}$$<div class="n">all three forms are the same equation, with Ohm's law substituted in</div></div>
 <p>Use whichever form matches what you know. If you know the current through a wire, use \(I^2R\). If you know the voltage across a resistor, use \(V^2/R\).</p>
-<p>Every resistor has a <strong>power rating</strong>: the most heat it can get rid of without damage. A common 0603 surface-mount resistor is rated ⅒ W, and a through-hole one is often ¼ W. Run a part at its full rating and it gets <em>hot</em> (often over 100 °C). The rating also assumes good airflow and room temperature, and an avionics bay sealed inside a sun-baked airframe has neither.</p>
+<p>Every resistor has a <strong>power rating</strong>: the most heat it can get rid of without damage. A common 0603 surface-mount resistor is rated ⅒ W, and a through-hole one is often ¼ W. Run a part at its full rating and it gets <em>hot</em> (often over 100 °C). The rating also assumes good airflow and room temperature, and a sealed enclosure sitting in the sun has neither.</p>
 <div class="note rule">
   <span class="ni">✓</span>
-  <div><span class="nt">Team rule of thumb: derate to 50 %</span>Pick a part whose rating is at least <b>twice</b> the power you calculate. The same idea applies to voltage ratings on capacitors and current ratings on connectors. Derating is the cheapest reliability you can buy.</div>
+  <div><span class="nt">Rule of thumb: derate to 50 %</span>Pick a part whose rating is at least <b>twice</b> the power you calculate. The same idea applies to voltage ratings on capacitors and current ratings on connectors. Derating is the cheapest reliability you can buy.</div>
 </div>
 
 <div class="example">
   <span class="xk">Worked example</span>
   <p>A 100 Ω resistor sits directly across a 5 V rail. It dissipates \(P = V^2/R = 25/100 = 0.25\ \text{W}\).</p>
-  <p>A ¼ W resistor would technically be "within rating", but it would run at its maximum temperature all the time, and the rating assumes cooler conditions than an avionics bay. Applying the 50 % rule, you'd pick a ½ W part. Better still, ask whether the circuit really needs to burn a quarter of a watt at all. (And don't reach for a smaller package: smaller parts have less area to shed heat, so their ratings are <em>lower</em>.)</p>
+  <p>A ¼ W resistor would technically be "within rating", but it would run at its maximum temperature all the time, and the rating assumes cooler conditions than a sealed enclosure in the sun. Applying the 50 % rule, you'd pick a ½ W part. Better still, ask whether the circuit really needs to burn a quarter of a watt at all. (And don't reach for a smaller package: smaller parts have less area to shed heat, so their ratings are <em>lower</em>.)</p>
 </div>
 <details class="exercise">
   <summary><span class="ek">Design exercise</span><span class="et">Does the LED resistor fit in an 0402?</span></summary>
   <div class="eb">
-    <p>Back to the 300 Ω resistor carrying 10 mA in the arming indicator. The board is tight on space, and an 0402 resistor is rated 1/16 W (62.5 mW).</p>
+    <p>Back to the 300 Ω resistor carrying 10 mA in the power indicator. The board is tight on space, and an 0402 resistor is rated 1/16 W (62.5 mW).</p>
     <div class="check" data-ans="30" data-tol="3%" data-unit="mW"><p>How much power does the resistor dissipate?</p>
       <div class="miss" data-val="0.03"><p>Right number, but in watts. The box wants milliwatts.</p></div>
       <div class="miss" data-val="50"><p>That's 5 V × 10 mA, the power of the whole circuit. The resistor only sees 3 V of it.</p></div>
@@ -212,28 +212,28 @@
 <div class="eq">$$R_\text{wire} = \frac{\rho\,\ell}{A}$$<div class="n">ρ is copper's resistivity (1.72 × 10⁻⁸ Ω·m), ℓ the length and A the cross-sectional area</div></div>
 <p>Wire size is often given in <strong>AWG</strong> (American Wire Gauge). The numbering runs backwards: bigger numbers mean <em>thinner</em> wire. Every 3 gauges halves the area, so it doubles the resistance per metre.</p>
 
-<div class="note rocket">
-  <span class="ni">🚀</span>
-  <div><span class="nt">Why this matters on the pad</span>For safety, the igniter is fired from far away, so there can be tens of metres of cable between the firing box and the pad. The igniter needs a minimum <em>all-fire current</em> to light reliably. Remember that current makes a round trip, out along one conductor and back along the other, so the cable's resistance counts <b>twice</b>. Too thin or too long a cable, and the igniter just sits there while you hold.</div>
+<div class="note">
+  <span class="ni">i</span>
+  <div><span class="nt">Why long cables matter</span>Picture a 12 V supply driving a solenoid (an electromagnet that pulls a plunger, as in a valve or a door latch) at the end of a long cable. The solenoid needs a minimum current to pull in reliably. Remember that current makes a round trip, out along one conductor and back along the other, so the cable's resistance counts <b>twice</b>. Too thin or too long a cable, and the solenoid just buzzes or sits there.</div>
 </div>
 
 <div class="widget wide" id="w-wire">
-  <div class="wh"><span class="tag">Interactive</span><b>Will the igniter fire?</b></div>
+  <div class="wh"><span class="tag">Interactive</span><b>Does enough current reach the load?</b></div>
   <div class="wb wcols">
     <div>
-      <div class="ctrl"><label for="wV">Firing supply <b id="wVv"></b></label><input id="wV" type="range" min="3" max="24" step="0.5" value="12"></div>
+      <div class="ctrl"><label for="wV">Supply voltage <b id="wVv"></b></label><input id="wV" type="range" min="3" max="24" step="0.5" value="12"></div>
       <div class="ctrl"><label for="wL">Cable length (one way) <b id="wLv"></b></label><input id="wL" type="range" min="1" max="150" step="1" value="30"></div>
       <div class="ctrl"><label for="wG">Wire gauge</label>
         <select id="wG"><option value="14">14 AWG (thick)</option><option value="16">16 AWG</option><option value="18">18 AWG</option><option value="20">20 AWG</option><option value="22" selected>22 AWG</option><option value="24">24 AWG</option><option value="26">26 AWG</option><option value="28">28 AWG (thin)</option></select></div>
-      <div class="ctrl"><label for="wR">Igniter resistance <b id="wRv"></b></label><input id="wR" type="range" min="0.3" max="5" step="0.1" value="1.6"></div>
-      <div class="ctrl"><label for="wA">All-fire current (from datasheet) <b id="wAv"></b></label><input id="wA" type="range" min="0.2" max="3" step="0.1" value="1"></div>
+      <div class="ctrl"><label for="wR">Load resistance <b id="wRv"></b></label><input id="wR" type="range" min="0.3" max="5" step="0.1" value="1.6"></div>
+      <div class="ctrl"><label for="wA">Minimum current the load needs <b id="wAv"></b></label><input id="wA" type="range" min="0.2" max="3" step="0.1" value="1"></div>
     </div>
     <div>
-      <canvas id="cvWire" style="height:260px" aria-label="Bar showing how the supply voltage is split between the outgoing wire, the igniter and the return wire"></canvas>
+      <canvas id="cvWire" style="height:260px" aria-label="Bar showing how the supply voltage is split between the outgoing wire, the load and the return wire"></canvas>
       <div class="readout">
         <div class="stat"><div class="k">Cable R (round trip)</div><div class="v" id="wRc"></div></div>
         <div class="stat"><div class="k">Current</div><div class="v" id="wI"></div></div>
-        <div class="stat"><div class="k">Volts at igniter</div><div class="v" id="wVi"></div></div>
+        <div class="stat"><div class="k">Volts at the load</div><div class="v" id="wVi"></div></div>
         <div class="stat" id="wMs"><div class="k">Margin</div><div class="v" id="wM"></div></div>
       </div>
       <div class="verdict" id="wVerdict"></div>
@@ -245,24 +245,20 @@
     <li>Halving the cable length helps. So does doubling the supply voltage. Which helps more, and why?</li>
   </ol></div>
 </div>
-<p>This is the first example of a pattern that comes up again and again: <strong>the "ideal" part of the schematic is often not where the voltage goes.</strong> Many teams put a relay box near the pad for exactly this reason. The long cable then carries only a small control signal, and the big firing current travels a few metres of thick wire.</p>
-<div class="note warn">
-  <span class="ni">!</span>
-  <div><span class="nt">Safety first</span>The numbers here are examples. Always use the all-fire and no-fire currents from your igniter's datasheet, and follow your club's pyro and arming procedures. Continuity testing and arming are covered in Module 6.</div>
-</div>
+<p>This is the first example of a pattern that comes up again and again: <strong>the "ideal" part of the schematic is often not where the voltage goes.</strong> A common fix is to put the switch, often a relay, next to the load. The long cable then carries only a small control signal, and the big load current travels a few metres of thick wire.</p>
 <div class="example">
   <span class="xk">Field story</span>
-  <p>An igniter fires every time on the bench with a 1 m lead, then sits there doing nothing on the pad. Same firing box, same batch of igniters. The difference is the cable. A 1 m lead adds almost no resistance, but tens of metres of thin wire can add several ohms, more than the igniter itself. The current falls below the all-fire level.</p>
+  <p>A solenoid works every time on the bench with a 1 m lead, then fails to pull in once it's installed at the end of a 30 m cable. Same supply, same solenoid. The difference is the cable. A 1 m lead adds almost no resistance, but tens of metres of thin wire can add several ohms, more than the solenoid itself. The current falls below what it needs.</p>
   <p>Note what <em>didn't</em> happen: the voltage didn't "run out" along the cable. Voltage gets <em>divided</em> between every resistance in the loop, and a long cable simply takes a big share.</p>
 </div>
 <details class="exercise">
-  <summary><span class="ek">Design exercise</span><span class="et">How long can the launch cable be?</span></summary>
+  <summary><span class="ek">Design exercise</span><span class="et">How long can the cable be?</span></summary>
   <div class="eb">
-    <p>The firing box supplies 12 V. The igniter is 1.6 Ω with an all-fire current of 1 A, and you want a 2× margin (2 A). The cable is 22 AWG twin, 52.9 mΩ per metre per conductor. Ignore the battery's and relay's own resistance.</p>
+    <p>A 12 V supply drives a 1.6 Ω solenoid that needs at least 1 A, and you want a 2× margin (2 A). The cable is 22 AWG twin, 52.9 mΩ per metre per conductor. Ignore the supply's and switch's own resistance.</p>
     <div class="check" data-ans="41.6" data-tol="2%" data-unit="m"><p>What's the longest one-way cable length that still delivers 2 A?</p>
       <div class="miss" data-val="83.2"><p>That's the total length of copper, out <em>and</em> back. The one-way length is half.</p></div>
-      <div class="hint">At 2 A the whole loop can be at most 12 / 2 = 6 Ω. Subtract the igniter, and what's left is the cable's budget.</div>
-      <div class="solution"><p>Loop budget: 6 Ω. Cable budget: 6 − 1.6 = 4.4 Ω for both conductors, so 2.2 Ω each. Length: \(2.2 / 0.0529 \approx 41.6\ \text{m}\) one way. If the pad needs to be further away, go to thicker wire or move the relay closer. You can check this in the simulator above.</p></div>
+      <div class="hint">At 2 A the whole loop can be at most 12 / 2 = 6 Ω. Subtract the solenoid, and what's left is the cable's budget.</div>
+      <div class="solution"><p>Loop budget: 6 Ω. Cable budget: 6 − 1.6 = 4.4 Ω for both conductors, so 2.2 Ω each. Length: \(2.2 / 0.0529 \approx 41.6\ \text{m}\) one way. If the load needs to be further away, go to thicker wire or move the switch next to the load. You can check this in the simulator above.</p></div>
     </div>
   </div>
 </details>
@@ -300,35 +296,35 @@
     </div>
   </div>
   <div class="try"><b>Things to try</b><ol>
-    <li>The avionics draw about 300 mA on the pad. How many hours can you hold with a 2200 mAh pack?</li>
-    <li>Now open a solenoid valve that draws 8 A from the same nearly empty 2S pack. Does the voltage drop below the threshold? If it does, the flight computer resets mid-sequence.</li>
+    <li>A device draws about 300 mA. How many hours does a 2200 mAh pack last?</li>
+    <li>Now start a motor that draws 8 A from the same nearly empty 2S pack. Does the voltage drop below the threshold? If it does, the microcontroller running the device resets.</li>
     <li>Look at the short-circuit current. That is why a LiPo shorted by a dropped screwdriver can start a fire.</li>
   </ol></div>
 </div>
-<div class="note rocket">
-  <span class="ni">🚀</span>
-  <div><span class="nt">A classic avionics failure</span>A valve or igniter draws a big current spike, the shared battery sags, and the flight computer's supply dips below its brown-out threshold. The computer resets, the data logging stops, and the valve sequence restarts from the top. The fixes are separate batteries (or at least separate wiring) for high-current loads, a hold-up capacitor, and brown-out detection in firmware. You'll design these properly in Module 7.</div>
+<div class="note">
+  <span class="ni">i</span>
+  <div><span class="nt">A classic failure</span>A motor, heater or solenoid draws a big current spike, the shared battery sags, and the control electronics' supply dips below its brown-out threshold. The processor resets, data logging stops, and whatever it was doing restarts from the top. The fixes are separate batteries (or at least separate wiring) for high-current loads, a hold-up capacitor, and brown-out detection in firmware. You'll design these properly in Module 7.</div>
 </div>
 <div class="grid2">
   <div class="example">
     <span class="xk">Worked example · runtime</span>
-    <p>A 2200 mAh pack powers avionics drawing a steady 300 mA: \(t = 2200 / 300 \approx 7.3\ \text{h}\).</p>
+    <p>A 2200 mAh pack powers electronics drawing a steady 300 mA: \(t = 2200 / 300 \approx 7.3\ \text{h}\).</p>
     <p>Plan on 70–80 % of that in practice, because of cold, ageing and the cutoff voltage.</p>
   </div>
   <div class="example">
     <span class="xk">Worked example · sag</span>
-    <p>A 2S pack with 40 mΩ per cell has \(2 \times 0.040 = 0.080\ \Omega\) inside it. A 5 A valve sags it by \(5 \times 0.080 = 0.4\ \text{V}\).</p>
+    <p>A 2S pack with 40 mΩ per cell has \(2 \times 0.040 = 0.080\ \Omega\) inside it. A 5 A load sags it by \(5 \times 0.080 = 0.4\ \text{V}\).</p>
     <p>A cold or old pack with three times the resistance sags 1.2 V.</p>
   </div>
 </div>
 <details class="exercise">
   <summary><span class="ek">Design exercise</span><span class="et">Spec a pack that won't brown out</span></summary>
   <div class="eb">
-    <p>The main valve and the flight computer share a 2S pack. Near the end of a long pad hold the cells are at 3.5 V each (7.0 V open circuit). Opening the valve draws 8 A, and the computer's regulator needs at least 6.0 V at its input.</p>
+    <p>A motor and its control electronics share a 2S pack. Near the end of the pack's charge the cells are at 3.5 V each (7.0 V open circuit). Starting the motor draws 8 A, and the electronics' regulator needs at least 6.0 V at its input.</p>
     <div class="check" data-ans="62.5" data-tol="2%" data-unit="mΩ"><p>What's the highest internal resistance <em>per cell</em> the pack can have?</p>
       <div class="miss" data-val="125"><p>That's the limit for the whole pack. It has two cells in series, so each one gets half.</p></div>
       <div class="hint">You can afford to lose 7.0 − 6.0 = 1.0 V at 8 A. What total resistance is that?</div>
-      <div class="solution"><p>Allowed sag 1.0 V at 8 A gives \(R \le 1.0 / 8 = 125\ \text{m}\Omega\) total, so 62.5 mΩ per cell. A fresh pack at room temperature may be fine, but internal resistance rises sharply in the cold and with age. That's a strong argument for giving the valve its own battery.</p></div>
+      <div class="solution"><p>Allowed sag 1.0 V at 8 A gives \(R \le 1.0 / 8 = 125\ \text{m}\Omega\) total, so 62.5 mΩ per cell. A fresh pack at room temperature may be fine, but internal resistance rises sharply in the cold and with age. That's a strong argument for giving the motor its own battery.</p></div>
     </div>
   </div>
 </details>
@@ -364,7 +360,7 @@
 
 <div class="note tip">
   <span class="ni">✓</span>
-  <div><span class="nt">Measuring a module's current draw</span>To find how much the GPS draws, break its supply line and put the meter (in amps mode) into the gap. Touching the probes across its power pins would short the rail. Good boards make this easy with a jumper or a 0 Ω resistor in each supply path, which you can lift to insert the meter. Don't try to work it out from voltage and a "resistance": a GPS module isn't a resistor, and its current changes with what it's doing (acquiring vs tracking).</div>
+  <div><span class="nt">Measuring a module's current draw</span>To find how much a module on a board draws (a radio, say), break its supply line and put the meter (in amps mode) into the gap. Touching the probes across its power pins would short the rail. Good boards make this easy with a jumper or a 0 Ω resistor in each supply path, which you can lift to insert the meter. Don't try to work it out from voltage and a "resistance": a radio module isn't a resistor, and its current changes with what it's doing (transmitting vs idle).</div>
 </div>
 </section>
 
@@ -372,9 +368,8 @@
 <section class="sec" id="safety" data-short="Bench safety">
 <h2>Bench safety</h2>
 <ul>
-  <li><strong>Current is what hurts you, and voltage is what pushes it through you.</strong> Dry skin is a few tens of kilohms or more, so the 7.4 V on the rocket can't push a dangerous current through your body. Mains voltage and high-voltage supplies can, so treat them with respect.</li>
-  <li><strong>LiPos are the real hazard on our bench.</strong> As the battery simulator showed, a short can draw hundreds of amps. That melts wires, welds tools and can start a fire. Insulate exposed leads, charge in a LiPo bag, and never charge unattended.</li>
-  <li><strong>Pyro channels are always treated as live.</strong> Follow the club's arming procedure, use shunts on igniters, and never be in line with a motor or igniter while connecting.</li>
+  <li><strong>Current is what hurts you, and voltage is what pushes it through you.</strong> Dry skin is a few tens of kilohms or more, so the 7.4 V of a 2S LiPo can't push a dangerous current through your body. Mains voltage and high-voltage supplies can, so treat them with respect.</li>
+  <li><strong>Lithium batteries are the real hazard on a low-voltage bench.</strong> As the battery simulator showed, a short can draw hundreds of amps. That melts wires, welds tools and can start a fire. Insulate exposed leads, charge in a LiPo bag, and never charge unattended.</li>
   <li><strong>Use a current-limited bench supply for first power-up.</strong> Set the current limit just above what you expect. If something's shorted, the supply limits the current instead of the board burning. (More on this in Module 14.)</li>
   <li><strong>ESD:</strong> static from your body can kill sensitive chips without you feeling anything. Use the wrist strap at the bench.</li>
 </ul>
@@ -383,57 +378,57 @@
 <!-- ================= DESIGN EXERCISES ================= -->
 <section class="sec" id="exercises" data-nonum data-short="Design exercises">
 <h2>Design exercises</h2>
-<p>Problems taken from the team's own hardware. Each takes a few steps. Enter numbers to check your reasoning as you go, or open the worked solutions and discussion. The simulators above are useful for sanity-checking.</p>
+<p>Problems drawn from real hardware. Each takes a few steps. Enter numbers to check your reasoning as you go, or open the worked solutions and discussion. The simulators above are useful for sanity-checking.</p>
 
 <div class="chal">
-  <div class="ch"><span class="cn">Exercise 1</span><span class="cd">Sizing · ●●○</span><span class="ctitle">How big a battery for the pad hold?</span></div>
+  <div class="ch"><span class="cn">Exercise 1</span><span class="cd">Sizing · ●●○</span><span class="ctitle">How big a battery?</span></div>
   <div class="cbody">
-    <p>The flight computer, radio and GPS run from one 2S LiPo. The launch window allows up to a 3-hour hold on the pad. After a 10-minute flight, recovery can take up to 2 hours, and you want the radio beacon running the whole time.</p>
+    <p>A remote sensor station runs a microcontroller board, a radio and a GPS receiver from one 2S LiPo. It has to run for 5 hours 10 minutes between charges.</p>
     <div class="given"><b>Given</b>
-      <span>Flight computer</span><span>180 mA</span>
-      <span>Telemetry radio (average)</span><span>120 mA</span>
-      <span>GPS</span><span>30 mA</span>
+      <span>Microcontroller board</span><span>180 mA</span>
+      <span>Radio (average)</span><span>120 mA</span>
+      <span>GPS receiver</span><span>30 mA</span>
       <span>Usable fraction of capacity</span><span>80 % (cold, cutoff voltage, ageing)</span>
     </div>
     <div class="check" data-ans="330" data-tol="1%" data-unit="mA"><p>(a) Total current draw?</p><div class="solution"><p>180 + 120 + 30 = 330 mA. All three loads hang off the same pack, so their currents add.</p></div></div>
     <div class="check" data-ans="2130" data-tol="3%" data-unit="mAh"><p>(b) Minimum <em>rated</em> capacity, accounting for the 80 % usable fraction?</p>
       <div class="miss" data-val="1705"><p>That's the capacity you'll actually <em>use</em>. The pack's rating has to be bigger, because only 80 % of it is usable.</p></div>
-      <div class="hint">Total time = 3 h + 10 min + 2 h ≈ 5.17 h. Capacity used = current × time. Then divide by 0.8.</div>
+      <div class="hint">Total time = 5 h 10 min ≈ 5.17 h. Capacity used = current × time. Then divide by 0.8.</div>
       <div class="solution"><p>Used: 0.33 A × 5.17 h ≈ 1.71 Ah. Rated: 1.71 / 0.8 ≈ 2.13 Ah, so you'd pick a 2200 mAh pack, or a bigger one if the weight budget allows.</p></div></div>
-    <details><summary>Discussion: what did we leave out?</summary><p>Current isn't constant. The radio transmits in bursts at maybe 5× its average current, and those peaks cause sag (Section 6). Heaters, servos and valves add large short-term loads too. Low temperature at altitude cuts usable capacity further. A real power budget lists every load with its average and peak current, and that's exactly what you'll build in Module 7.</p></details>
+    <details><summary>Discussion: what did we leave out?</summary><p>Current isn't constant. The radio transmits in bursts at maybe 5× its average current, and those peaks cause sag (Section 6). Heaters, motors and solenoids add large short-term loads too. Low temperature cuts usable capacity further. A real power budget lists every load with its average and peak current, and that's exactly what you'll build in Module 7.</p></details>
   </div>
 </div>
 
 <div class="chal">
-  <div class="ch"><span class="cn">Exercise 2</span><span class="cd">Analysis · ●●○</span><span class="ctitle">Will the igniter fire through the launch cable?</span></div>
+  <div class="ch"><span class="cn">Exercise 2</span><span class="cd">Analysis · ●●○</span><span class="ctitle">Does the solenoid get enough current?</span></div>
   <div class="cbody">
-    <p>The firing box is 30 m from the pad. It uses a 12 V lead-acid battery and a relay, connected to the igniter by twin 22 AWG cable.</p>
+    <p>A solenoid is 30 m from its supply: a 12 V lead-acid battery and a relay, connected to the solenoid by twin 22 AWG cable.</p>
     <div class="given"><b>Given</b>
       <span>Battery</span><span>12.0 V, internal resistance 0.05 Ω</span>
       <span>Relay contacts</span><span>0.05 Ω</span>
       <span>Cable</span><span>22 AWG, 52.9 mΩ per metre per conductor, 30 m one way</span>
-      <span>Igniter</span><span>1.6 Ω, all-fire current 1.0 A (example)</span>
+      <span>Solenoid</span><span>1.6 Ω, needs at least 1.0 A to pull in</span>
     </div>
     <div class="check" data-ans="3.17" data-tol="2%" data-unit="Ω"><p>(a) Total cable resistance (both conductors)?</p>
       <div class="miss" data-val="1.59"><p>That's one conductor. Current goes out <em>and</em> back.</p></div>
-      <div class="solution"><p>60 m × 0.0529 Ω/m = 3.17 Ω. That's already twice the igniter's resistance.</p></div></div>
-    <div class="check" data-ans="2.46" data-tol="2%" data-unit="A"><p>(b) Firing current?</p>
-      <div class="hint">Everything is in one loop, so add all the resistances: battery + relay + cable + igniter.</div>
-      <div class="solution"><p>\(R_\text{total} = 0.05 + 0.05 + 3.17 + 1.6 = 4.87\ \Omega\), so \(I = 12 / 4.87 = 2.46\ \text{A}\), about 2.5× the all-fire current.</p></div></div>
-    <div class="check" data-ans="3.94" data-tol="2%" data-unit="V"><p>(c) Voltage actually across the igniter?</p>
-      <div class="solution"><p>\(V = I R = 2.46 \times 1.6 = 3.94\ \text{V}\). Only a third of the battery voltage reaches the igniter. Most of the rest is lost in the cable.</p></div></div>
-    <details><summary>Discussion: what would you change?</summary><p>Swap in 16 AWG (13.2 mΩ/m) and the cable drops to 0.79 Ω, so the current rises to about 4.1 A. Or move the relay box to the pad and run only a low-current control line back to the firing box. Also check the opposite limit: the <em>no-fire</em> current. Your continuity-test current has to stay well below it, or the continuity check itself becomes a hazard.</p></details>
+      <div class="solution"><p>60 m × 0.0529 Ω/m = 3.17 Ω. That's already twice the solenoid's resistance.</p></div></div>
+    <div class="check" data-ans="2.46" data-tol="2%" data-unit="A"><p>(b) Current through the solenoid?</p>
+      <div class="hint">Everything is in one loop, so add all the resistances: battery + relay + cable + solenoid.</div>
+      <div class="solution"><p>\(R_\text{total} = 0.05 + 0.05 + 3.17 + 1.6 = 4.87\ \Omega\), so \(I = 12 / 4.87 = 2.46\ \text{A}\), about 2.5× the minimum it needs.</p></div></div>
+    <div class="check" data-ans="3.94" data-tol="2%" data-unit="V"><p>(c) Voltage actually across the solenoid?</p>
+      <div class="solution"><p>\(V = I R = 2.46 \times 1.6 = 3.94\ \text{V}\). Only a third of the battery voltage reaches the solenoid. Most of the rest is lost in the cable.</p></div></div>
+    <details><summary>Discussion: what would you change?</summary><p>Swap in 16 AWG (13.2 mΩ/m) and the cable drops to 0.79 Ω, so the current rises to about 4.8 A. Or move the relay next to the solenoid and run only a low-current control line back to the supply. Also check the opposite limit: at 4.8 A the 1.6 Ω coil dissipates about 37 W. Solenoids are rated for a particular voltage or current, and running one far above it overheats the coil, so more current isn't automatically better.</p></details>
   </div>
 </div>
 
 <div class="chal">
-  <div class="ch"><span class="cn">Exercise 3</span><span class="cd">Design · ●●●</span><span class="ctitle">A shunt resistor to measure valve current</span></div>
+  <div class="ch"><span class="cn">Exercise 3</span><span class="cd">Design · ●●●</span><span class="ctitle">A shunt resistor to measure solenoid current</span></div>
   <div class="cbody">
-    <p>You want the flight computer to log how much current the main oxidizer valve draws, so you can confirm it actually opened. The plan is to put a small "shunt" resistor in series with the valve and measure the voltage across it. To keep from stealing voltage from the valve, the shunt should drop no more than 100 mV at the valve's maximum current.</p>
+    <p>You want to log how much current a solenoid valve draws, so you can confirm it actually opened. The plan is to put a small "shunt" resistor in series with the valve and measure the voltage across it. To keep from stealing voltage from the valve, the shunt should drop no more than 100 mV at the valve's maximum current.</p>
     <div class="given"><b>Given</b>
       <span>Maximum valve current</span><span>2.0 A</span>
       <span>Maximum shunt voltage</span><span>100 mV</span>
-      <span>Derating</span><span>50 % (team rule)</span>
+      <span>Derating</span><span>50 % (rule of thumb)</span>
     </div>
     <div class="check" data-ans="50" data-tol="2%" data-unit="mΩ"><p>(a) Largest shunt resistance you can use?</p>
       <div class="miss" data-val="0.05"><p>Right value, but in ohms. The box wants milliohms.</p></div>
@@ -481,7 +476,7 @@
   <li>Current flows in loops and is the same everywhere in a single loop. Components use energy, not charge.</li>
   <li>Voltage is always between two points. "Ground" is just the agreed reference, and it's made of real copper with real resistance.</li>
   <li>Ohm's law \(V = IR\) and power \(P = VI = I^2R = V^2/R\) cover most everyday calculations. Derate parts to 50 % of their power rating.</li>
-  <li>Wires and batteries have resistance. Long cables starve igniters, and battery sag under heavy loads can reset your electronics.</li>
+  <li>Wires and batteries have resistance. Long cables starve loads of current, and battery sag under heavy loads can reset your electronics.</li>
   <li>Voltmeters go across, ammeters go in series, ohmmeters need the power off. Never put an ammeter across a source.</li>
 </ol>
 <div class="cheat">
@@ -534,7 +529,7 @@ function setVerdict(el, cls, html){ el.className = 'verdict ' + cls; el.innerHTM
     const v = $('#oVerdict');
     if (load > 2) setVerdict(v, 'bad', '<b>Smoke.</b> At over twice its rating the resistor overheats badly. Expect discolouration, a burning smell, and a resistance that drifts or goes open.');
     else if (load > 1) setVerdict(v, 'bad', '<b>Over rating.</b> The resistor runs hotter than it\'s designed for. It may survive a while, but it won\'t last.');
-    else if (load > 0.5) setVerdict(v, 'warn', '<b>Within rating, but above the 50 % derating rule.</b> Fine on the bench, but pick a bigger part for flight.');
+    else if (load > 0.5) setVerdict(v, 'warn', '<b>Within rating, but above the 50 % derating rule.</b> Fine on the bench, but pick a bigger part for anything that has to be reliable.');
     else setVerdict(v, 'ok', '<b>Comfortable.</b> Below half the rating, so this part will run cool and last.');
   }
   ['#oV','#oR'].forEach(s => $(s).addEventListener('input', upd));
@@ -581,7 +576,7 @@ function setVerdict(el, cls, html){ el.className = 'verdict ' + cls; el.innerHTM
   });
 })();
 
-/* ============ 2. Igniter cable ============ */
+/* ============ 2. Long cable to a load ============ */
 (() => {
   const ohmPerM = awg => { const d = 0.127e-3 * Math.pow(92, (36 - awg)/39); return 1.724e-8 / (Math.PI * d*d / 4); };
   let s = {};
@@ -595,19 +590,19 @@ function setVerdict(el, cls, html){ el.className = 'verdict ' + cls; el.innerHTM
     $('#wM').textContent = fmt(m, 2) + '×';
     $('#wMs').className = 'stat ' + (m >= 2 ? 'ok' : m >= 1 ? 'warn' : 'bad');
     const v = $('#wVerdict');
-    if (m >= 2) setVerdict(v, 'ok', `<b>Fires reliably.</b> The current is ${fmt(m,2)}× the all-fire level, a healthy margin.`);
-    else if (m >= 1) setVerdict(v, 'warn', `<b>Marginal.</b> Above all-fire, but with only ${fmt(m,2)}× margin. A cold battery or a corroded clip could make it fail.`);
-    else setVerdict(v, 'bad', `<b>Won't fire.</b> Only ${si(I,'A')} reaches the igniter, below the ${fmt(Ia,2)} A all-fire level. The cable takes ${Math.round(100*2*Rw/(2*Rw+Ri))} % of the voltage.`);
+    if (m >= 2) setVerdict(v, 'ok', `<b>Plenty of current.</b> The load gets ${fmt(m,2)}× the minimum it needs, a healthy margin.`);
+    else if (m >= 1) setVerdict(v, 'warn', `<b>Marginal.</b> Above the minimum, but with only ${fmt(m,2)}× margin. A cold battery or a corroded connector could make it fail.`);
+    else setVerdict(v, 'bad', `<b>Not enough current.</b> Only ${si(I,'A')} reaches the load, below the ${fmt(Ia,2)} A it needs. The cable takes ${Math.round(100*2*Rw/(2*Rw+Ri))} % of the voltage.`);
     w.redraw();
   }
   const w = Plot.widget($('#cvWire'), (ctx, W, H) => {
     const {V, Rw, Ri, I, m} = s; if (!V) return;
     const g = +$('#wG').value, L = +$('#wL').value;
-    // --- schematic: firing box (cell), cable out, igniter, cable back ---
+    // --- schematic: supply (cell), cable out, load, cable back ---
     const xL = 70, xR = W - 120, yT = 34, yB = 128, yc = (yT + yB)/2;
     const ic = m >= 2 ? col.good : m >= 1 ? col.warn : col.bad;
-    Plot.dashedBox(ctx, xL - 52, yT - 22, 96, yB - yT + 44, 'firing box');
-    Plot.dashedBox(ctx, xR - 44, yT - 22, 110, yB - yT + 44, 'pad');
+    Plot.dashedBox(ctx, xL - 52, yT - 22, 96, yB - yT + 44, 'supply');
+    Plot.dashedBox(ctx, xR - 44, yT - 22, 110, yB - yT + 44, 'load end');
     Plot.wire(ctx, [[xL, yc - 5], [xL, yT]]);
     Plot.wire(ctx, [[xL, yB], [xL, yc + 5]]);
     Plot.battery(ctx, xL, yc);
@@ -617,14 +612,14 @@ function setVerdict(el, cls, html){ el.className = 'verdict ' + cls; el.innerHTM
     Plot.resistor(ctx, xR, yT, xR, yB, {len: 46, color: col.c2, w: 2});
     Plot.text(ctx, `out: ${L} m of ${g} AWG, ${si(Rw, 'Ω')}`, (xL + xR)/2, yT - 14, {align:'center', color: col.ink2});
     Plot.text(ctx, `back: ${L} m of ${g} AWG, ${si(Rw, 'Ω')}`, (xL + xR)/2, yB + 15, {align:'center', color: col.ink2});
-    Plot.text(ctx, 'igniter', xR + 16, yc - 9, {color: col.ink2});
+    Plot.text(ctx, 'load', xR + 16, yc - 9, {color: col.ink2});
     Plot.text(ctx, si(Ri, 'Ω'), xR + 16, yc + 8, {mono:true});
     Plot.arrow(ctx, xL + 30, yT + 14, xL + 70, yT + 14, ic);
     Plot.text(ctx, 'I = ' + si(I, 'A'), xL + 78, yT + 14, {mono:true, color: ic});
     // --- where the supply voltage goes: one flat stacked bar ---
     const l = 18, r = W - 18, yb = H - 62, bh = 30;
     Plot.text(ctx, 'Where the ' + fmt(V,3) + ' V goes', l, yb - 14, {color: col.ink2});
-    const parts = [['cable out', I*Rw, Plot.mix(col.c4, '#ffffff', .65)], ['igniter', I*Ri, Plot.mix(col.c2, '#ffffff', .45)], ['cable back', I*Rw, Plot.mix(col.c4, '#ffffff', .65)]];
+    const parts = [['cable out', I*Rw, Plot.mix(col.c4, '#ffffff', .65)], ['load', I*Ri, Plot.mix(col.c2, '#ffffff', .45)], ['cable back', I*Rw, Plot.mix(col.c4, '#ffffff', .65)]];
     let x = l;
     parts.forEach(([name, v, c]) => {
       const w2 = (r - l) * v / V;
@@ -653,7 +648,7 @@ function setVerdict(el, cls, html){ el.className = 'verdict ' + cls; el.innerHTM
     $('#bRun').textContent = hrs >= 1 ? fmt(hrs, 3) + ' h' : fmt(hrs*60, 3) + ' min';
     $('#bIsc').textContent = si(Isc, 'A');
     const v = $('#bVerdict');
-    if (Vt < Vth) setVerdict(v, 'bad', `<b>Brown-out!</b> The terminal voltage (${si(Vt,'V')}) is below what the electronics need (${fmt(Vth,3)} V). The flight computer resets.`);
+    if (Vt < Vth) setVerdict(v, 'bad', `<b>Brown-out!</b> The terminal voltage (${si(Vt,'V')}) is below what the electronics need (${fmt(Vth,3)} V). The microcontroller resets.`);
     else if (Vt - Vth < 0.5) setVerdict(v, 'warn', `<b>Close call.</b> Only ${si(Vt - Vth,'V')} of headroom. A colder pack or a bigger current spike would push it over.`);
     else setVerdict(v, 'ok', `<b>OK.</b> ${si(Vt - Vth,'V')} of headroom above the brown-out threshold. The battery is losing ${si(I*I*R,'W')} as heat inside itself.`);
     w.redraw();

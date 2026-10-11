@@ -133,7 +133,7 @@
 <h2>Kirchhoff's voltage law <a class="vjump" data-t="5:30"></a></h2>
 <p>Go around any loop, adding up the voltage across every component on the way. You always get back to zero, because you're back at the same node you started from. That's <strong>Kirchhoff's voltage law</strong> (KVL):</p>
 <div class="eq">$$\sum_\text{loop} V = 0 \qquad\text{or equivalently}\qquad \text{sum of rises} = \text{sum of drops}$$<div class="n">count a voltage as positive going − to + and negative going + to −; any consistent convention works</div></div>
-<p>In plain terms, the battery's voltage gets shared out between everything in the loop, and every volt is accounted for. Module 1's igniter cable was KVL already: the 12 V was split between the outgoing wire, the igniter and the return wire.</p>
+<p>In plain terms, the battery's voltage gets shared out between everything in the loop, and every volt is accounted for. Module 1's long-cable example was KVL already: the 12 V was split between the outgoing wire, the solenoid and the return wire.</p>
 <p>The figure below puts KCL and KVL together: a 2S LiPo feeds four loads through one shared pair of wires, a feed wire out and a return (ground) wire back. Three of the loads are small; the fourth is a heavy load such as a motor or heater. The loads are modelled as drawing a fixed current, which is roughly how regulated electronics behave.</p>
 
 <div class="widget wide" id="w-bus">
@@ -223,14 +223,14 @@
 </div>
 
 <details class="exercise">
-  <summary><span class="ek">Design exercise</span><span class="et">Dual igniters on one cable</span></summary>
+  <summary><span class="ek">Design exercise</span><span class="et">Two solenoids on one cable</span></summary>
   <div class="eb">
-    <p>For redundancy, two igniters are wired in parallel at the end of the launch cable. Each is 1.6 Ω with a 1.0 A all-fire current. The cable is Module 1's 30 m of 22 AWG twin (3.17 Ω round trip), and the firing box supplies 12 V. Ignore the battery's and relay's resistance.</p>
-    <div class="check" data-ans="1.51" data-tol="2%" data-unit="A"><p>How much current goes through <em>each</em> igniter?</p>
-      <div class="miss" data-val="3.02"><p>That's the total current in the cable. It splits between the two igniters.</p></div>
-      <div class="miss" data-val="2.46"><p>That's the current for a single igniter. With two in parallel, the load resistance halves.</p></div>
+    <p>A second solenoid is added in parallel with the first at the end of Module 1's cable, so both pull in together. Each is 1.6 Ω and needs at least 1.0 A. The cable is 30 m of 22 AWG twin (3.17 Ω round trip), and the supply is 12 V. Ignore the battery's and relay's resistance.</p>
+    <div class="check" data-ans="1.51" data-tol="2%" data-unit="A"><p>How much current goes through <em>each</em> solenoid?</p>
+      <div class="miss" data-val="3.02"><p>That's the total current in the cable. It splits between the two solenoids.</p></div>
+      <div class="miss" data-val="2.52"><p>That's the current for a single solenoid. With two in parallel, the load resistance halves.</p></div>
       <div class="hint">Two equal resistors in parallel give half the resistance. Then it's one series loop: cable plus the parallel pair.</div>
-      <div class="solution"><p>The pair is \(1.6 \parallel 1.6 = 0.8\ \Omega\). The loop is \(3.17 + 0.8 = 3.97\ \Omega\), so the cable carries \(12 / 3.97 = 3.02\ \text{A}\), which splits equally: 1.51 A each, a 1.5× margin. Compare a single igniter at 2.46 A: adding the second one roughly doubled the load, so the cable's share of the voltage went up and each igniter got less. Redundancy here costs margin.</p></div>
+      <div class="solution"><p>The pair is \(1.6 \parallel 1.6 = 0.8\ \Omega\). The loop is \(3.17 + 0.8 = 3.97\ \Omega\), so the cable carries \(12 / 3.97 = 3.02\ \text{A}\), which splits equally: 1.51 A each, a 1.5× margin. Compare a single solenoid at about 2.5 A: adding the second one roughly doubled the load, so the cable's share of the voltage went up and each solenoid got less. Every load you add to a long cable eats into the margin of the others.</p></div>
     </div>
   </div>
 </details>
