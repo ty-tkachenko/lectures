@@ -74,7 +74,7 @@
       <p class="small">The picture is slowed to about one turn every five seconds, so the arrow can be watched. A 1 kHz sine does the same thing a thousand times a second. Both arrows are drawn the same length; only the delay is real.</p>
     </div>
     <div>
-      <canvas id="cvPh" style="height:320px" aria-label="A rotating arrow and the sine wave traced by its vertical component, with a second arrow delayed by the lag you set"></canvas>
+      <canvas id="cvPh" style="height:400px" aria-label="A rotating arrow and the sine wave traced by its vertical component, with a second arrow delayed by the lag you set"></canvas>
       <div class="legend"><span style="--c:var(--c1)">voltage</span><span style="--c:var(--c2)">current</span></div>
       <div class="readout">
         <div class="stat"><div class="k">Delay</div><div class="v" id="phTurns"></div></div>
@@ -640,7 +640,7 @@ function deg(rad){ return rad * 180 / Math.PI; }
     Plot.text(ctx, 'I', ix + 8, iy + 8, {color: col.c2});
 
     const P = stacked
-      ? {l: 32, r: W - 10, t: cy + rad + 28, b: H - 22}
+      ? {l: 32, r: W - 10, t: cy + rad + 28, b: H - 36}
       : {l: Math.max(cx + rad + 36, W*0.46), r: W - 12, t: 16, b: H - 36};
     if (P.b - P.t < 40 || P.r - P.l < 40) return;
     const X = Plot.lin(0, 1, P.l, P.r), Y = Plot.lin(-1.35, 1.35, P.b, P.t);
