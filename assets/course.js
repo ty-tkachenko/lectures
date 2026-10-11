@@ -12,7 +12,7 @@ window.COURSE = {
         // Foundations
         {id:'ee01', n:1,  status:'ready',   path:'EE/01_Circuit_Basics/',         title:'Voltage, Current, Resistance & Power', blurb:'Ohm\'s law, power ratings, wire resistance, batteries and the multimeter.'},
         {id:'ee02', n:2,  status:'ready',   path:'EE/02_Circuit_Analysis/',       title:'Circuit Analysis', blurb:'Kirchhoff\'s laws, dividers, loading, Thévenin, and reading schematics and datasheets.'},
-        {id:'ee03', n:3,  status:'planned', path:'EE/03_Capacitors_Inductors/',   title:'Capacitors & Inductors', blurb:'Time constants, inrush, inductive kickback, real parts, and your first oscilloscope.'},
+        {id:'ee03', n:3,  status:'ready',   path:'EE/03_Capacitors_Inductors/',   title:'Capacitors & Inductors', blurb:'Time constants, inrush, inductive kickback, real parts, and your first oscilloscope.'},
         {id:'ee04', n:4,  status:'planned', path:'EE/04_AC_and_Frequency/',       title:'AC Signals & Frequency Response', blurb:'Impedance, RC filters, Bode plots and decibels.'},
         // Moving power: driving actuators
         {id:'ee05', n:5,  status:'planned', path:'EE/05_Diodes/',                 title:'Diodes', blurb:'Rectifiers, LEDs, Zener/TVS protection and reverse-polarity protection.'},
@@ -58,5 +58,6 @@ window.COURSE = {
 window.COURSE.videos = {
   ee01: {lecture: '', lab: ''},
   ee02: {lecture: '', lab: ''},
+  ee03: {lecture: '', lab: ''},
   rf01: {lecture: '', lab: ''}
 };

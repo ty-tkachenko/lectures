@@ -236,6 +236,22 @@ window.renderHome = function(el){
   }).join('');
 };
 
+/* ---------- start each newly opened page at the top ----------
+   Some hosts (the claude.ai preview, for one) carry the previous page's scroll position over when a link opens
+   the next module. On a fresh navigation without a #section, scroll to the top, and keep doing so for a moment in
+   case the host restores its position late, unless the reader has started scrolling. Reloads and back/forward
+   keep their usual position. */
+function startAtTop(){
+  const nav = performance.getEntriesByType ? performance.getEntriesByType('navigation')[0] : null;
+  if (location.hash || (nav && nav.type !== 'navigate')) return;
+  let stop = false;
+  const quit = () => { stop = true; };
+  ['wheel', 'touchstart', 'keydown', 'mousedown'].forEach(ev => window.addEventListener(ev, quit, {once: true, passive: true}));
+  const top = () => { if (!stop) window.scrollTo(0, 0); };
+  top();
+  [50, 150, 400, 800].forEach(t => setTimeout(top, t));
+}
+
 /* ---------- boot ---------- */
 document.addEventListener('DOMContentLoaded', () => {
   if (window.renderMathInElement){
@@ -248,6 +264,7 @@ document.addEventListener('DOMContentLoaded', () => {
   buildSide();
   buildResources();
   buildPager();
+  startAtTop();
   // "Go deeper" links into the advanced theory pages: <a data-deep="matching_theory.html#refl">
   document.querySelectorAll('a[data-deep]').forEach(a => { a.href = ROOT + (C.deepBase || '') + a.dataset.deep; });
 });

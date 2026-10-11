@@ -4,31 +4,823 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Capacitors &amp; Inductors · EE 3</title>
-<meta name="description" content="EE Fundamentals module 3: Time constants, inrush, inductive kickback, real parts, and your first oscilloscope. In development.">
+<meta name="description" content="EE module 3: capacitors and inductors, RC and RL time constants, inrush current, inductive kickback, real capacitors, decoupling, and using an oscilloscope.">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
 <link rel="stylesheet" href="../../assets/site.css">
 <script src="../../assets/course.js"></script>
 <script src="../../assets/site.js"></script>
+<script src="../../assets/plot.js"></script>
 </head>
 <body>
 <div class="layout">
 <aside class="side" aria-label="Module contents"></aside>
 <main class="content">
 
-<!-- Placeholder: replace this page with the module when it's written (see README.md, "Writing a module"). -->
+<!-- ================= HERO ================= -->
 <header class="hero">
   <div class="eyebrow">EE Fundamentals · Module 3</div>
-  <h1>Capacitors &amp; Inductors</h1>
-  <p class="lede">Time constants, inrush, inductive kickback, real parts, and your first oscilloscope.</p>
+  <h1>Capacitors &amp; inductors</h1>
+  <p class="lede">Resistors respond instantly: change the voltage and the current follows at once. Capacitors and inductors store energy, so they respond over time. That's what makes them useful for steadying supplies and filtering signals, and it's also behind sparking connectors, transistors killed by a switched coil, and the ringing you'll see on your first oscilloscope traces.</p>
+  <p class="meta">Builds on: EE modules 1–2. Bench: oscilloscope, function generator, a few capacitors, a relay or solenoid coil, a diode.</p>
+  <div class="resources" data-auto></div>
+  <div class="objectives">
+    <h3>What's covered</h3>
+    <ul>
+      <li>What capacitance and inductance are, and the one rule each one follows.</li>
+      <li>RC and RL time constants: how fast things charge, discharge and settle.</li>
+      <li>Inrush current, and why plugging in a battery can spark.</li>
+      <li>Inductive kickback, and the diode that stops it destroying the switch.</li>
+      <li>Real capacitors: ESR, tolerance, voltage ratings, and the capacitance ceramics lose under DC bias.</li>
+      <li>Decoupling capacitors, and a first look at the oscilloscope and its probes.</li>
+    </ul>
+  </div>
+  <div class="video" data-video="lecture" id="lecture">
+    <div class="plan">
+      <p>Planned walkthrough of this page (≈ 30 min):</p>
+      <ol>
+        <li data-t="0:00">Storing energy: capacitors</li>
+        <li data-t="4:00">Storing energy: inductors</li>
+        <li data-t="7:30">The RC time constant</li>
+        <li data-t="11:30">Inrush current and the spark at the connector</li>
+        <li data-t="14:30">Inductive kickback and the flyback diode</li>
+        <li data-t="18:30">Real capacitors and DC-bias derating</li>
+        <li data-t="22:30">Decoupling capacitors</li>
+        <li data-t="25:30">The oscilloscope and the ground-lead trap</li>
+      </ol>
+    </div>
+  </div>
 </header>
 
-<section class="sec" id="status" data-nonum data-short="In development">
-<h2>In development</h2>
-<p>This module hasn't been written yet. The other modules are listed in the strip at the top of the page, and the links below go to the neighbouring ones.</p>
+<!-- ================= 1 CAPACITORS ================= -->
+<section class="sec" id="capacitors" data-short="Capacitors">
+<h2>Capacitors <a class="vjump" data-t="0:00"></a></h2>
+<p>A <strong>capacitor</strong> is two conductors separated by an insulator. Push current into one side and charge builds up there, with an equal and opposite charge on the other side. No current actually crosses the insulator, but as one plate fills, the other empties, so from outside it looks as if current flows through. The charge stored is proportional to the voltage across it:</p>
+<div class="eq">$$Q = C\,V$$<div class="n">capacitance C in <strong>farads</strong> (F): coulombs per volt</div></div>
+<p>A farad is enormous. Real parts run from picofarads (pF, 10⁻¹² F) in radio circuits, through nanofarads (nF) and microfarads (µF) on most boards, up to millifarads in power supplies. Differentiate the equation and you get the rule that explains almost everything a capacitor does:</p>
+<div class="eq">$$i = C\,\frac{dv}{dt}$$<div class="n">current flows only while the voltage is changing</div></div>
+<p>Two consequences follow. With a steady voltage, no current flows, so in a DC circuit that has settled, a capacitor behaves like an open circuit. And a capacitor's voltage <b>can't change instantly</b>, because that would take infinite current. That makes capacitors good at holding a voltage steady: they supply current when the voltage tries to drop and absorb it when the voltage tries to rise.</p>
+<p>A charged capacitor stores energy in the electric field between its plates:</p>
+<div class="eq">$$E = \tfrac{1}{2}\,C\,V^2$$</div>
+
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>A capacitor resists changes in voltage; an inductor resists changes in current</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 230" role="img" aria-label="Left: a capacitor symbol with plus charges on one plate and minus charges on the other, labelled i equals C dv/dt. Right: an inductor symbol with magnetic field loops, labelled v equals L di/dt.">
+    <g stroke="var(--ink)" stroke-width="2" fill="none" stroke-linejoin="round">
+      <path d="M160 40v58M160 132v58"/>
+      <path d="M120 98h80M120 132h80" stroke-width="3"/>
+      <path d="M480 40v38"/>
+      <path d="M480 78a10 10 0 0 1 0 20a10 10 0 0 1 0 20a10 10 0 0 1 0 20a10 10 0 0 1 0 20"/>
+      <path d="M480 158v32"/>
+    </g>
+    <g fill="var(--c2)" font-size="15" font-weight="700" text-anchor="middle">
+      <text x="132" y="92">+</text><text x="148" y="92">+</text><text x="164" y="92">+</text><text x="180" y="92">+</text><text x="196" y="92">+</text>
+    </g>
+    <g fill="var(--c1)" font-size="17" font-weight="700" text-anchor="middle">
+      <text x="132" y="150">−</text><text x="148" y="150">−</text><text x="164" y="150">−</text><text x="180" y="150">−</text><text x="196" y="150">−</text>
+    </g>
+    <g fill="none" stroke="var(--c3)" stroke-width="1.3" stroke-dasharray="4 3">
+      <ellipse cx="480" cy="118" rx="34" ry="52"/><ellipse cx="480" cy="118" rx="52" ry="70"/>
+    </g>
+    <text x="226" y="112" font-size="13">C</text>
+    <text x="226" y="132" font-size="12" fill="var(--muted)">electric field</text>
+    <text x="546" y="112" font-size="13">L</text>
+    <text x="546" y="132" font-size="12" fill="var(--muted)">magnetic field</text>
+    <text x="160" y="214" font-size="14" text-anchor="middle" font-style="italic">i = C dv/dt</text>
+    <text x="480" y="214" font-size="14" text-anchor="middle" font-style="italic">v = L di/dt</text>
+    <text x="160" y="24" font-size="12" text-anchor="middle" fill="var(--muted)">voltage can't jump</text>
+    <text x="480" y="24" font-size="12" text-anchor="middle" fill="var(--muted)">current can't jump</text>
+  </svg>
+  </div>
+</div>
+
+<div class="example">
+  <span class="xk">Worked example</span>
+  <p>A 100 µF capacitor sits across a 5 V supply that suddenly stops delivering current, while the circuit keeps drawing 20 mA. Rearranging \(i = C\,dv/dt\), the voltage falls at</p>
+  <p>\(\dfrac{dv}{dt} = \dfrac{i}{C} = \dfrac{0.02}{100 \times 10^{-6}} = 200\ \text{V/s}\), or 0.2 V every millisecond.</p>
+  <p>That's the idea behind a <strong>hold-up capacitor</strong>: it keeps a circuit running through a brief interruption, such as a loose connector or the supply sagging while a motor starts.</p>
+</div>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">How long can a capacitor hold up a rail?</span></summary>
+  <div class="eb">
+    <p>A microcontroller runs from a 3.3 V rail and draws 50 mA. It keeps working down to 3.0 V. A 1000 µF capacitor sits across the rail.</p>
+    <div class="check" data-ans="6" data-tol="3%" data-unit="ms"><p>If the supply cuts out, how long does the capacitor keep the rail above 3.0 V?</p>
+      <div class="miss" data-val="66"><p>That's how long it would take to discharge all the way from 3.3 V to 0 V. The microcontroller stops at 3.0 V.</p></div>
+      <div class="hint">Rearrange \(i = C\,dv/dt\) to \(t = C\,\Delta V / I\). How much can the voltage fall?</div>
+      <div class="solution"><p>\(t = C\,\Delta V / I = 1000\,\mu\text{F} \times 0.3\ \text{V} / 50\ \text{mA} = 6\ \text{ms}\). That's not long, because only 0.3 V of the 3.3 V is usable. Exercise 1 at the end shows why hold-up capacitors usually go before the regulator, where far more of the voltage can be used.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 2 INDUCTORS ================= -->
+<section class="sec" id="inductors" data-short="Inductors">
+<h2>Inductors <a class="vjump" data-t="4:00"></a></h2>
+<p>An <strong>inductor</strong> is a coil of wire, often wound on a magnetic core. Current through the coil builds a magnetic field, and changing that field induces a voltage that opposes the change. Its rule is the mirror image of the capacitor's:</p>
+<div class="eq">$$v = L\,\frac{di}{dt}$$<div class="n">inductance L in <strong>henries</strong> (H)</div></div>
+<p>With a steady current there's no voltage across an (ideal) inductor, so in a settled DC circuit it behaves like a wire. And an inductor's current <b>can't change instantly</b>, because that would take infinite voltage. Inductors keep current flowing: they produce whatever voltage it takes to do so.</p>
+<p>The energy is stored in the magnetic field:</p>
+<div class="eq">$$E = \tfrac{1}{2}\,L\,I^2$$</div>
+<p>You'll meet inductance in two forms. Deliberate inductors appear in switching power supplies (Module 7) and filters. Accidental inductance is everywhere: every wire and trace has some, roughly 1 nH per millimetre, and every motor, relay and solenoid coil is a large inductor whether you wanted one or not.</p>
+
+<div class="tablewrap"><table>
+  <tr><th></th><th>Capacitor</th><th>Inductor</th></tr>
+  <tr><td><b>Defining rule</b></td><td>\(i = C\,dv/dt\)</td><td>\(v = L\,di/dt\)</td></tr>
+  <tr><td><b>Can't change instantly</b></td><td>Voltage</td><td>Current</td></tr>
+  <tr><td><b>In a settled DC circuit</b></td><td>Open circuit</td><td>Short circuit (a wire)</td></tr>
+  <tr><td><b>Stored energy</b></td><td>\(\tfrac12 CV^2\), in the electric field</td><td>\(\tfrac12 LI^2\), in the magnetic field</td></tr>
+  <tr><td><b>Typical values</b></td><td>pF to mF</td><td>nH (a trace) to H (a big coil)</td></tr>
+</table></div>
+</section>
+
+<!-- ================= 3 RC ================= -->
+<section class="sec" id="rc" data-short="The RC time constant">
+<h2>The RC time constant <a class="vjump" data-t="7:30"></a></h2>
+<p>Connect a capacitor to a supply through a resistor. At the first instant the capacitor is empty, so it has no voltage across it, and the full supply voltage sits across the resistor: the current is \(V/R\). As charge builds up, the capacitor's voltage rises, the resistor's share shrinks, and the current falls. The closer the capacitor gets to full, the slower it fills. The result is an exponential curve:</p>
+<div class="eq">$$v_C(t) = V\left(1 - e^{-t/\tau}\right) \qquad i(t) = \frac{V}{R}\,e^{-t/\tau} \qquad \tau = R\,C$$<div class="n">τ (tau), the <strong>time constant</strong>, in seconds when R is in ohms and C in farads</div></div>
+<p>Discharging through a resistor gives the same curve upside down: \(v_C = V e^{-t/\tau}\). The time constant is all you need to know about the speed. After one τ the capacitor is 63 % of the way there; after five it's within 1 %, which engineers treat as "done".</p>
+
+<div class="widget wide" id="w-rc">
+  <div class="wh"><span class="tag">Interactive</span><b>Charging and discharging a capacitor through a resistor</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label>What happens</label><div class="seg" id="rM"><button type="button" data-v="c" class="on">Charging</button><button type="button" data-v="d">Discharging</button></div></div>
+      <div class="ctrl"><label for="rV">Supply voltage <b id="rVv"></b></label><input id="rV" type="range" min="1" max="12" step="0.1" value="5"></div>
+      <div class="ctrl"><label for="rR">R <b id="rRv"></b></label><input id="rR" type="range" min="0" max="48" step="1" value="24"></div>
+      <div class="ctrl"><label for="rC">C <b id="rCv"></b></label><input id="rC" type="range" min="0" max="72" step="1" value="36"></div>
+    </div>
+    <div>
+      <canvas id="cvRC" style="height:330px" aria-label="Plots of capacitor voltage and current against time, with the first five time constants marked"></canvas>
+      <div class="readout">
+        <div class="stat"><div class="k">Time constant τ</div><div class="v" id="rTau"></div></div>
+        <div class="stat"><div class="k">Within 1 % (≈ 5τ)</div><div class="v" id="r5"></div></div>
+        <div class="stat"><div class="k">Peak current</div><div class="v" id="rI"></div></div>
+        <div class="stat"><div class="k">Energy when full</div><div class="v" id="rE"></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>Double R, then double C instead. Both double τ. The curve keeps exactly the same shape; only the time axis changes.</li>
+    <li>Set 10 kΩ and 1 µF. How long until the capacitor reaches 63 % of the supply?</li>
+    <li>Make R small and C large. Look at the peak current. That's the next section's problem.</li>
+  </ol></div>
+</div>
+
+<div class="note tip">
+  <span class="ni">✓</span>
+  <div><span class="nt">Where you'll meet RC</span>A resistor and capacitor set the delay on a reset pin so a chip starts only after its supply has settled. They debounce a mechanical switch, whose contacts bounce for a few milliseconds. And an RC pair is the simplest filter: Module 4 looks at how it treats signals of different frequencies.</div>
+</div>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">A power-on delay</span></summary>
+  <div class="eb">
+    <p>A chip's enable pin is fed from its 3.3 V supply through 10 kΩ, with 1 µF from the pin to ground. The chip turns on when the pin reaches 2.0 V.</p>
+    <div class="check" data-ans="9.32" data-tol="2%" data-unit="ms"><p>How long after power-up does the chip turn on?</p>
+      <div class="miss" data-val="10"><p>That's one time constant, when the pin reaches 63 % of 3.3 V, about 2.1 V. The threshold is a little lower.</p></div>
+      <div class="hint">Solve \(2.0 = 3.3\,(1 - e^{-t/\tau})\) for t, with τ = RC.</div>
+      <div class="solution"><p>τ = 10 kΩ × 1 µF = 10 ms. \(e^{-t/\tau} = 1 - 2.0/3.3 = 0.394\), so \(t = -\tau \ln 0.394 = 0.93\,\tau = 9.32\ \text{ms}\). Capacitor tolerance (Section 6) makes the real delay vary by 10 % or more from part to part, so don't rely on it for precise timing.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 4 INRUSH ================= -->
+<section class="sec" id="inrush" data-short="Inrush current">
+<h2>Inrush current <a class="vjump" data-t="11:30"></a></h2>
+<p>Boards have capacitors across their power input, often hundreds of microfarads in total. When you first connect a battery, those capacitors are empty, and an empty capacitor looks like a short circuit. The only things limiting the current are the small resistances in the way: the battery's internal resistance, the wiring, the connector and the capacitor's own internal resistance (its ESR, Section 6). Together that can be a tenth of an ohm or less.</p>
+<div class="eq">$$I_\text{peak} \approx \frac{V}{R_\text{path}} \qquad \tau = R_\text{path}\,C$$</div>
+<p>The surge is short, because \(R_\text{path}\) is small and τ is tiny, but it can be tens or hundreds of amps. That's the spark you see when plugging in a big battery. It pits connector contacts, it can trip a supply's protection, and the rapid change of current through the wiring's inductance causes voltage spikes of its own.</p>
+<div class="note tip">
+  <span class="ni">✓</span>
+  <div><span class="nt">How designs limit inrush</span>A precharge resistor that's connected first and bypassed a moment later, "anti-spark" connectors with a built-in resistor on one pin, or an electronic load switch that turns on slowly (Module 7). All of them do the same thing: they make the capacitor charge through more resistance, or more slowly, than the bare wiring would.</div>
+</div>
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">How big is the spark?</span></summary>
+  <div class="eb">
+    <p>A fully charged 2S LiPo (8.4 V) is plugged into a board with 470 µF across its input. The battery's internal resistance is 80 mΩ, the wiring and connector add 20 mΩ, and the capacitor's ESR is 50 mΩ.</p>
+    <div class="check" data-ans="56" data-tol="2%" data-unit="A"><p>What's the peak inrush current?</p>
+      <div class="miss" data-val="84"><p>You left out the capacitor's ESR. Every resistance in the loop counts.</p></div>
+      <div class="hint">At the first instant the capacitor has no voltage across it. All 8.4 V is across the resistances in the loop.</div>
+      <div class="solution"><p>\(R_\text{path} = 0.08 + 0.02 + 0.05 = 0.15\ \Omega\), so \(I_\text{peak} = 8.4 / 0.15 = 56\ \text{A}\). It only lasts a few time constants, \(\tau = 0.15 \times 470\,\mu\text{F} \approx 70\ \mu\text{s}\), so the battery doesn't notice, but the connector contacts do.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 5 RL / KICKBACK ================= -->
+<section class="sec" id="kickback" data-short="Inductive kickback">
+<h2>RL circuits and inductive kickback <a class="vjump" data-t="14:30"></a></h2>
+<p>An inductor in series with a resistor has a time constant too. Switch on a supply and the current can't jump, so it rises exponentially towards \(V/R\):</p>
+<div class="eq">$$i(t) = \frac{V}{R}\left(1 - e^{-t/\tau}\right) \qquad \tau = \frac{L}{R}$$</div>
+<p>Switching <em>off</em> is where the trouble is. A solenoid coil carries a steady current. A transistor or switch opens and tries to stop it in a microsecond. The inductor refuses: it generates \(v = L\,di/dt\) to keep the current going, and with a fast switch that's hundreds or thousands of volts. The voltage appears across the opening switch. A mechanical switch arcs, which erodes its contacts. A transistor breaks down, absorbs the coil's stored energy, and may fail on the spot or after a few hundred cycles.</p>
+<p>The fix is a <strong>flyback diode</strong> across the coil, pointing so it doesn't conduct in normal operation. When the switch opens, the coil's current switches over to the diode and circulates around the coil-and-diode loop, dying away with time constant L/R. The switch only ever sees the supply voltage plus the diode's 0.7 V drop. Module 5 covers diodes, and Module 6 the transistor that does the switching.</p>
+
+<div class="widget wide" id="w-kick">
+  <div class="wh"><span class="tag">Interactive</span><b>Switching off a 12 V solenoid</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label>Protection</label><div class="seg" id="kP"><button type="button" data-v="none" class="on">None</button><button type="button" data-v="diode">Flyback diode</button></div></div>
+      <div class="ctrl"><label for="kL">Coil inductance <b id="kLv"></b></label><input id="kL" type="range" min="1" max="100" step="1" value="30"></div>
+      <div class="ctrl"><label for="kR">Coil resistance <b id="kRv"></b></label><input id="kR" type="range" min="6" max="100" step="1" value="24"></div>
+      <div class="ctrl"><label>How fast the switch turns off</label><div class="seg" id="kT"><button type="button" data-v="1e-7">100 ns</button><button type="button" data-v="1e-6" class="on">1 µs</button><button type="button" data-v="1e-5">10 µs</button></div></div>
+      <div class="ctrl"><label>Switch voltage rating</label><div class="seg" id="kB"><button type="button" data-v="30">30 V</button><button type="button" data-v="60" class="on">60 V</button><button type="button" data-v="100">100 V</button></div></div>
+    </div>
+    <div>
+      <canvas id="cvKick" style="height:330px" aria-label="Plots of coil current and the voltage across the switch, before and after the switch opens"></canvas>
+      <div class="readout">
+        <div class="stat"><div class="k">Coil current</div><div class="v" id="kI"></div></div>
+        <div class="stat"><div class="k">Energy in the coil</div><div class="v" id="kE"></div></div>
+        <div class="stat" id="kVS"><div class="k">Peak switch voltage</div><div class="v" id="kV"></div></div>
+        <div class="stat"><div class="k">Current gone after</div><div class="v" id="kD"></div></div>
+      </div>
+      <div class="verdict" id="kVerdict"></div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>With no protection, look at the voltage the coil <em>tries</em> to reach. Make the switch faster. What happens to it?</li>
+    <li>Add the flyback diode. The switch is safe, but how long does the current now take to die away?</li>
+    <li>A slower switch reduces the spike without a diode. Why isn't that a good fix? (Think about where the energy goes while it's half on.)</li>
+  </ol></div>
+</div>
+
+<div class="note warn">
+  <span class="ni">!</span>
+  <div><span class="nt">The flyback diode's catch</span>Because the diode keeps the current circulating, the coil takes longer to let go: a solenoid valve closes more slowly and a relay drops out later. When release speed matters, a Zener or TVS diode in series with the flyback diode lets the voltage rise to a controlled level, so the energy is absorbed faster while the switch stays within its rating.</div>
+</div>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">How big is the kick?</span></summary>
+  <div class="eb">
+    <p>A relay coil has 20 mH of inductance and carries 0.5 A. The transistor driving it turns off, and the current falls to zero in 10 µs.</p>
+    <div class="check" data-ans="1000" data-tol="2%" data-unit="V"><p>What voltage does the coil generate while the current falls?</p>
+      <div class="miss" data-val="0.001"><p>Check the units: 10 µs is \(10 \times 10^{-6}\) s, and 20 mH is 0.02 H.</p></div>
+      <div class="hint">\(v = L\,\Delta i / \Delta t\).</div>
+      <div class="solution"><p>\(v = 0.02 \times 0.5 / 10^{-5} = 1000\ \text{V}\). In practice the transistor breaks down long before that and clamps the voltage at its breakdown rating, absorbing the coil's energy as heat. A diode costing a few cents prevents all of it.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 6 REAL CAPACITORS ================= -->
+<section class="sec" id="real" data-short="Real capacitors">
+<h2>Real capacitors <a class="vjump" data-t="18:30"></a></h2>
+<p>A capacitor's datasheet has more numbers on it than its capacitance, and several of them change how it behaves in your circuit:</p>
+<ul>
+  <li><strong>Voltage rating.</strong> The most voltage it can safely have across it. Exceed it and the insulator breaks down. Derate as in Module 1: electrolytics and tantalums especially should run well below their rating.</li>
+  <li><strong>Tolerance.</strong> Ceramic capacitors are commonly ±10 % or ±20 %, electrolytics often −20 % to +80 %. Don't design anything that depends on the exact value.</li>
+  <li><strong>ESR</strong> (equivalent series resistance). Every capacitor behaves as if it had a small resistor in series with it. ESR limits how fast it can deliver current and heats the part when ripple current flows through it.</li>
+  <li><strong>ESL</strong> (equivalent series inductance). A small series inductance from the part's leads and body, which matters at high frequencies and for decoupling (Section 7).</li>
+  <li><strong>Polarity.</strong> Electrolytic and tantalum capacitors only work one way round. Reversed, they fail, sometimes violently: tantalums are known for catching fire.</li>
+</ul>
+<div class="tablewrap"><table>
+  <tr><th>Type</th><th>Typical range</th><th>Strengths</th><th>Watch out for</th></tr>
+  <tr><td><b>Ceramic (MLCC)</b></td><td>1 pF – 100 µF</td><td>Tiny, cheap, very low ESR and ESL</td><td>Lose capacitance with DC voltage and temperature (X5R, X7R); can crack if the board flexes</td></tr>
+  <tr><td><b>Aluminium electrolytic</b></td><td>1 µF – 10 mF+</td><td>Lots of capacitance for the money</td><td>Polarised, higher ESR, dry out and age, especially when hot</td></tr>
+  <tr><td><b>Tantalum / polymer</b></td><td>1 µF – 1 mF</td><td>Compact and stable</td><td>Polarised; classic tantalums can fail short and burn if surged or over-voltaged</td></tr>
+  <tr><td><b>Film</b></td><td>1 nF – 100 µF</td><td>Stable, precise, handles high voltage</td><td>Physically large</td></tr>
+</table></div>
+
+<h3>DC-bias derating: the capacitance that disappears</h3>
+<p>The ceramic capacitors on almost every board (dielectric types X5R and X7R) have a property that surprises everyone: <b>their capacitance falls as you put DC voltage across them</b>. A 10 µF part in a small package, run near its rated voltage, can have less than a third of its marked value. The marking is measured at almost no voltage. Larger packages and higher voltage ratings lose less. Type C0G (also called NP0) ceramics don't have the effect, but they're only made in small values.</p>
+
+<div class="widget wide" id="w-bias">
+  <div class="wh"><span class="tag">Interactive</span><b>How much of a 10 µF ceramic capacitor is left under DC bias</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label>Package size</label><div class="seg" id="bP"><button type="button" data-v="0402">0402</button><button type="button" data-v="0603" class="on">0603</button><button type="button" data-v="0805">0805</button><button type="button" data-v="1206">1206</button></div></div>
+      <div class="ctrl"><label>Voltage rating</label><div class="seg" id="bR"><button type="button" data-v="6.3">6.3 V</button><button type="button" data-v="10" class="on">10 V</button><button type="button" data-v="16">16 V</button><button type="button" data-v="25">25 V</button></div></div>
+      <div class="ctrl"><label for="bV">DC voltage across it <b id="bVv"></b></label><input id="bV" type="range" min="0" max="25" step="0.1" value="5"></div>
+      <p class="small">Curves follow the typical shape for X5R/X7R parts and are for illustration. Real curves vary by manufacturer: always check the one for the exact part number.</p>
+    </div>
+    <div>
+      <canvas id="cvBias" style="height:280px" aria-label="Plot of remaining capacitance against DC voltage for four package sizes, with the selected part highlighted"></canvas>
+      <div class="readout">
+        <div class="stat"><div class="k">Effective capacitance</div><div class="v" id="bC"></div></div>
+        <div class="stat" id="bLS"><div class="k">Lost</div><div class="v" id="bL"></div></div>
+      </div>
+      <div class="verdict" id="bVerdict"></div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>Put 5 V on a 10 V-rated 0603. How much of the 10 µF is left?</li>
+    <li>Keep 5 V and try a bigger package, then a higher voltage rating. Which helps more?</li>
+  </ol></div>
+</div>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">Enough capacitance on a 5 V rail</span></summary>
+  <div class="eb">
+    <p>A regulator's datasheet asks for at least 4 µF of <em>effective</em> output capacitance on its 5 V output. You have 10 µF 0603 capacitors, and the manufacturer's curve shows they keep 35 % of their capacitance at 5 V.</p>
+    <div class="check" data-ans="2" data-tol="0"><p>How many do you need?</p>
+      <div class="miss" data-val="1"><p>One 10 µF part only has 3.5 µF left at 5 V, short of the 4 µF required.</p></div>
+      <div class="solution"><p>Each part gives \(0.35 \times 10 = 3.5\ \mu\text{F}\) at 5 V, so you need two (7 µF). Or one larger part with a higher voltage rating. Regulators can oscillate when their output capacitance falls short, and a design that looked fine on the schematic fails on the bench because of exactly this effect.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 7 DECOUPLING ================= -->
+<section class="sec" id="decoupling" data-short="Decoupling">
+<h2>Decoupling capacitors <a class="vjump" data-t="22:30"></a></h2>
+<p>Digital chips don't draw a steady current. Every time their internal logic switches, they take a burst of current lasting a few nanoseconds. The supply that feeds them is centimetres away, and the trace in between has inductance. From \(v = L\,di/dt\), a fast change in current through that inductance means a voltage drop: the chip's supply dips at exactly the moment it needs current. Big enough dips cause resets, corrupted data and noise on every signal the chip produces.</p>
+<p>A <strong>decoupling capacitor</strong> placed right next to the chip's power pin supplies those bursts locally, over a path with very little inductance, and recharges from the supply between bursts. The usual starting point is a 100 nF ceramic at every power pin, as close as possible, plus a few microfarads of bulk capacitance nearby. Module 12 covers placement properly.</p>
+
+<div class="widget wide" id="w-dec">
+  <div class="wh"><span class="tag">Interactive</span><b>A chip's supply voltage during a current burst</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label>Decoupling capacitor</label><div class="seg" id="dC"><button type="button" data-v="0" class="on">None</button><button type="button" data-v="1e-8">10 nF</button><button type="button" data-v="1e-7">100 nF</button><button type="button" data-v="1e-6">1 µF</button></div></div>
+      <div class="ctrl"><label>Supply trace to the chip</label><div class="seg" id="dL"><button type="button" data-v="5e-9">Short (5 nH)</button><button type="button" data-v="5e-8" class="on">Long (50 nH)</button></div></div>
+      <div class="ctrl"><label for="dI">Burst current <b id="dIv"></b></label><input id="dI" type="range" min="50" max="500" step="10" value="200"></div>
+      <p class="small">3.3 V supply, 30 ns burst. Values are representative, chosen to show the effect clearly.</p>
+    </div>
+    <div>
+      <canvas id="cvDec" style="height:300px" aria-label="Plot of the chip's supply voltage and its current burst against time"></canvas>
+      <div class="legend"><span style="--c:var(--c1)">supply voltage at the chip</span><span style="--c:var(--c2)">chip current</span></div>
+      <div class="readout">
+        <div class="stat"><div class="k">Lowest voltage</div><div class="v" id="dMin"></div></div>
+        <div class="stat" id="dDS"><div class="k">Worst dip</div><div class="v" id="dD"></div></div>
+      </div>
+      <div class="verdict" id="dVerdict"></div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>With no capacitor and a long trace, how far does the supply dip, and what happens after the burst ends?</li>
+    <li>Add 100 nF. Then try 10 nF and 1 µF. Is bigger always better here?</li>
+    <li>Remove the capacitor and shorten the trace instead. Which matters more?</li>
+  </ol></div>
+</div>
+
+<p>The ringing with no capacitor is the trace's inductance and the chip's own small capacitance trading energy back and forth. Adding the decoupling capacitor gives the burst a nearby source, so the trace only has to supply the slow average.</p>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">How much does the decoupling capacitor droop?</span></summary>
+  <div class="eb">
+    <p>A chip takes a 100 mA burst lasting 20 ns, and in that time the trace inductance lets almost nothing through, so its 100 nF decoupling capacitor supplies all of it.</p>
+    <div class="check" data-ans="20" data-tol="3%" data-unit="mV"><p>How far does the capacitor's voltage drop?</p>
+      <div class="miss" data-val="0.02"><p>Right value, but in volts. The box wants millivolts.</p></div>
+      <div class="hint">\(\Delta V = I\,\Delta t / C\).</div>
+      <div class="solution"><p>\(\Delta V = 0.1 \times 20 \times 10^{-9} / 100 \times 10^{-9} = 0.02\ \text{V} = 20\ \text{mV}\), well under 1 % of a 3.3 V rail. In practice the capacitor's own inductance and its connection to the chip matter as much as its value, which is why placement is so important.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 8 OSCILLOSCOPE ================= -->
+<section class="sec" id="scope" data-short="The oscilloscope">
+<h2>The oscilloscope <a class="vjump" data-t="25:30"></a></h2>
+<p>A multimeter gives one number. An <strong>oscilloscope</strong> draws voltage against time, which is what you need for everything on this page: charging curves, kickback spikes, supply dips. The controls you'll use first:</p>
+<ul>
+  <li><strong>Vertical scale</strong> (volts per division) and <strong>timebase</strong> (time per division) set how much of the signal fits on the screen. The screen is usually 10 divisions across and 8 high.</li>
+  <li><strong>Trigger.</strong> A repeating signal only looks stable if every sweep starts at the same point in it. The trigger sets that point, typically "when the signal crosses this level, rising". If the trace is a smeared mess, the trigger is the first thing to check. Single-shot mode captures a one-off event, like an inrush spike.</li>
+  <li><strong>Coupling.</strong> DC coupling shows the whole signal. AC coupling removes the average so you can zoom in on small ripple riding on a supply.</li>
+</ul>
+<h3>Probes</h3>
+<p>The standard probe is a <strong>10× probe</strong>: it divides the signal by ten, which lets it present a high resistance (10 MΩ) and low capacitance (around 10 pF) to the circuit, so it disturbs it less. The scope has to know the probe is 10× or every reading is off by a factor of ten. Most scopes have a per-channel probe setting; check it every time.</p>
+
+<div class="note warn">
+  <span class="ni">!</span>
+  <div><span class="nt">The ground-lead trap, part 1: the clip is earthed</span>On a mains-powered bench scope, the probe's ground clip is connected to mains earth through the scope's power cord. Clip it to anything that isn't already at earth potential and you've made a short circuit through the scope. With a battery-powered board that's floating, it's harmless. With anything connected to mains, or to a computer over USB, it can blow traces, destroy the device and damage the scope. Clip ground to ground, and if you need the voltage between two points that aren't ground, use two channels and subtract, or a differential probe.</div>
+</div>
+
+<p>Part 2 of the trap is subtler. The ground clip's 15 cm lead is an inductor, and together with the probe tip's capacitance it forms a resonant circuit. Every fast edge makes it ring, and the ringing is added by the probe, not present in the circuit. For fast signals, take the long lead off and use the short spring that comes with the probe, touching ground right next to the point you're measuring.</p>
+
+<div class="widget wide" id="w-scope">
+  <div class="wh"><span class="tag">Interactive</span><b>A fast 3.3 V edge, measured with a long ground lead and with a ground spring</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label>Probe ground</label><div class="seg" id="sG"><button type="button" data-v="1.5e-7" class="on">15 cm lead</button><button type="button" data-v="5e-9">Ground spring</button></div></div>
+      <div class="ctrl"><label>Edge rise time</label><div class="seg" id="sE"><button type="button" data-v="1e-9" class="on">1 ns</button><button type="button" data-v="5e-9">5 ns</button></div></div>
+      <p class="small">Screen: 1 V/div, 4 ns/div. Probe tip capacitance 10 pF, source resistance 25 Ω.</p>
+    </div>
+    <div>
+      <canvas id="cvScope" style="height:280px" aria-label="Oscilloscope screen showing the real edge and what the probe displays"></canvas>
+      <div class="legend"><span style="--c:var(--c1)">what the scope shows</span><span class="dash" style="--c:var(--muted)">the real signal</span></div>
+      <div class="readout">
+        <div class="stat" id="sOS"><div class="k">Overshoot</div><div class="v" id="sO"></div></div>
+        <div class="stat"><div class="k">Ringing frequency</div><div class="v" id="sF"></div></div>
+      </div>
+      <div class="verdict" id="sVerdict"></div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>With the long lead and a 1 ns edge, how much overshoot does the scope show? None of it is real.</li>
+    <li>Swap to the ground spring. Then go back to the long lead with a slower 5 ns edge. Why does the slower edge ring less?</li>
+  </ol></div>
+</div>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">The reading that's ten times too small</span></summary>
+  <div class="eb">
+    <p>You probe a 3.3 V logic signal with a 10× probe, but the scope channel is still set for a 1× probe.</p>
+    <div class="check" data-ans="0.33" data-tol="3%" data-unit="V"><p>What high level does the scope display?</p>
+      <div class="miss" data-val="33"><p>That's the opposite mistake: a 1× probe with the scope set to 10×.</p></div>
+      <div class="solution"><p>The probe divides by ten, and the scope doesn't multiply back, so it shows 0.33 V. If a reading is off by exactly ten, check the probe setting first.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= DESIGN EXERCISES ================= -->
+<section class="sec" id="exercises" data-nonum data-short="Design exercises">
+<h2>Design exercises</h2>
+<p>Problems drawn from real hardware. Each takes a few steps. Enter numbers to check your reasoning as you go, or open the worked solutions and discussion. The figures above are useful for sanity-checking.</p>
+
+<div class="chal">
+  <div class="ch"><span class="cn">Exercise 1</span><span class="cd">Design · ●●○</span><span class="ctitle">A hold-up capacitor that rides through a dropout</span></div>
+  <div class="cbody">
+    <p>A board runs from a 2S battery through a linear regulator. When a motor on the same battery starts, the battery's voltage can drop out for up to 5 ms, and a diode stops the board's input capacitor from discharging back into the motor. You want the board to keep running through the dropout. A linear regulator draws the same current at its input as it delivers at its output.</p>
+    <div class="given"><b>Given</b>
+      <span>Input voltage before the dropout</span><span>7.4 V</span>
+      <span>Regulator's minimum input voltage</span><span>3.6 V</span>
+      <span>Board current</span><span>80 mA</span>
+      <span>Dropout length</span><span>5 ms</span>
+    </div>
+    <div class="check" data-ans="3.8" data-tol="2%" data-unit="V"><p>(a) How far can the input capacitor's voltage fall before the regulator stops working?</p>
+      <div class="solution"><p>7.4 − 3.6 = 3.8 V.</p></div></div>
+    <div class="check" data-ans="105" data-tol="3%" data-unit="µF"><p>(b) What's the minimum capacitance at the regulator's input?</p>
+      <div class="miss" data-val="1333"><p>That's what you'd need on the 3.3 V output, where only 0.3 V of droop is allowed. The capacitor is on the input.</p></div>
+      <div class="hint">\(C = I\,t / \Delta V\).</div>
+      <div class="solution"><p>\(C = 0.08 \times 0.005 / 3.8 = 105\ \mu\text{F}\). A 220 µF electrolytic gives margin for tolerance, ageing and cold.</p></div></div>
+    <details><summary>Discussion: why put it before the regulator?</summary><p>On the 3.3 V output, the capacitor can only fall 0.3 V before the microcontroller stops, so the same job takes about 1300 µF. Before the regulator it can fall 3.8 V, so it needs twelve times less. The energy view says the same thing: the capacitor delivers \(\tfrac12 C (V_1^2 - V_2^2)\), and a big voltage swing unlocks most of its stored energy. The diode matters too: without it, the capacitor would discharge into the starting motor instead of into the board.</p></details>
+  </div>
+</div>
+
+<div class="chal">
+  <div class="ch"><span class="cn">Exercise 2</span><span class="cd">Analysis · ●●○</span><span class="ctitle">The spark when plugging in a 4S pack</span></div>
+  <div class="cbody">
+    <p>A motor controller has 1000 µF across its input. It's connected to a fully charged 4S LiPo with an ordinary connector. Everything in the path, from the battery's internal resistance to the capacitors' ESR, adds up to 0.1 Ω.</p>
+    <div class="given"><b>Given</b>
+      <span>Battery, full charge</span><span>4 × 4.2 V = 16.8 V</span>
+      <span>Input capacitance</span><span>1000 µF</span>
+      <span>Total path resistance</span><span>0.1 Ω</span>
+    </div>
+    <div class="check" data-ans="168" data-tol="2%" data-unit="A"><p>(a) Peak inrush current?</p>
+      <div class="solution"><p>\(16.8 / 0.1 = 168\ \text{A}\), through a connector rated for perhaps 30 A continuous.</p></div></div>
+    <div class="check" data-ans="100" data-tol="2%" data-unit="µs"><p>(b) Time constant of the surge?</p>
+      <div class="solution"><p>\(\tau = 0.1 \times 1000\,\mu\text{F} = 100\ \mu\text{s}\). The surge is mostly over within half a millisecond.</p></div></div>
+    <div class="check" data-ans="0.141" data-tol="2%" data-unit="J"><p>(c) Energy stored in the capacitors once they're charged?</p>
+      <div class="solution"><p>\(\tfrac12 \times 10^{-3} \times 16.8^2 = 0.141\ \text{J}\).</p></div></div>
+    <details><summary>Discussion: where else does energy go?</summary><p>A neat and slightly surprising result: charging a capacitor from a fixed voltage through <em>any</em> resistance wastes exactly as much energy as ends up stored, here another 0.141 J. With a small resistance it's dumped in a fraction of a millisecond, much of it at the connector contacts as they touch, which is what pits and welds them. A precharge resistor doesn't reduce that energy, but it spreads it over a resistor designed to take it and over a much longer time. Anti-spark connectors build that resistor into the plug.</p></details>
+  </div>
+</div>
+
+<div class="chal">
+  <div class="ch"><span class="cn">Exercise 3</span><span class="cd">Design · ●●●</span><span class="ctitle">Protecting the switch for a solenoid</span></div>
+  <div class="cbody">
+    <p>A transistor switches a 12 V solenoid valve. The transistor is rated for 30 V and turns off in about 1 µs.</p>
+    <div class="given"><b>Given</b>
+      <span>Supply</span><span>12 V</span>
+      <span>Coil</span><span>24 Ω, 30 mH</span>
+      <span>Transistor rating</span><span>30 V</span>
+      <span>Flyback diode forward drop</span><span>0.7 V</span>
+    </div>
+    <div class="check" data-ans="0.5" data-tol="2%" data-unit="A"><p>(a) Steady coil current?</p>
+      <div class="solution"><p>\(12 / 24 = 0.5\ \text{A}\). In steady state the inductor is just its 24 Ω of wire.</p></div></div>
+    <div class="check" data-ans="15000" data-tol="2%" data-unit="V"><p>(b) Without protection, what voltage would the coil generate to stop 0.5 A in 1 µs?</p>
+      <div class="hint">\(v = L\,\Delta i/\Delta t\).</div>
+      <div class="solution"><p>\(0.03 \times 0.5 / 10^{-6} = 15\,000\ \text{V}\). It never actually gets there: the 30 V transistor breaks down first and absorbs the coil's energy.</p></div></div>
+    <div class="check" data-ans="12.7" data-tol="2%" data-unit="V"><p>(c) With a flyback diode across the coil, what's the highest voltage the transistor sees?</p>
+      <div class="miss" data-val="0.7"><p>That's the voltage across the diode (and the coil). The transistor sits between the bottom of the coil and ground, so it also has the 12 V supply above it.</p></div>
+      <div class="solution"><p>The coil's bottom end rises until the diode conducts, 0.7 V above the 12 V supply: 12.7 V, comfortably inside 30 V.</p></div></div>
+    <div class="check" data-ans="1.25" data-tol="2%" data-unit="ms"><p>(d) With the diode, roughly how long is the time constant of the current dying away?</p>
+      <div class="solution"><p>\(\tau = L/R = 0.03 / 24 = 1.25\ \text{ms}\), so the current takes around 5 ms to die away and the valve closes correspondingly later.</p></div></div>
+    <details><summary>Discussion: when a slow release matters</summary><p>If the valve must close quickly, put a Zener or TVS diode in series with the flyback diode, for example a 15 V Zener. The coil voltage can then rise to about 15.7 V, so the energy is absorbed several times faster, and the transistor sees about 12 + 15.7 ≈ 28 V. That's under 30 V but with little margin, so a 60 V transistor would be the better choice. Module 5 covers Zeners and TVS diodes.</p></details>
+  </div>
+</div>
+</section>
+
+<!-- ================= BENCH ================= -->
+<section class="sec" id="bench" data-nonum data-short="At the bench">
+<h2>At the bench</h2>
+<div class="video" data-video="lab">
+  <div class="plan">
+    <p>Planned lab demo (≈ 15 min, filmed at the bench):</p>
+    <ol>
+      <li>Setting up the scope: probe compensation, the 10× setting and an edge trigger</li>
+      <li>An RC charging curve, and measuring τ from the screen</li>
+      <li>Inductive kickback from a relay coil, with and without a flyback diode</li>
+      <li>The same fast edge with a long ground lead and with a ground spring</li>
+    </ol>
+  </div>
+</div>
+<div class="lab">
+  <h3>Time constants on the scope</h3>
+  <div class="parts"><span>Oscilloscope with a 10× probe</span><span>Function generator</span><span>10 kΩ resistor</span><span>100 nF and 1 µF capacitors</span><span>A 12 V relay or small solenoid</span><span>1N4148 or 1N4007 diode</span><span>A small transistor or MOSFET</span><span>Bench supply</span></div>
+  <ol>
+    <li><b>Compensate the probe.</b> Connect the probe to the scope's calibration output and adjust the probe's trimmer until the square wave has flat tops, with no rounding or overshoot. Check the channel is set to 10×.</li>
+    <li><b>Measure τ.</b> Drive 10 kΩ and 100 nF from a 0 to 5 V square wave at 100 Hz. Trigger on the rising edge. Measure the time for the capacitor voltage to reach 63 % (about 3.2 V). Compare it with RC = 1 ms. Swap in 1 µF and lower the frequency to 10 Hz.</li>
+    <li><b>See the kickback, safely.</b> Switch the relay coil from 12 V with the transistor, driven from the function generator at 1 Hz. Probe the transistor's drain or collector with the scope set to 20 V/div and a single-shot trigger. Without a diode, expect a spike far above 12 V (limited by the transistor breaking down). Add the diode across the coil, cathode to +12 V, and repeat. Keep this short: the transistor is being stressed every time it switches off unprotected.</li>
+    <li><b>Ground lead.</b> Probe the fastest edge you have (a microcontroller pin toggling, or the function generator's square wave) with the long ground lead, then with the ground spring. Compare the overshoot.</li>
+  </ol>
+  <div class="record"><b>What you should see:</b> a measured τ within the capacitor's tolerance of RC, a kickback spike that disappears with the diode (replaced by a slower current decay), and visibly less ringing with the ground spring than with the long lead.</div>
+</div>
+</section>
+
+<!-- ================= SUMMARY ================= -->
+<section class="sec" id="summary" data-nonum data-short="Summary">
+<h2>Summary &amp; cheat sheet</h2>
+<ol class="takeaways">
+  <li>A capacitor's voltage can't change instantly (\(i = C\,dv/dt\)); an inductor's current can't (\(v = L\,di/dt\)). In settled DC, a capacitor is an open circuit and an inductor is a wire.</li>
+  <li>RC and RL circuits change exponentially with time constants τ = RC and τ = L/R: 63 % after one τ, within 1 % after five.</li>
+  <li>Empty capacitors look like a short circuit at switch-on. Inrush current is limited only by the resistance in the path.</li>
+  <li>Interrupting an inductor's current produces a large voltage spike. Put a flyback diode across every relay, solenoid and motor coil you switch.</li>
+  <li>Real capacitors have tolerance, ESR, a voltage rating and, for X5R and X7R ceramics, a capacitance that shrinks with DC voltage.</li>
+  <li>A 100 nF decoupling capacitor at every power pin supplies chips' fast current bursts locally.</li>
+  <li>Set the scope for the probe you're using, clip ground only to ground, and use the ground spring for fast edges.</li>
+</ol>
+<div class="cheat">
+  <div><b>Capacitor</b>\(Q = CV\), \(i = C\,dv/dt\)<br>\(E = \tfrac12 CV^2\)</div>
+  <div><b>Inductor</b>\(v = L\,di/dt\)<br>\(E = \tfrac12 LI^2\)</div>
+  <div><b>Time constants</b>\(\tau = RC\), \(\tau = L/R\)<br><span class="small">1τ: 63 % · 3τ: 95 % · 5τ: 99.3 %</span></div>
+  <div><b>Charging</b>\(v = V(1 - e^{-t/\tau})\)<br><span class="small">discharging: \(v = V e^{-t/\tau}\)</span></div>
+  <div><b>Hold-up and droop</b>\(\Delta V = I\,\Delta t / C\)</div>
+  <div><b>Inrush</b>\(I_\text{peak} \approx V / R_\text{path}\)</div>
+</div>
+<h3>Further reading</h3>
+<ul class="small">
+  <li><em>The Art of Electronics</em> (Horowitz &amp; Hill), chapter 1.4: capacitors and RC circuits, and 1.5: inductors.</li>
+  <li><em>Practical Electronics for Inventors</em> (Scherz &amp; Monk), chapter 3: capacitor and inductor types, with plenty of practical detail.</li>
+  <li>Your capacitor manufacturer's DC-bias curves, usually in an online tool alongside each part number.</li>
+</ul>
 </section>
 
 <nav class="pager"></nav>
 </main>
 </div>
 <footer class="site">Hardware Engineering Fundamentals · EE Fundamentals</footer>
+
+<script>
+'use strict';
+const $ = s => document.querySelector(s);
+const {col, si, fmt} = Plot;
+function seg(id, cb){
+  const el = $(id);
+  el.addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    el.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
+    cb();
+  });
+  return () => el.querySelector('button.on').dataset.v;
+}
+function setVerdict(el, cls, html){ el.className = 'verdict ' + cls; el.innerHTML = html; }
+// E12 standard values: index 0 is 10^d0, then 12 steps per decade
+const E12 = [10, 12, 15, 18, 22, 27, 33, 39, 47, 56, 68, 82];
+const e12 = (i, d0) => E12[i % 12] * Math.pow(10, Math.floor(i / 12) + d0 - 1);
+// "nice" time axis: returns {X, ticks, f} for 0..tmax (or tmin..tmax)
+function timeAxis(t0, t1, l, r){
+  const X = Plot.lin(t0, t1, l, r);
+  return {X, ticks: Plot.ticks(t0, t1, 5), f: t => si(t, 's').replace(' ', ' ')};
+}
+
+/* ============ 1. RC charge and discharge ============ */
+(() => {
+  const mode = seg('#rM', upd);
+  let s = {};
+  function upd(){
+    const V = +$('#rV').value, R = e12(+$('#rR').value, 2), C = e12(+$('#rC').value, -9), tau = R*C;
+    s = {V, R, C, tau, m: mode()};
+    $('#rVv').textContent = fmt(V, 3) + ' V'; $('#rRv').textContent = si(R, 'Ω'); $('#rCv').textContent = si(C, 'F');
+    $('#rTau').textContent = si(tau, 's'); $('#r5').textContent = si(5*tau, 's');
+    $('#rI').textContent = si(V/R, 'A'); $('#rE').textContent = si(0.5*C*V*V, 'J');
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvRC'), (ctx, W, H) => {
+    const {V, R, tau, m} = s; if (!tau) return;
+    const t1 = 6*tau, ch = m === 'c';
+    const top = {l: 66, r: W - 14, t: 26, b: H*0.52}, bot = {l: 66, r: W - 14, t: H*0.62, b: H - 40};
+    const {X, ticks, f} = timeAxis(0, t1, top.l, top.r);
+    const Yv = Plot.lin(0, V*1.1, top.b, top.t), I0 = V/R, Yi = Plot.lin(0, I0*1.15, bot.b, bot.t);
+    Plot.axes(ctx, top, X, Yv, {xt: [], yt: Plot.ticks(0, V*1.1, 4), yl: 'capacitor (V)', yf: t => fmt(t, 3)});
+    Plot.axes(ctx, bot, X, Yi, {xt: ticks, yt: Plot.ticks(0, I0*1.15, 3), xl: 'time', yl: 'current', xf: f, yf: t => si(t, 'A').replace(' ', '')});
+    // time-constant markers
+    const pct = ch ? [63.2, 86.5, 95.0, 98.2, 99.3] : [36.8, 13.5, 5.0, 1.8, 0.7];
+    for (let k = 1; k <= 5; k++){
+      const x = X(k*tau);
+      Plot.line(ctx, [[x, top.t], [x, bot.b]], col.line, 1, [3, 3]);
+      Plot.text(ctx, k + 'τ', x, top.t - 12, {align: 'center', color: col.muted});
+      const vk = V*pct[k-1]/100;
+      Plot.dot(ctx, x, Yv(vk), 3, col.c1);
+      if (k <= 3) Plot.text(ctx, pct[k-1].toFixed(1).replace('.0', '') + ' %', x + 5, Yv(vk) + (ch ? 11 : -11), {color: col.c1});
+    }
+    const vp = [], ip = [];
+    for (let i = 0; i <= 200; i++){
+      const t = t1*i/200, e = Math.exp(-t/tau);
+      vp.push([X(t), Yv(ch ? V*(1 - e) : V*e)]); ip.push([X(t), Yi(I0*e)]);
+    }
+    Plot.line(ctx, [[top.l, Yv(V)], [top.r, Yv(V)]], col.muted, 1, [6, 5]);
+    Plot.text(ctx, ch ? 'supply ' + fmt(V, 3) + ' V' : 'started at ' + fmt(V, 3) + ' V', ch ? top.l + 6 : top.r - 4, Yv(V) - 9, {align: ch ? 'left' : 'right', color: col.muted});
+    Plot.line(ctx, vp, col.c1, 2.2);
+    Plot.line(ctx, ip, col.c2, 2.2);
+    Plot.text(ctx, ch ? 'charging current' : 'discharge current', X(0.15*tau) + 8, Yi(I0) + 2, {color: col.c2});
+  });
+  ['#rV', '#rR', '#rC'].forEach(id => $(id).addEventListener('input', upd));
+  upd();
+})();
+
+/* ============ 2. Inductive kickback ============ */
+(() => {
+  const prot = seg('#kP', upd), toff = seg('#kT', upd), vbr = seg('#kB', upd);
+  const VS = 12, VD = 0.7;
+  let s = {};
+  function upd(){
+    const L = +$('#kL').value/1000, R = +$('#kR').value, tf = +toff(), Vbr = +vbr(), p = prot();
+    const I0 = VS/R, E = 0.5*L*I0*I0, tau = L/R;
+    const Vtry = VS + L*I0/tf;                 // what the coil would need to stop the current in tf
+    let Vpk, Tend, clamped = false, Esw = 0;
+    if (p === 'diode'){ Vpk = VS + VD; Tend = 5*tau; }
+    else if (Vtry <= Vbr){ Vpk = Vtry; Tend = tf; Esw = 0.5*I0*(Vtry)*tf; }
+    else { clamped = true; Vpk = Vbr; Tend = L*I0/(Vbr - VS); Esw = E*Vbr/(Vbr - VS); }
+    s = {L, R, tf, Vbr, p, I0, tau, Vtry, Vpk, Tend, clamped};
+    $('#kLv').textContent = fmt(L*1000, 3) + ' mH'; $('#kRv').textContent = R + ' Ω';
+    $('#kI').textContent = si(I0, 'A'); $('#kE').textContent = si(E, 'J'); $('#kV').textContent = si(Vpk, 'V');
+    $('#kD').textContent = si(Tend, 's');
+    $('#kVS').className = 'stat ' + (p === 'diode' ? '' : clamped ? 'bad' : 'warn');
+    const v = $('#kVerdict');
+    if (p === 'diode') setVerdict(v, 'ok', `<b>Protected.</b> The switch sees ${si(VS + VD, 'V')}. The coil's ${si(E, 'J')} is dissipated in its own resistance and the diode as the current circulates and dies away over about ${si(5*tau, 's')}.`);
+    else if (clamped) setVerdict(v, 'bad', `<b>The switch breaks down.</b> To stop ${si(I0, 'A')} in ${si(tf, 's')} the coil would need ${si(Vtry, 'V')}. The ${Vbr} V switch breaks down first and holds the voltage there while it absorbs about ${si(Esw, 'J')}, every time it switches off. Expect it to fail.`);
+    else setVerdict(v, 'warn', `<b>Survives, but only just.</b> The spike (${si(Vpk, 'V')}) stays under the switch's ${Vbr} V rating because the switch is turning off slowly. While it's half on it dissipates about ${si(Esw, 'J')} per switch-off, and a faster switch or a different coil would push it over.`);
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvKick'), (ctx, W, H) => {
+    const {L, R, p, I0, tau, Vtry, Vpk, Tend, clamped, tf, Vbr} = s; if (!I0) return;
+    const t0 = -0.3*Tend, t1 = 1.4*Tend;
+    const iAt = t => {
+      if (t <= 0) return I0;
+      if (p === 'diode') return Math.max(0, (I0 + VD/R)*Math.exp(-t/tau) - VD/R);
+      return Math.max(0, I0*(1 - t/Tend));
+    };
+    const vAt = t => {
+      if (t < 0) return 0.1;                                  // switch on: almost no voltage across it
+      if (p === 'diode') return VS + VD;
+      return t <= Tend ? Vpk : VS;
+    };
+    const top = {l: 66, r: W - 14, t: 14, b: H*0.42}, bot = {l: 66, r: W - 14, t: H*0.53, b: H - 40};
+    const X = Plot.lin(t0, t1, top.l, top.r);
+    const vmax = Math.max(Vpk, VS + VD)*1.15, Yi = Plot.lin(0, I0*1.2, top.b, top.t), Yv = Plot.lin(0, vmax, bot.b, bot.t);
+    Plot.axes(ctx, top, X, Yi, {xt: [], yt: Plot.ticks(0, I0*1.2, 3), yl: 'coil current', yf: t => si(t, 'A').replace(' ', '')});
+    Plot.axes(ctx, bot, X, Yv, {xt: Plot.ticks(t0, t1, 5), yt: Plot.ticks(0, vmax, 4), xl: 'time after the switch opens', yl: 'switch (V)', xf: t => si(t, 's').replace(' ', ' '), yf: t => si(t, 'V').replace(' ', '')});
+    Plot.line(ctx, [[X(0), top.t], [X(0), bot.b]], col.line2, 1, [3, 3]);
+    Plot.text(ctx, 'switch opens', X(0) + 5, top.t + 4, {base: 'top', color: col.muted});
+    const ip = [], vp = [];
+    for (let i = 0; i <= 300; i++){ const t = t0 + (t1 - t0)*i/300; ip.push([X(t), Yi(iAt(t))]); }
+    // switch voltage drawn as steps
+    vp.push([X(t0), Yv(vAt(-1))], [X(0), Yv(vAt(-1))], [X(0), Yv(vAt(1e-15))]);
+    if (p !== 'diode'){ vp.push([X(Tend), Yv(Vpk)], [X(Tend), Yv(VS)]); }
+    vp.push([X(t1), Yv(vAt(t1))]);
+    Plot.line(ctx, ip, col.c1, 2.2);
+    Plot.line(ctx, vp, p === 'diode' ? col.c5 : clamped ? col.bad : col.warn, 2.2);
+    if (p !== 'diode' && Vbr < vmax){ Plot.line(ctx, [[bot.l, Yv(Vbr)], [bot.r, Yv(Vbr)]], col.bad, 1, [5, 4]); Plot.text(ctx, 'switch rating ' + Vbr + ' V', bot.r - 4, Yv(Vbr) - 9, {align: 'right', color: col.bad}); }
+    if (clamped) Plot.text(ctx, 'coil wants ' + si(Vtry, 'V'), X(Tend*0.05) + 4, Yv(Vpk) + 12, {color: col.bad});
+    Plot.line(ctx, [[bot.l, Yv(VS)], [bot.r, Yv(VS)]], col.muted, 1, [2, 4]);
+    Plot.text(ctx, '12 V supply', bot.l + 6, Yv(VS) - 9, {color: col.muted});
+  });
+  ['#kL', '#kR'].forEach(id => $(id).addEventListener('input', upd));
+  upd();
+})();
+
+/* ============ 3. DC-bias derating (illustrative model) ============ */
+(() => {
+  const pkg = seg('#bP', upd), rat = seg('#bR', upd);
+  // voltage at which half the capacitance is gone, for a 10 µF part rated 6.3 V, by package; scales with sqrt(rating)
+  const V50 = {'0402': 2.0, '0603': 3.0, '0805': 4.5, '1206': 7.0};
+  const frac = (V, p, r) => 1/(1 + Math.pow(V / (V50[p]*Math.sqrt(r/6.3)), 1.6));
+  let s = {};
+  function upd(){
+    const p = pkg(), r = +rat(), V = +$('#bV').value, k = frac(V, p, r);
+    s = {p, r, V, k};
+    $('#bVv').textContent = fmt(V, 3) + ' V';
+    $('#bC').textContent = fmt(10*k, 2) + ' µF'; $('#bL').textContent = Math.round(100*(1 - k)) + ' %';
+    $('#bLS').className = 'stat ' + (V > r ? 'bad' : k < 0.5 ? 'warn' : '');
+    const v = $('#bVerdict');
+    if (V > r) setVerdict(v, 'bad', `<b>Over its voltage rating.</b> ${fmt(V, 3)} V across a ${r} V part. Pick a higher rating; ceramics are usually run at no more than about half their rating anyway.`);
+    else if (k < 0.5) setVerdict(v, 'warn', `<b>Most of it is gone.</b> Only ${fmt(10*k, 2)} µF of the marked 10 µF is left at ${fmt(V, 3)} V. If the circuit needs 10 µF, this part doesn't provide it.`);
+    else setVerdict(v, 'ok', `<b>Reasonable.</b> ${fmt(10*k, 2)} µF is left at ${fmt(V, 3)} V. Still design with the effective value, not the marking.`);
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvBias'), (ctx, W, H) => {
+    const {p, r, V, k} = s; if (!p) return;
+    const P = {l: 52, r: W - 14, t: 14, b: H - 40};
+    const X = Plot.lin(0, 25, P.l, P.r), Y = Plot.lin(0, 105, P.b, P.t);
+    Plot.axes(ctx, P, X, Y, {xt: [0, 5, 10, 15, 20, 25], yt: [0, 25, 50, 75, 100], xl: 'DC voltage across the capacitor (V)', yl: 'capacitance left (%)', xgrid: true});
+    const cols = {'0402': col.c4, '0603': col.c1, '0805': col.c3, '1206': col.c5};
+    Object.keys(V50).forEach(q => {
+      const pts = []; for (let i = 0; i <= 100; i++){ const v = r*i/100; pts.push([X(v), Y(100*frac(v, q, r))]); }
+      Plot.line(ctx, pts, q === p ? cols[q] : Plot.rgba(cols[q], .35), q === p ? 2.6 : 1.4);
+      const end = pts[pts.length - 1];
+      Plot.text(ctx, q, end[0] + 4, end[1], {color: q === p ? cols[q] : col.muted, bold: q === p});
+    });
+    Plot.line(ctx, [[X(r), P.t], [X(r), P.b]], col.bad, 1, [4, 4]);
+    Plot.text(ctx, 'rated ' + r + ' V', X(r) + 4, P.t + 8, {color: col.bad});
+    const vx = Math.min(V, r);
+    Plot.dot(ctx, X(V), Y(100*k), 6, V > r ? col.bad : cols[p]);
+    Plot.dot(ctx, X(V), Y(100*k), 2.4, '#fff');
+    Plot.text(ctx, fmt(10*k, 2) + ' µF', X(V) + 9, Y(100*k) - 12, {mono: true, bold: true});
+  });
+  $('#bV').addEventListener('input', upd);
+  upd();
+})();
+
+/* ============ 4. Decoupling: supply at a chip during a current burst ============ */
+(() => {
+  const capSel = seg('#dC', upd), lSel = seg('#dL', upd);
+  const VS = 3.3, RS = 0.2, CP = 2e-9, RP = 1, RC = 0.02, LC = 1e-9;   // supply path R; chip's own capacitance and its loss; cap ESR and ESL
+  const T = 150e-9, B0 = 30e-9, B1 = 60e-9, EDGE = 2e-9, DT = 0.005e-9;
+  const iload = (t, A) => t < B0 ? 0 : t < B0 + EDGE ? A*(t - B0)/EDGE : t < B1 ? A : t < B1 + EDGE ? A*(1 - (t - B1)/EDGE) : 0;
+  let s = {};
+  function simulate(C, Lf, A){
+    // states: supply-path current iL, decoupling-cap branch current iC and voltage vC, chip capacitance voltage vp;
+    // the chip's supply voltage v is vp plus the drop across that capacitance's loss resistance
+    let iL = 0, iC = 0, vC = VS, vp = VS, v = VS, vmin = VS;
+    const out = [], every = 100;
+    for (let n = 0, t = 0; t <= T; n++, t += DT){
+      const il = iload(t, A), ip = iL - iC - il;
+      v = vp + RP*ip;
+      iL += DT*(VS - RS*iL - v)/Lf;
+      if (C > 0){ iC += DT*(v - vC - RC*iC)/LC; vC += DT*iC/C; }
+      vp += DT*ip/CP;
+      if (v < vmin) vmin = v;
+      if (n % every === 0) out.push([t, v, il]);
+    }
+    return {out, vmin};
+  }
+  function upd(){
+    const C = +capSel(), Lf = +lSel(), A = +$('#dI').value/1000;
+    const r = simulate(C, Lf, A);
+    s = {C, Lf, A, ...r};
+    $('#dIv').textContent = Math.round(A*1000) + ' mA';
+    const dip = VS - r.vmin;
+    $('#dMin').textContent = si(r.vmin, 'V'); $('#dD').textContent = si(dip, 'V') + ' (' + fmt(100*dip/VS, 2) + ' %)';
+    $('#dDS').className = 'stat ' + (dip > 0.33 ? 'bad' : dip > 0.165 ? 'warn' : '');
+    const v = $('#dVerdict');
+    if (dip > 0.33) setVerdict(v, 'bad', `<b>A dip of ${fmt(100*dip/VS, 2)} %.</b> Many chips tolerate only ±5 to ±10 % on their supply. This one could reset, or its outputs and any analog readings will be disturbed.`);
+    else if (dip > 0.165) setVerdict(v, 'warn', `<b>Within limits, but noisy.</b> A ${si(dip, 'V')} dip probably won't reset anything, but the noise couples into everything that shares this supply.`);
+    else setVerdict(v, 'ok', `<b>Clean.</b> The supply dips only ${si(dip, 'V')}. The capacitor supplies the burst and recharges afterwards.`);
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvDec'), (ctx, W, H) => {
+    const {out, A} = s; if (!out) return;
+    const P = {l: 52, r: W - 50, t: 14, b: H - 40};
+    const X = Plot.lin(0, T, P.l, P.r), Y = Plot.lin(1.6, 4.8, P.b, P.t), Yi = Plot.lin(0, 0.6, P.b, P.t);
+    Plot.axes(ctx, P, X, Y, {xt: Plot.ticks(0, T, 5), yt: [2, 2.5, 3, 3.3, 3.5, 4, 4.5], xl: 'time', yl: 'supply at chip (V)', xf: t => si(t, 's').replace(' ', ' '), yf: t => fmt(t, 2)});
+    // current axis on the right
+    [0, 0.2, 0.4, 0.6].forEach(t => Plot.text(ctx, si(t, 'A').replace(' ', ''), P.r + 6, Yi(t), {color: col.c2}));
+    Plot.clip(ctx, P);
+    ctx.fillStyle = Plot.rgba(col.good, .08); ctx.fillRect(P.l, Y(3.63), P.r - P.l, Y(2.97) - Y(3.63));
+    Plot.line(ctx, out.map(([t, , i]) => [X(t), Yi(i)]), col.c2, 1.6);
+    Plot.line(ctx, out.map(([t, v]) => [X(t), Y(v)]), col.c1, 2.2);
+    ctx.restore();
+    Plot.text(ctx, '±10 %', P.l + 6, Y(3.63) + 9, {color: col.good});
+  });
+  $('#dI').addEventListener('input', upd);
+  upd();
+})();
+
+/* ============ 5. Scope probe ground lead ============ */
+(() => {
+  const gSel = seg('#sG', upd), eSel = seg('#sE', upd);
+  const RS = 25, CT = 10e-12, VH = 3.3, T0 = 6e-9, T = 40e-9, DT = 0.002e-9;
+  let s = {};
+  function upd(){
+    const L = +gSel(), tr = +eSel();
+    const vin = t => t < T0 ? 0 : t < T0 + tr ? VH*(t - T0)/tr : VH;
+    let i = 0, v = 0, vmax = 0; const out = [];
+    for (let n = 0, t = 0; t <= T; n++, t += DT){
+      i += DT*(vin(t) - RS*i - v)/L; v += DT*i/CT;
+      if (v > vmax) vmax = v;
+      if (n % 20 === 0) out.push([t, v, vin(t)]);
+    }
+    const f0 = 1/(2*Math.PI*Math.sqrt(L*CT)), os = Math.max(0, (vmax - VH)/VH);
+    s = {out};
+    $('#sO').textContent = Math.round(100*os) + ' %'; $('#sF').textContent = si(f0, 'Hz');
+    $('#sOS').className = 'stat ' + (os > 0.2 ? 'bad' : os > 0.05 ? 'warn' : '');
+    const v2 = $('#sVerdict');
+    if (os > 0.2) setVerdict(v2, 'bad', `<b>Mostly probe artefact.</b> The real edge has no overshoot. The ${Math.round(100*os)} % overshoot and the ringing at ${si(f0, 'Hz')} come from the ground lead's inductance and the probe's capacitance.`);
+    else if (os > 0.05) setVerdict(v2, 'warn', `<b>Some artefact.</b> ${Math.round(100*os)} % overshoot that isn't in the circuit. Good enough to see the edge, not to judge its quality.`);
+    else setVerdict(v2, 'ok', `<b>A faithful measurement.</b> The probe adds almost nothing you'd mistake for the circuit's own behaviour.`);
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvScope'), (ctx, W, H) => {
+    const {out} = s; if (!out) return;
+    // a scope screen: 10 × 8 divisions, 1 V/div, 0 V two divisions above the bottom
+    const pad = 10, gw = W - 2*pad, gh = H - 2*pad, dx = gw/10, dy = gh/8;
+    ctx.fillStyle = col.sunk; ctx.fillRect(pad, pad, gw, gh);
+    for (let k = 0; k <= 10; k++) Plot.line(ctx, [[pad + k*dx, pad], [pad + k*dx, pad + gh]], col.line, k === 5 ? 1.2 : 0.7);
+    for (let k = 0; k <= 8; k++) Plot.line(ctx, [[pad, pad + k*dy], [pad + gw, pad + k*dy]], col.line, k === 4 ? 1.2 : 0.7);
+    const X = Plot.lin(0, T, pad, pad + gw), Y = Plot.lin(-2, 6, pad + gh, pad);
+    Plot.clip(ctx, {l: pad, r: pad + gw, t: pad, b: pad + gh});
+    Plot.line(ctx, out.map(([t, , vi]) => [X(t), Y(vi)]), col.muted, 1.4, [5, 4]);
+    Plot.line(ctx, out.map(([t, v]) => [X(t), Y(v)]), col.c1, 2.2);
+    ctx.restore();
+    Plot.text(ctx, '1 V/div', pad + 6, pad + 10, {color: col.muted});
+    Plot.text(ctx, '4 ns/div', pad + gw - 6, pad + 10, {align: 'right', color: col.muted});
+    Plot.text(ctx, '0 V', pad + 6, Y(0) - 8, {color: col.muted});
+  });
+  upd();
+})();
+</script>
 </body>
 </html>
