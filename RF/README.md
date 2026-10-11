@@ -1,8 +1,10 @@
 # RF Engineering: PCB & Hardware Design
 
-A lecture series on how radio-frequency hardware actually works and how to design it. It starts from the physics of waves on conductors and builds up to transmission lines, matching, components, PCB layout, measurement, system budgets, EMC, antennas, modulation and radio-control firmware. It ends with a design review of a real telemetry link.
+Interactive notes on how radio-frequency hardware actually works and how to design it. It starts from the physics of waves on conductors and builds up to transmission lines, matching, components, PCB layout, measurement, system budgets, EMC, antennas, modulation and radio-control firmware. It ends with a design review of a real telemetry link.
 
-**Who it's for:** engineers and students who are comfortable with circuits and digital design and want to move into RF. You should know basic circuit theory, complex numbers and logarithms. No prior RF or electromagnetics course is needed.
+**Who it's for:** avionics team members who want to work on the radio, GPS and high-speed parts of our hardware. The [EE notes](../EE/) modules 1–4 and 12 cover everything assumed here; no prior RF or electromagnetics background is needed.
+
+**What's in each module:** an interactive page (explanations, simulations and worked examples, simplified from the advanced [theory pages](../../theory/)), a lecture video, a lab video at the bench, and design exercises drawn from the telemetry system. Each page links to the matching section of the theory pages for anyone who wants the full derivations.
 
 **How to read it:** the modules are meant to be read in order, since each one builds on the last. Modules 0–2 are the foundation and everything later depends on them. After that, 3–8 cover hardware and system design, 9 covers antennas, and 10–11 cover signals and software. The case study pulls it all together.
 
@@ -63,4 +65,4 @@ Reviewing a real block diagram · finding what's missing · the plots that prove
 
 ## Folder layout
 
-Each module has its own folder holding the slides, figures and the scripts that generate them. Shared plotting style and constants are in [`common/`](common/).
+Each module is a folder with an `index.html` page. Shared styles, the plotting helpers and the site engine are in [`../assets/`](../assets/), and the module list that drives the menus is [`../assets/course.js`](../assets/course.js).

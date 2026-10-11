@@ -1,0 +1,1009 @@
+<!doctype html>
+<html lang="en" data-root="../../" data-module="rf01">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RF Fundamentals · RF 1</title>
+<meta name="description" content="RF module 1: decibels, when a wire becomes a transmission line, characteristic impedance, reflections and VSWR, TDR, ripple, dielectric loss and polarization.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<link rel="stylesheet" href="../../assets/site.css">
+<script src="../../assets/course.js"></script>
+<script src="../../assets/site.js"></script>
+<script src="../../assets/plot.js"></script>
+</head>
+<body>
+<div class="layout">
+<aside class="side" aria-label="Module contents"></aside>
+<main class="content">
+
+<header class="hero">
+  <div class="eyebrow">RF &amp; High-Speed Design · Module 1</div>
+  <h1>RF fundamentals</h1>
+  <p class="lede">At radio frequencies a wire stops being "just a wire". Signals travel as waves, reflect off anything that doesn't match, and lose energy into the board itself. These notes build the vocabulary and intuition the rest of the RF material depends on: decibels, transmission lines, reflections, and the materials signals travel through.</p>
+  <div class="meta">
+    <span class="pill">Builds on: EE modules 1–4</span>
+    <span class="pill">Bench: NanoVNA or any VNA, a few SMA cables</span>
+  </div>
+  <div class="resources" data-auto></div>
+  <div class="objectives">
+    <h3>What's covered</h3>
+    <ul>
+      <li>Decibels, dBm and dBc, and why RF engineers add instead of multiply.</li>
+      <li>When a connection must be treated as a transmission line, and what phase and electrical length mean.</li>
+      <li>Characteristic impedance: what 50 Ω actually means, and why it's 50.</li>
+      <li>Reflections, VSWR and return loss, and how to read them in time (TDR) and in frequency.</li>
+      <li>How the board material (Dk and Df) slows signals down and eats them, and why polarization matters for a rocket.</li>
+    </ul>
+  </div>
+  <div class="video" data-video="lecture" id="lecture">
+    <div class="plan">
+      <p>Planned walkthrough of this page (≈ 35 min):</p>
+      <ol>
+        <li data-t="0:00">Why RF needs its own vocabulary</li>
+        <li data-t="2:00">Decibels and the transmit chain</li>
+        <li data-t="7:00">When a wire becomes a transmission line</li>
+        <li data-t="12:00">Characteristic impedance and why 50 Ω</li>
+        <li data-t="16:00">Reflections, VSWR and return loss</li>
+        <li data-t="22:00">TDR: seeing reflections in time</li>
+        <li data-t="26:00">Ripple: the same reflections in frequency</li>
+        <li data-t="29:00">Dk, Df and board loss</li>
+        <li data-t="32:00">Polarization and the rolling rocket</li>
+      </ol>
+    </div>
+  </div>
+</header>
+
+<!-- ============ 1 DECIBELS ============ -->
+<section class="sec" id="db" data-short="Decibels">
+<h2>Decibels: the language of RF power <a class="vjump" data-t="2:00"></a></h2>
+<p>A telemetry radio transmits about 100 mW. By the time the signal reaches the ground station a few kilometres away, perhaps 0.000 000 000 01 mW arrives. Numbers spanning that many orders of magnitude are miserable to multiply, so RF engineers use a logarithmic scale, the <strong>decibel</strong>:</p>
+<div class="eq">$$\text{ratio in dB} = 10\log_{10}\frac{P_2}{P_1} \qquad\qquad P\ \text{in dBm} = 10\log_{10}\frac{P}{1\ \text{mW}}$$<div class="n">dB is a ratio (gain or loss). dBm is an absolute power referenced to 1 mW.</div></div>
+<p>The payoff: <strong>multiplying becomes adding</strong>. An amplifier with 20 dB of gain followed by a cable with 3 dB of loss gives 17 dB overall. Most of RF system design, from transmit chains to link budgets, is adding and subtracting dB.</p>
+
+<div class="grid2">
+<div class="tablewrap"><table>
+  <tr><th>dB</th><th>Power ratio</th></tr>
+  <tr><td>+3 dB</td><td>× 2</td></tr>
+  <tr><td>+10 dB</td><td>× 10</td></tr>
+  <tr><td>+20 dB</td><td>× 100</td></tr>
+  <tr><td>−3 dB</td><td>× ½</td></tr>
+  <tr><td>−10 dB</td><td>× 1/10</td></tr>
+</table></div>
+<div class="tablewrap"><table>
+  <tr><th>dBm</th><th>Power</th></tr>
+  <tr><td>+30 dBm</td><td>1 W</td></tr>
+  <tr><td>+20 dBm</td><td>100 mW (typical telemetry radio)</td></tr>
+  <tr><td>0 dBm</td><td>1 mW</td></tr>
+  <tr><td>−100 dBm</td><td>0.1 pW (a weak received signal)</td></tr>
+</table></div>
+</div>
+<p>Two more suffixes come up constantly: <strong>dBc</strong> is relative to the carrier (a harmonic at −40 dBc is 10 000× weaker than the signal), and <strong>dBi</strong> is antenna gain relative to an ideal antenna that radiates equally in all directions.</p>
+
+<div class="widget wide" id="w-chain">
+  <div class="wh"><span class="tag">Interactive</span><b>A transmit chain, in dB and in milliwatts</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label for="cP">Radio output <b id="cPv"></b></label><input id="cP" type="range" min="0" max="30" step="0.5" value="20"></div>
+      <div class="ctrl"><label for="cC">Coax cable loss <b id="cCv"></b></label><input id="cC" type="range" min="0" max="6" step="0.1" value="1.5"></div>
+      <div class="ctrl"><label for="cK">Connectors (total) <b id="cKv"></b></label><input id="cK" type="range" min="0" max="1.5" step="0.05" value="0.3"></div>
+      <div class="ctrl"><label for="cF">Harmonic filter loss <b id="cFv"></b></label><input id="cF" type="range" min="0" max="3" step="0.1" value="0.8"></div>
+      <div class="ctrl"><label for="cA">Antenna gain <b id="cAv"></b></label><input id="cA" type="range" min="-5" max="9" step="0.5" value="2"></div>
+    </div>
+    <div>
+      <canvas id="cvChain" style="height:270px" aria-label="Staircase showing the power level after each stage of the transmit chain"></canvas>
+      <div class="readout">
+        <div class="stat"><div class="k">Radiated (EIRP)</div><div class="v" id="cE"></div></div>
+        <div class="stat"><div class="k">In milliwatts</div><div class="v" id="cEm"></div></div>
+        <div class="stat"><div class="k">Lost before antenna</div><div class="v" id="cL"></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>Watch the milliwatt column: each stage <em>multiplies</em> the power, while the dB column simply adds.</li>
+    <li>Set the cable to 3 dB. Half the radio's power now heats the cable. A short, low-loss cable is often the cheapest way to "add" power.</li>
+  </ol></div>
+</div>
+
+<div class="note myth">
+  <span class="ni">!</span>
+  <div><span class="nt">You can't add two dBm values</span>Adding dB to dBm applies a gain to a power, which is fine. But two signals of 0 dBm (1 mW each) combine to 2 mW, which is <b>+3 dBm</b>, not 0 dBm and not "0 dBm + 0 dBm". To combine powers, convert to milliwatts, add, and convert back.</div>
+</div>
+<div class="example">
+  <span class="xk">Mental math</span>
+  <p>Break any dB value into 10s and 3s. 13 dB = 10 + 3, so ×10 × 2 = ×20. 27 dBm = 30 − 3, so 1 W ÷ 2 = 500 mW. With a little practice you'll never reach for a calculator for this.</p>
+</div>
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">Signal level at the ground receiver</span><span class="eo">optional</span></summary>
+  <div class="eb">
+    <p>At the ground station, the antenna delivers −95 dBm. It feeds a 20 dB low-noise amplifier mounted at the mast, then 4 dB of cable down to the receiver.</p>
+    <div class="check" data-ans="-79" data-tol="0.1" data-unit="dBm"><p>What power reaches the receiver?</p>
+      <div class="miss" data-val="-119"><p>The amplifier adds 20 dB. It doesn't subtract it.</p></div>
+      <div class="solution"><p>−95 + 20 − 4 = <b>−79 dBm</b>. In linear terms that's about 12.6 pW. Putting the amplifier at the mast <em>before</em> the cable is deliberate: Module 6 shows why it gives a much better noise figure than putting it at the receiver.</p></div>
+    </div>
+  </div>
+</details>
+<p>For a voltage ratio, use \(20\log_{10}\) instead of \(10\log_{10}\), because power goes as voltage squared. Doubling a voltage is +6 dB, and that's the same physical change as quadrupling the power.</p>
+</section>
+
+<!-- ============ 2 WIRE TO LINE ============ -->
+<section class="sec" id="lines" data-short="Wires become lines">
+<h2>When a wire becomes a transmission line <a class="vjump" data-t="7:00"></a></h2>
+<p>Signals don't arrive instantly. They travel at a large fraction of the speed of light, slowed down by the material around the conductor:</p>
+<div class="eq">$$v = \frac{c}{\sqrt{\varepsilon_\text{eff}}} \qquad\qquad \lambda = \frac{v}{f}$$<div class="n">ε<sub>eff</sub> is the effective dielectric constant: 1 for air, about 2.1 for PTFE coax, about 3.3 for a microstrip trace on FR-4</div></div>
+<p>If a connection is short compared with the wavelength, every point on it sees nearly the same voltage at any instant, and ordinary circuit theory (Kirchhoff's laws, EE Module 2) works. Once the connection is a noticeable fraction of a wavelength, different points on it hold <em>different</em> voltages at the same moment. The far end lags behind the near end, and anything that happens at the far end comes back as a reflection. Then you need transmission-line thinking.</p>
+<div class="note rule">
+  <span class="ni">λ</span>
+  <div><span class="nt">Rule of thumb: the λ/10 rule</span>If a connection is longer than about <b>one tenth of a wavelength</b>, treat it as a transmission line: control its impedance and terminate it properly. At 915 MHz on FR-4 that's only about 2 cm.</div>
+</div>
+
+<div class="widget wide" id="w-wave">
+  <div class="wh"><span class="tag">Interactive</span><b>Voltage along a connection, frozen in time</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label for="lF">Frequency <b id="lFv"></b></label><input id="lF" type="range" min="6" max="10" step="0.01" value="8.96"></div>
+      <div class="ctrl"><label for="lL">Length <b id="lLv"></b></label><input id="lL" type="range" min="-3" max="1" step="0.01" value="-1"></div>
+      <div class="ctrl"><label>Medium</label>
+        <div class="seg" id="lE"><button type="button" data-v="1">Air</button><button type="button" data-v="2.1">PTFE coax</button><button type="button" data-v="3.3" class="on">FR-4 trace</button></div></div>
+    </div>
+    <div>
+      <canvas id="cvWave" style="height:220px" aria-label="Animated plot of the voltage along the conductor at one instant"></canvas>
+      <div class="readout">
+        <div class="stat"><div class="k">Wavelength here</div><div class="v" id="lLam"></div></div>
+        <div class="stat"><div class="k">Length / λ</div><div class="v" id="lRat"></div></div>
+        <div class="stat"><div class="k">Electrical length</div><div class="v" id="lTh"></div></div>
+        <div class="stat"><div class="k">Delay</div><div class="v" id="lDel"></div></div>
+      </div>
+      <div class="verdict" id="lVerdict"></div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>At 10 MHz, even a 1 m wire moves together as one: lumped behaviour.</li>
+    <li>Now go to 2.4 GHz with a 10 cm FR-4 trace. Several whole wavelengths fit on it.</li>
+    <li>Switch the medium from air to FR-4 and watch the wavelength shrink by √3.3 ≈ 1.8×.</li>
+  </ol></div>
+</div>
+
+<h3>Phase is just time delay, measured in cycles</h3>
+<p>The <strong>electrical length</strong> of a line is its delay expressed as a fraction of one cycle, in degrees:</p>
+<div class="eq">$$\theta = 360^\circ \cdot \frac{\ell}{\lambda} = 360^\circ \cdot f \cdot t_\text{delay}$$</div>
+<p>A line that delays the signal by a quarter of a period has an electrical length of 90°, whatever its physical length. That's why the same 2 cm trace is "electrically short" for a 10 MHz clock and a substantial 40° at 2.4 GHz. Matching networks, power splitters and antenna feeds are all built from lines of precise electrical length, so you'll use this idea constantly in Module 2. (A related idea, <em>group delay</em>, describes how long the information in a modulated signal takes to get through, and comes back with filters in Module 3.)</p>
+<div class="note">
+  <span class="ni">↯</span>
+  <div><span class="nt">It isn't only radios: fast digital edges count too</span>A digital edge with rise time \(t_r\) contains significant energy up to roughly \(0.35/t_r\). A 1 ns edge on an SPI or Ethernet line behaves like a 350 MHz signal, so a long trace or ribbon cable starts acting like a transmission line, ringing and all. This is where RF and high-speed digital design meet.</div>
+</div>
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">The longest "lumped" trace at 2.4 GHz</span><span class="eo">optional</span></summary>
+  <div class="eb">
+    <p>A 2.4 GHz video transmitter sits on an FR-4 board (ε<sub>eff</sub> ≈ 3.3). You'd like to route its output without impedance control.</p>
+    <div class="check" data-ans="6.9" data-tol="3%" data-unit="mm"><p>Up to what trace length can you get away with it, by the λ/10 rule?</p>
+      <div class="miss" data-val="12.5"><p>That uses the free-space wavelength. On FR-4 it's shorter by √3.3.</p></div>
+      <div class="solution"><p>\(\lambda = c/(f\sqrt{\varepsilon_\text{eff}}) = 3\times10^8/(2.4\times10^9 \times 1.817) \approx 68.8\ \text{mm}\), so λ/10 ≈ 6.9 mm. Anything longer, which is nearly any real route, should be a 50 Ω line.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ============ 3 Z0 ============ -->
+<section class="sec" id="z0" data-short="Characteristic impedance">
+<h2>Characteristic impedance: what "50 Ω" means <a class="vjump" data-t="12:00"></a></h2>
+<p>Every pair of conductors has inductance along its length and capacitance between them, spread evenly per metre. A wave travelling down the line has to charge that capacitance through that inductance, and the ratio of voltage to current in the travelling wave settles at a fixed value, the <strong>characteristic impedance</strong>:</p>
+<div class="eq">$$Z_0 = \sqrt{\frac{L'}{C'}} \qquad\qquad Z_0^\text{coax} = \frac{60}{\sqrt{\varepsilon_r}}\ln\frac{D}{d}$$<div class="n">L′ and C′ are inductance and capacitance per metre. For coax, D is the dielectric (shield) diameter and d the centre conductor diameter.</div></div>
+<p>Two facts surprise almost everyone:</p>
+<ul>
+  <li><strong>Z₀ doesn't depend on length.</strong> A 50 Ω cable is 50 Ω whether it's 1 cm or 100 m long. Z₀ is set by the cross-section: the conductor sizes, their spacing, and the dielectric.</li>
+  <li><strong>You can't measure it with an ohmmeter.</strong> Put a multimeter across an unterminated 50 Ω cable and it reads open circuit. Z₀ is the ratio a <em>travelling wave</em> sees, not a DC resistance.</li>
+</ul>
+
+<div class="widget wide" id="w-coax">
+  <div class="wh"><span class="tag">Interactive</span><b>Coax cross-section to Z₀</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label>Presets</label>
+        <div class="seg" id="xPre"><button type="button" data-v="0.46,1.52,2.1">RG-316</button><button type="button" data-v="0.85,2.95,2.25">RG-58</button><button type="button" data-v="1.02,4.57,1.5">75 Ω TV coax</button><button type="button" data-v="1.3,3,1">Air line</button></div></div>
+      <div class="ctrl"><label for="xd">Centre conductor d <b id="xdv"></b></label><input id="xd" type="range" min="0.2" max="3" step="0.01" value="0.46"></div>
+      <div class="ctrl"><label for="xD">Dielectric diameter D <b id="xDv"></b></label><input id="xD" type="range" min="0.8" max="8" step="0.01" value="1.52"></div>
+      <div class="ctrl"><label for="xe">Dielectric constant εr <b id="xev"></b></label><input id="xe" type="range" min="1" max="4.5" step="0.05" value="2.1"></div>
+    </div>
+    <div>
+      <canvas id="cvCoax" style="height:240px" aria-label="Cross-section of a coaxial cable showing the electric and magnetic field lines"></canvas>
+      <div class="legend"><span style="--c:var(--c1)">electric field</span><span class="dash" style="--c:var(--c2)">magnetic field</span></div>
+      <div class="readout">
+        <div class="stat"><div class="k">Z₀</div><div class="v" id="xZ"></div></div>
+        <div class="stat"><div class="k">Velocity factor</div><div class="v" id="xVF"></div></div>
+        <div class="stat"><div class="k">Capacitance</div><div class="v" id="xC"></div></div>
+        <div class="stat"><div class="k">Delay</div><div class="v" id="xT"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+<h3>Why 50 Ω?</h3>
+<p>For air-filled coax of a given outer size, loss is lowest near 77 Ω and power handling is highest near 30 Ω. 50 Ω is a compromise between the two that stuck in the 1930s, and today nearly every RF connector, cable, amplifier and instrument is built for it. (Video and TV systems standardised on 75 Ω, which is why that coax is different.) On our PCBs, a 50 Ω microstrip is a trace of a particular width over a ground plane; you'll calculate it in Modules 2 and 4.</p>
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">Design a 50 Ω PTFE coax</span><span class="eo">optional</span></summary>
+  <div class="eb">
+    <p>You're specifying a semi-rigid cable with solid PTFE dielectric (ε<sub>r</sub> = 2.1).</p>
+    <div class="check" data-ans="3.35" data-tol="2%" data-unit=""><p>What ratio D/d gives 50 Ω?</p>
+      <div class="miss" data-val="2.3"><p>That's the ratio for an <em>air</em>-filled line. The dielectric lowers Z₀, so the ratio must grow to compensate.</p></div>
+      <div class="hint">Rearrange: \(\ln(D/d) = Z_0\sqrt{\varepsilon_r}/60\).</div>
+      <div class="solution"><p>\(\ln(D/d) = 50 \times 1.449 / 60 = 1.208\), so \(D/d = e^{1.208} \approx 3.35\). Real 0.141″ semi-rigid has d = 0.91 mm and D = 2.98 mm, a ratio of 3.27, which is 49 Ω in this simple formula. Check it with the presets in the calculator above.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ============ 4 REFLECTIONS ============ -->
+<section class="sec" id="refl" data-short="Reflections &amp; VSWR">
+<h2>Reflections, VSWR and return loss <a class="vjump" data-t="16:00"></a></h2>
+<p>A wave travelling down a 50 Ω line has \(V/I = 50\ \Omega\). When it reaches a load that isn't 50 Ω, it can't keep that ratio and match the load at the same time. Nature resolves the conflict by sending part of the wave back. The fraction of the voltage that reflects is the <strong>reflection coefficient</strong> Γ (gamma):</p>
+<div class="eq">$$\Gamma = \frac{Z_L - Z_0}{Z_L + Z_0} \qquad\qquad T = 1 + \Gamma$$<div class="n">Γ for the reflected voltage, T for the voltage passed into the load</div></div>
+<p>Three special cases are worth memorising: a <strong>matched</strong> load (Γ = 0) absorbs everything; an <strong>open</strong> (Γ = +1) reflects everything with the same sign, so the voltage at the end doubles; a <strong>short</strong> (Γ = −1) reflects everything inverted, so the voltage there is zero.</p>
+<p>Power splits cleanly: the fraction \(|\Gamma|^2\) reflects and \(1 - |\Gamma|^2\) is delivered. (T can exceed 1 for a high-impedance load, but that's voltage, not power. No energy is created.) The incident and reflected waves interfere to form a <strong>standing wave</strong> whose peaks and dips stay fixed in place. Engineers describe mismatch in three equivalent ways:</p>
+<div class="eq">$$\text{VSWR} = \frac{1 + |\Gamma|}{1 - |\Gamma|} \qquad\qquad \text{Return loss} = -20\log_{10}|\Gamma|\ \text{dB}$$</div>
+
+<div class="widget wide" id="w-refl">
+  <div class="wh"><span class="tag">Interactive</span><b>Standing waves on a mismatched line</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label>Load</label>
+        <div class="seg" id="rPre"><button type="button" data-v="50,0" class="on">Matched</button><button type="button" data-v="1e9,0">Open</button><button type="button" data-v="0,0">Short</button><button type="button" data-v="100,0">100 Ω</button><button type="button" data-v="25,0">25 Ω</button><button type="button" data-v="35,25">Detuned antenna</button></div></div>
+      <div class="ctrl"><label for="rR">Load resistance R <b id="rRv"></b></label><input id="rR" type="range" min="0" max="300" step="1" value="50"></div>
+      <div class="ctrl"><label for="rX">Load reactance X <b id="rXv"></b></label><input id="rX" type="range" min="-150" max="150" step="1" value="0"></div>
+    </div>
+    <div>
+      <canvas id="cvRefl" style="height:240px" aria-label="Incident, reflected and total voltage along the line, with the standing-wave envelope"></canvas>
+      <div class="legend"><span style="--c:var(--c1)">incident wave</span><span style="--c:var(--c2)">reflected wave</span><span style="--c:var(--ink)">total voltage</span><span class="dash" style="--c:var(--c3)">envelope (what a probe would see)</span></div>
+      <canvas id="cvSplit" style="height:54px;margin-top:.6rem" aria-label="Bar showing delivered versus reflected power"></canvas>
+      <div class="readout">
+        <div class="stat"><div class="k">|Γ|</div><div class="v" id="rG"></div></div>
+        <div class="stat"><div class="k">VSWR</div><div class="v" id="rS"></div></div>
+        <div class="stat"><div class="k">Return loss</div><div class="v" id="rRL"></div></div>
+        <div class="stat"><div class="k">Power reflected</div><div class="v" id="rP"></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>With a matched load there's no standing wave: the envelope is flat.</li>
+    <li>Open and short both reflect everything, but the nulls land in different places, a quarter wavelength apart.</li>
+    <li>100 Ω and 25 Ω give the same VSWR (2:1) with opposite-sign Γ. VSWR alone can't tell high from low.</li>
+  </ol></div>
+</div>
+
+<div class="tablewrap"><table>
+  <tr><th>VSWR</th><th>|Γ|</th><th>Return loss</th><th>Power reflected</th><th>What it usually means</th></tr>
+  <tr><td>1.2 : 1</td><td>0.09</td><td>21 dB</td><td>0.8 %</td><td>A good cable assembly or connector</td></tr>
+  <tr><td>1.5 : 1</td><td>0.20</td><td>14 dB</td><td>4 %</td><td>A well-matched antenna or amplifier port</td></tr>
+  <tr><td>2 : 1</td><td>0.33</td><td>9.5 dB</td><td>11 %</td><td>The common "acceptable" edge of an antenna's band</td></tr>
+  <tr><td>3 : 1</td><td>0.50</td><td>6 dB</td><td>25 %</td><td>Poor; some power amplifiers start protecting themselves</td></tr>
+  <tr><td>10 : 1</td><td>0.82</td><td>1.7 dB</td><td>67 %</td><td>Something is broken or disconnected</td></tr>
+</table></div>
+<div class="note rocket">
+  <span class="ni">🚀</span>
+  <div><span class="nt">The airframe is part of the antenna</span>An antenna tuned on the bench can be badly mismatched once it's inside the rocket. Carbon fibre is conductive and shields the antenna; metal bulkheads and the wiring harness change its impedance. Always measure return loss with the antenna installed in the real airframe section.</div>
+</div>
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">A 75 Ω antenna on a 50 Ω radio</span><span class="eo">optional</span></summary>
+  <div class="eb">
+    <p>Someone salvaged a 75 Ω antenna and connected it straight to the 50 Ω telemetry radio.</p>
+    <div class="check" data-ans="13.98" data-tol="0.15" data-unit="dB"><p>What return loss will you measure?</p>
+      <div class="miss" data-val="0.2"><p>That's |Γ|. Return loss is \(-20\log_{10}|\Gamma|\) in dB.</p></div>
+      <div class="solution"><p>\(\Gamma = (75-50)/(75+50) = 0.2\), so return loss = \(-20\log_{10}(0.2) \approx 14\ \text{dB}\), and VSWR = 1.5:1. Only 4 % of the power reflects (0.18 dB), which is honestly fine. A 75/50 mismatch isn't the disaster people assume.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ============ 5 TDR ============ -->
+<section class="sec" id="tdr" data-short="TDR">
+<h2>TDR: seeing reflections in time <a class="vjump" data-t="22:00"></a></h2>
+<p><strong>Time-domain reflectometry</strong> launches a fast voltage step into a line and watches what comes back. Every change in impedance reflects part of the step, and the echo arrives after the round trip to the discontinuity and back. A step <em>up</em> means higher impedance (an open, a narrow trace, extra inductance); a step <em>down</em> means lower impedance (a short, a wide pad, extra capacitance). The trace becomes a map of impedance along the line:</p>
+<div class="eq">$$x = \frac{v\,t}{2}$$<div class="n">distance to the discontinuity; the factor of 2 is because the echo makes a round trip</div></div>
+
+<div class="widget wide" id="w-tdr">
+  <div class="wh"><span class="tag">Interactive</span><b>A TDR on a 1 m line</b></div>
+  <div class="wb">
+    <div class="seg" id="tSc"><button type="button" data-v="open" class="on">Open end</button><button type="button" data-v="short">Short</button><button type="button" data-v="r100">100 Ω load</button><button type="button" data-v="r25">25 Ω load</button><button type="button" data-v="sec75">75 Ω section</button><button type="button" data-v="conn">Bad connector</button><button type="button" data-v="crush">Crushed cable</button></div>
+    <canvas id="cvTdr" style="height:400px" aria-label="Impedance profile, a snapshot of the voltage along the line, and the TDR trace"></canvas>
+    <div class="btns" style="display:flex;gap:.5rem;margin-top:.6rem"><button type="button" class="primary" id="tGo">▶ Launch step</button><button type="button" id="tSlow">Slow motion: off</button></div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>Compare the open and the short: same time, opposite direction.</li>
+    <li>The bad connector shows as a small up-then-down wiggle: a bit of extra inductance, then extra capacitance.</li>
+    <li>On the crushed cable, the dip tells you exactly where to cut and re-terminate.</li>
+  </ol></div>
+</div>
+<p>A VNA can compute the same view (most have a "time domain" mode, including the NanoVNA), which is how we check cable assemblies and find bad crimps on the rocket's RF harness.</p>
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">Measure a cable's velocity factor</span><span class="eo">optional</span></summary>
+  <div class="eb">
+    <p>You have a spool of unknown coax. You cut exactly 2.00 m, leave the far end open, and the TDR shows the open-circuit step 19.5 ns after launch.</p>
+    <div class="check" data-ans="0.684" data-tol="1.5%" data-unit=""><p>What's the cable's velocity factor?</p>
+      <div class="miss" data-val="0.342"><p>The echo travelled 2 m out <em>and</em> 2 m back, so the wave covered 4 m in 19.5 ns.</p></div>
+      <div class="solution"><p>\(v = 2 \times 2.00 / 19.5\ \text{ns} = 2.05\times10^8\ \text{m/s}\), so VF = v/c ≈ 0.684, typical of solid PTFE. Enter this into the TDR afterwards so its distance readings are right.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ============ 6 TIME vs FREQUENCY ============ -->
+<section class="sec" id="ripple" data-short="Time vs frequency">
+<h2>The same reflections, seen in frequency <a class="vjump" data-t="26:00"></a></h2>
+<p>Suppose a cable has two small mismatches: one at the near-end connector and one at the far end. On a TDR you'd see two echoes, separated by the round-trip delay \(2\tau\). On a VNA, which sweeps frequency, the two echoes add with a phase that changes with frequency. Sometimes they reinforce and sometimes they cancel, so the return loss shows a <strong>ripple</strong>:</p>
+<div class="eq">$$\Delta f_\text{ripple} = \frac{1}{2\tau}$$<div class="n">ripple period in frequency; τ is the one-way delay between the two discontinuities</div></div>
+<p>The two views are the same information, related by the Fourier transform. Closely spaced bumps in a return-loss plot mean the discontinuities are far apart; widely spaced bumps mean they're close together. When you see a periodic ripple on a VNA, measure the spacing and you know how far apart the problems are.</p>
+
+<div class="widget wide" id="w-rip">
+  <div class="wh"><span class="tag">Interactive</span><b>Two echoes in time, ripple in frequency</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label for="pL">Cable length <b id="pLv"></b></label><input id="pL" type="range" min="5" max="200" step="1" value="30"></div>
+      <div class="ctrl"><label for="p1">Near-end connector return loss <b id="p1v"></b></label><input id="p1" type="range" min="10" max="40" step="0.5" value="20"></div>
+      <div class="ctrl"><label for="p2">Far-end load return loss <b id="p2v"></b></label><input id="p2" type="range" min="6" max="40" step="0.5" value="14"></div>
+      <p class="small">Cable velocity factor 0.70 (PTFE).</p>
+    </div>
+    <div>
+      <canvas id="cvRipT" style="height:150px" aria-label="Time domain: two echoes"></canvas>
+      <canvas id="cvRipF" style="height:200px;margin-top:.6rem" aria-label="Frequency domain: return loss with ripple"></canvas>
+      <div class="readout">
+        <div class="stat"><div class="k">One-way delay τ</div><div class="v" id="pTau"></div></div>
+        <div class="stat"><div class="k">Ripple period</div><div class="v" id="pDf"></div></div>
+        <div class="stat"><div class="k">Worst-case RL</div><div class="v" id="pW"></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>Double the cable length: the echoes move apart in time and the ripple squeezes together in frequency.</li>
+    <li>Make the near-end connector perfect (40 dB). The ripple almost disappears and only the load's mismatch remains.</li>
+  </ol></div>
+</div>
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">Locate a problem from the ripple</span><span class="eo">optional</span></summary>
+  <div class="eb">
+    <p>A VNA sweep of the rocket's GPS cable assembly shows a return-loss ripple repeating every 125 MHz. The cable is PTFE, velocity factor 0.70.</p>
+    <div class="check" data-ans="84" data-tol="2%" data-unit="cm"><p>How far apart are the two discontinuities causing it?</p>
+      <div class="miss" data-val="168"><p>That's the round-trip distance. The ripple period is set by \(2\tau\), so halve it.</p></div>
+      <div class="solution"><p>\(\tau = 1/(2\Delta f) = 4\ \text{ns}\), so the distance is \(0.70 \times 3\times10^8 \times 4\ \text{ns} \approx 0.84\ \text{m}\). If the assembly is 84 cm long, the two culprits are the connectors at each end.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ============ 7 Dk Df ============ -->
+<section class="sec" id="material" data-short="Dk, Df &amp; loss">
+<h2>Dk and Df: what the board does to the signal <a class="vjump" data-t="29:00"></a></h2>
+<p>A PCB trace carries its signal mostly in the electric field <em>between</em> the copper and the ground plane, so the dielectric in between matters as much as the copper. Two numbers describe it:</p>
+<ul>
+  <li><strong>Dk</strong> (dielectric constant, εr) sets how much the material slows the wave, and so the wavelength on the board and the trace width needed for 50 Ω.</li>
+  <li><strong>Df</strong> (dissipation factor, loss tangent, tan δ) is the fraction of field energy turned into heat each cycle.</li>
+</ul>
+<p>Loss comes from two places. <strong>Conductor loss</strong> grows with \(\sqrt{f}\), because at high frequency current crowds into a thin skin at the copper surface (the skin effect). <strong>Dielectric loss</strong> grows in proportion to \(f \cdot \text{Df}\). Above a gigahertz or so, dielectric loss usually wins on FR-4, which is why RF boards use lower-loss laminates.</p>
+
+<div class="widget wide" id="w-mat">
+  <div class="wh"><span class="tag">Interactive</span><b>Loss of a 50 Ω microstrip, by material</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label>Material</label>
+        <div class="seg" id="mMat"><button type="button" data-v="4.3,0.02" class="on">FR-4</button><button type="button" data-v="3.66,0.0037">Rogers 4350B</button><button type="button" data-v="3.55,0.0027">Rogers 4003C</button><button type="button" data-v="2.1,0.0004">PTFE</button></div></div>
+      <div class="ctrl"><label for="mF">Marker frequency <b id="mFv"></b></label><input id="mF" type="range" min="8" max="10" step="0.01" value="9.38"></div>
+      <p class="small">50 Ω microstrip on 0.2 mm of dielectric (a typical 4-layer outer layer), smooth copper. Real copper roughness adds 10–40 % to the conductor loss.</p>
+    </div>
+    <div>
+      <canvas id="cvMat" style="height:250px" aria-label="Loss per 10 cm versus frequency: conductor, dielectric and total"></canvas>
+      <div class="legend"><span style="--c:var(--c1)">total</span><span class="dash" style="--c:var(--c4)">conductor (∝ √f)</span><span class="dash" style="--c:var(--c2)">dielectric (∝ f·Df)</span></div>
+      <div class="readout">
+        <div class="stat"><div class="k">Loss / 10 cm</div><div class="v" id="mLoss"></div></div>
+        <div class="stat"><div class="k">From dielectric</div><div class="v" id="mDiel"></div></div>
+        <div class="stat"><div class="k">λ on board</div><div class="v" id="mLam"></div></div>
+        <div class="stat"><div class="k">Trace width</div><div class="v" id="mW"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+<p>For a 915 MHz telemetry board with short traces, FR-4 is perfectly fine: a few centimetres of trace cost around a tenth of a dB. The material choice starts to matter for long runs, higher frequencies (5.8 GHz video links) and filters, where Dk's tolerance and stability over temperature also come into play. Module 4 covers stackups and material selection in detail.</p>
+</section>
+
+<!-- ============ 8 POLARIZATION ============ -->
+<section class="sec" id="pol" data-short="Polarization">
+<h2>Polarization: which way the field points <a class="vjump" data-t="32:00"></a></h2>
+<p>A radio wave's electric field oscillates in a particular direction, its <strong>polarization</strong>. A straight dipole or monopole radiates <em>linear</em> polarization along its own axis, and it only picks up the component of an incoming field that lies along that axis. Two linear antennas at angle θ to each other lose</p>
+<div class="eq">$$L_\text{pol} = -20\log_{10}|\cos\theta|\ \text{dB}$$</div>
+<p>That's nothing at 0°, 3 dB at 45°, and in theory infinite at 90° (in practice 20–30 dB, thanks to reflections and imperfect antennas). <em>Circular</em> polarization rotates as it travels; a circular antenna receives a linear signal with a constant 3 dB loss whatever the angle.</p>
+
+<div class="widget wide" id="w-pol">
+  <div class="wh"><span class="tag">Interactive</span><b>Polarization mismatch</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label>Ground antenna</label><div class="seg" id="oM"><button type="button" data-v="lin" class="on">Linear</button><button type="button" data-v="circ">Circular</button></div></div>
+      <div class="ctrl"><label for="oA">Rocket antenna tilt <b id="oAv"></b></label><input id="oA" type="range" min="0" max="90" step="1" value="30"></div>
+    </div>
+    <div>
+      <canvas id="cvPol" style="height:220px" aria-label="Transmitted field direction compared with the receiving antenna"></canvas>
+      <div class="readout">
+        <div class="stat"><div class="k">Polarization loss</div><div class="v" id="oL"></div></div>
+        <div class="stat"><div class="k">Power received</div><div class="v" id="oP"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="note rocket">
+  <span class="ni">🚀</span>
+  <div><span class="nt">Why this matters on a rocket</span>The rocket pitches over after launch, may roll, and swings under the parachute during descent. A linear antenna on the airframe and a linear antenna at the ground station will drift in and out of alignment, and the link fades. A circularly polarized ground antenna trades a constant 3 dB for never hitting that deep null, which is usually a good deal. Antenna patterns and choices are covered in Module 9.</div>
+</div>
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">When does a linear ground antenna lose 6 dB?</span><span class="eo">optional</span></summary>
+  <div class="eb">
+    <p>Both antennas are linear. The link budget has 6 dB of margin set aside for polarization.</p>
+    <div class="check" data-ans="60" data-tol="1.5%" data-unit="°"><p>At what tilt angle between them is that margin used up?</p>
+      <div class="hint">Solve \(20\log_{10}|\cos\theta| = -6\) for θ.</div>
+      <div class="solution"><p>\(|\cos\theta| = 10^{-6/20} = 0.501\), so θ ≈ 60°. Any steeper and the link drops below margin. A rocket that's pitched over 60° from vertical at apogee is not unusual, which is why circular polarization at the ground is so common.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= DESIGN EXERCISES ================= -->
+<section class="sec" id="exercises" data-nonum data-short="Design exercises">
+<h2>Design exercises</h2>
+<p>Problems drawn from the telemetry system. Enter numbers to check your reasoning as you go, or open the worked solutions and discussion.</p>
+
+<div class="chal">
+  <div class="ch"><span class="cn">Exercise 1</span><span class="cd">Budget · ●●○</span><span class="ctitle">How much power actually leaves the rocket?</span></div>
+  <div class="cbody">
+    <p>The telemetry radio sits on the avionics sled and feeds an antenna in the nosecone through a short coax jumper.</p>
+    <div class="given"><b>Given</b>
+      <span>Radio output</span><span>+27 dBm</span>
+      <span>Coax</span><span>RG-316, 1.2 m, 0.75 dB/m at 915 MHz</span>
+      <span>Connectors</span><span>2 × SMA, 0.1 dB each</span>
+      <span>Antenna</span><span>2 dBi gain, return loss 10 dB as installed</span>
+    </div>
+    <div class="check" data-ans="0.46" data-tol="4%" data-unit="dB"><p>(a) Mismatch loss at the antenna, the power lost to reflection, \(-10\log_{10}(1-|\Gamma|^2)\)?</p>
+      <div class="hint">Return loss 10 dB means \(|\Gamma| = 10^{-10/20} \approx 0.316\), so \(|\Gamma|^2 = 0.1\).</div>
+      <div class="solution"><p>\(|\Gamma|^2 = 0.1\), so the antenna accepts 90 % of the power: \(-10\log_{10}(0.9) = 0.46\ \text{dB}\).</p></div></div>
+    <div class="check" data-ans="27.44" data-tol="0.1" data-unit="dBm"><p>(b) EIRP (effective radiated power, including antenna gain)?</p>
+      <div class="miss" data-val="25.44"><p>You've got the losses right. Now add the antenna's +2 dBi of gain.</p></div>
+      <div class="solution"><p>27 − 0.9 (cable) − 0.2 (connectors) − 0.46 (mismatch) + 2 (antenna) = <b>27.44 dBm</b>.</p></div></div>
+    <div class="check" data-ans="555" data-tol="3%" data-unit="mW"><p>(c) …and in milliwatts?</p>
+      <div class="solution"><p>\(10^{27.44/10} \approx 555\ \text{mW}\). Without the antenna gain and losses it would be the radio's 500 mW. The 2 dBi of gain more than makes up for 1.56 dB of losses.</p></div></div>
+    <details><summary>Discussion: where would you look to improve it?</summary><p>The cable is the biggest loss. Moving the radio closer to the antenna, or using a lower-loss cable, buys back most of a dB. Re-tuning the antenna in the real nosecone to 15 dB return loss cuts the mismatch loss from 0.46 to 0.14 dB. Neither is huge on its own, but each dB is about 12 % more range in free space, and the margins add up across the whole link budget (Module 6).</p></details>
+  </div>
+</div>
+
+<div class="chal">
+  <div class="ch"><span class="cn">Exercise 2</span><span class="cd">Fault-finding · ●●○</span><span class="ctitle">Finding the damage in the RF harness</span></div>
+  <div class="cbody">
+    <p>After a hard landing, the telemetry link is weak. A TDR on the coax from the radio to the antenna shows a dip to about 35 Ω, 4.2 ns after the launch edge, followed by an otherwise normal trace.</p>
+    <div class="given"><b>Given</b>
+      <span>Cable</span><span>PTFE coax, velocity factor 0.69</span>
+      <span>Echo time</span><span>4.2 ns (round trip)</span>
+      <span>Dip</span><span>35 Ω on a 50 Ω line</span>
+    </div>
+    <div class="check" data-ans="43.5" data-tol="2%" data-unit="cm"><p>(a) How far from the radio end is the fault?</p>
+      <div class="miss" data-val="87"><p>That's the round-trip distance. The echo travelled there and back, so halve it.</p></div>
+      <div class="solution"><p>\(x = v t / 2 = 0.69 \times 3\times10^8 \times 4.2\times10^{-9} / 2 \approx 0.435\ \text{m}\).</p></div></div>
+    <div class="check" data-ans="-0.176" data-tol="0.01" data-unit=""><p>(b) Reflection coefficient Γ of the 35 Ω section?</p>
+      <div class="miss" data-val="0.176"><p>Check the sign: 35 Ω is <em>below</em> 50 Ω, so Γ is negative and the TDR steps down.</p></div>
+      <div class="solution"><p>\(\Gamma = (35 - 50)/(35 + 50) = -0.176\).</p></div></div>
+    <details><summary>Discussion: what physically causes a low-impedance dip?</summary><p>Lower impedance means more capacitance per unit length: the centre conductor has been pushed closer to the shield. That's typical of a cable crushed or kinked too tightly, here probably where it passes the bulkhead 43 cm from the radio. A high-impedance bump would instead suggest a cracked solder joint or partly pulled-out connector pin (extra series inductance).</p></details>
+  </div>
+</div>
+
+<div class="chal">
+  <div class="ch"><span class="cn">Exercise 3</span><span class="cd">Layout judgement · ●○○</span><span class="ctitle">Does the GPS trace need to be a controlled-impedance line?</span></div>
+  <div class="cbody">
+    <p>The GPS module's antenna input connects to a u.FL connector through an 18 mm trace on the flight computer's FR-4 board.</p>
+    <div class="given"><b>Given</b>
+      <span>GPS L1 frequency</span><span>1575.42 MHz</span>
+      <span>Trace length</span><span>18 mm</span>
+      <span>Effective dielectric constant</span><span>3.3 (FR-4 microstrip)</span>
+    </div>
+    <div class="check" data-ans="104.8" data-tol="2%" data-unit="mm"><p>(a) Wavelength on the board?</p>
+      <div class="miss" data-val="190.3"><p>That's the free-space wavelength. On the board it's shorter by \(\sqrt{\varepsilon_\text{eff}}\).</p></div>
+      <div class="solution"><p>\(\lambda = c / (f\sqrt{\varepsilon_\text{eff}}) = 3\times10^8 / (1.575\times10^9 \times 1.817) \approx 104.8\ \text{mm}\).</p></div></div>
+    <div class="check" data-ans="61.8" data-tol="2%" data-unit="°"><p>(b) Electrical length of the trace?</p>
+      <div class="solution"><p>\(\theta = 360° \times 18/104.8 \approx 62°\), well beyond the λ/10 (36°) threshold. Yes: it must be a 50 Ω line, with a solid ground plane underneath.</p></div></div>
+    <details><summary>Discussion: what goes wrong if it isn't?</summary><p>An uncontrolled trace of that length, say a thin 0.15 mm signal trace at ~85 Ω, transforms the 50 Ω input of the GPS into something else. The resulting mismatch costs signal, and GPS signals arrive about 20 dB <em>below</em> the noise floor, so there's no margin to spare. Better still, put the connector right next to the module.</p></details>
+  </div>
+</div>
+</section>
+
+<!-- ============ BENCH ============ -->
+<section class="sec" id="bench" data-nonum data-short="At the bench">
+<h2>At the bench</h2>
+<div class="video" data-video="lab">
+  <div class="plan">
+    <p>Planned lab demo (≈ 20 min, filmed at the bench with a NanoVNA):</p>
+    <ol>
+      <li>Calibrating the VNA, and why it matters</li>
+      <li>Open, short and 50 Ω load on the Smith chart and as return loss</li>
+      <li>TDR mode: finding the length of a cable and a deliberately bad adapter</li>
+      <li>The ripple from two mismatches, live</li>
+      <li>Measuring the telemetry antenna on the bench, then inside the nosecone</li>
+    </ol>
+  </div>
+</div>
+<div class="lab">
+  <h3>Seeing reflections for real</h3>
+  <div class="parts"><span>NanoVNA (or any VNA)</span><span>SOL calibration kit</span><span>Two SMA cables of different lengths</span><span>SMA barrel and a cheap adapter</span><span>The telemetry antenna</span></div>
+  <ol>
+    <li><b>Calibrate</b> at the end of a cable with the open, short and load standards.</li>
+    <li><b>Look at the three standards</b> as return loss and as a Smith chart. Open and short reflect everything (0 dB return loss); the load reflects almost nothing.</li>
+    <li><b>Measure a cable's length with TDR.</b> Leave the far end open, switch to time-domain mode, set the velocity factor, and read off the length. Compare with a tape measure.</li>
+    <li><b>Find a bad adapter.</b> Insert a cheap adapter partway along a cable run. Spot it in the TDR, then look for the matching ripple in the return loss and check its period against \(1/(2\tau)\).</li>
+    <li><b>Antenna in situ.</b> Measure the antenna's return loss on the bench, then installed in the nosecone section. Note how far the best match shifts.</li>
+  </ol>
+  <div class="record"><b>What you should see:</b> cable lengths within a centimetre or two, a ripple whose spacing matches the adapter's distance, and an antenna whose resonance moves noticeably once installed.</div>
+</div>
+</section>
+
+<!-- ============ SUMMARY ============ -->
+<section class="sec" id="summary" data-nonum data-short="Summary">
+<h2>Summary &amp; cheat sheet</h2>
+<ol class="takeaways">
+  <li>Decibels turn multiplication into addition. dB is a ratio; dBm is an absolute power. Combine powers in milliwatts, not dBm.</li>
+  <li>Once a connection is longer than about λ/10, it's a transmission line. Electrical length is just delay measured in cycles.</li>
+  <li>Z₀ is set by a line's cross-section, not its length, and you can't measure it with an ohmmeter.</li>
+  <li>A mismatch reflects \(|\Gamma|^2\) of the power. VSWR, return loss and Γ all describe the same thing.</li>
+  <li>TDR shows reflections in time; a VNA shows them as ripple in frequency. They're two views of the same physics.</li>
+  <li>Dielectric loss grows with f·Df and dominates on FR-4 at GHz frequencies. Polarization mismatch can cost more than any cable.</li>
+</ol>
+<div class="cheat">
+  <div><b>Decibels</b>\(10\log_{10}(P_2/P_1)\) · voltage \(20\log_{10}\)<br><span class="small">3 dB = ×2 · 10 dB = ×10 · 0 dBm = 1 mW · 30 dBm = 1 W</span></div>
+  <div><b>Wavelength</b>\(\lambda = c/(f\sqrt{\varepsilon_\text{eff}})\)<br><span class="small">line if ℓ > λ/10 · θ = 360°·ℓ/λ</span></div>
+  <div><b>Coax</b>\(Z_0 = \tfrac{60}{\sqrt{\varepsilon_r}}\ln(D/d)\)<br><span class="small">VF = 1/√εr</span></div>
+  <div><b>Reflection</b>\(\Gamma = \tfrac{Z_L - Z_0}{Z_L + Z_0}\)<br><span class="small">VSWR = (1+|Γ|)/(1−|Γ|) · RL = −20 log|Γ|</span></div>
+  <div><b>TDR &amp; ripple</b>\(x = vt/2\) · \(\Delta f = 1/(2\tau)\)</div>
+  <div><b>Polarization</b>\(-20\log_{10}|\cos\theta|\)<br><span class="small">linear → circular: 3 dB</span></div>
+</div>
+<h3>Go deeper</h3>
+<p class="small">The full treatment, with derivations and harder problems, is in the advanced theory pages:</p>
+<div class="deeper">
+  <a data-deep="signals_theory.html#db">Decibels, done right<small>Every dB unit, a converter, and the common pitfalls</small></a>
+  <a data-deep="matching_theory.html#wire">When does a wire become a transmission line?<small>Plus the distributed RLGC model and telegrapher's equations</small></a>
+  <a data-deep="matching_theory.html#refl">Reflections and standing waves<small>Complex loads, mismatch loss and the full VSWR table</small></a>
+  <a data-deep="matching_theory.html#tdr">Time-domain reflectometry<small>Interpreting real TDR traces, including vias and bond wires</small></a>
+  <a data-deep="antenna_theory.html#pol">Polarization<small>Elliptical polarization, axial ratio and cross-polar isolation</small></a>
+</div>
+</section>
+
+<nav class="pager"></nav>
+</main>
+</div>
+<footer class="site">Avionics Notes · RF &amp; High-Speed Design</footer>
+
+<script>
+'use strict';
+const $ = s => document.querySelector(s);
+const {col, si, fmt, lin, log, ticks, axes, line, text, dot, rrect, rgba, mix} = Plot;
+const C0 = 299792458;
+
+/* ============ 1. Transmit chain ============ */
+(() => {
+  let st = {};
+  function upd(){
+    const P = +$('#cP').value, Lc = +$('#cC').value, Lk = +$('#cK').value, Lf = +$('#cF').value, G = +$('#cA').value;
+    $('#cPv').textContent = fmt(P,3) + ' dBm'; $('#cCv').textContent = '−' + fmt(Lc,2) + ' dB'; $('#cKv').textContent = '−' + fmt(Lk,2) + ' dB';
+    $('#cFv').textContent = '−' + fmt(Lf,2) + ' dB'; $('#cAv').textContent = (G >= 0 ? '+' : '−') + fmt(Math.abs(G),2) + ' dBi';
+    const steps = [['Radio', P, null], ['Cable', -Lc, null], ['Connectors', -Lk, null], ['Filter', -Lf, null], ['Antenna', G, 'dBi']];
+    let lvl = 0; const nodes = steps.map(([n, d], k) => { lvl = k === 0 ? d : lvl + d; return {n, d, lvl}; });
+    st = {nodes};
+    const E = nodes[4].lvl;
+    $('#cE').textContent = fmt(E,3) + ' dBm'; $('#cEm').textContent = si(Math.pow(10, E/10)/1000, 'W');
+    const lost = Lc + Lk + Lf;
+    $('#cL').innerHTML = fmt(lost,3) + ' dB <small>(' + Math.round(100*(1 - Math.pow(10, -lost/10))) + ' %)</small>';
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvChain'), (ctx, W, H) => {
+    const {nodes} = st; if (!nodes) return;
+    const P = {l:52, r:W-12, t:18, b:H-58};
+    const lv = nodes.map(n => n.lvl), lo = Math.floor(Math.min(...lv) - 3), hi = Math.ceil(Math.max(...lv) + 3);
+    const Y = lin(lo, hi, P.b, P.t);
+    const cw = (P.r - P.l) / nodes.length;
+    axes(ctx, P, x => x, Y, {yt: ticks(lo, hi, 5), yl: 'power (dBm)'});
+    nodes.forEach((n, k) => {
+      const x0 = P.l + k*cw + 8, x1 = P.l + (k+1)*cw - 8;
+      const y = Y(n.lvl);
+      // step riser from previous level
+      if (k){ line(ctx, [[x0 - 16, Y(nodes[k-1].lvl)], [x0 - 16, y]], rgba(col.ink2, .35), 1.5, [3,3]); }
+      ctx.fillStyle = rgba(k === 0 ? col.c1 : n.d >= 0 ? col.c5 : col.c2, .14);
+      rrect(ctx, x0, y, x1 - x0, P.b - y, [6,6,0,0]); ctx.fill();
+      line(ctx, [[x0, y], [x1, y]], k === 0 ? col.c1 : n.d >= 0 ? col.c5 : col.c2, 3);
+      text(ctx, fmt(n.lvl,3) + ' dBm', (x0+x1)/2, y - 10, {align:'center', mono:true});
+      text(ctx, n.n, (x0+x1)/2, P.b + 14, {align:'center', bold:true, color: col.ink});
+      const lab = k === 0 ? 'source' : (n.d >= 0 ? '+' : '−') + fmt(Math.abs(n.d),2) + ' dB  (×' + fmt(Math.pow(10, n.d/10), 2) + ')';
+      text(ctx, lab, (x0+x1)/2, P.b + 30, {align:'center', mono:true, color: k === 0 ? col.muted : n.d >= 0 ? col.good : col.flame});
+      text(ctx, fmt(Math.pow(10, n.lvl/10), 3) + ' mW', (x0+x1)/2, P.b + 46, {align:'center', color: col.ink2, mono:true});
+    });
+  });
+  ['#cP','#cC','#cK','#cF','#cA'].forEach(id => $(id).addEventListener('input', upd));
+  upd();
+})();
+
+/* ============ 2. Wire becomes a line ============ */
+(() => {
+  const med = Plot.seg('#lE', upd);
+  let s = {};
+  function upd(){
+    const f = Math.pow(10, +$('#lF').value), L = Math.pow(10, +$('#lL').value), e = +med();
+    const lam = C0 / (f * Math.sqrt(e)), r = L / lam, th = 360 * r, dl = L * Math.sqrt(e) / C0;
+    s = {f, L, lam, r};
+    $('#lFv').textContent = si(f, 'Hz'); $('#lLv').textContent = si(L, 'm');
+    $('#lLam').textContent = si(lam, 'm'); $('#lRat').textContent = fmt(r, 3);
+    $('#lTh').textContent = (th < 1000 ? fmt(th, 3) : Math.round(th)) + '°'; $('#lDel').textContent = si(dl, 's');
+    const v = $('#lVerdict');
+    if (r < 0.05) Plot.verdict(v, 'ok', '<b>Lumped.</b> The whole connection is at practically the same voltage. Ordinary circuit rules apply.');
+    else if (r < 0.1) Plot.verdict(v, 'warn', '<b>Borderline.</b> Close to λ/10. Treat it as a line if the signal matters.');
+    else Plot.verdict(v, 'bad', `<b>Transmission line.</b> ${r >= 1 ? fmt(r,2) + ' wavelengths fit on it' : 'Different points hold different voltages at the same moment'}. Control its impedance and terminate it.`);
+  }
+  Plot.animate($('#cvWave'), (ctx, W, H, t) => {
+    const {lam, r} = s; if (!lam) return;
+    const P = {l:36, r:W-36, t:28, b:H-46}, ym = (P.t + P.b)/2, A = (P.b - P.t)/2 - 8;
+    const ph = 2*Math.PI*t/1.6;
+    // source and load blocks
+    ctx.fillStyle = col.sunk; rrect(ctx, 6, ym - 22, 24, 44, 6); ctx.fill(); rrect(ctx, W - 30, ym - 22, 24, 44, 6); ctx.fill();
+    text(ctx, '~', 18, ym, {align:'center', bold:true, color: col.ink2}); text(ctx, 'R', W - 18, ym, {align:'center', bold:true, color: col.ink2});
+    // conductor coloured by local voltage
+    const N = 400, pts = [];
+    for (let i = 0; i <= N; i++){
+      const z = i / N, v = Math.cos(ph - 2*Math.PI*r*z);
+      pts.push([P.l + z*(P.r - P.l), ym - A*v, v]);
+    }
+    for (let i = 0; i < N; i++){
+      const v = pts[i][2];
+      ctx.fillStyle = v >= 0 ? rgba(col.c2, .15 + .55*v) : rgba(col.c1, .15 - .55*v);
+      ctx.fillRect(pts[i][0], P.b + 14, (P.r - P.l)/N + 1, 10);
+    }
+    line(ctx, [[P.l, ym], [P.r, ym]], col.line2, 1, [4,4]);
+    ctx.save(); ctx.globalAlpha = .12; ctx.fillStyle = col.c1;
+    ctx.beginPath(); ctx.moveTo(P.l, ym); pts.forEach(p => ctx.lineTo(p[0], p[1])); ctx.lineTo(P.r, ym); ctx.fill(); ctx.restore();
+    line(ctx, pts.map(p => [p[0], p[1]]), col.c1, 2.5);
+    dot(ctx, P.l, pts[0][1], 5, col.c2);
+    text(ctx, 'source end', P.l, P.t - 14, {color: col.muted});
+    text(ctx, 'load end', P.r, P.t - 14, {align:'right', color: col.muted});
+    text(ctx, 'the conductor, coloured by its voltage right now (orange +, blue −)', W/2, H - 10, {align:'center', color: col.muted});
+  });
+  ['#lF','#lL'].forEach(id => $(id).addEventListener('input', upd));
+  upd();
+})();
+
+/* ============ 3. Coax ============ */
+(() => {
+  const pre = Plot.seg('#xPre', v => { const [d, D, e] = v.split(',').map(Number); $('#xd').value = d; $('#xD').value = D; $('#xe').value = e; upd(); });
+  let s = {};
+  function upd(){
+    let d = +$('#xd').value, D = +$('#xD').value; const e = +$('#xe').value;
+    if (D <= d*1.05){ D = d*1.05; $('#xD').value = D; }
+    const Z = 60/Math.sqrt(e) * Math.log(D/d), vf = 1/Math.sqrt(e);
+    const Cp = 2*Math.PI*8.854e-12*e / Math.log(D/d);
+    s = {d, D, e, Z};
+    $('#xdv').textContent = fmt(d,3) + ' mm'; $('#xDv').textContent = fmt(D,3) + ' mm'; $('#xev').textContent = fmt(e,3);
+    $('#xZ').textContent = fmt(Z,3) + ' Ω'; $('#xVF').textContent = fmt(vf,3); $('#xC').textContent = si(Cp, 'F') + '/m'; $('#xT').textContent = si(1/(vf*C0), 's') + '/m';
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvCoax'), (ctx, W, H) => {
+    const {d, D, e, Z} = s; if (!d) return;
+    const cx = W*0.38, cy = H/2, Rmax = Math.min(H/2 - 16, W*0.3);
+    const k = Rmax / (D/2 + 0.12*D);       // px per mm, leave room for the jacket
+    const ri = d/2*k, ro = D/2*k, rs = ro + Math.max(4, 0.06*D*k), rj = rs + Math.max(6, 0.08*D*k);
+    // jacket, shield, dielectric, centre conductor
+    ctx.fillStyle = Plot.isDark() ? '#3a3f4a' : '#2f343d'; ctx.beginPath(); ctx.arc(cx, cy, rj, 0, 2*Math.PI); ctx.fill();
+    const sh = ctx.createRadialGradient(cx, cy, ro, cx, cy, rs); sh.addColorStop(0, '#c98d55'); sh.addColorStop(1, '#8f5b2e');
+    ctx.fillStyle = sh; ctx.beginPath(); ctx.arc(cx, cy, rs, 0, 2*Math.PI); ctx.fill();
+    ctx.fillStyle = mix(col.panel, col.c1, Math.min(.35, (e - 1)*.12)); ctx.beginPath(); ctx.arc(cx, cy, ro, 0, 2*Math.PI); ctx.fill();
+    // magnetic field circles
+    for (let j = 1; j <= 3; j++){
+      const r = ri + (ro - ri) * j/4;
+      ctx.save(); ctx.setLineDash([4,4]); ctx.strokeStyle = rgba(col.c2, .8); ctx.lineWidth = 1.4; ctx.beginPath(); ctx.arc(cx, cy, r, 0, 2*Math.PI); ctx.stroke(); ctx.restore();
+    }
+    // electric field: radial lines
+    for (let a = 0; a < 16; a++){
+      const th = a * Math.PI/8;
+      line(ctx, [[cx + ri*Math.cos(th), cy + ri*Math.sin(th)], [cx + ro*Math.cos(th), cy + ro*Math.sin(th)]], rgba(col.c1, .9), 1.6);
+    }
+    const cg = ctx.createRadialGradient(cx - ri*.3, cy - ri*.3, 1, cx, cy, ri); cg.addColorStop(0, '#f3c08d'); cg.addColorStop(1, '#b8743a');
+    ctx.fillStyle = cg; ctx.beginPath(); ctx.arc(cx, cy, Math.max(2, ri), 0, 2*Math.PI); ctx.fill();
+    // labels
+    const lx = W*0.72;
+    const lab = (y, t1, t2) => { text(ctx, t1, lx, y, {bold:true}); text(ctx, t2, lx, y + 16, {color: col.ink2, mono:true}); };
+    lab(cy - 70, 'centre conductor', 'd = ' + fmt(d,3) + ' mm');
+    lab(cy - 24, 'dielectric', 'D = ' + fmt(D,3) + ' mm · εr ' + fmt(e,3));
+    lab(cy + 22, 'braided shield + jacket', '');
+    text(ctx, 'Z₀ = ' + fmt(Z,3) + ' Ω', lx, cy + 66, {bold:true, mono:true, color: Math.abs(Z - 50) < 2.5 || Math.abs(Z - 75) < 3 ? col.good : col.ink});
+  });
+  ['#xd','#xD','#xe'].forEach(id => $(id).addEventListener('input', upd));
+  upd();
+})();
+
+/* ============ 4. Reflections ============ */
+(() => {
+  let R = 50, X = 0, G = [0,0];
+  Plot.seg('#rPre', v => { const [r, x] = v.split(',').map(Number); R = r; X = x; if (r < 1e6){ $('#rR').value = r; } $('#rX').value = x; calc(); });
+  function calc(){
+    const Z0 = 50;
+    if (R >= 1e6){ G = [1, 0]; }
+    else { const nr = R - Z0, ni = X, dr = R + Z0, di = X, den = dr*dr + di*di; G = [(nr*dr + ni*di)/den, (ni*dr - nr*di)/den]; }
+    const m = Math.hypot(G[0], G[1]);
+    $('#rRv').textContent = R >= 1e6 ? '∞ (open)' : R + ' Ω'; $('#rXv').textContent = (X >= 0 ? '+j' : '−j') + Math.abs(X) + ' Ω';
+    $('#rG').innerHTML = fmt(m, 3) + (m > 0.005 ? ` <small>∠${Math.round(Math.atan2(G[1], G[0])*180/Math.PI)}°</small>` : '');
+    $('#rS').textContent = m >= 0.999 ? '∞' : fmt((1+m)/(1-m), 3) + ' : 1';
+    $('#rRL').textContent = m < 1e-4 ? '∞ dB' : fmt(-20*Math.log10(m), 3) + ' dB';
+    $('#rP').textContent = fmt(100*m*m, 3) + ' %';
+    split.redraw();
+  }
+  $('#rR').addEventListener('input', () => { R = +$('#rR').value; calc(); });
+  $('#rX').addEventListener('input', () => { X = +$('#rX').value; if (R >= 1e6){ R = 300; $('#rR').value = 300; } calc(); });
+  Plot.animate($('#cvRefl'), (ctx, W, H, t) => {
+    const P = {l:16, r:W-60, t:16, b:H-24}, ym = (P.t + P.b)/2, A = (P.b - P.t)/4.3;
+    const ph = 2*Math.PI*t/2.2, nl = 1.75;   // wavelengths of line shown
+    // load block
+    ctx.fillStyle = col.sunk; rrect(ctx, P.r + 8, ym - 26, 44, 52, 8); ctx.fill();
+    text(ctx, 'load', P.r + 30, ym - 8, {align:'center', color: col.muted});
+    text(ctx, R >= 1e6 ? 'open' : (R === 0 && X === 0 ? 'short' : fmt(R,3) + (X ? (X > 0 ? '+j' : '−j') + Math.abs(X) : '')), P.r + 30, ym + 9, {align:'center', mono:true});
+    line(ctx, [[P.l, ym], [P.r, ym]], col.line2, 1);
+    const N = 300, inc = [], ref = [], tot = [], envU = [], envL = [];
+    for (let i = 0; i <= N; i++){
+      const x = P.l + (P.r - P.l)*i/N, dd = nl*(1 - i/N);          // distance from load in wavelengths
+      const b = 2*Math.PI*dd;
+      // V(d,t) = Re{ e^{j(ωt + βd)} + Γ e^{j(ωt − βd)} }
+      const vi = Math.cos(ph + b);
+      const vr = G[0]*Math.cos(ph - b) - G[1]*Math.sin(ph - b);
+      const er = Math.cos(b) + (G[0]*Math.cos(-b) - G[1]*Math.sin(-b)), ei = Math.sin(b) + (G[0]*Math.sin(-b) + G[1]*Math.cos(-b));
+      const env = Math.hypot(er, ei);
+      inc.push([x, ym - A*vi]); ref.push([x, ym - A*vr]); tot.push([x, ym - A*(vi + vr)]);
+      envU.push([x, ym - A*env]); envL.push([x, ym + A*env]);
+    }
+    ctx.save(); ctx.fillStyle = rgba(col.c3, .08); ctx.beginPath(); envU.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])); for (let i = envL.length - 1; i >= 0; i--) ctx.lineTo(envL[i][0], envL[i][1]); ctx.fill(); ctx.restore();
+    line(ctx, envU, col.c3, 1.5, [5,4]); line(ctx, envL, col.c3, 1.5, [5,4]);
+    line(ctx, inc, rgba(col.c1, .75), 1.6); line(ctx, ref, rgba(col.c2, .85), 1.6); line(ctx, tot, col.ink, 2.6);
+    text(ctx, '← source', P.l, H - 8, {color: col.muted});
+  });
+  const split = Plot.widget($('#cvSplit'), (ctx, W, H) => {
+    const m2 = G[0]*G[0] + G[1]*G[1];
+    const l = 0, r = W, y = 8, h = 26, wd = (r - l)*(1 - m2);
+    ctx.save(); rrect(ctx, l, y, r - l, h, 8); ctx.clip();
+    ctx.fillStyle = col.c1; ctx.fillRect(l, y, wd, h);
+    ctx.fillStyle = col.c2; ctx.fillRect(l + wd, y, r - l - wd, h);
+    ctx.restore();
+    if (wd > 120) text(ctx, 'delivered ' + fmt(100*(1 - m2), 3) + ' %', l + 10, y + h/2, {color:'#fff', bold:true});
+    if (r - l - wd > 120) text(ctx, 'reflected ' + fmt(100*m2, 3) + ' %', r - 10, y + h/2, {align:'right', color:'#fff', bold:true});
+    text(ctx, 'where the incident power goes', l, y + h + 12, {color: col.muted});
+  });
+  calc();
+})();
+
+/* ============ 5. TDR ============ */
+(() => {
+  const N = 240, Z0 = 50;
+  const scen = Plot.seg('#tSc', () => reset(true));
+  let Z, GL, a, b, trace, step, running = false, slow = false;
+  function profile(name){
+    Z = new Array(N).fill(Z0); GL = 0;
+    if (name === 'open') GL = 1;
+    else if (name === 'short') GL = -1;
+    else if (name === 'r100') GL = 1/3;
+    else if (name === 'r25') GL = -1/3;
+    else if (name === 'sec75'){ for (let i = 80; i < 160; i++) Z[i] = 75; }
+    else if (name === 'conn'){ for (let i = 96; i < 101; i++) Z[i] = 85; for (let i = 101; i < 106; i++) Z[i] = 30; }
+    else if (name === 'crush'){ for (let i = 140; i < 150; i++) Z[i] = 35; GL = 1; }
+  }
+  function reset(go){
+    profile(scen());
+    a = new Float64Array(N); b = new Float64Array(N); trace = []; step = 0; running = !!go;
+  }
+  function vs(k){ return Math.min(1, k / 6); }        // source step with a short rise
+  function tick(){
+    const na = new Float64Array(N), nb = new Float64Array(N);
+    const Zs = Z0, gs = (Zs - Z[0])/(Zs + Z[0]);
+    na[0] = vs(step) * Z[0]/(Zs + Z[0]) + gs * b[0];
+    for (let i = 0; i < N - 1; i++){
+      const g = (Z[i+1] - Z[i])/(Z[i+1] + Z[i]);
+      na[i+1] = (1 + g)*a[i] - g*b[i+1];
+      nb[i] = g*a[i] + (1 - g)*b[i+1];
+    }
+    nb[N-1] = GL * a[N-1];
+    a = na; b = nb; step++;
+    trace.push(a[0] + b[0]);
+  }
+  $('#tGo').onclick = () => reset(true);
+  $('#tSlow').onclick = () => { slow = !slow; $('#tSlow').textContent = 'Slow motion: ' + (slow ? 'on' : 'off'); $('#tSlow').classList.toggle('on', slow); };
+  reset(true);
+  const TMAX = 2*N + 40;
+  let acc = 0;
+  Plot.animate($('#cvTdr'), (ctx, W, H, t, dt) => {
+    if (running){
+      acc += dt * (slow ? 60 : 260);
+      while (acc >= 1 && step < TMAX){ tick(); acc -= 1; }
+      if (step >= TMAX) running = false;
+      if (Plot.reduced) while (step < TMAX) tick();
+    }
+    const L = 56, R = W - 14;
+    const X = lin(0, N, L, R);
+    // panel 1: impedance profile
+    let y0 = 8;
+    text(ctx, 'impedance along the line', L, y0 + 6, {bold:true, color: col.ink2});
+    const pz = {t: y0 + 18, b: y0 + 70};
+    const Yz = lin(20, 100, pz.b, pz.t);
+    ctx.fillStyle = col.sunk; rrect(ctx, L, pz.t, R - L, pz.b - pz.t, 6); ctx.fill();
+    line(ctx, [[L, Yz(50)], [R, Yz(50)]], col.line2, 1, [3,3]);
+    const zp = []; for (let i = 0; i < N; i++){ zp.push([X(i), Yz(Z[i])]); zp.push([X(i+1), Yz(Z[i])]); }
+    line(ctx, zp, col.c3, 2.5);
+    text(ctx, GL === 1 ? 'open' : GL === -1 ? 'short' : GL ? (GL > 0 ? '100 Ω' : '25 Ω') : '50 Ω load', R, pz.t - 8, {align:'right', color: col.muted});
+    text(ctx, '50 Ω', L - 4, Yz(50), {align:'right', color: col.muted});
+    // panel 2: voltage snapshot
+    y0 = pz.b + 18;
+    text(ctx, 'voltage on the line right now', L, y0 + 6, {bold:true, color: col.ink2});
+    const pv = {t: y0 + 18, b: y0 + 98};
+    const Yv = lin(0, 1.05, pv.b, pv.t);
+    line(ctx, [[L, pv.b], [R, pv.b]], col.line2, 1);
+    line(ctx, [[L, Yv(.5)], [R, Yv(.5)]], col.line2, 1, [3,3]);
+    const vp = []; for (let i = 0; i < N; i++) vp.push([X(i + .5), Yv(Math.max(-0.05, a[i] + b[i]))]);
+    ctx.save(); ctx.fillStyle = rgba(col.c1, .12); ctx.beginPath(); ctx.moveTo(L, pv.b); vp.forEach(p => ctx.lineTo(p[0], p[1])); ctx.lineTo(R, pv.b); ctx.fill(); ctx.restore();
+    line(ctx, vp, col.c1, 2.2);
+    text(ctx, 'V/2', L - 4, Yv(.5), {align:'right', color: col.muted});
+    // panel 3: TDR trace, converted to impedance, x axis as distance (round trip / 2)
+    y0 = pv.b + 22;
+    text(ctx, 'what the TDR records (impedance vs distance)', L, y0 + 6, {bold:true, color: col.ink2});
+    const pt = {l: L, r: R, t: y0 + 18, b: H - 26};
+    const Yt = lin(0, 160, pt.b, pt.t);
+    const Xt = lin(0, 2*N, L, R);
+    [0, 50, 100, 150].forEach(v => { line(ctx, [[L, Yt(v)], [R, Yt(v)]], col.line, 1); text(ctx, v + ' Ω', L - 4, Yt(v), {align:'right', color: col.muted}); });
+    [0, .25, .5, .75, 1].forEach(f => text(ctx, fmt(f,2) + ' m', Xt(2*N*f), pt.b + 12, {align:'center', color: col.muted}));
+    // skip the first few samples while the launched step is still rising
+    const tp = trace.slice(8).map((v, k) => {
+      const rho = v/0.5 - 1, z = rho >= 0.999 ? 1e9 : 50*(1 + rho)/(1 - rho);
+      return [Xt(k + 8), Yt(Math.max(0, Math.min(160, z)))];
+    });
+    if (tp.length) line(ctx, tp, col.c2, 2.6);
+    if (tp.length && tp[tp.length-1][1] <= Yt(159)) text(ctx, '→ ∞ (open)', Math.min(R - 70, tp[tp.length-1][0] + 6), Yt(150), {color: col.c2});
+  });
+})();
+
+/* ============ 6. Ripple ============ */
+(() => {
+  let s = {};
+  function upd(){
+    const L = +$('#pL').value / 100, r1 = +$('#p1').value, r2 = +$('#p2').value;
+    const tau = L / (0.70*C0), g1 = Math.pow(10, -r1/20), g2 = Math.pow(10, -r2/20);
+    s = {tau, g1, g2};
+    $('#pLv').textContent = Math.round(L*100) + ' cm'; $('#p1v').textContent = fmt(r1,3) + ' dB'; $('#p2v').textContent = fmt(r2,3) + ' dB';
+    $('#pTau').textContent = si(tau, 's'); $('#pDf').textContent = si(1/(2*tau), 'Hz');
+    $('#pW').textContent = fmt(-20*Math.log10(g1 + g2), 3) + ' dB';
+    wt.redraw(); wf.redraw();
+  }
+  const wt = Plot.widget($('#cvRipT'), (ctx, W, H) => {
+    const {tau, g1, g2} = s; if (!tau) return;
+    const P = {l:46, r:W-12, t:30, b:H-24}, tmax = 2*2*200/100/(0.7*C0);
+    const gmax = Math.max(0.12, Math.max(g1, g2)*1.35);
+    const X = lin(0, tmax, P.l, P.r), Y = lin(0, gmax, P.b, P.t);
+    axes(ctx, P, X, Y, {xt: ticks(0, tmax*1e9, 6).map(v => v*1e-9), xf: v => fmt(v*1e9,3) + ' ns', yt: ticks(0, gmax, 2), yf: v => fmt(v, 2)});
+    text(ctx, 'time domain: two echoes, height = |Γ|', P.l, 10, {bold:true, color: col.ink2});
+    [[0, g1, 'connector'], [2*tau, g2, 'load']].forEach(([tt, g, n]) => {
+      line(ctx, [[X(tt), Y(0)], [X(tt), Y(g)]], col.c2, 4);
+      dot(ctx, X(tt), Y(g), 4.5, col.c2);
+      text(ctx, n, X(tt) + 9, Y(g), {color: col.ink2});
+    });
+    const yb = Y(0) - 10;
+    line(ctx, [[X(0) + 3, yb], [X(2*tau) - 3, yb]], col.muted, 1.2, [3,3]);
+    if (X(2*tau) - X(0) > 40) text(ctx, '2τ', (X(0) + X(2*tau))/2, yb - 9, {align:'center', color: col.muted, mono:true});
+  });
+  const wf = Plot.widget($('#cvRipF'), (ctx, W, H) => {
+    const {tau, g1, g2} = s; if (!tau) return;
+    const P = {l:46, r:W-12, t:22, b:H-28}, fmax = 3e9;
+    const X = lin(0, fmax, P.l, P.r), Y = lin(45, 0, P.b, P.t);
+    axes(ctx, P, X, Y, {xt: [0, .5e9, 1e9, 1.5e9, 2e9, 2.5e9, 3e9], xf: v => fmt(v/1e9, 2) + ' GHz', yt: [0, 10, 20, 30, 40], yf: v => v + ' dB'});
+    text(ctx, 'frequency domain: return loss (bigger is better)', P.l, 10, {bold:true, color: col.ink2});
+    const pts = [];
+    for (let i = 0; i <= 900; i++){
+      const f = fmax*i/900, ph = -2*Math.PI*f*2*tau;
+      const re = g1 + g2*Math.cos(ph), im = g2*Math.sin(ph);
+      pts.push([X(f), Y(Math.min(45, -20*Math.log10(Math.max(1e-6, Math.hypot(re, im)))))]);
+    }
+    Plot.clip(ctx, P); line(ctx, pts, col.c1, 2.2); ctx.restore();
+    const df = 1/(2*tau);
+    if (df < fmax*0.7){
+      const y = Y(41);
+      line(ctx, [[X(df*0.5), y], [X(df*1.5), y]], col.c2, 1.5);
+      text(ctx, 'Δf = 1/(2τ) = ' + si(df, 'Hz'), X(df*1.5) + 6, y, {color: col.c2});
+    }
+  });
+  ['#pL','#p1','#p2'].forEach(id => $(id).addEventListener('input', upd));
+  upd();
+})();
+
+/* ============ 7. Microstrip loss by material ============ */
+(() => {
+  const mat = Plot.seg('#mMat', upd);
+  const h = 0.2e-3, Z0 = 50, mu0 = 4e-7*Math.PI, sigma = 5.8e7;
+  function geom(er){
+    const A = Z0/60*Math.sqrt((er+1)/2) + (er-1)/(er+1)*(0.23 + 0.11/er);
+    let wh = 8*Math.exp(A)/(Math.exp(2*A) - 2);
+    if (wh > 2){ const B = 377*Math.PI/(2*Z0*Math.sqrt(er)); wh = 2/Math.PI*(B - 1 - Math.log(2*B - 1) + (er-1)/(2*er)*(Math.log(B-1) + 0.39 - 0.61/er)); }
+    const w = wh*h, ee = (er+1)/2 + (er-1)/2/Math.sqrt(1 + 12/wh);
+    return {w, ee};
+  }
+  function loss(f, er, df, g){
+    const lam0 = C0/f;
+    const ad = 27.3 * (er*(g.ee - 1))/(Math.sqrt(g.ee)*(er - 1)) * df / lam0;      // dB/m
+    const Rs = Math.sqrt(Math.PI*f*mu0/sigma);
+    const ac = 8.686 * Rs/(Z0*g.w);                                                 // dB/m (simple estimate)
+    return {ad: ad/10, ac: ac/10};                                                   // per 10 cm
+  }
+  let s = {};
+  function upd(){
+    const [er, df] = mat().split(',').map(Number), f = Math.pow(10, +$('#mF').value), g = geom(er), L = loss(f, er, df, g);
+    s = {er, df, f, g};
+    $('#mFv').textContent = si(f, 'Hz');
+    $('#mLoss').textContent = fmt(L.ad + L.ac, 3) + ' dB'; $('#mDiel').textContent = Math.round(100*L.ad/(L.ad + L.ac)) + ' %';
+    $('#mLam').textContent = si(C0/(f*Math.sqrt(g.ee)), 'm'); $('#mW').textContent = si(g.w, 'm');
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvMat'), (ctx, W, H) => {
+    const {er, df, f, g} = s; if (!er) return;
+    const P = {l:52, r:W-12, t:14, b:H-40};
+    const X = log(1e8, 1e10, P.l, P.r);
+    const fs = []; for (let i = 0; i <= 200; i++) fs.push(Math.pow(10, 8 + 2*i/200));
+    const Ls = fs.map(x => loss(x, er, df, g));
+    const ymax = Math.max(0.5, Math.ceil(Math.max(...Ls.map(l => l.ad + l.ac))*2)/2);
+    const Y = lin(0, ymax, P.b, P.t);
+    axes(ctx, P, X, Y, {xt: [1e8, 3e8, 1e9, 3e9, 1e10], xf: v => si(v, 'Hz', 2), xgrid: true, yt: ticks(0, ymax, 5), yl: 'dB per 10 cm', xl: 'frequency'});
+    [[915e6, '915 MHz'], [2.4e9, '2.4 GHz'], [5.8e9, '5.8 GHz']].forEach(([x, n]) => { line(ctx, [[X(x), P.t], [X(x), P.b]], rgba(col.ink2, .25), 1, [2,3]); text(ctx, n, X(x) + 4, P.t + 8, {color: col.muted}); });
+    line(ctx, fs.map((x, i) => [X(x), Y(Ls[i].ac)]), col.c4, 1.8, [6,4]);
+    line(ctx, fs.map((x, i) => [X(x), Y(Ls[i].ad)]), col.c2, 1.8, [6,4]);
+    line(ctx, fs.map((x, i) => [X(x), Y(Ls[i].ad + Ls[i].ac)]), col.c1, 2.8);
+    const L = loss(f, er, df, g);
+    dot(ctx, X(f), Y(L.ad + L.ac), 6, col.c1); dot(ctx, X(f), Y(L.ad + L.ac), 2.5, col.raise);
+  });
+  $('#mF').addEventListener('input', upd);
+  upd();
+})();
+
+/* ============ 8. Polarization ============ */
+(() => {
+  const mode = Plot.seg('#oM', upd);
+  function upd(){
+    const a = +$('#oA').value, circ = mode() === 'circ';
+    const Ld = circ ? 3.01 : Math.min(40, -20*Math.log10(Math.max(1e-6, Math.abs(Math.cos(a*Math.PI/180)))));
+    $('#oAv').textContent = a + '°';
+    $('#oL').textContent = (Ld >= 40 ? '≥ 40' : fmt(Ld, 3)) + ' dB';
+    $('#oP').textContent = fmt(100*Math.pow(10, -Ld/10), 3) + ' %';
+  }
+  Plot.animate($('#cvPol'), (ctx, W, H, t) => {
+    const a = +$('#oA').value * Math.PI/180, circ = mode() === 'circ';
+    const cy = H/2, xr = W*0.25, xg = W*0.75, r = Math.min(70, H/2 - 24);
+    const osc = Math.sin(2*Math.PI*t/1.4);
+    // rocket antenna: a dipole tilted by a, its field oscillates along it
+    const ux = Math.sin(a), uy = -Math.cos(a);
+    ctx.fillStyle = col.sunk; ctx.beginPath(); ctx.arc(xr, cy, r + 12, 0, 2*Math.PI); ctx.fill();
+    ctx.lineCap = 'round';
+    line(ctx, [[xr - ux*r, cy - uy*r], [xr - ux*6, cy - uy*6]], col.ink2, 5); line(ctx, [[xr + ux*6, cy + uy*6], [xr + ux*r, cy + uy*r]], col.ink2, 5);
+    const e = osc * r * 0.85;
+    line(ctx, [[xr, cy], [xr + ux*e, cy + uy*e]], col.c2, 3.5); dot(ctx, xr + ux*e, cy + uy*e, 5, col.c2);
+    text(ctx, 'rocket antenna (tilted ' + Math.round(a*180/Math.PI) + '°)', xr, H - 8, {align:'center', color: col.ink2});
+    // ground antenna
+    ctx.fillStyle = col.sunk; ctx.beginPath(); ctx.arc(xg, cy, r + 12, 0, 2*Math.PI); ctx.fill();
+    if (!circ){
+      line(ctx, [[xg, cy - r], [xg, cy - 6]], col.ink2, 5); line(ctx, [[xg, cy + 6], [xg, cy + r]], col.ink2, 5);
+      // incoming field and its projection onto the vertical antenna
+      line(ctx, [[xg, cy], [xg + ux*e, cy + uy*e]], rgba(col.c2, .35), 3);
+      line(ctx, [[xg + ux*e, cy + uy*e], [xg, cy + uy*e]], rgba(col.ink2, .5), 1, [3,3]);
+      line(ctx, [[xg, cy], [xg, cy + uy*e]], col.c1, 4); dot(ctx, xg, cy + uy*e, 5, col.c1);
+    } else {
+      // crossed dipoles fed 90° apart
+      line(ctx, [[xg, cy - r], [xg, cy + r]], col.ink2, 4); line(ctx, [[xg - r, cy], [xg + r, cy]], col.ink2, 4);
+      const ang = 2*Math.PI*t/1.4;
+      ctx.save(); ctx.strokeStyle = rgba(col.c1, .35); ctx.setLineDash([4,4]); ctx.beginPath(); ctx.arc(xg, cy, r*0.85/Math.SQRT2, 0, 2*Math.PI); ctx.stroke(); ctx.restore();
+      line(ctx, [[xg, cy], [xg + ux*e, cy + uy*e]], rgba(col.c2, .35), 3);
+      const rr = r*0.85/Math.SQRT2;
+      line(ctx, [[xg, cy], [xg + rr*Math.cos(ang), cy + rr*Math.sin(ang)]], col.c1, 4); dot(ctx, xg + rr*Math.cos(ang), cy + rr*Math.sin(ang), 5, col.c1);
+    }
+    text(ctx, circ ? 'circular ground antenna' : 'vertical ground antenna', xg, H - 8, {align:'center', color: col.ink2});
+    text(ctx, '→', W/2, cy, {align:'center', color: col.muted, bold:true});
+  });
+  $('#oA').addEventListener('input', upd);
+  upd();
+})();
+</script>
+</body>
+</html>
