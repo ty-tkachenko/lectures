@@ -23,10 +23,10 @@ What current and voltage actually are · ground is a reference, not a place · O
 Kirchhoff's laws · series and parallel · the voltage divider (battery-voltage monitoring) · loading: why your divider reads wrong · Thévenin equivalents · superposition · reading schematics and datasheets
 
 **[Module 3: Capacitors & Inductors](03_Capacitors_Inductors/)**
-Storing energy in fields · RC and RL time constants · charging, discharging, and inrush current · inductive kickback, and why a solenoid valve's coil needs a flyback diode · real capacitors: ESR, ESL and self-resonance, DC-bias derating, tolerance · real inductors: DCR, saturation and current ratings · decoupling capacitors, the first look · the oscilloscope: triggering, probes and the ground-lead trap
+Storing energy in fields · RC and RL time constants · charging, discharging, and inrush current · inductive kickback, and why a solenoid valve's coil needs a flyback diode · real capacitors: ESR, ESL, DC-bias derating, tolerance · real inductors: DCR, saturation and current ratings · decoupling capacitors in the time domain · the oscilloscope: triggering, probes and the ground-lead trap
 
 **[Module 4: AC Signals & Frequency Response](04_AC_and_Frequency/)**
-Sinusoids, amplitude, frequency, phase · RMS · impedance of R, L and C · RC low-pass and high-pass filters · Bode plots and decibels · resonance · *the bridge to the RF notes*
+Sinusoids, amplitude, frequency, phase · RMS · impedance of R, L and C · a capacitor's self-resonance · RC low-pass and high-pass filters · Bode plots and decibels · resonance · *the bridge to the RF notes*
 
 ### Part II: Moving Power: Driving Actuators
 

@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>AC Signals &amp; Frequency Response · EE 4</title>
 <meta name="description" content="EE Fundamentals module 4: Impedance, RC filters, Bode plots and decibels. In development.">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
 <link rel="stylesheet" href="../../assets/site.css">
 <script src="../../assets/course.js"></script>
 <script src="../../assets/site.js"></script>
@@ -23,7 +26,34 @@
 
 <section class="sec" id="status" data-nonum data-short="In development">
 <h2>In development</h2>
-<p>This module hasn't been written yet. The other modules are listed in the strip at the top of the page, and the links below go to the neighbouring ones.</p>
+<p>The rest of this module hasn't been written yet. The section below was moved here from Module 3 so that module's decoupling discussion can stay in the time domain. It will be rewritten into the impedance and resonance sections when this module is written in full.</p>
+</section>
+
+<section class="sec" id="srf-draft" data-short="Moved: self-resonance">
+<h2>Self-resonance, drafted from Module 3</h2>
+<div class="note warn">
+  <span class="ni">!</span>
+  <div><span class="nt">Moved, not yet integrated</span>This is the impedance-curve and self-resonance material taken out of Module 3. The frequency-domain figure that used to sit under Module 3's decoupling plot is not reproduced here; Module 4's impedance widget replaces it. The explanation and the question are kept so the content is not lost.</div>
+</div>
+<p>A bigger capacitor isn't automatically better, because a real capacitor is a capacitor in series with its ESR and its ESL. At low frequency the capacitance dominates and the impedance falls as frequency rises. At the <strong>self-resonant frequency</strong> (SRF) the capacitance and the ESL cancel, leaving only the ESR. Above it, the ESL dominates and the part behaves as an inductor:</p>
+<div class="eq">$$f_\text{SRF} = \frac{1}{2\pi\sqrt{L_\text{ESL}\,C}}$$</div>
+<p>A chip's current bursts have most of their energy at tens to hundreds of megahertz, usually above the SRF of every capacitor on the board. Up there, what decides how well a capacitor decouples is its inductance: its own ESL, which grows with package size, plus the trace and vias connecting it to the pin. That's why a 100 nF capacitor in a small package right at the pin beats a 10 µF part in a larger package, and why a capacitor a centimetre away does little for fast edges whatever its value. Larger capacitors still have a job: they cover the slower, larger demands that the small ones run out of charge for, so boards use both. Combining values brings its own problems (parallel capacitors can resonate with each other), which Module 12 covers along with placement.</p>
+<p>The mirror image for an inductor: the turns of a winding have capacitance between them. Above its self-resonant frequency an inductor behaves as a capacitor.</p>
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">Swapping in a bigger decoupling capacitor</span></summary>
+  <div class="eb">
+    <p>A chip has a 100 nF 0402 decoupling capacitor right at its power pin. To "add more capacitance", someone replaces it with a 10 µF 1206 in the same spot.</p>
+    <div class="choice"><p>Does the chip's supply get cleaner during its fast current bursts?</p>
+    <ol class="opts">
+      <li>Much cleaner: it's a hundred times the capacitance.<div class="why">At the frequencies in a fast edge, capacitance isn't what limits a decoupling capacitor.</div></li>
+      <li data-correct>No better, and probably worse: above their self-resonant frequency both parts act as inductors, and the larger 1206 has more inductance.<div class="why">For fast edges, the inductance of the part and its connection decides.</div></li>
+      <li>Exactly the same, because they're in the same position.<div class="why">Same position, but not the same package.</div></li>
+      <li>Better only if it's an electrolytic.<div class="why">Electrolytics have even more inductance.</div></li>
+    </ol>
+    <div class="solution"><p>A chip's current bursts have most of their energy at tens to hundreds of megahertz, above the self-resonant frequency of both capacitors. There, each behaves as a small inductor: its ESL plus the trace and vias to the pin. The 1206 has more ESL than the 0402, so it does slightly worse on fast edges, despite its hundred times larger value. The 10 µF is still useful, for slower demands, alongside the 100 nF, not instead of it. Module 3's time-domain figure shows the same comparison as a deeper dip; this section is the frequency reason.</p></div>
+    </div>
+  </div>
+</details>
 </section>
 
 <nav class="pager"></nav>

@@ -32,9 +32,9 @@
       <li>RC and RL time constants: how fast things charge, discharge and settle.</li>
       <li>Inrush current, and why plugging in a battery can spark.</li>
       <li>Inductive kickback, and the diode that stops it destroying the switch.</li>
-      <li>Real capacitors: ESR, ESL and self-resonance, tolerance, voltage ratings, and the capacitance ceramics lose under DC bias.</li>
-      <li>Real inductors: winding resistance, saturation, current ratings and self-resonance.</li>
-      <li>Decoupling capacitors, and a first look at the oscilloscope and its probes.</li>
+      <li>Real capacitors: ESR, ESL, tolerance, voltage ratings, and the capacitance ceramics lose under DC bias.</li>
+      <li>Real inductors: winding resistance, saturation and current ratings.</li>
+      <li>Decoupling in the time domain: trace inductance drops the supply, and a local capacitor supplies the burst. Then a first look at the oscilloscope and its probes.</li>
     </ul>
   </div>
   <div class="video" data-video="lecture" id="lecture">
@@ -48,7 +48,7 @@
         <li data-t="14:30">Inductive kickback and the flyback diode</li>
         <li data-t="18:30">Real capacitors and DC-bias derating</li>
         <li data-t="21:30">Real inductors and saturation</li>
-        <li data-t="24:00">Decoupling capacitors and self-resonance</li>
+        <li data-t="24:00">Decoupling: trace inductance and a local capacitor</li>
         <li data-t="27:30">The oscilloscope and probe grounding</li>
       </ol>
     </div>
@@ -361,7 +361,7 @@
   <li><strong>Voltage rating.</strong> The most voltage it can safely have across it. Exceed it and the insulator breaks down. Derate as in Module 1: electrolytics and tantalums especially should run well below their rating.</li>
   <li><strong>Tolerance.</strong> Ceramic capacitors are commonly ±10 % or ±20 %, electrolytics often −20 % to +80 %. Don't design anything that depends on the exact value.</li>
   <li><strong>ESR</strong> (equivalent series resistance). Every capacitor behaves as if it had a small resistor in series with it. ESR limits how fast it can deliver current and heats the part when ripple current flows through it.</li>
-  <li><strong>ESL</strong> (equivalent series inductance). A small series inductance from the part's leads and body. Together with the capacitance it sets the <strong>self-resonant frequency</strong>, above which the capacitor behaves as an inductor. It matters most for decoupling (Section 8).</li>
+  <li><strong>ESL</strong> (equivalent series inductance). A small series inductance from the part's leads and body. A fast current through it drops voltage, \(v = L\,di/dt\), which is why a decoupling capacitor has to sit close to the pin it serves (Section 8). How that inductance makes the part stop behaving as a capacitor above some frequency is Module 4.</li>
   <li><strong>Polarity.</strong> Electrolytic and tantalum capacitors only work one way round. Reversed, they fail, sometimes violently; tantalums can catch fire.</li>
 </ul>
 <div class="tablewrap"><table>
@@ -424,7 +424,7 @@
   <li><strong>DC resistance (DCR).</strong> The resistance of the winding. It wastes power as \(I^2R\) and sets the steady current in a coil driven from a fixed voltage: the 24 Ω of the solenoid in Section 5 is its DCR.</li>
   <li><strong>Saturation current (I<sub>sat</sub>).</strong> A magnetic core can only carry so much magnetic flux. As the current approaches I<sub>sat</sub>, the core saturates and the inductance falls, often defined on the datasheet as the current at which L has dropped by 20 to 30 %. Past that point the current rises much faster than \(V/L\) predicts.</li>
   <li><strong>Rated (thermal) current (I<sub>rms</sub>).</strong> The current that heats the part by a stated amount, typically 40 °C, through its DCR. It's a separate limit from I<sub>sat</sub>, and either one can be the lower of the two.</li>
-  <li><strong>Self-resonant frequency.</strong> The turns of the winding have capacitance between them. Above its SRF an inductor behaves as a capacitor, the mirror image of a capacitor's ESL.</li>
+  <li><strong>Winding capacitance.</strong> The turns have capacitance between them. Together with the inductance that sets a frequency where the two cancel; Module 4 uses it as the example of resonance. Below that frequency the part is still the inductor described here.</li>
   <li><strong>Tolerance and shielding.</strong> ±20 % is common. Unshielded inductors spread their magnetic field into nearby circuits; shielded ones keep most of it inside the part.</li>
 </ul>
 <p>The core material decides how saturation happens. Air-core inductors never saturate but only reach small values. Ferrite cores give high inductance in a small part but saturate abruptly. Powdered-iron and metal-composite cores saturate gradually, losing inductance steadily as the current rises.</p>
@@ -481,50 +481,49 @@
 <p>A <strong>decoupling capacitor</strong> placed right next to the chip's power pin supplies those bursts locally, over a path with very little inductance, and recharges from the supply between bursts. The usual starting point is a 100 nF ceramic at every power pin, as close as possible, plus a few microfarads of bulk capacitance nearby. Module 12 covers placement in detail.</p>
 
 <div class="widget wide" id="w-dec">
-  <div class="wh"><span class="tag">Interactive</span><b>A chip's supply voltage during a current burst, and the decoupling capacitor's impedance</b></div>
+  <div class="wh"><span class="tag">Interactive</span><b>A chip's supply voltage during a current burst</b></div>
   <div class="wb wcols">
     <div>
       <div class="ctrl"><label>Decoupling capacitor</label><div class="seg" id="dC"><button type="button" data-v="none">None</button><button type="button" data-v="10n">10 nF 0402</button><button type="button" data-v="100n" class="on">100 nF 0402</button><button type="button" data-v="1u">1 µF 0603</button><button type="button" data-v="10u">10 µF 1206</button><button type="button" data-v="100u">100 µF electrolytic</button></div></div>
       <div class="ctrl"><label>Capacitor placement</label><div class="seg" id="dP"><button type="button" data-v="0.5e-9" class="on">At the pin</button><button type="button" data-v="1e-8">1 cm away</button></div></div>
       <div class="ctrl"><label>Supply trace to the chip</label><div class="seg" id="dL"><button type="button" data-v="5e-9">Short (5 nH)</button><button type="button" data-v="5e-8" class="on">Long (50 nH)</button></div></div>
       <div class="ctrl"><label for="dI">Burst current <b id="dIv"></b></label><input id="dI" type="range" min="50" max="500" step="10" value="200"></div>
-      <p class="small">3.3 V supply, a 30 ns burst with 2 ns edges. Each capacitor has a typical ESR and ESL for its package; placement adds the inductance of the trace and vias to the pin. Values are representative, chosen to show the effects clearly.</p>
+      <p class="small">3.3 V supply, a 30 ns burst with 2 ns edges. Each capacitor has a typical ESR and ESL for its package; placement adds the inductance of the trace and vias between the capacitor and the pin. Values are representative, chosen to show the effects clearly. The frequency picture, including self-resonance, is Module 4.</p>
     </div>
     <div>
-      <canvas id="cvDec" style="height:440px" aria-label="Top: the chip's supply voltage and current burst against time. Bottom: impedance against frequency for each capacitor, with the selected one highlighted and its self-resonant frequency marked."></canvas>
-      <div class="legend"><span style="--c:var(--c1)">supply voltage at the chip</span><span style="--c:var(--c2)">chip current</span><span style="--c:var(--c3)">capacitor impedance</span></div>
+      <canvas id="cvDec" style="height:280px" aria-label="The chip's supply voltage and its current burst against time"></canvas>
+      <div class="legend"><span style="--c:var(--c1)">supply voltage at the chip</span><span style="--c:var(--c2)">chip current</span></div>
       <div class="readout">
         <div class="stat"><div class="k">Lowest voltage</div><div class="v" id="dMin"></div></div>
         <div class="stat" id="dDS"><div class="k">Worst dip</div><div class="v" id="dD"></div></div>
-        <div class="stat"><div class="k">Self-resonance</div><div class="v" id="dSRF"></div></div>
+        <div class="stat"><div class="k">Inductance in the burst's path</div><div class="v" id="dLpath"></div></div>
       </div>
       <div class="verdict" id="dVerdict"></div>
     </div>
   </div>
   <div class="try"><b>Things to try</b><ol>
-    <li>Select None. How far does the supply dip, and what happens after the burst ends?</li>
-    <li>Step through the capacitors from 10 nF to 100 µF. Which gives the smallest dip? Look at where each one's impedance curve bottoms out, and how high each sits at 100 MHz.</li>
-    <li>With 100 nF selected, move it 1 cm away. How much of the benefit is left?</li>
+    <li>Select None. The burst has to come through the supply trace. How far does the pin voltage dip?</li>
+    <li>Add the 100 nF capacitor at the pin. The dip shrinks because that capacitor, not the distant supply, provides the charge.</li>
+    <li>Move that capacitor 1 cm away, then try the 100 µF electrolytic at the pin. In both cases more inductance sits in the path the burst has to take.</li>
   </ol></div>
 </div>
 
-<p>The ringing with no capacitor is the trace's inductance and the chip's own small capacitance trading energy back and forth. Adding the decoupling capacitor gives the burst a nearby source, so the trace only has to supply the slow average.</p>
-<p>A bigger capacitor isn't automatically better, because a real capacitor is a capacitor in series with its ESR and its ESL. At low frequency the capacitance dominates and the impedance falls as frequency rises. At the <strong>self-resonant frequency</strong> (SRF) the capacitance and the ESL cancel, leaving only the ESR. Above it, the ESL dominates and the part behaves as an inductor:</p>
-<div class="eq">$$f_\text{SRF} = \frac{1}{2\pi\sqrt{L_\text{ESL}\,C}}$$</div>
-<p>A chip's current bursts have most of their energy at tens to hundreds of megahertz, usually above the SRF of every capacitor on the board. Up there, what decides how well a capacitor decouples is its inductance: its own ESL, which grows with package size, plus the trace and vias connecting it to the pin. That's why a 100 nF capacitor in a small package right at the pin beats a 10 µF part in a larger package, and why a capacitor a centimetre away does little for fast edges whatever its value. Larger capacitors still have a job: they cover the slower, larger demands that the small ones run out of charge for, so boards use both. Combining values brings its own problems (parallel capacitors can resonate with each other), which Module 12 covers along with placement.</p>
+<p>With no local capacitor, the burst current has to change in the supply trace. From \(v = L\,di/dt\), that inductance drops the voltage at the pin for the length of the edge. The ringing afterwards is the trace inductance and the chip's own small capacitance trading the energy back and forth.</p>
+<p>A capacitor next to the pin already holds charge at the supply voltage. The burst takes that charge over a few millimetres, so the long trace is hardly in the path. Between bursts the supply puts the charge back slowly, which the trace can do. Move the same capacitor a centimetre away and that centimetre's inductance sits between the stored charge and the pin: the capacitor still has the charge, and the pin still sees \(L\,di/dt\).</p>
+<p>A physically larger part has more inductance in its own body and leads, so the fast edge drops voltage there too, even though the part stores more charge for a slower demand. That is why the usual starting point is a small capacitor right at the pin, with a larger one nearby for the slower current. A 10 nF part at the pin runs out of charge during a 30 ns burst (\(\Delta V \approx It/C\)), which is the other way a decoupling capacitor fails, still in the time domain. How a capacitor's own inductance makes it stop acting as a capacitor above some frequency, and the impedance curves that show it, are Module 4. Parallel capacitors can also resonate with each other; Module 12 covers that with placement.</p>
 
 <details class="exercise">
-  <summary><span class="ek">Design exercise</span><span class="et">Swapping in a bigger decoupling capacitor</span></summary>
+  <summary><span class="ek">Design exercise</span><span class="et">Moving the decoupling capacitor a centimetre away</span></summary>
   <div class="eb">
-    <p>A chip has a 100 nF 0402 decoupling capacitor right at its power pin. To "add more capacitance", someone replaces it with a 10 µF 1206 in the same spot.</p>
-    <div class="choice"><p>Does the chip's supply get cleaner during its fast current bursts?</p>
+    <p>A 100 nF capacitor sits beside a chip's power pin and keeps the supply dip small during the chip's fast current bursts. To make room, someone moves that same capacitor 1 cm away along the supply trace.</p>
+    <div class="choice"><p>What happens to the dip?</p>
     <ol class="opts">
-      <li>Much cleaner: it's a hundred times the capacitance.<div class="why">At the frequencies in a fast edge, capacitance isn't what limits a decoupling capacitor.</div></li>
-      <li data-correct>No better, and probably worse: above their self-resonant frequency both parts act as inductors, and the larger 1206 has more inductance.<div class="why">For fast edges, the inductance of the part and its connection decides.</div></li>
-      <li>Exactly the same, because they're in the same position.<div class="why">Same position, but not the same package.</div></li>
-      <li>Better only if it's an electrolytic.<div class="why">Electrolytics have even more inductance.</div></li>
+      <li>It gets smaller: a centimetre of trace adds capacitance.<div class="why">A centimetre of trace is about 10 nH of inductance. Its capacitance is negligible next to 100 nF.</div></li>
+      <li>Nothing: the capacitance did not change.<div class="why">The stored charge is the same, but the path from that charge to the pin now includes the trace inductance.</div></li>
+      <li data-correct>It gets worse. The capacitor still supplies the charge, but the current has to change in the inductance of that centimetre, and \(v = L\,di/dt\) appears between the capacitor and the pin.<div class="why">Decoupling fails when inductance sits in the path of the burst, even if the capacitor value is untouched.</div></li>
+      <li>It gets worse only for an electrolytic; a ceramic is immune to where it sits.<div class="why">Any capacitor moved away puts inductance between its charge and the pin. A larger package adds still more inductance of its own.</div></li>
     </ol>
-    <div class="solution"><p>A chip's current bursts have most of their energy at tens to hundreds of megahertz, above the self-resonant frequency of both capacitors. There, each behaves as a small inductor: its ESL plus the trace and vias to the pin. The 1206 has more ESL than the 0402, so it does slightly worse on fast edges, despite its hundred times larger value. Try it in the figure above. The 10 µF is still useful, for slower demands, alongside the 100 nF, not instead of it.</p></div>
+    <div class="solution"><p>The burst lasts tens of nanoseconds. The charge that supplies it has to come from somewhere close, because inductance will not pass a fast change in current without dropping voltage. A centimetre of trace is roughly 10 nH. For a 200 mA edge in 2 ns, \(L\,\Delta i/\Delta t = 10\,\text{nH} \times 0.2\,\text{A} / 2\,\text{ns} = 1\,\text{V}\). The figure's dip is smaller than that bare estimate, because the edge is not a pure step into that inductance alone, but moving the 100 nF part from the pin to 1 cm away makes the dip several times worse. The value of the capacitor did not change. Its location did.</p></div>
     </div>
   </div>
 </details>
@@ -706,7 +705,7 @@
   <li>Interrupting an inductor's current produces a large voltage spike. Put a flyback diode across every relay, solenoid and motor coil you switch.</li>
   <li>Real capacitors have tolerance, ESR, a voltage rating and, for X5R and X7R ceramics, a capacitance that shrinks with DC voltage.</li>
   <li>Real inductors have winding resistance, a saturation current beyond which their inductance collapses, and a thermal current rating. Keep peak current below I<sub>sat</sub>.</li>
-  <li>Every capacitor has a self-resonant frequency, above which it acts as an inductor. For decoupling fast edges, low inductance (small package, right at the pin) matters more than a large value.</li>
+  <li>A decoupling capacitor next to a chip supplies the current burst locally. Inductance in that path, a long trace or a capacitor placed away from the pin, is what makes the supply dip.</li>
   <li>Set the scope for the probe you're using, clip ground only to ground, and use the ground spring for fast edges.</li>
 </ol>
 <div class="cheat">
@@ -716,7 +715,7 @@
   <div><b>Charging</b>\(v = V(1 - e^{-t/\tau})\)<br><span class="small">discharging: \(v = V e^{-t/\tau}\)</span></div>
   <div><b>Hold-up and droop</b>\(\Delta V = I\,\Delta t / C\)</div>
   <div><b>Inrush</b>\(I_\text{peak} \approx V / R_\text{path}\)</div>
-  <div><b>Self-resonance</b>\(f = 1/(2\pi\sqrt{LC})\)<br><span class="small">capacitor above SRF: an inductor</span></div>
+  <div><b>Decoupling</b>local C supplies the burst<br><span class="small">dip from \(v = L\,di/dt\) in the path</span></div>
   <div><b>Inductor ramp</b>\(\Delta i = V\,\Delta t / L\)<br><span class="small">keep the peak below I<sub>sat</sub></span></div>
 </div>
 <h3>Further reading</h3>
@@ -916,7 +915,7 @@ function timeAxis(t0, t1, l, r){
 
 /* ============ 4. Decoupling: supply at a chip during a current burst ============ */
 (() => {
-  // capacitor options: C, ESR, ESL (typical for the package)
+  // capacitor options: C, ESR, ESL (typical for the package). Frequency behaviour is Module 4.
   const CAPS = {
     none: null,
     '10n':  {C: 1e-8, r: 0.05,  l: 0.4e-9, name: '10 nF 0402'},
@@ -929,7 +928,6 @@ function timeAxis(t0, t1, l, r){
   const VS = 3.3, RS = 0.2, CP = 2e-9, RP = 1;            // supply path R; chip's own capacitance and its loss
   const T = 150e-9, B0 = 30e-9, B1 = 60e-9, EDGE = 2e-9, DT = 0.005e-9;
   const iload = (t, A) => t < B0 ? 0 : t < B0 + EDGE ? A*(t - B0)/EDGE : t < B1 ? A : t < B1 + EDGE ? A*(1 - (t - B1)/EDGE) : 0;
-  const zmag = (c, Lm, f) => { const w = 2*Math.PI*f; return Math.hypot(c.r, w*(c.l + Lm) - 1/(w*c.C)); };
   let s = {};
   function simulate(cap, Lm, Lf, A){
     // states: supply-path current iL, decoupling-cap branch current iC and voltage vC, chip capacitance voltage vp;
@@ -950,24 +948,27 @@ function timeAxis(t0, t1, l, r){
   function upd(){
     const key = capSel(), cap = CAPS[key], Lm = +pSel(), Lf = +lSel(), A = +$('#dI').value/1000;
     const r = simulate(cap, Lm, Lf, A);
-    const srf = cap ? 1/(2*Math.PI*Math.sqrt((cap.l + Lm)*cap.C)) : 0;
-    s = {key, cap, Lm, Lf, A, srf, ...r};
+    const Lpath = cap ? cap.l + Lm : Lf;
+    s = {key, cap, Lm, Lf, A, Lpath, ...r};
     $('#dIv').textContent = Math.round(A*1000) + ' mA';
     const dip = VS - r.vmin;
     $('#dMin').textContent = si(r.vmin, 'V'); $('#dD').textContent = si(dip, 'V') + ' (' + fmt(100*dip/VS, 2) + ' %)';
-    $('#dSRF').textContent = cap ? si(srf, 'Hz') : '–';
+    $('#dLpath').textContent = si(Lpath, 'H');
     $('#dDS').className = 'stat ' + (dip > 0.33 ? 'bad' : dip > 0.165 ? 'warn' : '');
     const v = $('#dVerdict');
-    const why = cap ? ` This capacitor resonates at ${si(srf, 'Hz')}; above that it behaves as ${si(cap.l + Lm, 'H')} of inductance (its ESL${Lm > 1e-9 ? ' plus the long connection to the pin' : ' plus its connection'}), and the burst's edges are mostly above it.` : '';
+    const why = cap
+      ? (Lm > 1e-9
+          ? ` The capacitor still holds the charge, but ${si(Lm, 'H')} of connection sits between that charge and the pin, so part of the dip is L di/dt on the way.`
+          : ` The capacitor supplies the burst through only ${si(cap.l + Lm, 'H')}, its own inductance plus a short connection. The supply trace refills it slowly afterwards.`)
+      : ` With no local capacitor the whole burst comes through the supply trace's ${si(Lf, 'H')}, and v = L di/dt drops the pin for the length of the edge.`;
     if (dip > 0.33) setVerdict(v, 'bad', `<b>A dip of ${fmt(100*dip/VS, 2)} %.</b> Many chips tolerate only ±5 to ±10 % on their supply. This one could reset, or its outputs and any analog readings will be disturbed.${why}`);
     else if (dip > 0.165) setVerdict(v, 'warn', `<b>Within limits, but noisy.</b> A ${si(dip, 'V')} dip probably won't reset anything, but the noise couples into everything that shares this supply.${why}`);
     else setVerdict(v, 'ok', `<b>Clean.</b> The supply dips only ${si(dip, 'V')}.${why}`);
     w.redraw();
   }
   const w = Plot.widget($('#cvDec'), (ctx, W, H) => {
-    const {out, key, cap, Lm, srf} = s; if (!out) return;
-    // top: supply voltage and current against time
-    const P = {l: 56, r: W - 50, t: 14, b: H*0.46};
+    const {out} = s; if (!out) return;
+    const P = {l: 56, r: W - 50, t: 14, b: H - 42};
     const X = Plot.lin(0, T, P.l, P.r), Y = Plot.lin(1.6, 4.8, P.b, P.t), Yi = Plot.lin(0, 0.6, P.b, P.t);
     Plot.axes(ctx, P, X, Y, {xt: Plot.ticks(0, T, 5), yt: [2, 2.5, 3, 3.3, 3.5, 4, 4.5], xl: 'time', yl: 'supply (V)', xf: t => si(t, 's').replace(' ', ' '), yf: t => fmt(t, 2)});
     [0, 0.2, 0.4, 0.6].forEach(t => Plot.text(ctx, si(t, 'A').replace(' ', ''), P.r + 6, Yi(t), {color: col.c2}));
@@ -977,26 +978,6 @@ function timeAxis(t0, t1, l, r){
     Plot.line(ctx, out.map(([t, v]) => [X(t), Y(v)]), col.c1, 2.2);
     ctx.restore();
     Plot.text(ctx, '±10 %', P.l + 6, Y(3.63) + 9, {color: col.good});
-    // bottom: impedance of each capacitor (with the chosen placement) against frequency
-    const Q = {l: 56, r: W - 50, t: H*0.6, b: H - 40};
-    const Xf = Plot.log(1e5, 1e9, Q.l, Q.r), Yz = Plot.log(1e-3, 100, Q.b, Q.t);
-    Plot.axes(ctx, Q, Xf, Yz, {xt: Plot.logTicks(1e5, 1e9), yt: Plot.logTicks(1e-3, 100), xl: 'frequency', yl: 'impedance (Ω)', xf: t => si(t, 'Hz').replace(' ', ''), yf: t => si(t, '').trim() || '0', xgrid: true});
-    Plot.clip(ctx, Q);
-    ctx.fillStyle = Plot.rgba(col.c2, .08); ctx.fillRect(Xf(1e7), Q.t, Xf(1.75e8) - Xf(1e7), Q.b - Q.t);
-    Object.entries(CAPS).forEach(([k, c]) => {
-      if (!c) return;
-      const pts = []; for (let i = 0; i <= 160; i++){ const f = Math.pow(10, 5 + 4*i/160); pts.push([Xf(f), Yz(zmag(c, Lm, f))]); }
-      Plot.line(ctx, pts, k === key ? col.c3 : Plot.rgba(col.c3, .22), k === key ? 2.4 : 1.2);
-    });
-    ctx.restore();
-    Plot.text(ctx, 'burst energy', Xf(Math.sqrt(1e7*1.75e8)), Q.t + 9, {align: 'center', color: col.c2});
-    if (cap && srf > 1e5 && srf < 1e9){
-      const zs = zmag(cap, Lm, srf);
-      Plot.dot(ctx, Xf(srf), Yz(zs), 4.5, col.c3);
-      Plot.text(ctx, 'SRF ' + si(srf, 'Hz'), Xf(srf), Yz(zs) + 14, {align: 'center', color: col.c3, bold: true});
-      Plot.text(ctx, '← acts as a capacitor', Xf(srf) - 8, Q.t + 26, {align: 'right', color: col.muted});
-      Plot.text(ctx, 'acts as an inductor →', Xf(srf) + 8, Q.t + 26, {color: col.muted});
-    } else if (!cap) Plot.text(ctx, 'no capacitor selected', (Q.l + Q.r)/2, (Q.t + Q.b)/2, {align: 'center', color: col.muted});
   });
   $('#dI').addEventListener('input', upd);
   upd();
