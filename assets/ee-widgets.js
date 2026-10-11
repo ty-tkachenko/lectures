@@ -394,7 +394,7 @@
         : (hot ? "The E24 resistor is over a 1/8 W rating. " : "E24 next-up stays at or under the target. ")
           + (overE12 ? "The nearest E12 value lets the current go over the target." : "Check the E12 current before you use that coarser series."));
       dcStatus(doc, "led-limit", [
-        [Math.abs(vs - 9) < 0.05 && Math.abs(vf - 2) < 0.05 && Math.abs(iT - 0.01) < 5e-5, "9 V, Vf " + fixed(vf, 1) + " V, target " + fixed(iT * 1000, 1) + " mA"],
+        [Math.abs(vs - 9) < 0.05 && Math.abs(vf - 2) < 0.05 && Math.abs(iT - 0.01) < 5e-5, fixed(vs, 1) + " V, Vf " + fixed(vf, 1) + " V, target " + fixed(iT * 1000, 1) + " mA"],
         [finite(i24) && e24.nextUp + 1e-6 >= lim.r && i24 <= iT + 1e-6, "E24 " + fmtOhms(e24.nextUp) + " → " + (finite(i24) ? sig(i24 * 1000, 3) : "—") + " mA"],
         [finite(p24) && p24 < 0.125, "P " + (finite(p24) ? sig(p24, 3) : "—") + " W"]
       ]);
