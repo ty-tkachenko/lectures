@@ -22,7 +22,7 @@
   <div class="eyebrow">RF &amp; High-Speed Design · Module 1</div>
   <h1>RF fundamentals</h1>
   <p class="lede">At radio frequencies a wire stops being "just a wire". Signals travel as waves, reflect off anything that doesn't match, and lose energy into the board itself. These notes build the vocabulary and intuition the rest of the RF material depends on: decibels, transmission lines, reflections, and the materials signals travel through.</p>
-  <p class="meta">Builds on: EE modules 1–4. Bench: NanoVNA or any VNA, a few SMA cables.</p>
+  <p class="meta">Builds on: EE modules 1–3. Reactance is EE Module 4, and complex loads are Module 2; this module stays with real resistances. Bench: NanoVNA or any VNA, a few SMA cables.</p>
   <div class="resources" data-auto></div>
   <div class="objectives">
     <h3>What's covered</h3>
@@ -267,9 +267,9 @@
   <div class="wb wcols">
     <div>
       <div class="ctrl"><label>Load</label>
-        <div class="seg" id="rPre"><button type="button" data-v="50,0" class="on">Matched</button><button type="button" data-v="1e9,0">Open</button><button type="button" data-v="0,0">Short</button><button type="button" data-v="100,0">100 Ω</button><button type="button" data-v="25,0">25 Ω</button><button type="button" data-v="35,25">Detuned antenna</button></div></div>
+        <div class="seg" id="rPre"><button type="button" data-v="50" class="on">Matched</button><button type="button" data-v="1e9">Open</button><button type="button" data-v="0">Short</button><button type="button" data-v="100">100 Ω</button><button type="button" data-v="25">25 Ω</button></div></div>
       <div class="ctrl"><label for="rR">Load resistance R <b id="rRv"></b></label><input id="rR" type="range" min="0" max="300" step="1" value="50"></div>
-      <div class="ctrl"><label for="rX">Load reactance X <b id="rXv"></b></label><input id="rX" type="range" min="-150" max="150" step="1" value="0"></div>
+      <p class="small">These loads are real resistances. A detuned antenna also has reactance, so Γ is a complex number and the standing-wave nulls shift along the line. That case is Module 2, after EE Module 4.</p>
     </div>
     <div>
       <canvas id="cvRefl" style="height:240px" aria-label="Incident, reflected and total voltage along the line, with the standing-wave envelope"></canvas>
@@ -361,7 +361,7 @@
 <h2>Reflections in the frequency domain <a class="vjump" data-t="26:00"></a></h2>
 <p>Suppose a cable has two small mismatches: one at the near-end connector and one at the far end. On a TDR you'd see two echoes, separated by the round-trip delay \(2\tau\). On a VNA, which sweeps frequency, the two echoes add with a phase that changes with frequency. Sometimes they reinforce and sometimes they cancel, so the return loss shows a <strong>ripple</strong>:</p>
 <div class="eq">$$\Delta f_\text{ripple} = \frac{1}{2\tau}$$<div class="n">ripple period in frequency; τ is the one-way delay between the two discontinuities</div></div>
-<p>The two views are the same information, related by the Fourier transform. Closely spaced bumps in a return-loss plot mean the discontinuities are far apart; widely spaced bumps mean they're close together. When you see a periodic ripple on a VNA, measure the spacing and you know how far apart the problems are.</p>
+<p>The two views are the same echoes. Closely spaced bumps in a return-loss plot mean the discontinuities are far apart; widely spaced bumps mean they're close together. (The formal link between the two pictures is called a Fourier transform. You do not need it here.) When you see a periodic ripple on a VNA, measure the spacing and you know how far apart the problems are.</p>
 
 <div class="widget wide" id="w-rip">
   <div class="wh"><span class="tag">Interactive</span><b>Two echoes in time, ripple in frequency</b></div>
@@ -742,8 +742,7 @@
   <div class="plan">
     <p>Planned lab demo (≈ 20 min, filmed at the bench with a NanoVNA):</p>
     <ol>
-      <li>Calibrating the VNA, and why it matters</li>
-      <li>Open, short and 50 Ω load on the Smith chart and as return loss</li>
+      <li>Open, short and 50 Ω as return loss (calibration itself is Module 5; the Smith chart is Module 2)</li>
       <li>TDR mode: finding the length of a cable and a deliberately bad adapter</li>
       <li>The ripple from two mismatches, live</li>
       <li>Measuring the telemetry antenna on the bench, then inside the nosecone</li>
@@ -752,15 +751,19 @@
 </div>
 <div class="lab">
   <h3>Measuring reflections</h3>
-  <div class="parts"><span>NanoVNA (or any VNA)</span><span>SOL calibration kit</span><span>Two SMA cables of different lengths</span><span>SMA barrel and a low-quality adapter</span><span>The telemetry antenna</span></div>
+  <p>This lab uses a VNA to see the reflections from this module, as return loss and as a TDR trace. Calibrating the instrument, and why the standards have to sit at the end of the cable you care about, is Module 5. The Smith chart, which draws the same reflection as a point, is Module 2. Stay with return loss and time here.</p>
+  <div class="parts"><span>NanoVNA (or any VNA), already calibrated at the cable end</span><span>Open, short and 50 Ω standards</span><span>Two SMA cables of different lengths</span><span>SMA barrel and a low-quality adapter</span><span>The telemetry antenna</span></div>
   <ol>
-    <li><b>Calibrate</b> at the end of a cable with the open, short and load standards.</li>
-    <li><b>Look at the three standards</b> as return loss and as a Smith chart. Open and short reflect everything (0 dB return loss); the load reflects almost nothing.</li>
-    <li><b>Measure a cable's length with TDR.</b> Leave the far end open, switch to time-domain mode, set the velocity factor, and read off the length. Compare with a tape measure.</li>
+    <li><b>Write your prediction first.</b> Open, short and a 50 Ω load: which ones reflect everything, and what return loss is "everything"?</li>
+    <li><b>Look at the three standards</b> as return loss. Open and short reflect everything (0 dB return loss); the load reflects almost nothing. The same three points on a Smith chart are Module 2.</li>
+    <li><b>Write your prediction first.</b> For an open cable whose length you have measured with a tape, what round-trip time do you expect once you set the velocity factor?</li>
+    <li><b>Measure a cable's length with TDR.</b> Leave the far end open, switch to time-domain mode, set the velocity factor, and read off the length. Compare with the tape, and with the prediction.</li>
+    <li><b>Write your prediction first.</b> If you insert a bad adapter partway along the run, the TDR should show a bump at that distance, and the return loss should ripple with period \(1/(2\tau)\). Which way does the ripple spacing move if the adapter is closer to the near end?</li>
     <li><b>Find a bad adapter.</b> Insert the low-quality adapter partway along a cable run. Spot it in the TDR, then look for the matching ripple in the return loss and check its period against \(1/(2\tau)\).</li>
-    <li><b>Antenna in situ.</b> Measure the antenna's return loss on the bench, then installed in the nosecone section. Note how far the best match shifts.</li>
+    <li><b>Write your prediction first.</b> Will the antenna's best match stay put when it is installed in the nosecone, or move? Why?</li>
+    <li><b>Antenna in situ.</b> Measure the antenna's return loss on the bench, then installed in the nosecone section. Compare with the prediction.</li>
   </ol>
-  <div class="record"><b>What you should see:</b> cable lengths within a centimetre or two, a ripple whose spacing matches the adapter's distance, and an antenna whose resonance moves noticeably once installed.</div>
+  <div class="record"><b>What you should see:</b> cable lengths within a centimetre or two of the tape, a ripple whose spacing matches the adapter's distance, and an antenna whose best match moves once it is installed, because the airframe is part of the antenna.</div>
 </div>
 </section>
 
@@ -783,14 +786,14 @@
   <div><b>TDR &amp; ripple</b>\(x = vt/2\) · \(\Delta f = 1/(2\tau)\)</div>
   <div><b>Polarization</b>\(-20\log_{10}|\cos\theta|\)<br><span class="small">linear → circular: 3 dB</span></div>
 </div>
-<h3>Go deeper</h3>
-<p class="small">The full treatment, with derivations and harder problems, is in the advanced theory pages:</p>
+<h3>Where this continues</h3>
+<p class="small">There is no separate theory site behind these notes. The same ideas continue in later modules, and the derivations are in Pozar, below.</p>
 <div class="deeper">
-  <a data-deep="signals_theory.html#db">Decibels in detail<small>Every dB unit, a converter, and the common pitfalls</small></a>
-  <a data-deep="matching_theory.html#wire">When does a wire become a transmission line?<small>Plus the distributed RLGC model and telegrapher's equations</small></a>
-  <a data-deep="matching_theory.html#refl">Reflections and standing waves<small>Complex loads, mismatch loss and the full VSWR table</small></a>
-  <a data-deep="matching_theory.html#tdr">Time-domain reflectometry<small>Interpreting real TDR traces, including vias and bond wires</small></a>
-  <a data-deep="antenna_theory.html#pol">Polarization<small>Elliptical polarization, axial ratio and cross-polar isolation</small></a>
+  <a href="#db">Decibels on this page<small>The ratio, dBm, and why a voltage ratio uses 20 log</small></a>
+  <a href="#lines">When a wire becomes a line<small>Electrical length and the λ/10 rule, on this page</small></a>
+  <a href="../02_Lines_and_Matching/index.html#smith">Complex loads and the Smith chart<small>Module 2. Γ with a phase, and the map of it</small></a>
+  <a href="../05_Measurements/index.html">Measuring this on a VNA<small>Module 5. Calibration, and why the standards sit at the cable end</small></a>
+  <a href="../09_Antennas/index.html">Patterns and polarization<small>Module 9. The nose/tail null, and antennas on a rocket</small></a>
 </div>
 <h3>Further reading</h3>
 <ul class="small">
@@ -977,21 +980,21 @@ const C0 = 299792458;
 /* ============ 4. Reflections ============ */
 (() => {
   let R = 50, X = 0, G = [0,0];
-  Plot.seg('#rPre', v => { const [r, x] = v.split(',').map(Number); R = r; X = x; if (r < 1e6){ $('#rR').value = r; } $('#rX').value = x; calc(); });
+  Plot.seg('#rPre', v => { R = +v; X = 0; if (R < 1e6) $('#rR').value = R; calc(); });
   function calc(){
     const Z0 = 50;
+    X = 0;
     if (R >= 1e6){ G = [1, 0]; }
-    else { const nr = R - Z0, ni = X, dr = R + Z0, di = X, den = dr*dr + di*di; G = [(nr*dr + ni*di)/den, (ni*dr - nr*di)/den]; }
-    const m = Math.hypot(G[0], G[1]);
-    $('#rRv').textContent = R >= 1e6 ? '∞ (open)' : R + ' Ω'; $('#rXv').textContent = (X >= 0 ? '+j' : '−j') + Math.abs(X) + ' Ω';
-    $('#rG').innerHTML = fmt(m, 3) + (m > 0.005 ? ` <small>∠${Math.round(Math.atan2(G[1], G[0])*180/Math.PI)}°</small>` : '');
+    else { const g = (R - Z0) / (R + Z0); G = [g, 0]; }
+    const m = Math.abs(G[0]);
+    $('#rRv').textContent = R >= 1e6 ? '∞ (open)' : R + ' Ω';
+    $('#rG').innerHTML = fmt(m, 3) + (m > 0.005 ? ` <small>∠${G[0] < 0 ? 180 : 0}°</small>` : '');
     $('#rS').textContent = m >= 0.999 ? '∞' : fmt((1+m)/(1-m), 3) + ' : 1';
     $('#rRL').textContent = m < 1e-4 ? '∞ dB' : fmt(-20*Math.log10(m), 3) + ' dB';
     $('#rP').textContent = fmt(100*m*m, 3) + ' %';
     split.redraw();
   }
   $('#rR').addEventListener('input', () => { R = +$('#rR').value; calc(); });
-  $('#rX').addEventListener('input', () => { X = +$('#rX').value; if (R >= 1e6){ R = 300; $('#rR').value = 300; } calc(); });
   Plot.animate($('#cvRefl'), (ctx, W, H, t) => {
     const P = {l:16, r:W-60, t:16, b:H-24}, ym = (P.t + P.b)/2, A = (P.b - P.t)/4.3;
     const ph = 2*Math.PI*t/2.2, nl = 1.75;   // wavelengths of line shown
