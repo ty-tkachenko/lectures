@@ -11,8 +11,8 @@ window.COURSE = {
       modules: [
         // Foundations
         {id:'ee01', n:1,  status:'ready',   path:'EE/01_Circuit_Basics/',         title:'Voltage, Current, Resistance & Power', blurb:'Ohm\'s law, power ratings, wire resistance, batteries and the multimeter.'},
-        {id:'ee02', n:2,  status:'ready',   path:'EE/02_Circuit_Analysis/',       title:'Circuit Analysis', blurb:'Kirchhoff\'s laws, dividers, loading, Thévenin, and reading schematics and datasheets.'},
-        {id:'ee03', n:3,  status:'ready',   path:'EE/03_Capacitors_Inductors/',   title:'Capacitors & Inductors', blurb:'Time constants, inrush, inductive kickback, real parts, time-domain decoupling, and your first oscilloscope.'},
+        {id:'ee02', n:2,  status:'ready',   path:'EE/02_Circuit_Analysis/',       title:'Circuit Analysis', blurb:'Kirchhoff\'s laws, dividers, loading and Thévenin equivalents.'},
+        {id:'ee03', n:3,  status:'ready',   path:'EE/03_Capacitors_Inductors/',   title:'Capacitors & Inductors', blurb:'Time constants, inrush, inductive kickback, real parts and time-domain decoupling.'},
         {id:'ee04', n:4,  status:'planned', path:'EE/04_AC_and_Frequency/',       title:'AC Signals & Frequency Response', blurb:'Impedance, RC filters, Bode plots and decibels.'},
         // Moving power: driving actuators
         {id:'ee05', n:5,  status:'planned', path:'EE/05_Diodes/',                 title:'Diodes', blurb:'Rectifiers, LEDs, Zener/TVS protection and reverse-polarity protection.'},
@@ -24,9 +24,9 @@ window.COURSE = {
         {id:'ee10', n:10, status:'planned', path:'EE/10_OpAmps_Sensors/',         title:'Op-Amps & Sensor Front Ends', blurb:'Bridges, instrumentation amps, thermocouples and 4–20 mA loops.'},
         {id:'ee11', n:11, status:'planned', path:'EE/11_Data_Acquisition/',       title:'Data Acquisition', blurb:'ADCs, aliasing and anti-alias filters: from transducer to logged data.'},
         // Building hardware
-        {id:'ee12', n:12, status:'planned', path:'EE/12_PCB_Design/',             title:'Schematics & PCB Design', blurb:'KiCad, footprints, grounding, decoupling and design review.'},
+        {id:'ee12', n:12, status:'planned', path:'EE/12_PCB_Design/',             title:'Schematics & PCB Design', blurb:'KiCad, footprints, grounding and design review. Schematic and datasheet reading is drafted here.'},
         {id:'ee13', n:13, status:'planned', path:'EE/13_Harnesses/',              title:'Harnesses, Connectors & Ruggedization', blurb:'Crimping, connectors, vibration and ground loops.'},
-        {id:'ee14', n:14, status:'planned', path:'EE/14_Test_and_Debug/',         title:'Test, Debug & Bring-Up', blurb:'Bring-up with a current-limited supply, a debugging method, and flight-readiness testing.'},
+        {id:'ee14', n:14, status:'planned', path:'EE/14_Test_and_Debug/',         title:'Test, Debug & Bring-Up', blurb:'Bring-up, debugging and flight-readiness testing. The oscilloscope section is drafted here.'},
         {id:'eeC',  n:'C', status:'planned', path:'EE/C_Capstone/',               title:'Capstone: Test-Stand DAQ Design Review', blurb:'Review a real board end to end.'}
       ]
     },

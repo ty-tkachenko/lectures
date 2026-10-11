@@ -20,10 +20,10 @@ The modules are grouped so that each part ends on something you can point to on 
 What current and voltage actually are · ground is a reference, not a place · Ohm's law · power and resistor ratings · wires have resistance (the igniter-cable problem) · batteries, capacity and internal resistance · using a multimeter without blowing its fuse · electrical safety around LiPos
 
 **[Module 2: Circuit Analysis](02_Circuit_Analysis/)**
-Kirchhoff's laws · series and parallel · the voltage divider (battery-voltage monitoring) · loading: why your divider reads wrong · Thévenin equivalents · superposition · reading schematics and datasheets
+Kirchhoff's laws · series and parallel · the voltage divider (battery-voltage monitoring) · loading: why your divider reads wrong · Thévenin equivalents · superposition
 
 **[Module 3: Capacitors & Inductors](03_Capacitors_Inductors/)**
-Storing energy in fields · RC and RL time constants · charging, discharging, and inrush current · inductive kickback, and why a solenoid valve's coil needs a flyback diode · real capacitors: ESR, ESL, DC-bias derating, tolerance · real inductors: DCR, saturation and current ratings · decoupling capacitors in the time domain · the oscilloscope: triggering, probes and the ground-lead trap
+Storing energy in fields · RC and RL time constants · charging, discharging, and inrush current · inductive kickback, and why a solenoid valve's coil needs a flyback diode · real capacitors: ESR, ESL, DC-bias derating, tolerance · real inductors: DCR, saturation and current ratings · decoupling capacitors in the time domain
 
 **[Module 4: AC Signals & Frequency Response](04_AC_and_Frequency/)**
 Sinusoids, amplitude, frequency, phase · RMS · impedance of R, L and C · a capacitor's self-resonance · RC low-pass and high-pass filters · Bode plots and decibels · resonance · *the bridge to the RF notes*
@@ -56,13 +56,13 @@ ADCs: resolution, reference and input range · sampling and aliasing · anti-ali
 ### Part IV: Building Hardware
 
 **[Module 12: Schematics & PCB Design](12_PCB_Design/)**
-The KiCad flow · symbols and footprints · stackups · trace width and current capacity · ground planes and return paths · decoupling placement · design rule checks · running a design review
+Reading a schematic and a datasheet (drafted, moved from Module 2) · the KiCad flow · symbols and footprints · stackups · trace width and current capacity · ground planes and return paths · decoupling placement · design rule checks · running a design review
 
 **[Module 13: Harnesses, Connectors & Ruggedization](13_Harnesses/)**
 Wire gauge and insulation · crimping technique · locking connectors · strain relief and vibration · conformal coating · noise from valves and pumps · ground loops on the test stand
 
 **[Module 14: Test, Debug & Bring-Up](14_Test_and_Debug/)**
-Bring-up with a current-limited supply · advanced probing and logic analyzers · a debugging method that works · failure analysis · test reports and flight-readiness reviews
+The oscilloscope: triggering, probes and the ground-lead trap (drafted, moved from Module 3; read it before Module 3's bench) · bring-up with a current-limited supply · advanced probing and logic analyzers · a debugging method that works · failure analysis · test reports and flight-readiness reviews
 
 ### Capstone
 

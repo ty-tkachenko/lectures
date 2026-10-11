@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Circuit Analysis · EE 2</title>
-<meta name="description" content="EE module 2: Kirchhoff's laws, series and parallel, the voltage divider for battery monitoring, loading, Thévenin equivalents, superposition, and reading schematics and datasheets.">
+<meta name="description" content="EE module 2: Kirchhoff's laws, series and parallel, the voltage divider for battery monitoring, loading, Thévenin equivalents and superposition.">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
@@ -33,12 +33,11 @@
       <li>The voltage divider, designed as a battery-voltage monitor.</li>
       <li>Loading: why the divider reads wrong once you connect something to it.</li>
       <li>Thévenin equivalents and superposition, the two tools that make bigger circuits manageable.</li>
-      <li>Reading a schematic and a datasheet, including what "typical" values mean.</li>
     </ul>
   </div>
   <div class="video" data-video="lecture" id="lecture">
     <div class="plan">
-      <p>Planned walkthrough of this page (≈ 30 min):</p>
+      <p>Planned walkthrough of this page (≈ 27 min):</p>
       <ol>
         <li data-t="0:00">Nodes, branches and loops</li>
         <li data-t="2:30">Kirchhoff's current law at a junction</li>
@@ -48,7 +47,6 @@
         <li data-t="17:00">Loading</li>
         <li data-t="20:30">Thévenin equivalents</li>
         <li data-t="24:00">Superposition: shifting a bipolar signal into the ADC</li>
-        <li data-t="27:00">Reading schematics and datasheets</li>
       </ol>
     </div>
   </div>
@@ -522,87 +520,12 @@
 </details>
 </section>
 
-<!-- ================= 9 SCHEMATICS & DATASHEETS ================= -->
-<section class="sec" id="reading" data-short="Schematics &amp; datasheets">
-<h2>Reading schematics and datasheets <a class="vjump" data-t="27:00"></a></h2>
-<p>A schematic shows how parts are <em>connected</em>, not where they sit on the board. Here is the battery monitor from Section 5 as it would appear in a real schematic, with the conventions that most often cause mistakes marked:</p>
-
-<div class="widget">
-  <div class="wh"><span class="tag">Diagram</span><b>The battery monitor as drawn in a real schematic</b></div>
-  <div class="wb">
-  <svg viewBox="0 0 640 270" role="img" aria-label="Schematic: a VBAT power label feeds R7 33k and R8 10k to ground; the midpoint, net VBAT_SENSE, has C12 100 nF to ground and runs to input AIN0 of U1, an ADC. An SPI clock net crosses the sense wire without a junction dot. Numbered callouts mark the conventions.">
-    <g stroke="var(--ink)" stroke-width="2" fill="none" stroke-linejoin="round">
-      <!-- VBAT power flag -->
-      <path d="M110 30h-24l-8 9l8 9h24z" stroke-width="1.5"/>
-      <path d="M110 39h30v16"/>
-      <!-- R7 vertical -->
-      <path d="M140 55v6l6 3l-12 6l12 6l-12 6l12 6l-12 6l6 3v12"/>
-      <!-- R8 vertical -->
-      <path d="M140 140v6l6 3l-12 6l12 6l-12 6l12 6l-12 6l6 3v20"/>
-      <path d="M140 109v31"/>
-      <!-- sense net to the ADC -->
-      <path d="M140 125h330"/>
-      <!-- C12 -->
-      <path d="M260 125v35M246 160h28M246 168h28M260 168v24"/>
-      <!-- grounds -->
-      <path d="M128 199h24M132 204h16M137 209h6"/>
-      <path d="M248 192h24M252 197h16M257 202h6"/>
-      <!-- ADC -->
-      <rect x="470" y="70" width="120" height="160" stroke-width="1.5"/>
-      <!-- SPI clock crossing -->
-      <path d="M360 60v150h110"/>
-    </g>
-    <circle cx="140" cy="125" r="4.5" fill="var(--ink)"/><circle cx="260" cy="125" r="4.5" fill="var(--ink)"/>
-    <text x="98" y="43" font-size="11" text-anchor="middle" font-family="var(--mono)">VBAT</text>
-    <text x="156" y="80" font-size="12">R7</text><text x="156" y="95" font-size="12">33k 1%</text>
-    <text x="156" y="164" font-size="12">R8</text><text x="156" y="179" font-size="12">10k 1%</text>
-    <text x="280" y="160" font-size="12">C12</text><text x="280" y="175" font-size="12">100n</text>
-    <text x="300" y="117" font-size="11" font-family="var(--mono)">VBAT_SENSE</text>
-    <text x="370" y="56" font-size="11" font-family="var(--mono)">SPI_SCK</text>
-    <text x="530" y="62" font-size="12" text-anchor="middle" font-weight="600">U1  ADC</text>
-    <text x="478" y="129" font-size="11" font-family="var(--mono)">AIN0</text>
-    <text x="478" y="214" font-size="11" font-family="var(--mono)">SCLK</text>
-    <!-- callouts -->
-    <g font-size="11" font-weight="700" text-anchor="middle" fill="#fff">
-      <circle cx="60" cy="39" r="9" fill="var(--c2)"/><text x="60" y="43">1</text>
-      <circle cx="205" cy="70" r="9" fill="var(--c2)"/><text x="205" y="74">2</text>
-      <circle cx="118" cy="112" r="9" fill="var(--c2)"/><text x="118" y="116">3</text>
-      <circle cx="378" cy="144" r="9" fill="var(--c2)"/><text x="378" y="148">4</text>
-      <circle cx="110" cy="206" r="9" fill="var(--c2)"/><text x="110" y="210">5</text>
-      <circle cx="286" cy="112" r="9" fill="var(--c2)"/><text x="286" y="116">6</text>
-    </g>
-  </svg>
-  </div>
-</div>
-
-<ol>
-  <li><strong>Power labels.</strong> The VBAT flag connects this wire to every other VBAT flag in the whole schematic, possibly on another page. No wire is drawn between them.</li>
-  <li><strong>Reference designators and values.</strong> R7 is "the seventh resistor". The letter tells you the kind of part: R resistor, C capacitor, L inductor, D diode, Q transistor, U integrated circuit, J connector, F fuse. Values are written without the unit and with the multiplier in place of the decimal point: 4k7 is 4.7 kΩ, 100n is 100 nF.</li>
-  <li><strong>Junction dots.</strong> A dot means the wires are connected. Here three wires meet at the top of R8, and the capacitor joins at a second dot.</li>
-  <li><strong>Crossings without a dot are not connected.</strong> The SPI clock passes straight over the sense net. Good schematics avoid four-way junctions entirely, so a crossing is never ambiguous.</li>
-  <li><strong>Ground symbols</strong> are all one node, like power labels. Boards often have several named grounds (GND, AGND, PGND, chassis), and which ones are joined, and where, is a deliberate design decision (Module 12).</li>
-  <li><strong>Net labels.</strong> VBAT_SENSE names the node, so you can find it in the layout and refer to it by name. Two labels with the same name are connected, even if they're drawn pages apart.</li>
-</ol>
-
-<h3>Datasheets</h3>
-<p>Every part has a datasheet, and the numbers in it come in different kinds that mean very different things:</p>
-<div class="tablewrap"><table>
-  <tr><th>Section</th><th>What it means</th><th>How to use it</th></tr>
-  <tr><td><b>Absolute maximum ratings</b></td><td>Exceed these and the part may be damaged, even briefly</td><td>Never a place to operate. Stay well inside, with margin for transients</td></tr>
-  <tr><td><b>Recommended operating conditions</b></td><td>The range over which the part is designed to work</td><td>Design to these: supply voltage, temperature, input range</td></tr>
-  <tr><td><b>Electrical characteristics</b></td><td>Guaranteed min and max values, plus a "typical", under the stated test conditions</td><td>Design to the min or max. Check the conditions column: they may not match your circuit</td></tr>
-  <tr><td><b>Typical performance graphs</b></td><td>How a typical part behaves</td><td>Good for intuition, not a guarantee</td></tr>
-  <tr><td><b>Application circuit</b></td><td>The manufacturer's suggested schematic</td><td>The best starting point. Deviate on purpose, not by accident</td></tr>
-</table></div>
-
-<div class="note myth">
-  <span class="ni">!</span>
-  <div><span class="nt">"Typical" is not a specification</span>A typical value is what the median part does at room temperature. Your part could be anywhere between the min and max, and at −20 °C it might sit at the edge. If a design only works with the typical value, it doesn't work.</div>
-</div>
-
-<div class="note tip">
-  <span class="ni">✓</span>
-  <div><span class="nt">Where loading hides in a datasheet</span>ADC datasheets list a maximum <em>source impedance</em> (sometimes called external input impedance), often a few tens of kilohms for slow sampling and much less for fast. That's the 100× rule from the ADC's side: the Thévenin resistance of your divider has to stay below it, or the readings come out low. The 100 nF capacitor on the battery monitor avoids the problem by holding the voltage steady while the ADC samples, so slow signals like battery voltage can use larger resistors.</div>
+<!-- ================= moved ================= -->
+<section class="sec" id="reading" data-nonum data-short="Moved: schematics">
+<h2>Reading schematics and datasheets</h2>
+<div class="note">
+  <span class="ni">i</span>
+  <div><span class="nt">Moved</span>This section now lives in <a href="../12_PCB_Design/#reading">Module 12</a>, as a drafted section, because that is where you first read a schematic in order to lay out a board. The one result used earlier in the course: a datasheet's guaranteed minimum and maximum are what you design to, and a "typical" value is not a specification. Module 3's hold-up capacitor is the worked example.</div>
 </div>
 </section>
 
@@ -715,7 +638,7 @@
   <li>A divider scales a voltage by \(R_2/(R_1 + R_2)\). Its resistors trade battery drain against sensitivity to loading.</li>
   <li>Any linear circuit looks like \(V_\text{th}\) in series with \(R_\text{th}\) from two terminals. Keep the load at least 100× \(R_\text{th}\), or account for it.</li>
   <li>Superposition: with several sources, add the effect of each one alone. Linear circuits only, and never for power.</li>
-  <li>On schematics, same-named labels are connected and dotless crossings are not. In datasheets, design to min and max, not typical.</li>
+  <li>Design to a datasheet's minimum and maximum, not its typical value. The schematic conventions that go with that reading live in Module 12.</li>
 </ol>
 <div class="cheat">
   <div><b>Kirchhoff</b>\(\sum I_\text{in} = \sum I_\text{out}\)<br>\(\sum_\text{loop} V = 0\)</div>

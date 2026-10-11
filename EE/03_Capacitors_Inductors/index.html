@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Capacitors &amp; Inductors · EE 3</title>
-<meta name="description" content="EE module 3: capacitors and inductors, RC and RL time constants, inrush current, inductive kickback, real capacitors, decoupling, and using an oscilloscope.">
+<meta name="description" content="EE module 3: capacitors and inductors, RC and RL time constants, inrush current, inductive kickback, real capacitors and time-domain decoupling.">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
@@ -22,7 +22,7 @@
 <header class="hero">
   <div class="eyebrow">EE Fundamentals · Module 3</div>
   <h1>Capacitors &amp; inductors</h1>
-  <p class="lede">Resistors respond instantly: change the voltage and the current follows at once. Capacitors and inductors store energy, so they respond over time. That's what makes them useful for steadying supplies and filtering signals, and it's also behind sparking connectors, transistors destroyed by switched coils, and ringing on oscilloscope traces.</p>
+  <p class="lede">Resistors respond instantly: change the voltage and the current follows at once. Capacitors and inductors store energy, so they respond over time. That's what makes them useful for steadying supplies and filtering signals, and it's also behind sparking connectors, transistors destroyed by switched coils, and supply dips when a chip draws a sudden burst of current.</p>
   <p class="meta">Builds on: EE modules 1–2. Bench: oscilloscope, function generator, a few capacitors, a relay or solenoid coil, a diode.</p>
   <div class="resources" data-auto></div>
   <div class="objectives">
@@ -34,12 +34,12 @@
       <li>Inductive kickback, and the diode that stops it destroying the switch.</li>
       <li>Real capacitors: ESR, ESL, tolerance, voltage ratings, and the capacitance ceramics lose under DC bias.</li>
       <li>Real inductors: winding resistance, saturation and current ratings.</li>
-      <li>Decoupling in the time domain: trace inductance drops the supply, and a local capacitor supplies the burst. Then a first look at the oscilloscope and its probes.</li>
+      <li>Decoupling in the time domain: trace inductance drops the supply, and a local capacitor supplies the burst.</li>
     </ul>
   </div>
   <div class="video" data-video="lecture" id="lecture">
     <div class="plan">
-      <p>Planned walkthrough of this page (≈ 33 min):</p>
+      <p>Planned walkthrough of this page (≈ 28 min):</p>
       <ol>
         <li data-t="0:00">Storing energy: capacitors</li>
         <li data-t="4:00">Storing energy: inductors</li>
@@ -49,7 +49,6 @@
         <li data-t="18:30">Real capacitors and DC-bias derating</li>
         <li data-t="21:30">Real inductors and saturation</li>
         <li data-t="24:00">Decoupling: trace inductance and a local capacitor</li>
-        <li data-t="27:30">The oscilloscope and probe grounding</li>
       </ol>
     </div>
   </div>
@@ -559,64 +558,13 @@
 </details>
 </section>
 
-<!-- ================= 9 OSCILLOSCOPE ================= -->
-<section class="sec" id="scope" data-short="The oscilloscope">
-<h2>The oscilloscope <a class="vjump" data-t="27:30"></a></h2>
-<p>A multimeter gives one number. An <strong>oscilloscope</strong> draws voltage against time, which is needed for everything on this page: charging curves, kickback spikes, supply dips. The main controls:</p>
-<ul>
-  <li><strong>Vertical scale</strong> (volts per division) and <strong>timebase</strong> (time per division) set how much of the signal fits on the screen. The screen is usually 10 divisions across and 8 high.</li>
-  <li><strong>Trigger.</strong> A repeating signal only looks stable if every sweep starts at the same point in it. The trigger sets that point, typically "when the signal crosses this level, rising". If the trace is unstable or smeared, check the trigger first. Single-shot mode captures a one-off event, like an inrush spike.</li>
-  <li><strong>Coupling.</strong> DC coupling shows the whole signal. AC coupling removes the average so you can zoom in on small ripple riding on a supply.</li>
-</ul>
-<h3>Probes</h3>
-<p>The standard probe is a <strong>10× probe</strong>: it divides the signal by ten, which lets it present a high resistance (10 MΩ) and low capacitance (around 10 pF) to the circuit, so it disturbs it less. The scope has to know the probe is 10× or every reading is off by a factor of ten. Most scopes have a per-channel probe setting; check it every time.</p>
-
-<div class="note warn">
-  <span class="ni">!</span>
-  <div><span class="nt">Probe ground, part 1: the clip is earthed</span>On a mains-powered bench scope, the probe's ground clip is connected to mains earth through the scope's power cord. Clip it to anything that isn't already at earth potential and you've made a short circuit through the scope. With a battery-powered board that's floating, it's harmless. With anything connected to mains, or to a computer over USB, it can blow traces, destroy the device and damage the scope. Clip ground to ground, and if you need the voltage between two points that aren't ground, use two channels and subtract, or a differential probe.</div>
+<!-- ================= moved ================= -->
+<section class="sec" id="scope" data-nonum data-short="Moved: oscilloscope">
+<h2>The oscilloscope</h2>
+<div class="note">
+  <span class="ni">i</span>
+  <div><span class="nt">Moved</span>Triggering, probes and the ground-lead trap now live in <a href="../14_Test_and_Debug/#scope">Module 14</a>, which is where the oscilloscope is first written up. Read that section before the bench below: this lab is the first one that uses a scope.</div>
 </div>
-
-<p>The second issue with the probe ground is less obvious. The ground clip's 15 cm lead is an inductor, and together with the probe tip's capacitance it forms a resonant circuit. Every fast edge makes it ring, and the ringing is added by the probe, not present in the circuit. For fast signals, take the long lead off and use the short spring that comes with the probe, touching ground right next to the point you're measuring.</p>
-
-<div class="widget wide" id="w-scope">
-  <div class="wh"><span class="tag">Interactive</span><b>A fast 3.3 V edge, measured with a long ground lead and with a ground spring</b></div>
-  <div class="wb wcols">
-    <div>
-      <div class="ctrl"><label>Probe ground</label><div class="seg" id="sG"><button type="button" data-v="1.5e-7" class="on">15 cm lead</button><button type="button" data-v="5e-9">Ground spring</button></div></div>
-      <div class="ctrl"><label>Edge rise time</label><div class="seg" id="sE"><button type="button" data-v="1e-9" class="on">1 ns</button><button type="button" data-v="5e-9">5 ns</button></div></div>
-      <p class="small">Screen: 1 V/div, 4 ns/div. Probe tip capacitance 10 pF, source resistance 25 Ω.</p>
-    </div>
-    <div>
-      <canvas id="cvScope" style="height:280px" aria-label="Oscilloscope screen showing the real edge and what the probe displays"></canvas>
-      <div class="legend"><span style="--c:var(--c1)">what the scope shows</span><span class="dash" style="--c:var(--muted)">the real signal</span></div>
-      <div class="readout">
-        <div class="stat" id="sOS"><div class="k">Overshoot</div><div class="v" id="sO"></div></div>
-        <div class="stat"><div class="k">Ringing frequency</div><div class="v" id="sF"></div></div>
-      </div>
-      <div class="verdict" id="sVerdict"></div>
-    </div>
-  </div>
-  <div class="try"><b>Things to try</b><ol>
-    <li>With the long lead and a 1 ns edge, how much overshoot does the scope show? None of it is real.</li>
-    <li>Swap to the ground spring. Then go back to the long lead with a slower 5 ns edge. Why does the slower edge ring less?</li>
-  </ol></div>
-</div>
-
-<details class="exercise">
-  <summary><span class="ek">Check your understanding</span><span class="et">Is the ringing real?</span></summary>
-  <div class="eb">
-    <p>A fast logic edge on your scope shows heavy ringing, and you need to know whether the circuit really rings or the probe is adding it.</p>
-    <div class="choice"><p>Which quick test tells you?</p>
-    <ol class="opts">
-      <li>Change the vertical scale and see if the ringing scales with it.<div class="why">Real or not, the ringing scales with the display.</div></li>
-      <li data-correct>Swap the long ground lead for the ground spring, and see whether the ringing changes.<div class="why">If shortening the ground connection changes the ringing, the probe was causing it.</div></li>
-      <li>Move the trigger level.<div class="why">The trigger only sets where the sweep starts.</div></li>
-      <li>Switch to AC coupling.<div class="why">AC coupling removes the average, not ringing.</div></li>
-    </ol>
-    <div class="solution"><p>The probe's long ground lead and its tip capacitance form a resonant circuit, so a ringing frequency that changes, or a ringing that disappears, when you change the ground connection was the probe's. Ringing that stays the same with the shortest ground connection is in the circuit. The same habit applies to any measurement: change the measurement, not the circuit, and see whether the result moves.</p></div>
-    </div>
-  </div>
-</details>
 </section>
 
 <!-- ================= DESIGN EXERCISES ================= -->
@@ -627,7 +575,7 @@
 <div class="chal">
   <div class="ch"><span class="cn">Exercise 1</span><span class="cd">Design · ●●○</span><span class="ctitle">Sizing a hold-up capacitor</span></div>
   <div class="cbody">
-    <p>A board runs from a 2S pack through a series diode and a linear regulator. When a motor on the same pack starts, the pack can drop out for up to 5 ms. The diode stops the board's input capacitor from discharging back into the motor, and it also sits in series while the pack is healthy, so the capacitor never charges all the way up to the pack voltage. You want the board to keep running through the dropout. A linear regulator draws the same current at its input as it delivers at its output. Design to the worst case you can actually count on, the way a datasheet's guaranteed minimum is what you design to rather than its typical value (Module 2).</p>
+    <p>A board runs from a 2S pack through a series diode and a linear regulator. When a motor on the same pack starts, the pack can drop out for up to 5 ms. The diode stops the board's input capacitor from discharging back into the motor, and it also sits in series while the pack is healthy, so the capacitor never charges all the way up to the pack voltage. You want the board to keep running through the dropout. A linear regulator draws the same current at its input as it delivers at its output. Design to the worst case you can actually count on, the way a datasheet's guaranteed minimum is what you design to rather than its typical value (Module 12).</p>
     <div class="given"><b>Given</b>
       <span>Pack, nominal</span><span>7.4 V (3.7 V per cell). Not the number to design to.</span>
       <span>Pack while sagged</span><span>6.6 V</span>
@@ -650,7 +598,7 @@
       <div class="miss" data-val="1333"><p>That's what you'd need on the 3.3 V output, where only 0.3 V of droop is allowed. The capacitor is on the input.</p></div>
       <div class="hint">\(C = I\,t / \Delta V\), with the ΔV from (b).</div>
       <div class="solution"><p>\(C = 0.080 \times 0.005 / 2.3 = 174\ \mu\text{F}\), about 175 µF. A 220 µF electrolytic is the smallest common value with margin for tolerance, ageing and cold. Designing from the nominal 7.4 V and forgetting the diode would have specified 105 µF, and that part runs out before the 5 ms is over.</p></div></div>
-    <details><summary>Discussion: worst case, and why the capacitor goes before the regulator</summary><p>The 7.4 V figure is a nominal, in the same sense as a datasheet "typical" (Module 2): useful as a label, not as a number the circuit is guaranteed to see. The case to design to is a sagged pack and the diode you added to stop the capacitor feeding the motor. Between the two diode drops, 0.7 V and a Schottky's 0.3 V, the larger one leaves less room (2.3 V rather than 2.7 V) and so asks for more capacitance (174 µF rather than about 150 µF). On the 3.3 V output the capacitor can only fall 0.3 V before the microcontroller stops, so the same 80 mA for 5 ms takes \(0.080 \times 0.005 / 0.3 = 1330\ \mu\text{F}\), about eight times the input-side part. The energy view says why the input side still wins: the capacitor delivers \(\tfrac12 C(V_1^2 - V_2^2)\), and swinging from 5.9 V to 3.6 V makes more of the stored energy available than swinging from 3.3 V to 3.0 V. The diode's other job remains: without it, the capacitor would discharge into the starting motor instead of into the board.</p></details>
+    <details><summary>Discussion: worst case, and why the capacitor goes before the regulator</summary><p>The 7.4 V figure is a nominal, in the same sense as a datasheet "typical" (Module 12): useful as a label, not as a number the circuit is guaranteed to see. The case to design to is a sagged pack and the diode you added to stop the capacitor feeding the motor. Between the two diode drops, 0.7 V and a Schottky's 0.3 V, the larger one leaves less room (2.3 V rather than 2.7 V) and so asks for more capacitance (174 µF rather than about 150 µF). On the 3.3 V output the capacitor can only fall 0.3 V before the microcontroller stops, so the same 80 mA for 5 ms takes \(0.080 \times 0.005 / 0.3 = 1330\ \mu\text{F}\), about eight times the input-side part. The energy view says why the input side still wins: the capacitor delivers \(\tfrac12 C(V_1^2 - V_2^2)\), and swinging from 5.9 V to 3.6 V makes more of the stored energy available than swinging from 3.3 V to 3.0 V. The diode's other job remains: without it, the capacitor would discharge into the starting motor instead of into the board.</p></details>
   </div>
 </div>
 
@@ -736,7 +684,7 @@
   <li>Real capacitors have tolerance, ESR, a voltage rating and, for X5R and X7R ceramics, a capacitance that shrinks with DC voltage.</li>
   <li>Real inductors have winding resistance, a saturation current beyond which their inductance collapses, and a thermal current rating. Keep peak current below I<sub>sat</sub>.</li>
   <li>A decoupling capacitor next to a chip supplies the current burst locally. Inductance in that path, a long trace or a capacitor placed away from the pin, is what makes the supply dip.</li>
-  <li>Set the scope for the probe you're using, clip ground only to ground, and use the ground spring for fast edges.</li>
+  <li>Before the bench, read the oscilloscope section in Module 14: set the scope for the probe you're using, clip ground only to ground, and use the ground spring for fast edges.</li>
 </ol>
 <div class="cheat">
   <div><b>Capacitor</b>\(Q = CV\), \(i = C\,dv/dt\)<br>\(E = \tfrac12 CV^2\)</div>
@@ -1064,48 +1012,6 @@ function timeAxis(t0, t1, l, r){
   upd();
 })();
 
-/* ============ 5. Scope probe ground lead ============ */
-(() => {
-  const gSel = seg('#sG', upd), eSel = seg('#sE', upd);
-  const RS = 25, CT = 10e-12, VH = 3.3, T0 = 6e-9, T = 40e-9, DT = 0.002e-9;
-  let s = {};
-  function upd(){
-    const L = +gSel(), tr = +eSel();
-    const vin = t => t < T0 ? 0 : t < T0 + tr ? VH*(t - T0)/tr : VH;
-    let i = 0, v = 0, vmax = 0; const out = [];
-    for (let n = 0, t = 0; t <= T; n++, t += DT){
-      i += DT*(vin(t) - RS*i - v)/L; v += DT*i/CT;
-      if (v > vmax) vmax = v;
-      if (n % 20 === 0) out.push([t, v, vin(t)]);
-    }
-    const f0 = 1/(2*Math.PI*Math.sqrt(L*CT)), os = Math.max(0, (vmax - VH)/VH);
-    s = {out};
-    $('#sO').textContent = Math.round(100*os) + ' %'; $('#sF').textContent = si(f0, 'Hz');
-    $('#sOS').className = 'stat ' + (os > 0.2 ? 'bad' : os > 0.05 ? 'warn' : '');
-    const v2 = $('#sVerdict');
-    if (os > 0.2) setVerdict(v2, 'bad', `<b>Mostly probe artefact.</b> The real edge has no overshoot. The ${Math.round(100*os)} % overshoot and the ringing at ${si(f0, 'Hz')} come from the ground lead's inductance and the probe's capacitance.`);
-    else if (os > 0.05) setVerdict(v2, 'warn', `<b>Some artefact.</b> ${Math.round(100*os)} % overshoot that isn't in the circuit. Good enough to see the edge, not to judge its quality.`);
-    else setVerdict(v2, 'ok', `<b>A faithful measurement.</b> The probe adds almost nothing you'd mistake for the circuit's own behaviour.`);
-    w.redraw();
-  }
-  const w = Plot.widget($('#cvScope'), (ctx, W, H) => {
-    const {out} = s; if (!out) return;
-    // a scope screen: 10 × 8 divisions, 1 V/div, 0 V two divisions above the bottom
-    const pad = 10, gw = W - 2*pad, gh = H - 2*pad, dx = gw/10, dy = gh/8;
-    ctx.fillStyle = col.sunk; ctx.fillRect(pad, pad, gw, gh);
-    for (let k = 0; k <= 10; k++) Plot.line(ctx, [[pad + k*dx, pad], [pad + k*dx, pad + gh]], col.line, k === 5 ? 1.2 : 0.7);
-    for (let k = 0; k <= 8; k++) Plot.line(ctx, [[pad, pad + k*dy], [pad + gw, pad + k*dy]], col.line, k === 4 ? 1.2 : 0.7);
-    const X = Plot.lin(0, T, pad, pad + gw), Y = Plot.lin(-2, 6, pad + gh, pad);
-    Plot.clip(ctx, {l: pad, r: pad + gw, t: pad, b: pad + gh});
-    Plot.line(ctx, out.map(([t, , vi]) => [X(t), Y(vi)]), col.muted, 1.4, [5, 4]);
-    Plot.line(ctx, out.map(([t, v]) => [X(t), Y(v)]), col.c1, 2.2);
-    ctx.restore();
-    Plot.text(ctx, '1 V/div', pad + 6, pad + 10, {color: col.muted});
-    Plot.text(ctx, '4 ns/div', pad + gw - 6, pad + 10, {align: 'right', color: col.muted});
-    Plot.text(ctx, '0 V', pad + 6, Y(0) - 8, {color: col.muted});
-  });
-  upd();
-})();
 </script>
 </body>
 </html>

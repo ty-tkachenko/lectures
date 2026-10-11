@@ -4,31 +4,155 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Test, Debug &amp; Bring-Up · EE 14</title>
-<meta name="description" content="EE Fundamentals module 14: Bring-up with a current-limited supply, a debugging method, and flight-readiness testing. In development.">
+<meta name="description" content="EE Fundamentals module 14: the oscilloscope, moved here from Module 3, then bring-up, debugging and flight-readiness testing. In development.">
 <link rel="stylesheet" href="../../assets/site.css">
 <script src="../../assets/course.js"></script>
 <script src="../../assets/site.js"></script>
+<script src="../../assets/plot.js"></script>
 </head>
 <body>
 <div class="layout">
 <aside class="side" aria-label="Module contents"></aside>
 <main class="content">
 
-<!-- Placeholder: replace this page with the module when it's written (see README.md, "Writing a module"). -->
 <header class="hero">
   <div class="eyebrow">EE Fundamentals · Module 14</div>
   <h1>Test, Debug &amp; Bring-Up</h1>
-  <p class="lede">Bring-up with a current-limited supply, a debugging method, and flight-readiness testing.</p>
+  <p class="lede">Bring-up with a current-limited supply, a debugging method, and flight-readiness testing. The oscilloscope section, first needed for Module 3's bench, is drafted below.</p>
 </header>
 
 <section class="sec" id="status" data-nonum data-short="In development">
 <h2>In development</h2>
-<p>This module hasn't been written yet. The other modules are listed in the strip at the top of the page, and the links below go to the neighbouring ones.</p>
+<p>Most of this module hasn't been written yet. The oscilloscope section below was moved from Module 3. Read it before that module's bench: triggering, the 10× probe and the ground-lead trap are what the lab assumes.</p>
 </section>
+
+<!-- ================= 9 OSCILLOSCOPE ================= -->
+<section class="sec" id="scope" data-short="The oscilloscope">
+<h2>The oscilloscope</h2>
+<div class="note warn">
+  <span class="ni">!</span>
+  <div><span class="nt">Draft, moved from Module 3</span>The rest of this module is not written yet. This section was moved here because the oscilloscope is a bench tool, first needed for Module 3's lab, and not a ninth topic of capacitor theory. It will be integrated when Module 14 is written in full.</div>
+</div>
+<p>A multimeter gives one number. An <strong>oscilloscope</strong> draws voltage against time, which is what Module 3's bench uses for charging curves, kickback spikes and supply dips. Read this section before that lab. The main controls:</p>
+<ul>
+  <li><strong>Vertical scale</strong> (volts per division) and <strong>timebase</strong> (time per division) set how much of the signal fits on the screen. The screen is usually 10 divisions across and 8 high.</li>
+  <li><strong>Trigger.</strong> A repeating signal only looks stable if every sweep starts at the same point in it. The trigger sets that point, typically "when the signal crosses this level, rising". If the trace is unstable or smeared, check the trigger first. Single-shot mode captures a one-off event, like an inrush spike.</li>
+  <li><strong>Coupling.</strong> DC coupling shows the whole signal. AC coupling removes the average so you can zoom in on small ripple riding on a supply.</li>
+</ul>
+<h3>Probes</h3>
+<p>The standard probe is a <strong>10× probe</strong>: it divides the signal by ten, which lets it present a high resistance (10 MΩ) and low capacitance (around 10 pF) to the circuit, so it disturbs it less. The scope has to know the probe is 10× or every reading is off by a factor of ten. Most scopes have a per-channel probe setting; check it every time.</p>
+
+<div class="note warn">
+  <span class="ni">!</span>
+  <div><span class="nt">Probe ground, part 1: the clip is earthed</span>On a mains-powered bench scope, the probe's ground clip is connected to mains earth through the scope's power cord. Clip it to anything that isn't already at earth potential and you've made a short circuit through the scope. With a battery-powered board that's floating, it's harmless. With anything connected to mains, or to a computer over USB, it can blow traces, destroy the device and damage the scope. Clip ground to ground, and if you need the voltage between two points that aren't ground, use two channels and subtract, or a differential probe.</div>
+</div>
+
+<p>The second issue with the probe ground is less obvious. The ground clip's 15 cm lead is an inductor, and together with the probe tip's capacitance it forms a resonant circuit. Every fast edge makes it ring, and the ringing is added by the probe, not present in the circuit. For fast signals, take the long lead off and use the short spring that comes with the probe, touching ground right next to the point you're measuring.</p>
+
+<div class="widget wide" id="w-scope">
+  <div class="wh"><span class="tag">Interactive</span><b>A fast 3.3 V edge, measured with a long ground lead and with a ground spring</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label>Probe ground</label><div class="seg" id="sG"><button type="button" data-v="1.5e-7" class="on">15 cm lead</button><button type="button" data-v="5e-9">Ground spring</button></div></div>
+      <div class="ctrl"><label>Edge rise time</label><div class="seg" id="sE"><button type="button" data-v="1e-9" class="on">1 ns</button><button type="button" data-v="5e-9">5 ns</button></div></div>
+      <p class="small">Screen: 1 V/div, 4 ns/div. Probe tip capacitance 10 pF, source resistance 25 Ω.</p>
+    </div>
+    <div>
+      <canvas id="cvScope" style="height:280px" aria-label="Oscilloscope screen showing the real edge and what the probe displays"></canvas>
+      <div class="legend"><span style="--c:var(--c1)">what the scope shows</span><span class="dash" style="--c:var(--muted)">the real signal</span></div>
+      <div class="readout">
+        <div class="stat" id="sOS"><div class="k">Overshoot</div><div class="v" id="sO"></div></div>
+        <div class="stat"><div class="k">Ringing frequency</div><div class="v" id="sF"></div></div>
+      </div>
+      <div class="verdict" id="sVerdict"></div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>With the long lead and a 1 ns edge, how much overshoot does the scope show? None of it is real.</li>
+    <li>Swap to the ground spring. Then go back to the long lead with a slower 5 ns edge. Why does the slower edge ring less?</li>
+  </ol></div>
+</div>
+
+<details class="exercise">
+  <summary><span class="ek">Check your understanding</span><span class="et">Is the ringing real?</span></summary>
+  <div class="eb">
+    <p>A fast logic edge on your scope shows heavy ringing, and you need to know whether the circuit really rings or the probe is adding it.</p>
+    <div class="choice"><p>Which quick test tells you?</p>
+    <ol class="opts">
+      <li>Change the vertical scale and see if the ringing scales with it.<div class="why">Real or not, the ringing scales with the display.</div></li>
+      <li data-correct>Swap the long ground lead for the ground spring, and see whether the ringing changes.<div class="why">If shortening the ground connection changes the ringing, the probe was causing it.</div></li>
+      <li>Move the trigger level.<div class="why">The trigger only sets where the sweep starts.</div></li>
+      <li>Switch to AC coupling.<div class="why">AC coupling removes the average, not ringing.</div></li>
+    </ol>
+    <div class="solution"><p>The probe's long ground lead and its tip capacitance form a resonant circuit, so a ringing frequency that changes, or a ringing that disappears, when you change the ground connection was the probe's. Ringing that stays the same with the shortest ground connection is in the circuit. The same habit applies to any measurement: change the measurement, not the circuit, and see whether the result moves.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
 
 <nav class="pager"></nav>
 </main>
 </div>
 <footer class="site">Hardware Engineering Fundamentals · EE Fundamentals</footer>
+<script>
+'use strict';
+const $ = s => document.querySelector(s);
+const {col, si, fmt} = Plot;
+function seg(id, cb){
+  const el = $(id);
+  el.addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    el.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
+    cb();
+  });
+  return () => el.querySelector('button.on').dataset.v;
+}
+function setVerdict(el, cls, html){ el.className = 'verdict ' + cls; el.innerHTML = html; }
+
+/* ============ 5. Scope probe ground lead ============ */
+(() => {
+  const gSel = seg('#sG', upd), eSel = seg('#sE', upd);
+  const RS = 25, CT = 10e-12, VH = 3.3, T0 = 6e-9, T = 40e-9, DT = 0.002e-9;
+  let s = {};
+  function upd(){
+    const L = +gSel(), tr = +eSel();
+    const vin = t => t < T0 ? 0 : t < T0 + tr ? VH*(t - T0)/tr : VH;
+    let i = 0, v = 0, vmax = 0; const out = [];
+    for (let n = 0, t = 0; t <= T; n++, t += DT){
+      i += DT*(vin(t) - RS*i - v)/L; v += DT*i/CT;
+      if (v > vmax) vmax = v;
+      if (n % 20 === 0) out.push([t, v, vin(t)]);
+    }
+    const f0 = 1/(2*Math.PI*Math.sqrt(L*CT)), os = Math.max(0, (vmax - VH)/VH);
+    s = {out};
+    $('#sO').textContent = Math.round(100*os) + ' %'; $('#sF').textContent = si(f0, 'Hz');
+    $('#sOS').className = 'stat ' + (os > 0.2 ? 'bad' : os > 0.05 ? 'warn' : '');
+    const v2 = $('#sVerdict');
+    if (os > 0.2) setVerdict(v2, 'bad', `<b>Mostly probe artefact.</b> The real edge has no overshoot. The ${Math.round(100*os)} % overshoot and the ringing at ${si(f0, 'Hz')} come from the ground lead's inductance and the probe's capacitance.`);
+    else if (os > 0.05) setVerdict(v2, 'warn', `<b>Some artefact.</b> ${Math.round(100*os)} % overshoot that isn't in the circuit. Good enough to see the edge, not to judge its quality.`);
+    else setVerdict(v2, 'ok', `<b>A faithful measurement.</b> The probe adds almost nothing you'd mistake for the circuit's own behaviour.`);
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvScope'), (ctx, W, H) => {
+    const {out} = s; if (!out) return;
+    // a scope screen: 10 × 8 divisions, 1 V/div, 0 V two divisions above the bottom
+    const pad = 10, gw = W - 2*pad, gh = H - 2*pad, dx = gw/10, dy = gh/8;
+    ctx.fillStyle = col.sunk; ctx.fillRect(pad, pad, gw, gh);
+    for (let k = 0; k <= 10; k++) Plot.line(ctx, [[pad + k*dx, pad], [pad + k*dx, pad + gh]], col.line, k === 5 ? 1.2 : 0.7);
+    for (let k = 0; k <= 8; k++) Plot.line(ctx, [[pad, pad + k*dy], [pad + gw, pad + k*dy]], col.line, k === 4 ? 1.2 : 0.7);
+    const X = Plot.lin(0, T, pad, pad + gw), Y = Plot.lin(-2, 6, pad + gh, pad);
+    Plot.clip(ctx, {l: pad, r: pad + gw, t: pad, b: pad + gh});
+    Plot.line(ctx, out.map(([t, , vi]) => [X(t), Y(vi)]), col.muted, 1.4, [5, 4]);
+    Plot.line(ctx, out.map(([t, v]) => [X(t), Y(v)]), col.c1, 2.2);
+    ctx.restore();
+    Plot.text(ctx, '1 V/div', pad + 6, pad + 10, {color: col.muted});
+    Plot.text(ctx, '4 ns/div', pad + gw - 6, pad + 10, {align: 'right', color: col.muted});
+    Plot.text(ctx, '0 V', pad + 6, Y(0) - 8, {color: col.muted});
+  });
+  upd();
+})();
+
+</script>
 </body>
 </html>
