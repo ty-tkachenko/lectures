@@ -75,6 +75,7 @@ Copy an existing module folder (EE 1 is the reference) and keep the same structu
    ```
 
    `data-tol` is relative (`2%`) or absolute (`0.1`). Answers accept SI prefixes (`4.7k`, `2.5m`).
-6. End with **At the bench** (lab video slot plus a `<div class="lab">` procedure), a **Summary & cheat sheet**, optional **Go deeper** links (`<a data-deep="matching_theory.html#refl">`), and `<nav class="pager"></nav>`.
+6. End with **At the bench** (lab video slot plus a `<div class="lab">` procedure), a **Summary & cheat sheet**, optional **Go deeper** links (`<a data-deep="matching_theory.html#refl">`), **Further reading**, and `<nav class="pager"></nav>`.
+7. **Further reading** cites specific chapters of the standard references. EE modules use *The Art of Electronics* (Horowitz & Hill) and *Practical Electronics for Inventors* (Scherz & Monk). RF modules use *Microwave Engineering* (Pozar).
 
 Draw every figure with the theme colours from `Plot.col` (or CSS variables in SVG) so the figures match the page.
