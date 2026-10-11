@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 500" width="760" height="500" role="img" aria-labelledby="t d" font-family="system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif">
 <title id="t">Buck waveforms over two cycles</title>
-<desc id="d">Three traces share one time axis. The switch node is a square wave between Vin and about zero. The inductor current is a triangle; a dimension arrow marks delta I from valley to peak. The output ripple is drawn on its own exaggerated scale. A valley that reaches zero is discontinuous conduction, and a long scope ground lead can fake a bigger spike.</desc>
+<desc id="d">Three traces share one time axis at 50 percent duty. The switch node is a square wave between Vin and about zero. The inductor current is a triangle around a dashed average. The output is the capacitive ripple: a parabola that crests where the inductor current crosses its average on the way down, a quarter cycle after the current peak. A valley that reaches zero is discontinuous conduction, and a long scope ground lead can fake a bigger spike.</desc>
 <defs>
 <marker id="ah555" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#555"/></marker>
 <marker id="ah555s" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M10,0L0,5L10,10z" fill="#555"/></marker>
@@ -8,42 +8,44 @@
 <rect width="760" height="500" fill="#ffffff"/>
 <text x="20" y="24" font-size="14" font-weight="600" fill="#2b2b2b">What the scope should show, slowed down</text>
 
-<!-- shared switching edges -->
-<line x1="250" y1="70" x2="250" y2="400" stroke="#e5e7eb" stroke-width="1"/>
-<line x1="390" y1="70" x2="390" y2="400" stroke="#e5e7eb" stroke-width="1"/>
-<line x1="530" y1="70" x2="530" y2="400" stroke="#e5e7eb" stroke-width="1"/>
-<line x1="670" y1="70" x2="670" y2="400" stroke="#e5e7eb" stroke-width="1"/>
+<!-- shared switching edges: 50 percent duty, period 240 -->
+<line x1="300" y1="70" x2="300" y2="400" stroke="#e5e7eb" stroke-width="1"/>
+<line x1="420" y1="70" x2="420" y2="400" stroke="#e5e7eb" stroke-width="1"/>
+<line x1="540" y1="70" x2="540" y2="400" stroke="#e5e7eb" stroke-width="1"/>
+<line x1="660" y1="70" x2="660" y2="400" stroke="#e5e7eb" stroke-width="1"/>
 
 <!-- switch node -->
 <text x="20" y="78" font-size="12.5" font-weight="600" fill="#2b2b2b">Switch node</text>
 <text x="168" y="86" font-size="11" fill="#555" text-anchor="end">Vin</text>
 <text x="168" y="148" font-size="11" fill="#555" text-anchor="end">0</text>
 <line x1="180" y1="80" x2="180" y2="150" stroke="#2b2b2b" stroke-width="1.3"/>
-<line x1="180" y1="142" x2="720" y2="142" stroke="#e5e7eb" stroke-width="1"/>
-<polyline points="180,142 180,86 250,86 250,142 390,142 390,86 530,86 530,142 670,142 670,86 720,86" fill="none" stroke="#2b2b2b" stroke-width="1.8" stroke-linejoin="round"/>
+<line x1="180" y1="142" x2="660" y2="142" stroke="#e5e7eb" stroke-width="1"/>
+<polyline points="180,142 180,86 300,86 300,142 420,142 420,86 540,86 540,142 660,142" fill="none" stroke="#2b2b2b" stroke-width="1.8" stroke-linejoin="round"/>
 
-<!-- inductor current -->
+<!-- inductor current. Average is the dashed line. -->
 <text x="20" y="188" font-size="12.5" font-weight="600" fill="#1d4ed8">Inductor current</text>
 <text x="168" y="214" font-size="11" fill="#555" text-anchor="end">peak</text>
+<text x="168" y="251" font-size="11" fill="#555" text-anchor="end">I<tspan baseline-shift="sub" font-size="75%">avg</tspan></text>
 <text x="168" y="286" font-size="11" fill="#555" text-anchor="end">valley</text>
 <line x1="180" y1="200" x2="180" y2="292" stroke="#2b2b2b" stroke-width="1.3"/>
-<line x1="180" y1="280" x2="720" y2="280" stroke="#e5e7eb" stroke-width="1"/>
-<polyline points="180,280 250,214 390,280 530,214 670,280 720,246" fill="none" stroke="#1d4ed8" stroke-width="1.8" stroke-linejoin="round"/>
-<line x1="600" y1="214" x2="600" y2="280" stroke="#555" stroke-width="1.2" marker-start="url(#ah555s)" marker-end="url(#ah555)"/>
-<text x="608" y="252" font-size="12" fill="#555">ΔI_L</text>
+<line x1="180" y1="280" x2="660" y2="280" stroke="#e5e7eb" stroke-width="1"/>
+<line x1="180" y1="247" x2="660" y2="247" stroke="#1d4ed8" stroke-width="1.15" stroke-dasharray="5 4"/>
+<polyline points="180,280 300,214 420,280 540,214 660,280" fill="none" stroke="#1d4ed8" stroke-width="1.8" stroke-linejoin="round"/>
+<line x1="692" y1="214" x2="692" y2="280" stroke="#555" stroke-width="1.2" marker-start="url(#ah555s)" marker-end="url(#ah555)"/>
+<text x="704" y="251" font-size="12" fill="#555">ΔI<tspan baseline-shift="sub" font-size="75%">L</tspan></text>
 
-<!-- output, exaggerated -->
+<!-- capacitive output ripple: crest at the downward average crossing -->
 <text x="20" y="328" font-size="12.5" font-weight="600" fill="#16a34a">Output voltage</text>
 <text x="168" y="372" font-size="11" fill="#555" text-anchor="end">exaggerated</text>
 <line x1="180" y1="336" x2="180" y2="400" stroke="#2b2b2b" stroke-width="1.3"/>
-<line x1="180" y1="386" x2="720" y2="386" stroke="#e5e7eb" stroke-width="1"/>
-<polyline points="180,378 250,352 390,378 530,352 670,378 720,366" fill="none" stroke="#16a34a" stroke-width="1.8" stroke-linejoin="round"/>
-<text x="608" y="344" font-size="11" fill="#16a34a">ΔVout</text>
+<line x1="180" y1="390" x2="660" y2="390" stroke="#e5e7eb" stroke-width="1"/>
+<path d="M180,370 Q240,402 300,370 Q360,338 420,370 Q480,402 540,370 Q600,338 660,370" fill="none" stroke="#16a34a" stroke-width="1.8"/>
+<text x="500" y="348" font-size="11" fill="#16a34a">ΔV<tspan baseline-shift="sub" font-size="75%">out</tspan></text>
 
 <!-- shared time axis -->
-<line x1="180" y1="418" x2="720" y2="418" stroke="#2b2b2b" stroke-width="1.3"/>
+<line x1="180" y1="418" x2="660" y2="418" stroke="#2b2b2b" stroke-width="1.3"/>
 <text x="180" y="436" font-size="12" fill="#555">time, two cycles, same axis for all three traces</text>
 
-<text x="20" y="466" font-size="11.5" font-style="italic" fill="#555">Output ripple is on its own exaggerated scale. The capacitor absorbs most of ΔI_L, so ΔVout is much smaller.</text>
+<text x="20" y="466" font-size="11.5" font-style="italic" fill="#555">Ideal capacitor: the output crests where the inductor current crosses its average on the way down.</text>
 <text x="20" y="486" font-size="11.5" font-style="italic" fill="#555">A long scope ground lead can fake a bigger spike. A valley that hits zero is discontinuous conduction.</text>
 </svg>

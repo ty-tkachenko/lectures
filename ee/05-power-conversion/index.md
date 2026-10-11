@@ -66,9 +66,9 @@ A linear regulator is a controlled resistor in series with the load. The series 
 
 An [LDO]({{ '/glossary/#ldo' | relative_url }}), a low-dropout regulator, is a linear regulator that can still do this when the input is only a little above the output. That "little" is the [dropout voltage]({{ '/glossary/#dropout' | relative_url }}). If the pack falls closer than that, the output sags and the part is no longer regulating.
 
-![Diagram of a linear regulator. A pass element sits between Vin and Vout. An error amplifier compares a feedback divider with a reference and drives the pass element. The load returns to 0 V. Heat is the voltage dropped in the pass element times the load current.](img/ldo-pass.svg){: .figure}
+![Diagram of an LDO. A P-channel MOSFET has its source on Vin and its drain on Vout. The error amplifier output drives the gate. The feedback divider goes to the plus input and the reference to the minus input. Cin, Cout, and the load return to one ground rail. Heat is the voltage the MOSFET drops times the load current.](img/ldo-pass.svg){: .figure}
 
-*The pass element is in series with the load. Feedback tells it how hard to conduct. Whatever voltage it drops, at the load current, becomes heat in the package.*
+*The pass element is a P-channel MOSFET, source on the input and drain on the output. The divider goes to the amplifier's + input and the reference to the − input, so a rising output drives the gate up and the MOSFET turns down. Whatever voltage it drops, at the load current, becomes heat in the package.*
 
 Dropout is why a single cell is a bad way to make 3.3 V with an ordinary LDO, and why a 2S pack usually is not. Suppose the dropout at this current is 1.0 V, a round number for an older 1117-style part. Read the real number from the datasheet. The input must stay at or above
 
@@ -259,9 +259,9 @@ $$
 
 The valley is still positive, so the assumption holds.
 
-![Three aligned traces. The switch node is a square wave. The inductor current is a triangle labeled delta I from valley to peak. The output voltage shows a much smaller ripple. A note says a long scope ground lead can fake a bigger spike, and that a valley of zero means discontinuous conduction.](img/ripple-wave.svg){: .figure}
+![Three aligned traces at 50 percent duty. The switch node is a square wave. The inductor current is a triangle about a dashed average, with delta I marked beside the trace. The output is the capacitive ripple: a parabola that crests where the inductor current crosses its average on the way down. A note says a long scope ground lead can fake a bigger spike, and that a valley of zero means discontinuous conduction.](img/ripple-wave.svg){: .figure}
 
-*Switch node, inductor current, and the much smaller output ripple, drawn for continuous conduction. Delta I is the height of the current triangle.*
+*Switch node, inductor current, and the capacitive output ripple, drawn for continuous conduction. The output crests a quarter cycle after the current peak, where the current crosses its average on the way down.*
 
 If the valley would have to go negative, the current hits zero and waits. That is [discontinuous conduction]({{ '/glossary/#dcm' | relative_url }}). The triangle formula still tells you that you have left continuous conduction. It does not draw the real shape anymore. The widget switches to the discontinuous shape when $$\Delta I_L / 2 > I_{\mathrm{out}}$$.
 
