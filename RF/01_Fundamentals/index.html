@@ -162,7 +162,7 @@
   </div>
   <div class="try"><b>Things to try</b><ol>
     <li>At 10 MHz, even a 1 m wire moves together as one: lumped behaviour.</li>
-    <li>Now go to 2.4 GHz with a 10 cm FR-4 trace. Several whole wavelengths fit on it.</li>
+    <li>Now go to 2.4 GHz with a 10 cm FR-4 trace. About 1.45 wavelengths fit on it.</li>
     <li>Switch the medium from air to FR-4 and watch the wavelength shrink by √3.3 ≈ 1.8×.</li>
   </ol></div>
 </div>
@@ -170,7 +170,7 @@
 <h3>Phase is just time delay, measured in cycles</h3>
 <p>The <strong>electrical length</strong> of a line is its delay expressed as a fraction of one cycle, in degrees:</p>
 <div class="eq">$$\theta = 360^\circ \cdot \frac{\ell}{\lambda} = 360^\circ \cdot f \cdot t_\text{delay}$$</div>
-<p>A line that delays the signal by a quarter of a period has an electrical length of 90°, whatever its physical length. That's why the same 2 cm trace is "electrically short" for a 10 MHz clock and a substantial 40° at 2.4 GHz. Matching networks, power splitters and antenna feeds are all built from lines of precise electrical length, and Module 2 relies on this idea throughout. (A related idea, <em>group delay</em>, describes how long the information in a modulated signal takes to get through, and comes back with filters in Module 3.)</p>
+<p>A line that delays the signal by a quarter of a period has an electrical length of 90°, whatever its physical length. That's why the same 2 cm trace is electrically short for a 10 MHz clock (well under a degree) and about 105° at 2.4 GHz on FR-4, where \(\varepsilon_\text{eff} \approx 3.3\). The same 2 cm in air, with no dielectric slowing the wave, is only about 58°. Matching networks, power splitters and antenna feeds are all built from lines of precise electrical length, and Module 2 relies on this idea throughout. (A related idea, <em>group delay</em>, describes how long the information in a modulated signal takes to get through, and comes back with filters in Module 3.)</p>
 <div class="note">
   <span class="ni">↯</span>
   <div><span class="nt">It isn't only radios: fast digital edges count too</span>A digital edge with rise time \(t_r\) contains significant energy up to roughly \(0.35/t_r\). A 1 ns edge on an SPI or Ethernet line behaves like a 350 MHz signal, so a long trace or ribbon cable starts acting like a transmission line, ringing and all. This is where RF and high-speed digital design meet.</div>
@@ -401,7 +401,7 @@
 <p>A PCB trace carries its signal mostly in the electric field <em>between</em> the copper and the ground plane, so the dielectric in between matters as much as the copper. Two numbers describe it:</p>
 <ul>
   <li><strong>Dk</strong> (dielectric constant, εr) sets how much the material slows the wave, and so the wavelength on the board and the trace width needed for 50 Ω.</li>
-  <li><strong>Df</strong> (dissipation factor, loss tangent, tan δ) is the fraction of field energy turned into heat each cycle.</li>
+  <li><strong>Df</strong> (dissipation factor, loss tangent, tan δ) is the energy lost <em>per radian</em> divided by the energy stored. The fraction of the stored energy turned into heat over a whole cycle is \(2\pi\tan\delta\), and \(\tan\delta = 1/Q_d\).</li>
 </ul>
 <p>Loss comes from two places. <strong>Conductor loss</strong> grows with \(\sqrt{f}\), because at high frequency current crowds into a thin skin at the copper surface (the skin effect). <strong>Dielectric loss</strong> grows in proportion to \(f \cdot \text{Df}\). Above a gigahertz or so, dielectric loss usually wins on FR-4, which is why RF boards use lower-loss laminates.</p>
 
