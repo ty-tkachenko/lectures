@@ -88,7 +88,7 @@ $$Z_0 = \frac{60\ \Omega}{\sqrt{\varepsilon_r}}\,\ln\!\frac{D}{d}$$
 
 For microstrip there's no exact formula, only good approximations (Hammerstad–Wheeler), which the **microstrip calculator** below uses. Module 2 compares the line types in detail.
 
-{% include widget.html widget="microstrip-z0" height=790 title="Microstrip impedance calculator" %}
+{% include widget.html widget="microstrip-z0" height=1200 title="Microstrip impedance calculator" %}
 
 ### Why 50 Ω?
 
@@ -174,7 +174,7 @@ If you slid a voltmeter along the line you'd read a wavy pattern: maxima and min
 
 *Standing-wave envelopes (orange) for four loads, with the total voltage at eight instants (grey). The pattern repeats every λ/2.*
 
-{% include widget.html widget="standing-wave" height=930 title="Standing waves and VSWR" %}
+{% include widget.html widget="standing-wave" height=1315 title="Standing waves and VSWR" %}
 
 ### The math
 
@@ -264,7 +264,7 @@ $$\tau_C = \frac{Z_0 C}{2}\qquad\text{(extra shunt capacitance)}\qquad\qquad \ta
 
 A 0.3 pF pad gives $$\tau_C = 50 \times 0.3\times10^{-12}/2 = 7.5$$ ps. That's much shorter than the rise time, so the dip is shallow and wide: the TDR sees the right *amount* of capacitance (the area of the dip) but can't show its true depth. Try it in the TDR simulator by slowing the rise time:
 
-{% include widget.html widget="tdr-simulator" height=1170 title="TDR simulator" %}
+{% include widget.html widget="tdr-simulator" height=1605 title="TDR simulator" %}
 
 **Where you'll use it:** checking the impedance of a new board on a **test coupon** (a straight 50 Ω line that the board house adds to the panel), finding a bad connector in a cable run, and seeing *where* along a path a mismatch lives, which a frequency sweep can't tell you directly.
 
@@ -368,7 +368,7 @@ $$P_{\text{dBm}} = 10\log_{10}\frac{P}{1\ \text{mW}}$$
 
 The **dB chain** widget below lets you play with this.
 
-{% include widget.html widget="db-chain" height=730 title="dB and dBm chain" %}
+{% include widget.html widget="db-chain" height=1180 title="dB and dBm chain" %}
 
 > **Go deeper: the noise floor, in dB.** Thermal noise in a 1 Hz bandwidth at room temperature (290 K) is $$kT = 4\times10^{-21}$$ W, which is **−174 dBm/Hz**. A receiver with bandwidth $$B$$ and noise figure NF (Module 6) has a noise floor
 > $$N = -174\ \text{dBm/Hz} + 10\log_{10}(B/1\,\text{Hz}) + \text{NF}$$
@@ -419,7 +419,7 @@ And the useful mixed cases:
 
 Try the combinations in the **polarization mismatch** widget:
 
-{% include widget.html widget="polarization" height=620 title="Polarization mismatch" %}
+{% include widget.html widget="polarization" height=1020 title="Polarization mismatch" %}
 
 **Why rocketeers care.** A rocket spins and tumbles, so a linear antenna on it keeps changing its angle to the ground station. That causes deep fades whenever the antennas cross at 90°. Using circular polarization on one or both ends trades a fixed 3 dB (or 0 dB if both are circular with the same hand) for no fades. A side benefit is that a reflection off the ground flips the handedness, so a circular receive antenna partly rejects ground bounce.
 
@@ -471,7 +471,7 @@ Compare how the two kinds of line loss grow with frequency:
 
 Something that grows like $$f$$ always overtakes something that grows like $$\sqrt f$$. Where they cross depends on the trace: wide traces have little copper loss, so the dielectric takes over sooner. For a 50 Ω microstrip on FR-4 with smooth copper, the crossover is around 25 MHz for a 3 mm trace on 1.6 mm board, about 240 MHz on 0.5 mm, and about 1.5 GHz for a 0.39 mm trace on 0.2 mm. Above the crossover, **the board material is the main source of loss**, which is why high-frequency boards use low-Df materials. Because the crossover frequency scales as $$1/\text{Df}^2$$, RO4350B's roughly 5× lower Df pushes it up about 30×. The **Dk/Df loss** widget below plots both curves for any material and thickness. (Real copper is rough, which adds copper loss and moves the crossover up somewhat; Module 3 covers roughness.)
 
-{% include widget.html widget="dk-df-loss" height=770 title="Copper vs dielectric loss" %}
+{% include widget.html widget="dk-df-loss" height=1130 title="Copper vs dielectric loss" %}
 
 | Material | Dk (design) | Df | Notes |
 |---|---|---|---|
@@ -592,14 +592,13 @@ Answers are hidden. Try each one before you open it.
 10. **Explain.** A 100 Ω load and a 25 Ω load on a 50 Ω line both give VSWR 2:1. How could you tell them apart by sliding a voltage probe along the line?
     <details><summary>Answer</summary>For 100 Ω, Γ = +1/3 (in phase), so there's a voltage <b>maximum</b> at the load. For 25 Ω, Γ = −1/3, so there's a voltage <b>minimum</b> at the load. The patterns are the same shape but shifted by λ/4. (The phase of Γ is the information VSWR throws away.)</details>
 
-<script>
-/* Grow each embedded widget iframe (figure.widget-embed from _includes/widget.html) to fit its content (the widget posts its height). */
-window.addEventListener("message", function (e) {
-  var d = e.data;
-  if (!d || d.type !== "widget-height" || !(d.height > 0)) return;
-  var frames = document.querySelectorAll(".widget-embed iframe");
-  for (var i = 0; i < frames.length; i++) {
-    if (frames[i].contentWindow === e.source) frames[i].style.height = Math.min(Math.ceil(d.height) + 4, 4000) + "px";
-  }
-});
-</script>
+## Design challenges
+
+Each widget ends with a design card. The briefs below give the targets. The live check, a hint, the worked answer and a reference preset are in the widget.
+
+- [A 50 Ω trace that fits the radio's pin]({{ '/rf/01-fundamentals/widgets/demo.html?w=microstrip-z0' | relative_url }}#dc-microstrip-z0) ([in the lesson](#1-transmission-lines-and-characteristic-impedance)). Design a 50 Ω microstrip on a 0.20 mm FR-4 prepreg within fab limits, and report ε<sub>eff</sub> and λ/4 at 2.45 GHz.
+- [Write the VSWR spec for a ground-station antenna]({{ '/rf/01-fundamentals/widgets/demo.html?w=standing-wave' | relative_url }}#dc-standing-wave) ([in the lesson](#3-standing-waves-and-vswr)). Turn "at least 90% of 1 W delivered" into a VSWR limit, then pass or fail a 70 + j20 Ω sample.
+- [Find and fix a fault from a TDR reading]({{ '/rf/01-fundamentals/widgets/demo.html?w=tdr-simulator' | relative_url }}#dc-tdr-simulator) ([in the lesson](#4-time-domain-reflectometry-tdr)). Locate and size a capacitive dip from its echo time and time constant, then set how small it must get for 20 dB return loss at 2.45 GHz.
+- [Budget a 915 MHz uplink under the legal limit]({{ '/rf/01-fundamentals/widgets/demo.html?w=db-chain' | relative_url }}#dc-db-chain) ([in the lesson](#6-power-db-dbm-and-dbc)). Pick the radio power and the feedline so EIRP lands between +33 and +36 dBm without overdriving the PA.
+- [Polarization for a spinning rocket]({{ '/rf/01-fundamentals/widgets/demo.html?w=polarization' | relative_url }}#dc-polarization) ([in the lesson](#7-polarization-and-how-em-waves-behave)). Choose the ground-station antenna so a rolling linear antenna never drops into a polarization null.
+- [Choose a laminate for a 5.8 GHz video line]({{ '/rf/01-fundamentals/widgets/demo.html?w=dk-df-loss' | relative_url }}#dc-dk-df-loss) ([in the lesson](#8-dielectric-constant-dk-and-loss-tangent-df)). Keep a 10 cm, 5.8 GHz line under 1 dB of loss with a trace that fits an edge-launch SMA. Does FR-4 work?

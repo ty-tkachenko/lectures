@@ -81,7 +81,7 @@ At 2.4 GHz that's only **6.8 mm**, shorter than most traces on a real board. At 
 
 Try it in the **wavelength explorer**: pick a frequency and a board material and see λ, λ/10 and λ/4 drawn to scale next to a trace.
 
-{% include widget.html widget="wavelength-explorer" height=600 title="Wavelength explorer" %}
+{% include widget.html widget="wavelength-explorer" height=1020 title="Wavelength explorer" %}
 
 > **Go deeper: why λ/10?** Over one wavelength a wave goes through a full 360° cycle. Over λ/10 it goes through 36°, so the two ends of the trace are already noticeably out of step. Kirchhoff's circuit laws assume the voltage is the same all along a wire at every instant. That's the *lumped* model. Past about λ/10 that assumption gets too inaccurate and you need the *distributed* model, where voltage and current vary along the line (Module 1). λ/10 isn't a law of physics. It's a convenient threshold, and some designers use λ/20 to be safe.
 
@@ -127,7 +127,7 @@ A standard "1 oz" PCB trace is 35 µm thick, so at 915 MHz nearly all the curren
 
 Sweep it yourself in the **skin-depth visualizer**, from 1 kHz to 6 GHz:
 
-{% include widget.html widget="skin-depth" height=570 title="Skin-depth visualizer" %}
+{% include widget.html widget="skin-depth" height=965 title="Skin-depth visualizer" %}
 
 ---
 
@@ -238,14 +238,9 @@ Both widgets are embedded in the sections above. Open them full screen here:
 4. **Explain.** Why does a slot in the ground plane under a trace cause trouble at 2.4 GHz but not at 1 kHz?
 5. **Design.** A 915 MHz radio chip sits 25 mm from its antenna connector on an FR-4 board. Should you treat that trace as a transmission line? Show your numbers.
 
-<script>
-/* Grow each embedded widget iframe (figure.widget-embed from _includes/widget.html) to fit its content (the widget posts its height). */
-window.addEventListener("message", function (e) {
-  var d = e.data;
-  if (!d || d.type !== "widget-height" || !(d.height > 0)) return;
-  var frames = document.querySelectorAll(".widget-embed iframe");
-  for (var i = 0; i < frames.length; i++) {
-    if (frames[i].contentWindow === e.source) frames[i].style.height = Math.min(Math.ceil(d.height) + 4, 4000) + "px";
-  }
-});
-</script>
+## Design challenges
+
+Each widget ends with a design card. The briefs below give the targets. The live check, a hint, the worked answer and a reference preset are in the widget.
+
+- [Does this trace need to be a 50 Ω line?]({{ '/rf/00-mindset/widgets/demo.html?w=wavelength-explorer' | relative_url }}#dc-wavelength-explorer) ([in the lesson](#1-when-does-a-wire-stop-being-a-wire)). A 2.45 GHz radio on 2-layer FR-4. Which of a 4 mm and a 12 mm trace can stay a plain wire, and how long can an uncontrolled trace be?
+- [Pick the copper weight for a 433 MHz board]({{ '/rf/00-mindset/widgets/demo.html?w=skin-depth' | relative_url }}#dc-skin-depth) ([in the lesson](#2-skin-effect-rf-current-lives-on-the-surface)). Choose the cheapest copper that is at least 5 skin depths thick, and decide whether 2 oz copper really halves the RF loss.

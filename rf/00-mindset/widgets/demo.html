@@ -14,6 +14,18 @@ select{padding:.2rem}
 canvas{width:100%;border-radius:8px;background:#fafafa}
 .try{font-size:.9rem;background:#fffbeb;border-left:3px solid #f59e0b;padding:.5rem .75rem;margin-top:.8rem}
 .verdict{font-weight:600}
+.design{font-size:.9rem;background:#f0fdf4;border-left:3px solid #16a34a;padding:.5rem .75rem;margin-top:.8rem}
+.design .spec{margin:.35rem 0 .35rem 1.1rem;padding:0}
+.design .spec li{margin:.12rem 0}
+.design .deliver{margin:.4rem 0}
+.design summary{cursor:pointer;font-weight:600;color:#166534}
+.design details{margin:.25rem 0}
+.design p{margin:.3rem 0}
+.design .dc-f{display:block;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.82rem;background:#fff;border-radius:4px;padding:.25rem .5rem;margin:.25rem 0}
+.design .dc-status{font-size:.85rem;font-weight:600;margin:.4rem 0;color:#b45309}
+.design .dc-status.pass{color:#15803d}
+.design .dc-inputs{display:flex;flex-wrap:wrap;gap:.3rem 1rem;align-items:end;margin:.3rem 0}
+.design .dc-inputs label{margin:0}
 </style>
 <!-- embed mode: demo.html?w=<widget-id> shows only that widget (for an iframe in the lesson page) -->
 <script>(function(){try{var w=new URLSearchParams(location.search).get('w');if(w){document.documentElement.className+=' embed';document.documentElement.setAttribute('data-w',w)}}catch(e){}})();</script>
@@ -42,6 +54,7 @@ html.embed.w-unknown .widget{display:block;border:1px solid #eee;padding:1rem 1.
 </select></label>
 <label>Your trace length: <span id="wl-lv"></span></label>
 <input id="wl-l" type="range" min="1" max="200" value="25">
+<div>Presets: <button type="button" class="dc-load">Load reference design</button></div>
 <div class="readout">
 <div>Wavelength λ<b id="wl-lam"></b></div>
 <div>λ/10 threshold<b id="wl-l10"></b></div>
@@ -51,6 +64,17 @@ html.embed.w-unknown .widget{display:block;border:1px solid #eee;padding:1rem 1.
 <p class="verdict" id="wl-verdict"></p>
 <canvas id="wl-c" width="760" height="170"></canvas>
 <div class="try"><b>Try this:</b> set the trace to 25 mm and slide from 100 MHz up to 6 GHz. Where does it stop being "just a wire"? Then switch FR-4 to air: does the threshold move up or down, and why?</div>
+<div class="design" id="dc-wavelength-explorer" data-dc="wavelength-explorer">
+<b>Design challenge:</b> <p>You're laying out a small 2.4 GHz telemetry board for a drone or model rocket on cheap 2-layer FR-4 (microstrip, ε<sub>eff</sub> ≈ 3.4). The fab won't promise controlled impedance, so you'd like to keep RF traces short enough to count as plain wires. The radio's RF pin runs 4 mm to its matching network, then 12 mm on to the chip antenna.</p>
+<ul class="spec"><li>Frequency 2.45 GHz, FR-4 microstrip (ε<sub>eff</sub> 3.4).</li><li>A trace counts as a plain wire only if it is shorter than λ/10.</li><li>Find the longest uncontrolled trace you may use, rounded down to a whole millimetre.</li></ul>
+<p class="deliver">Produce: which of the two traces must be designed as a 50 Ω line, the longest allowed uncontrolled length, and one sentence on what you'd change in the layout. Check it in the widget above.</p>
+<p class="dc-status" aria-live="polite"></p>
+<details class="hint"><summary>Hint</summary><p>Find λ on the board first: the board slows the wave by √ε<sub>eff</sub>, so λ is shorter than in air. Then put each trace length on the slider and read the verdict.</p></details>
+<details class="check"><summary>Check your design</summary><p><b>Pass if:</b> the widget is at about 2.45 GHz on FR-4 microstrip and the trace slider sits at the longest whole-millimetre length that still shows ✅.</p>
+<p><b>Worked answer.</b></p><span class="dc-f">λ = c / (f √ε<sub>eff</sub>) = 3×10⁸ / (2.45×10⁹ × √3.4) = 66.4 mm  →  λ/10 = 6.64 mm</span><p>So the longest plain-wire trace is <b>6 mm</b>. The 4 mm run is 0.060 λ: a plain wire is fine. The 12 mm run is 0.181 λ: it must be a 50 Ω line. Either move the antenna so its feed is within 6 mm of the matching network, or pay for a controlled-impedance stackup (see the microstrip widget in Module 1). For comparison, at 915 MHz λ/10 is 17.8 mm, so the same 12 mm trace would be fine there.</p>
+<p>Other answers can be valid if they meet every requirement.</p>
+<p>Press <b>Load reference design</b> in the presets row to set the widget to this answer.</p></details>
+</div>
 </div>
 
 <div class="widget" id="sd" data-wid="skin-depth">
@@ -59,6 +83,7 @@ html.embed.w-unknown .widget{display:block;border:1px solid #eee;padding:1rem 1.
 <input id="sd-f" type="range" min="0" max="1000" value="700">
 <label>Copper thickness
 <select id="sd-t"><option value="17.5">½ oz (17.5 µm)</option><option value="35" selected>1 oz (35 µm)</option><option value="70">2 oz (70 µm)</option></select></label>
+<div>Presets: <button type="button" class="dc-load">Load reference design</button></div>
 <div class="readout">
 <div>Skin depth δ<b id="sd-d"></b></div>
 <div>Current within 1 δ of the surface<b id="sd-p"></b></div>
@@ -66,6 +91,17 @@ html.embed.w-unknown .widget{display:block;border:1px solid #eee;padding:1rem 1.
 </div>
 <canvas id="sd-c" width="760" height="220"></canvas>
 <div class="try"><b>Try this:</b> start at 1 kHz, where the color is even all the way through. Slide up to 915 MHz. How much of the 35 µm copper is actually doing the work? Does buying 2 oz copper help at 2.4 GHz?</div>
+<div class="design" id="dc-skin-depth" data-dc="skin-depth">
+<b>Design challenge:</b> <p>A 433 MHz beacon board (70 cm band). Heavier copper costs more: ½ oz is cheapest, 2 oz the most expensive. A teammate says switching the RF trace to 2 oz copper will cut its loss in half.</p>
+<ul class="spec"><li>Design at 433 MHz, the lowest frequency on the board.</li><li>Copper at least 5 skin depths thick, so the current density has fallen below 1% (e<sup>−5</sup> = 0.7%) inside the metal.</li><li>Choose the cheapest copper weight that meets it.</li></ul>
+<p class="deliver">Produce: the copper weight, the skin depth δ, the ratio t/δ, and one sentence answering your teammate. Check it in the widget above.</p>
+<p class="dc-status" aria-live="polite"></p>
+<details class="hint"><summary>Hint</summary><p>δ shrinks like 1/√f. Compare 5δ at 433 MHz with 17.5, 35 and 70 µm. Then ask yourself: once the copper is many δ thick, does adding more copper add any more surface for the current to flow on?</p></details>
+<details class="check"><summary>Check your design</summary><p><b>Pass if:</b> the frequency is near 433 MHz (420–450 MHz), t ≥ 5δ, and no thinner copper option would also pass.</p>
+<p><b>Worked answer.</b></p><span class="dc-f">δ = √(2ρ / (ωμ₀)) = √(2 × 1.68×10⁻⁸ / (2π × 433×10⁶ × 4π×10⁻⁷)) = 3.13 µm  →  5δ = 15.7 µm</span><p>½ oz copper is 17.5 µm, so t/δ = 5.6 and <b>½ oz passes</b>. It meets 5δ at every frequency above about 347 MHz. Your teammate is wrong: once t ≫ δ, the RF resistance per square is about ρ/δ = 5.4 mΩ whatever the copper weight. Thicker copper only lowers the DC resistance. If you want less loss, pay for smooth copper and a low-loss surface finish, because the current lives in the top few micrometres.</p>
+<p>Other answers can be valid if they meet every requirement.</p>
+<p>Press <b>Load reference design</b> in the presets row to set the widget to this answer.</p></details>
+</div>
 </div>
 
 <script>
@@ -118,6 +154,35 @@ const q=id=>document.getElementById(id);
 const wlf=q('wl-f'),wlm=q('wl-mat'),wll=q('wl-l'),sdf=q('sd-f'),sdt=q('sd-t');
 [wlf,wlm,wll].forEach(e=>e.addEventListener('input',wl));[sdf,sdt].forEach(e=>e.addEventListener('input',sd));
 wl();sd();
+</script><script>
+// ---- design challenges: live check + "Load reference design" ----
+function dcSet(id,val){const e=document.getElementById(id);e.value=val;e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}))}
+function dcInit(DC){
+ document.querySelectorAll('.design[data-dc]').forEach(sec=>{
+  const id=sec.getAttribute('data-dc'),cfg=DC[id];if(!cfg)return;
+  const st=sec.querySelector('.dc-status'),wid=sec.closest('.widget')||sec;
+  const run=()=>{let items;try{items=cfg.check(sec)}catch(e){items=[[false,'check error: '+e.message]]}
+   const ok=items.length>0&&items.every(i=>i[0]);st.className='dc-status'+(ok?' pass':'');sec.setAttribute('data-pass',ok?'1':'0');
+   st.textContent='Live check of the current settings: '+(ok?'✅ meets every requirement. ':'not there yet. ')+items.map(i=>(i[0]?'✓ ':'✗ ')+i[1]).join(' · ')};
+  let pend=false;const sched=()=>{if(pend)return;pend=true;requestAnimationFrame(()=>{pend=false;run()})};
+  ['input','change','click','pointerup','pointermove'].forEach(ev=>wid.addEventListener(ev,sched));
+  const b=wid.querySelector('.dc-load');sec.querySelectorAll('details').forEach(d=>d.addEventListener('toggle',()=>{window.dispatchEvent(new Event('resize'))}));if(b&&cfg.load)b.addEventListener('click',()=>{cfg.load(sec);sched()});
+  if(cfg.poll)setInterval(run,500);
+  run();
+ });
+}
+
+dcInit({
+ 'wavelength-explorer':{
+  load(){dcSet('wl-mat','3.4');dcSet('wl-f',860);dcSet('wl-l',6)},
+  check(){const f=logF(+q('wl-f').value,1e7,6e9),e=+q('wl-mat').value,L=+q('wl-l').value,lam=3e8/(f*Math.sqrt(e))*1000,fr=L/lam,mx=Math.ceil(lam/10)-1;
+   return [[f>=2.40e9&&f<=2.50e9,'f = '+(f/1e9).toFixed(3)+' GHz'],[e===3.4,'FR-4 microstrip'],[fr<0.1,'trace '+L+' mm = '+fr.toFixed(3)+' λ'],[fr<0.1&&L>=mx,L>=mx?'longest whole-mm plain-wire length':'you can go longer']]}},
+ 'skin-depth':{
+  load(){dcSet('sd-f',832);dcSet('sd-t','17.5')},
+  check(){const f=logF(+q('sd-f').value,1e3,6e9),t=+q('sd-t').value,d=Math.sqrt(2*1.68e-8/(2*Math.PI*f*4*Math.PI*1e-7))*1e6,r=t/d;
+   const thinner=[17.5,35,70].filter(x=>x<t&&x/d>=5);
+   return [[f>=420e6&&f<=450e6,'f = '+(f/1e6).toFixed(0)+' MHz'],[r>=5,'t/δ = '+r.toFixed(1)],[r>=5&&thinner.length===0,thinner.length?'a thinner, cheaper copper also passes':'cheapest copper that passes']]}}
+});
 </script><script>
 // ---- embed mode + iframe auto-height ----
 (function(){

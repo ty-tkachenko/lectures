@@ -21,6 +21,18 @@ canvas{width:100%;border-radius:8px;background:#fafafa}
 .verdict{font-weight:600}
 .legend{font-size:.85rem;color:#555}
 .legend span{display:inline-block;width:14px;height:3px;vertical-align:middle;margin:0 .3rem 0 .8rem}
+.design{font-size:.9rem;background:#f0fdf4;border-left:3px solid #16a34a;padding:.5rem .75rem;margin-top:.8rem}
+.design .spec{margin:.35rem 0 .35rem 1.1rem;padding:0}
+.design .spec li{margin:.12rem 0}
+.design .deliver{margin:.4rem 0}
+.design summary{cursor:pointer;font-weight:600;color:#166534}
+.design details{margin:.25rem 0}
+.design p{margin:.3rem 0}
+.design .dc-f{display:block;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.82rem;background:#fff;border-radius:4px;padding:.25rem .5rem;margin:.25rem 0}
+.design .dc-status{font-size:.85rem;font-weight:600;margin:.4rem 0;color:#b45309}
+.design .dc-status.pass{color:#15803d}
+.design .dc-inputs{display:flex;flex-wrap:wrap;gap:.3rem 1rem;align-items:end;margin:.3rem 0}
+.design .dc-inputs label{margin:0}
 </style>
 <!-- embed mode: demo.html?w=<widget-id> shows only that widget (for an iframe in the lesson page) -->
 <script>(function(){try{var w=new URLSearchParams(location.search).get('w');if(w){document.documentElement.className+=' embed';document.documentElement.setAttribute('data-w',w)}}catch(e){}})();</script>
@@ -51,7 +63,7 @@ html.embed.w-unknown .widget{display:block;border:1px solid #eee;padding:1rem 1.
 <label class="inline"><input type="checkbox" id="sc-adm"> show admittance grid (for shunt parts)</label></div>
 </div>
 <div>Presets:
-<button data-r="0" data-x="0">Short</button><button data-r="1e9" data-x="0">Open</button><button data-r="50" data-x="0">Matched</button><button data-r="100" data-x="0">100 Ω</button><button data-r="25" data-x="-25">25 − j25 Ω</button><button data-r="10" data-x="30">10 + j30 Ω</button><button id="sc-qw">Short, then λ/4 of line</button>
+<button data-r="0" data-x="0">Short</button><button data-r="1e9" data-x="0">Open</button><button data-r="50" data-x="0">Matched</button><button data-r="100" data-x="0">100 Ω</button><button data-r="25" data-x="-25">25 − j25 Ω</button><button data-r="10" data-x="30">10 + j30 Ω</button><button id="sc-qw">Short, then λ/4 of line</button><button type="button" class="dc-load">Load reference design</button>
 </div>
 <div class="readout">
 <div>Load Z<sub>L</sub> (normalized z)<b id="sc-z"></b></div>
@@ -64,6 +76,17 @@ html.embed.w-unknown .widget{display:block;border:1px solid #eee;padding:1rem 1.
 <canvas id="sc-c" width="760" height="560" style="touch-action:none;cursor:crosshair"></canvas>
 <p class="legend"><span style="background:#ef4444"></span>load <span style="background:#7c3aed"></span>after the line (Z<sub>in</sub>) <span style="background:#f59e0b"></span>constant-|Γ| (constant-VSWR) circle <span style="background:#16a34a"></span>admittance grid: read the <i>same</i> red dot on the green circles to get the normalized admittance y = g + jb</p>
 <div class="try"><b>Try this:</b> (1) Press "Short, then λ/4 of line". The dot travels half-way round the chart and ends at the open circuit on the right edge: a shorted quarter-wave line looks like an open. (2) Pick 100 Ω and slide the line length. The dot circles the center at a fixed distance: a lossless line never changes |Γ| or VSWR, only the angle. (3) Drag the dot into the top half: that's inductive. Bottom half is capacitive.</div>
+<div class="design" id="dc-smith-chart" data-dc="smith-chart">
+<b>Design challenge:</b> <p>A 2.45 GHz PCB antenna measures <b>Z<sub>L</sub> = 30 + j40 Ω</b> at its feed. The plan is to add 50 Ω line until the impedance looking in is purely resistive, then finish with a λ/4 transformer (Section 5). The board is 4-layer FR-4 with 0.20 mm to ground (ε<sub>r</sub> 4.4) and a 0.15 mm minimum trace width. Its 50 Ω line is 0.38 mm wide with ε<sub>eff</sub> 3.33.</p>
+<ul class="spec"><li>Z<sub>in</sub> purely resistive: |X<sub>in</sub>| ≤ 2 Ω.</li><li>The λ/4 transformer that follows, Z<sub>1</sub> = √(50 R<sub>in</sub>), has to be buildable: 0.15–1.5 mm wide on this stackup.</li><li>Use the shortest line that meets both.</li></ul>
+<p class="deliver">Produce: the line length (in λ and in mm), R<sub>in</sub>, Z<sub>1</sub> and Z<sub>1</sub>'s width. Check it in the widget above.</p>
+<p class="dc-status" aria-live="polite"></p>
+<details class="hint"><summary>Hint</summary><p>Slide the line length and watch the purple dot: Z<sub>in</sub> is real wherever it crosses the horizontal axis, and that happens twice per half turn. Is the first crossing buildable? (The microstrip widget in Module 1 gives widths.)</p></details>
+<details class="check"><summary>Check your design</summary><p><b>Pass if:</b> the load is 30 + j40 Ω in a 50 Ω system, |X<sub>in</sub>| ≤ 2 Ω, and the transformer width for that R<sub>in</sub> is between 0.15 and 1.5 mm.</p>
+<p><b>Worked answer.</b></p><span class="dc-f">Γ<sub>L</sub> = (Z<sub>L</sub> − 50) / (Z<sub>L</sub> + 50) = (−20 + j40) / (80 + j40) = 0.5 ∠ 90°,  VSWR = 3</span><p>Moving toward the generator rotates Γ clockwise by 720° × ℓ/λ. The first crossing is on the right after 90°: ℓ = 0.125 λ, R<sub>in</sub> = 50 × VSWR = 150 Ω, Z<sub>1</sub> = √(50 × 150) = 86.6 Ω, which is <b>0.13 mm wide</b>: too thin for the fab. The second crossing is on the left after 270°: <b>ℓ = 0.375 λ</b>, R<sub>in</sub> = 50 / VSWR = 16.7 Ω, Z<sub>1</sub> = √(50 × 16.7) = 28.9 Ω, which is 0.87 mm wide and buildable.</p><span class="dc-f">λ<sub>g</sub> = c / (f √3.33) = 67.1 mm  →  0.375 λ = 25.2 mm of 50 Ω line; the 28.9 Ω section (ε<sub>eff</sub> 3.58) is 16.2 mm long</span>
+<p>Other answers can be valid if they meet every requirement.</p>
+<p>Press <b>Load reference design</b> in the presets row to set the widget to this answer.</p></details>
+</div>
 </div>
 
 <!-- ============ 2. L-network designer ============ -->
@@ -78,11 +101,27 @@ html.embed.w-unknown .widget{display:block;border:1px solid #eee;padding:1rem 1.
 <div><label>Load resistance R<sub>L</sub> (Ω)</label><input id="lm-rl" type="number" value="25" min="0.1" step="any"></div>
 <div><label>Load reactance X<sub>L</sub> (Ω, + is inductive)</label><input id="lm-xl" type="number" value="0" step="any"></div>
 </div>
-<div>Examples: <button data-l="50,900,25,0">25 Ω → 50 Ω at 900 MHz</button><button data-l="50,915,10,30">10 + j30 Ω antenna</button><button data-l="50,2400,200,-100">200 − j100 Ω</button><button data-l="50,915,2,0">2 Ω PA output (high Q)</button></div>
+<div>Examples: <button data-l="50,900,25,0">25 Ω → 50 Ω at 900 MHz</button><button data-l="50,915,10,30">10 + j30 Ω antenna</button><button data-l="50,2400,200,-100">200 − j100 Ω</button><button data-l="50,915,2,0">2 Ω PA output (high Q)</button><button data-l="50,915,18,-22" class="dc-load">Load reference design</button></div>
 <div id="lm-out" style="margin:.8rem 0"></div>
 <canvas id="lm-c" width="760" height="380"></canvas>
 <p class="legend" id="lm-leg"></p>
 <div class="try"><b>Try this:</b> start with the 25 Ω → 50 Ω example: two answers, one low-pass (series L, shunt C) and one high-pass (series C, shunt L). Then pick "2 Ω PA output". The node Q jumps to about 5 and the 10 dB-return-loss bandwidth collapses. That's why big impedance ratios are usually matched in two or more smaller steps.</div>
+<div class="design" id="dc-l-match-designer" data-dc="l-match-designer">
+<b>Design challenge:</b> <p>A 915 MHz chip antenna measures <b>18 − j22 Ω</b> at its feed on your board. Match it to the radio's 50 Ω output with one series part and one shunt part from the E12 series (…3.9, 4.7, 5.6, 6.8, 8.2, 10…). The radio's 2nd and 3rd harmonics, at 1.83 and 2.75 GHz, must not get an easy path to the antenna.</p>
+<ul class="spec"><li>Return loss ≥ 15 dB at 902, 915 and 928 MHz with your rounded E12 parts.</li><li>E12 values only.</li><li>A topology chosen for a reason (harmonics or DC block).</li></ul>
+<p class="deliver">Produce: the topology, the two part values, the return loss at the band edges, and a one-sentence justification. Enter your parts below and the live check computes their return loss. Check it in the widget above.</p>
+<div class="dc-inputs">
+<label>Your network <select class="dc-topo"><option value="lp">Low-pass: shunt C at the radio, series L at the antenna</option><option value="hp">High-pass: shunt L at the radio, series C at the antenna</option></select></label>
+<label>Shunt part <input class="dc-sh" type="number" step="any" min="0" value=""> <span class="dc-shu">pF</span></label>
+<label>Series part <input class="dc-se" type="number" step="any" min="0" value=""> <span class="dc-seu">nH</span></label>
+</div>
+<p class="dc-status" aria-live="polite"></p>
+<details class="hint"><summary>Hint</summary><p>Load the antenna into the designer (R<sub>S</sub> 50, 915 MHz, R<sub>L</sub> 18, X<sub>L</sub> −22). It gives two exact answers. Which one has a series inductor and a shunt capacitor, and what does that do to 2.75 GHz? Then round each part to the nearest E12 value.</p></details>
+<details class="check"><summary>Check your design</summary><p><b>Pass if:</b> the designer holds the antenna case, the network is low-pass, both parts are E12 values, and return loss is ≥ 15 dB at 902, 915 and 928 MHz.</p>
+<p><b>Worked answer.</b> R<sub>L</sub> < 50 Ω, so the series part goes next to the load (ω = 2π × 915 MHz = 5.749×10⁹ rad/s):</p><span class="dc-f">X<sub>series</sub> = ±√(R<sub>L</sub>(50 − R<sub>L</sub>)) − X<sub>L</sub> = ±24 + 22  →  +46 Ω (L = 8.0 nH) or −2 Ω (C = 87 pF)</span><span class="dc-f">B<sub>shunt</sub> = ±√((50 − R<sub>L</sub>)/R<sub>L</sub>) / 50 = ±26.7 mS  →  C = B/ω = 4.64 pF or L = 1/(ωB) = 6.52 nH</span><p><b>Low-pass: shunt 4.7 pF, series 8.2 nH</b> (E12). Return loss is 37.8 / 29.0 / 24.6 dB at 902 / 915 / 928 MHz. The series L and shunt C roll off the harmonics. The high-pass answer would let them through. Its 87 pF series cap works as a DC block, which is only worth having if the antenna feed carries DC. The node Q is 1.33, so the band is easy.</p>
+<p>Other answers can be valid if they meet every requirement.</p>
+<p>Press <b>Load reference design</b> in the presets row to set the widget to this answer.</p></details>
+</div>
 </div>
 
 <!-- ============ 3. quarter-wave transformer ============ -->
@@ -92,6 +131,7 @@ html.embed.w-unknown .widget{display:block;border:1px solid #eee;padding:1rem 1.
 <div><label>Load resistance R<sub>L</sub>: <span id="qw-rv"></span></label><input id="qw-r" type="range" min="0" max="1000" step="any" value="650.515"></div>
 <div><label>Design frequency f<sub>0</sub> (MHz) and board ε<sub>eff</sub></label><input id="qw-f" type="number" value="915" min="1" step="any"> <input id="qw-e" type="number" value="3.4" min="1" max="12" step="0.1"></div>
 </div>
+<div>Presets: <button type="button" class="dc-load">Load reference design</button></div>
 <div class="readout">
 <div>One section: Z<sub>1</sub> = √(Z<sub>0</sub>R<sub>L</sub>)<b id="qw-z1"></b></div>
 <div>Two-section binomial: Z<sub>1</sub>, Z<sub>2</sub><b id="qw-z2"></b></div>
@@ -101,6 +141,17 @@ html.embed.w-unknown .widget{display:block;border:1px solid #eee;padding:1rem 1.
 <canvas id="qw-c" width="760" height="260"></canvas>
 <p class="legend"><span style="background:#94a3b8"></span>no matching <span style="background:#3b82f6"></span>one λ/4 section <span style="background:#16a34a"></span>two-section binomial</p>
 <div class="try"><b>Try this:</b> set R<sub>L</sub> = 100 Ω. One section gives a perfect match at f<sub>0</sub>, and also at 3f<sub>0</sub>, where the line is 3λ/4 long. Make R<sub>L</sub> = 10 Ω: the dip gets narrow. The two-section version trades a slightly longer line for a much wider band.</div>
+<div class="design" id="dc-quarter-wave-transformer" data-dc="quarter-wave-transformer">
+<b>Design challenge:</b> <p>An S-band ground-station feed has to cover <b>2.2–2.7 GHz</b> (satellite telemetry plus the 2.4 GHz band). It feeds four 50 Ω elements in parallel, so the feed point is 12.5 Ω. You'll match it to the 50 Ω cable with λ/4 microstrip sections on RO4350B, 0.508 mm thick (ε<sub>r</sub> 3.66).</p>
+<ul class="spec"><li>R<sub>L</sub> = 12.5 Ω, f<sub>0</sub> = 2.45 GHz.</li><li>Return loss ≥ 20 dB from 2.2 to 2.7 GHz.</li><li>Use the fewest sections that meet it.</li></ul>
+<p class="deliver">Produce: the number of sections, the section impedances, and each section's width and physical λ/4 length on RO4350B 0.508 mm (use the microstrip widget in Module 1 for widths and ε<sub>eff</sub>). Check it in the widget above.</p>
+<p class="dc-status" aria-live="polite"></p>
+<details class="hint"><summary>Hint</summary><p>Fractional bandwidth = (f<sub>high</sub> − f<sub>low</sub>) / f<sub>0</sub>. Compare it with the widget's “RL ≥ 20 dB” readout for one and two sections. Each section has a different width, so each has its own ε<sub>eff</sub>.</p></details>
+<details class="check"><summary>Check your design</summary><p><b>Pass if:</b> the widget is set to R<sub>L</sub> = 12.5 Ω and f<sub>0</sub> = 2450 MHz with ε<sub>eff</sub> between 2.9 and 3.3, and the section count you choose is the fewest that covers 20.4%.</p>
+<p><b>Worked answer.</b> The required fractional bandwidth is (2.7 − 2.2)/2.45 = 20.4%.</p><span class="dc-f">1 section: Z<sub>1</sub> = √(50 × 12.5) = 25 Ω;  FBW = 2 − (4/π) acos[ (Γ<sub>m</sub>/√(1 − Γ<sub>m</sub>²)) · 2√(Z<sub>0</sub>R<sub>L</sub>) / |R<sub>L</sub> − Z<sub>0</sub>| ] = 17.1%</span><p>One section reaches only 18.5 dB return loss at the band edges, so it fails.</p><span class="dc-f">2-section binomial: Z<sub>1</sub> = 50<sup>3/4</sup> · 12.5<sup>1/4</sup> = 35.4 Ω,  Z<sub>2</sub> = 50<sup>1/4</sup> · 12.5<sup>3/4</sup> = 17.7 Ω  →  FBW 47.7%, RL 34.4 dB at 2.2 and 2.7 GHz</span><p><b>Two sections</b>: 50 Ω cable → 35.4 Ω → 17.7 Ω → 12.5 Ω load. On RO4350B 0.508 mm, the 35.4 Ω section is 1.88 mm wide with ε<sub>eff</sub> 2.98, so λ/4 = c/(4f<sub>0</sub>√ε<sub>eff</sub>) = 17.7 mm. The 17.7 Ω section is 4.56 mm wide with ε<sub>eff</sub> 3.20, so λ/4 = 17.1 mm. The widget uses one ε<sub>eff</sub> for both, so set it to about 3.1 for a 17.4 mm average.</p>
+<p>Other answers can be valid if they meet every requirement.</p>
+<p>Press <b>Load reference design</b> in the presets row to set the widget to this answer.</p></details>
+</div>
 </div>
 
 <!-- ============ 4. S-parameters power split ============ -->
@@ -110,6 +161,7 @@ html.embed.w-unknown .widget{display:block;border:1px solid #eee;padding:1rem 1.
 <div><label>S<sub>11</sub>: <span id="sp-av"></span></label><input id="sp-a" type="range" min="-40" max="0" step="0.1" value="-15"></div>
 <div><label>S<sub>21</sub>: <span id="sp-bv"></span></label><input id="sp-b" type="range" min="-30" max="0" step="0.1" value="-0.8"></div>
 </div>
+<div>Presets: <button type="button" class="dc-load">Load reference design</button></div>
 <div class="readout">
 <div>Return loss<b id="sp-rl"></b></div>
 <div>Insertion loss<b id="sp-il"></b></div>
@@ -120,6 +172,17 @@ html.embed.w-unknown .widget{display:block;border:1px solid #eee;padding:1rem 1.
 <p class="verdict" id="sp-verdict"></p>
 <canvas id="sp-c" width="760" height="90"></canvas>
 <div class="try"><b>Try this:</b> a filter datasheet says S<sub>11</sub> = −15 dB and S<sub>21</sub> = −0.8 dB. Where did the missing power go? Now set S<sub>11</sub> to −3 dB and S<sub>21</sub> to −1 dB: is that possible for a passive part?</div>
+<div class="design" id="dc-s-parameter-power" data-dc="s-parameter-power">
+<b>Design challenge:</b> <p>A harmonic filter sits between a 1 W (+30 dBm) 915 MHz PA and the antenna. You have three candidates: <b>A</b> S<sub>11</sub> −12 dB, S<sub>21</sub> −0.6 dB; <b>B</b> S<sub>11</sub> −20 dB, S<sub>21</sub> −0.9 dB; <b>C</b> S<sub>11</sub> −18 dB, S<sub>21</sub> −0.5 dB.</p>
+<ul class="spec"><li>At most 2% of the power reflected back to the PA.</li><li>At least 80% delivered to the antenna.</li><li>No more than 150 mW of heat in the filter, its power rating with margin.</li></ul>
+<p class="deliver">Produce: the spec limits for S<sub>11</sub> and S<sub>21</sub> in dB, the power each candidate dissipates, and your choice. Check it in the widget above.</p>
+<p class="dc-status" aria-live="polite"></p>
+<details class="hint"><summary>Hint</summary><p>Turn each dB value into a power fraction with 10<sup>dB/10</sup>. Whatever is neither reflected nor transmitted turns into heat, since a filter radiates almost nothing.</p></details>
+<details class="check"><summary>Check your design</summary><p><b>Pass if:</b> at the S-parameters you've set, reflected ≤ 2%, transmitted ≥ 80%, and the heat at 1 W input is ≤ 150 mW.</p>
+<p><b>Worked answer.</b></p><span class="dc-f">S<sub>11</sub> ≤ 10 log 0.02 = −17.0 dB ;  S<sub>21</sub> ≥ 10 log 0.80 = −0.97 dB ;  heat = (1 − |S<sub>11</sub>|² − |S<sub>21</sub>|²) × 1 W</span><p>A reflects 6.3%, so it fails. B reflects 1.0% and passes 81.3%, but it turns 177 mW into heat and fails even though both of its S-parameters look fine. C reflects 1.6%, passes 89.1% and dissipates 93 mW: <b>choose C</b>.</p>
+<p>Other answers can be valid if they meet every requirement.</p>
+<p>Press <b>Load reference design</b> in the presets row to set the widget to this answer.</p></details>
+</div>
 </div>
 
 <script>
@@ -266,6 +329,59 @@ function sp(){const a=+q('sp-a').value,b=+q('sp-b').value,r=Math.pow(10,a/10),t=
  [[r,'#ef4444','reflected'],[t,'#3b82f6','transmitted'],[Math.max(0,l),'#f59e0b','lost']].forEach(([fr,col,name])=>{const w=Wd*Math.min(1,fr);x.fillStyle=col;x.fillRect(px,20,w,40);if(w>70){x.fillStyle='#fff';x.font='600 13px Inter,sans-serif';x.fillText(name,px+6,45)}px+=w});
  x.strokeStyle='#999';x.strokeRect(L,20,Wd,40);x.fillStyle='#555';x.font='12px Inter,sans-serif';x.fillText('100% of the power arriving at port 1',L,H-8)}
 ['sp-a','sp-b'].forEach(i=>q(i).addEventListener('input',sp));sp();
+</script><script>
+// ---- design challenges: live check + "Load reference design" ----
+function dcSet(id,val){const e=document.getElementById(id);e.value=val;e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}))}
+function dcInit(DC){
+ document.querySelectorAll('.design[data-dc]').forEach(sec=>{
+  const id=sec.getAttribute('data-dc'),cfg=DC[id];if(!cfg)return;
+  const st=sec.querySelector('.dc-status'),wid=sec.closest('.widget')||sec;
+  const run=()=>{let items;try{items=cfg.check(sec)}catch(e){items=[[false,'check error: '+e.message]]}
+   const ok=items.length>0&&items.every(i=>i[0]);st.className='dc-status'+(ok?' pass':'');sec.setAttribute('data-pass',ok?'1':'0');
+   st.textContent='Live check of the current settings: '+(ok?'✅ meets every requirement. ':'not there yet. ')+items.map(i=>(i[0]?'✓ ':'✗ ')+i[1]).join(' · ')};
+  let pend=false;const sched=()=>{if(pend)return;pend=true;requestAnimationFrame(()=>{pend=false;run()})};
+  ['input','change','click','pointerup','pointermove'].forEach(ev=>wid.addEventListener(ev,sched));
+  const b=wid.querySelector('.dc-load');sec.querySelectorAll('details').forEach(d=>d.addEventListener('toggle',()=>{window.dispatchEvent(new Event('resize'))}));if(b&&cfg.load)b.addEventListener('click',()=>{cfg.load(sec);sched()});
+  if(cfg.poll)setInterval(run,500);
+  run();
+ });
+}
+
+function dcMs(w,h,er){const u=w/h;let ee,z;
+ if(u<=1){ee=(er+1)/2+(er-1)/2*(Math.pow(1+12/u,-0.5)+0.04*(1-u)*(1-u));z=60/Math.sqrt(ee)*Math.log(8/u+u/4)}
+ else{ee=(er+1)/2+(er-1)/2*Math.pow(1+12/u,-0.5);z=120*Math.PI/(Math.sqrt(ee)*(u+1.393+0.667*Math.log(u+1.444)))}return {z,ee}}
+function dcW(Zt,h,er){let lo=0.005*h,hi=30*h;for(let i=0;i<80;i++){const m=Math.sqrt(lo*hi);if(dcMs(m,h,er).z>Zt)lo=m;else hi=m}return Math.sqrt(lo*hi)}
+const dcE12=[1,1.2,1.5,1.8,2.2,2.7,3.3,3.9,4.7,5.6,6.8,8.2];
+function dcIsE12(v){if(!(v>0))return false;const dec=Math.pow(10,Math.floor(Math.log10(v)+1e-9)),m=v/dec;return dcE12.some(e=>Math.abs(m-e)<1e-6)}
+dcInit({
+ 'smith-chart':{poll:true,
+  load(){q('sc-z0').value='50';scSet(30,40);q('sc-l').value=0.375;sc()},
+  check(){const {R,X,z0}=scLoad(),l=+q('sc-l').value;if(R>=1e8)return [[false,'load is an open']];
+   const gL=zToG(cx(R/z0,X/z0)),gin=cmul(gL,cexpj(-4*Math.PI*l)),Zin=cmul(gToZ(gin),cx(z0)),Rin=Zin[0],Xin=Zin[1];
+   const Z1=Math.sqrt(50*Math.max(Rin,1e-6)),w=dcW(Z1,0.2,4.4);
+   return [[z0===50&&Math.abs(R-30)<=1&&Math.abs(X-40)<=1,'load '+fmtZ(R,X)],[Math.abs(Xin)<=2,'X_in '+(Math.abs(Xin)<0.05?0:Xin).toFixed(1)+' Ω at ℓ = '+l.toFixed(3)+' λ'],[w>=0.15&&w<=1.5,'Z₁ '+Z1.toFixed(1)+' Ω → '+w.toFixed(2)+' mm wide']]}},
+ 'l-match-designer':{
+  load(sec){q('lm-rs').value=50;q('lm-f').value=915;q('lm-rl').value=18;q('lm-xl').value=-22;lm();
+   const t=sec.querySelector('.dc-topo');t.value='lp';t.dispatchEvent(new Event('change',{bubbles:true}));sec.querySelector('.dc-sh').value=4.7;sec.querySelector('.dc-se').value=8.2},
+  check(sec){const topo=sec.querySelector('.dc-topo').value,sh=+sec.querySelector('.dc-sh').value,se=+sec.querySelector('.dc-se').value;
+   sec.querySelector('.dc-shu').textContent=topo==='lp'?'pF':'nH';sec.querySelector('.dc-seu').textContent=topo==='lp'?'nH':'pF';
+   const scen=+q('lm-rs').value===50&&+q('lm-f').value===915&&+q('lm-rl').value===18&&+q('lm-xl').value===-22;
+   const ZL=cx(18,-22),rl=f=>{const w=2*Math.PI*f;let zs,ys;
+    if(topo==='lp'){zs=cx(0,w*se*1e-9);ys=cx(0,w*sh*1e-12)}else{zs=cx(0,-1/(w*se*1e-12));ys=cx(0,-1/(w*sh*1e-9))}
+    const Zin=cinv(cadd(cinv(cadd(ZL,zs)),ys)),g=cabs(cdiv(csub(Zin,cx(50)),cadd(Zin,cx(50))));return -20*Math.log10(Math.max(g,1e-9))};
+   const have=sh>0&&se>0,r=have?[902e6,915e6,928e6].map(rl):[NaN,NaN,NaN];
+   return [[scen,scen?'designer holds the antenna case':'load the antenna (50 Ω, 915 MHz, 18 − j22 Ω) into the designer'],[topo==='lp',topo==='lp'?'low-pass (keeps harmonics down)':'high-pass lets the harmonics through'],[dcIsE12(sh)&&dcIsE12(se),have?(dcIsE12(sh)&&dcIsE12(se)?'E12 values':'not E12 values'):'enter your two parts'],[have&&r.every(x=>x>=15),'RL '+r.map(x=>isFinite(x)?x.toFixed(1):'–').join(' / ')+' dB at 902 / 915 / 928 MHz']]}},
+ 'quarter-wave-transformer':{
+  load(){q('qw-r').value=1000*Math.log(12.5/5)/Math.log(100);q('qw-f').value=2450;q('qw-e').value=3.1;qw()},
+  check(){const RL=5*Math.pow(100,+q('qw-r').value/1000),f0=+q('qw-f').value,ee=+q('qw-e').value,need=0.5/2.45;
+   const b1=Math.pow(50,0.75)*Math.pow(RL,0.25),b2=Math.pow(50,0.25)*Math.pow(RL,0.75),bw1=qwBW(RL,50,[Math.sqrt(50*RL)]),bw2=qwBW(RL,50,[b1,b2]);
+   const n=bw1>=need?1:bw2>=need?2:'more than 2';
+   return [[Math.abs(RL-12.5)<=0.2,'R_L '+RL.toFixed(1)+' Ω'],[Math.abs(f0-2450)<=5,'f₀ '+f0+' MHz'],[ee>=2.9&&ee<=3.3,'ε_eff '+ee],[n===2,'needs '+(100*need).toFixed(1)+'%: 1 section '+(100*bw1).toFixed(0)+'%, 2 sections '+(100*bw2).toFixed(0)+'% → fewest = '+n]]}},
+ 's-parameter-power':{
+  load(){dcSet('sp-a',-18);dcSet('sp-b',-0.5)},
+  check(){const a=+q('sp-a').value,b=+q('sp-b').value,r=Math.pow(10,a/10),t=Math.pow(10,b/10),l=1-r-t;
+   return [[r<=0.02,(100*r).toFixed(1)+'% reflected'],[t>=0.8,(100*t).toFixed(1)+'% delivered'],[l>=0&&l*1000<=150,l<0?'impossible for a passive part':(1000*l).toFixed(0)+' mW of heat']]}}
+});
 </script><script>
 // ---- embed mode + iframe auto-height ----
 (function(){

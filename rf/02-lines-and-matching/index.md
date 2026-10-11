@@ -107,7 +107,7 @@ Then grid lines are drawn on that circle to show which impedance each point corr
 - **Outer rim:** $$\lvert \Gamma\rvert  = 1$$, pure L or C with no resistance.
 - **Distance from the center = $$\lvert \Gamma\rvert$$.** A circle around the center is a circle of constant VSWR.
 
-{% include widget.html widget="smith-chart" height=1290 title="Live Smith chart" %}
+{% include widget.html widget="smith-chart" height=1720 title="Live Smith chart" %}
 
 ### The math
 
@@ -200,7 +200,7 @@ $$Q = \sqrt{\frac{R_{\text{high}}}{R_{\text{low}}} - 1} \qquad\quad |X_{\text{se
 
 **Complex loads.** If the load has its own reactance, such as an antenna at $$10 + j30\ \Omega$$, you can either cancel the reactance first and then match the resistance, or let the two steps absorb it. The widget solves the general case exactly (it uses the closed-form solution in Pozar's *Microwave Engineering*, §5.1). Real chip inductors and capacitors are not ideal, so you always tune on the bench with a VNA (Module 5).
 
-{% include widget.html widget="l-match-designer" height=1020 title="L-network designer" %}
+{% include widget.html widget="l-match-designer" height=1530 title="L-network designer" %}
 
 ### Bandwidth and Q
 
@@ -271,7 +271,7 @@ $$Z_1 = \sqrt{Z_0\,R_L}$$
 
 With the **quarter-wave transformer** widget below you can see the trade: a single section gives return loss ≥ 20 dB over 37% bandwidth for 100 Ω → 50 Ω. A two-section *binomial* transformer (59.5 Ω then 84.1 Ω) widens that to about 72%, at the cost of twice the length.
 
-{% include widget.html widget="quarter-wave-transformer" height=650 title="Quarter-wave transformer" %}
+{% include widget.html widget="quarter-wave-transformer" height=1090 title="Quarter-wave transformer" %}
 
 **Where you'll see this:**
 
@@ -324,7 +324,7 @@ Two properties tell you a lot at a glance:
 
 The **S-parameter power** widget below does this check for any pair of numbers, and flags combinations a passive part can't produce.
 
-{% include widget.html widget="s-parameter-power" height=550 title="S-parameter power check" %}
+{% include widget.html widget="s-parameter-power" height=910 title="S-parameter power check" %}
 
 Datasheets give S-parameters as plots and as **Touchstone files** (`.s2p`), which simulators read directly. Always note the **reference impedance** (almost always 50 Ω) and where the **reference planes** are: the measurement includes everything between the planes, such as pads and connectors.
 
@@ -451,14 +451,11 @@ Answers are hidden. Try each one before you open it.
 10. **Limits.** A friend claims that a clever enough matching network can give their tiny antenna 30 dB return loss from 400 MHz to 6 GHz. What principle says they're wrong, and what tradeoff does it force?
     <details><summary>Answer</summary>The Bode–Fano limit. A small antenna looks like a resistance with a large reactance, and the integral of ln(1/|Γ|) over frequency is capped by that reactance. A deep match (30 dB) can only cover a narrow band, and a wide band only allows a shallow match. They have to trade depth of match for bandwidth (or make the antenna bigger).</details>
 
-<script>
-/* Grow each embedded widget iframe (figure.widget-embed from _includes/widget.html) to fit its content (the widget posts its height). */
-window.addEventListener("message", function (e) {
-  var d = e.data;
-  if (!d || d.type !== "widget-height" || !(d.height > 0)) return;
-  var frames = document.querySelectorAll(".widget-embed iframe");
-  for (var i = 0; i < frames.length; i++) {
-    if (frames[i].contentWindow === e.source) frames[i].style.height = Math.min(Math.ceil(d.height) + 4, 4000) + "px";
-  }
-});
-</script>
+## Design challenges
+
+Each widget ends with a design card. The briefs below give the targets. The live check, a hint, the worked answer and a reference preset are in the widget.
+
+- [A line that makes the antenna look resistive]({{ '/rf/02-lines-and-matching/widgets/demo.html?w=smith-chart' | relative_url }}#dc-smith-chart) ([in the lesson](#3-the-smith-chart)). Find the shortest line that turns a 30 + j40 Ω antenna into a pure resistance that a buildable λ/4 transformer can then match.
+- [Match a 915 MHz chip antenna with real parts]({{ '/rf/02-lines-and-matching/widgets/demo.html?w=l-match-designer' | relative_url }}#dc-l-match-designer) ([in the lesson](#4-lumped-element-matching)). Match 18 − j22 Ω to 50 Ω with E12 parts, ≥ 15 dB return loss across 902–928 MHz, and a topology that keeps harmonics down.
+- [One section or two?]({{ '/rf/02-lines-and-matching/widgets/demo.html?w=quarter-wave-transformer' | relative_url }}#dc-quarter-wave-transformer) ([in the lesson](#5-input-impedance-and-quarter-wave-transformers)). Match 12.5 Ω to 50 Ω across 2.2–2.7 GHz at 20 dB return loss with the fewest λ/4 sections, and give their widths and lengths on RO4350B.
+- [Pick a harmonic filter from its S-parameters]({{ '/rf/02-lines-and-matching/widgets/demo.html?w=s-parameter-power' | relative_url }}#dc-s-parameter-power) ([in the lesson](#6-s-parameters)). Turn reflected-power, delivered-power and heat limits at 1 W into S<sub>11</sub>/S<sub>21</sub> specs and choose between three candidates.

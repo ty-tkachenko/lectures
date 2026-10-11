@@ -21,6 +21,18 @@ canvas{width:100%;border-radius:8px;background:#fafafa}
 .verdict{font-weight:600}
 .legend{font-size:.85rem;color:#555}
 .legend span{display:inline-block;width:14px;height:3px;vertical-align:middle;margin:0 .3rem 0 .8rem}
+.design{font-size:.9rem;background:#f0fdf4;border-left:3px solid #16a34a;padding:.5rem .75rem;margin-top:.8rem}
+.design .spec{margin:.35rem 0 .35rem 1.1rem;padding:0}
+.design .spec li{margin:.12rem 0}
+.design .deliver{margin:.4rem 0}
+.design summary{cursor:pointer;font-weight:600;color:#166534}
+.design details{margin:.25rem 0}
+.design p{margin:.3rem 0}
+.design .dc-f{display:block;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.82rem;background:#fff;border-radius:4px;padding:.25rem .5rem;margin:.25rem 0}
+.design .dc-status{font-size:.85rem;font-weight:600;margin:.4rem 0;color:#b45309}
+.design .dc-status.pass{color:#15803d}
+.design .dc-inputs{display:flex;flex-wrap:wrap;gap:.3rem 1rem;align-items:end;margin:.3rem 0}
+.design .dc-inputs label{margin:0}
 </style>
 <!-- embed mode: demo.html?w=<widget-id> shows only that widget (for an iframe in the lesson page) -->
 <script>(function(){try{var w=new URLSearchParams(location.search).get('w');if(w){document.documentElement.className+=' embed';document.documentElement.setAttribute('data-w',w)}}catch(e){}})();</script>
@@ -45,7 +57,7 @@ html.embed.w-unknown .widget{display:block;border:1px solid #eee;padding:1rem 1.
 <div><label>Load reactance X: <span id="sw-xv"></span></label><input id="sw-x" type="range" min="0" max="1000" step="any" value="500"></div>
 </div>
 <div>Presets:
-<button data-r="0" data-x="0">Short (0 Ω)</button><button data-r="1e9" data-x="0">Open (∞)</button><button data-r="50" data-x="0">Matched (50 Ω)</button><button data-r="75" data-x="0">75 Ω</button><button data-r="100" data-x="0">100 Ω</button><button data-r="25" data-x="-25">25 − j25 Ω</button>
+<button data-r="0" data-x="0">Short (0 Ω)</button><button data-r="1e9" data-x="0">Open (∞)</button><button data-r="50" data-x="0">Matched (50 Ω)</button><button data-r="75" data-x="0">75 Ω</button><button data-r="100" data-x="0">100 Ω</button><button data-r="25" data-x="-25">25 − j25 Ω</button><button data-r="70" data-x="20" class="dc-load">Load reference design</button>
 </div>
 <div>
 <label class="inline"><input type="checkbox" id="sw-inc" checked> incident</label>
@@ -66,6 +78,17 @@ html.embed.w-unknown .widget{display:block;border:1px solid #eee;padding:1rem 1.
 <canvas id="sw-c" width="760" height="280"></canvas>
 <p class="legend"><span style="background:#3b82f6"></span>incident (moving right) <span style="background:#ef4444"></span>reflected (moving left) <span style="background:#111"></span>total <span style="background:#f59e0b"></span>envelope (what a voltmeter sliding along the line would read)</p>
 <div class="try"><b>Try this:</b> start at Matched. The total is a clean traveling wave and the envelope is flat. Now pick Short, then Open. The envelope gets nodes (zero points) λ/2 apart. Where are the nodes for a short compared with an open? Finally pick 100 Ω and 25 Ω. They give the same VSWR. What's different about the pattern?</div>
+<div class="design" id="dc-standing-wave" data-dc="standing-wave">
+<b>Design challenge:</b> <p>You're buying a 915 MHz antenna for a telemetry ground station. The radio puts out 1 W. Your link budget assumes at least 90% of that reaches the antenna, and the radio's datasheet says its PA is safe up to VSWR 2:1. A sample antenna measures <b>70 + j20 Ω</b> on a VNA at 915 MHz.</p>
+<ul class="spec"><li>Power reaching the antenna ≥ 90% (mismatch loss ≤ 0.46 dB).</li><li>VSWR ≤ 2:1 for PA safety.</li><li>System impedance Z<sub>0</sub> = 50 Ω.</li></ul>
+<p class="deliver">Produce: the maximum VSWR (and the matching return loss) to write on the purchase spec, and a pass or fail for the sample with its VSWR and delivered power. Check it in the widget above.</p>
+<p class="dc-status" aria-live="polite"></p>
+<details class="hint"><summary>Hint</summary><p>Turn “90% delivered” into |Γ| first: delivered fraction = 1 − |Γ|². Then VSWR = (1 + |Γ|)/(1 − |Γ|). Which of the two requirements is stricter?</p></details>
+<details class="check"><summary>Check your design</summary><p><b>Pass if:</b> the load is the sample (70 + j20 Ω), at least 90% of the power reaches it, and VSWR ≤ 2:1.</p>
+<p><b>Worked answer.</b></p><span class="dc-f">|Γ|<sub>max</sub> = √(1 − 0.90) = 0.316  →  VSWR<sub>max</sub> = 1.316 / 0.684 = 1.92  (RL ≥ 10.0 dB)</span><p>That's stricter than the PA's 2:1, so write <b>VSWR ≤ 1.9:1 across 902–928 MHz</b>.</p><span class="dc-f">Γ = (70 + j20 − 50) / (70 + j20 + 50) = (20 + j20) / (120 + j20)  →  |Γ| = 28.3 / 121.7 = 0.232</span><p>Sample: VSWR 1.61, return loss 12.7 dB, 1 − 0.054 = <b>94.6% delivered</b>, so it passes.</p>
+<p>Other answers can be valid if they meet every requirement.</p>
+<p>Press <b>Load reference design</b> in the presets row to set the widget to this answer.</p></details>
+</div>
 </div>
 
 <!-- ============ 2. TDR ============ -->
@@ -91,6 +114,7 @@ html.embed.w-unknown .widget{display:block;border:1px solid #eee;padding:1rem 1.
 <div><label>Effective dielectric constant ε<sub>eff</sub>: <span id="tdr-ev"></span></label><input id="tdr-e" type="range" min="1" max="10" step="0.05" value="3.4"></div>
 <div><label>TDR rise time (10–90%): <span id="tdr-tv"></span></label><input id="tdr-t" type="range" min="15" max="200" step="1" value="35"></div>
 </div>
+<div>Presets: <button type="button" class="dc-load">Load reference design</button></div>
 <div class="readout">
 <div>Wave speed v<sub>p</sub><b id="tdr-vp"></b></div>
 <div>Round-trip time to it<b id="tdr-rt"></b></div>
@@ -101,6 +125,17 @@ html.embed.w-unknown .widget{display:block;border:1px solid #eee;padding:1rem 1.
 <canvas id="tdr-c" width="760" height="260"></canvas>
 <canvas id="tdr-f" width="760" height="200" style="margin-top:.6rem"></canvas>
 <div class="try"><b>Try this:</b> (1) Pick Open end, then change ε<sub>eff</sub>. The cut stays at the same distance, but the time it takes the echo to come back (top axis) changes. A real TDR only measures time, so if you guess ε<sub>eff</sub> wrong you will look for the fault in the wrong place. (2) Pick the capacitive bump and slow the rise time to 200 ps. The dip gets shallower: a slow TDR can't see small things. (3) Pick Impedance section at 60 Ω and make it longer. In the lower plot the S<sub>11</sub> ripples get closer together: ripple period = v<sub>p</sub>/(2 × length).</div>
+<div class="design" id="dc-tdr-simulator" data-dc="tdr-simulator">
+<b>Design challenge:</b> <p>A 2.45 GHz board has worse return loss than expected. You TDR its 50 Ω microstrip feed (FR-4, ε<sub>eff</sub> ≈ 3.4) with a 35 ps step. The trace shows one capacitive dip. Its echo arrives <b>1.23 ns</b> after launch (round trip), and fitting the dip gives a time constant Z<sub>0</sub>C/2 = <b>25 ps</b>.</p>
+<ul class="spec"><li>Locate the fault to ±0.5 cm and size its extra capacitance to ±0.1 pF.</li><li>Reproduce the reading in the widget: round trip 1.23 ns, time constant 25 ps, ε<sub>eff</sub> 3.4, 35 ps rise time.</li><li>Propose a fix that brings this discontinuity to return loss ≥ 20 dB at 2.45 GHz.</li></ul>
+<p class="deliver">Produce: the distance, the capacitance, the largest capacitance you can live with after the fix, and a one-sentence fix. Check it in the widget above.</p>
+<p class="dc-status" aria-live="polite"></p>
+<details class="hint"><summary>Hint</summary><p>A TDR measures time, and the echo travels there and back. The speed comes from ε<sub>eff</sub>. For the fix: a shunt C on a matched line reflects |Γ| = ωCZ<sub>0</sub> / √(4 + (ωCZ<sub>0</sub>)²).</p></details>
+<details class="check"><summary>Check your design</summary><p><b>Pass if:</b> the widget shows a capacitive bump with ε<sub>eff</sub> 3.4, a round trip of 1.23 ± 0.03 ns and a time constant of 25 ± 1.5 ps.</p>
+<p><b>Worked answer.</b></p><span class="dc-f">v<sub>p</sub> = c / √3.4 = 1.626×10⁸ m/s  →  d = v<sub>p</sub> t / 2 = 1.626×10⁸ × 1.23×10⁻⁹ / 2 = 10.0 cm</span><span class="dc-f">C = 2τ / Z<sub>0</sub> = 2 × 25 ps / 50 Ω = 1.0 pF</span><p>At 2.45 GHz, ωCZ<sub>0</sub> = 0.77, so |Γ| = 0.36 and RL = 8.9 dB: that's your problem. For RL ≥ 20 dB you need |Γ| ≤ 0.1:</p><span class="dc-f">ωCZ<sub>0</sub> ≤ √(0.04 / 0.99) = 0.201  →  C ≤ 0.201 / (2π × 2.45×10⁹ × 50) = 0.26 pF</span><p>Fix: something 10 cm down the line, such as an oversized pad, a test point or a via, adds about 1 pF. Shrink it, or cut the ground out under the pad, to remove at least 0.74 pF. Then TDR it again.</p>
+<p>Other answers can be valid if they meet every requirement.</p>
+<p>Press <b>Load reference design</b> in the presets row to set the widget to this answer.</p></details>
+</div>
 </div>
 
 <!-- ============ 3. microstrip ============ -->
@@ -123,6 +158,7 @@ html.embed.w-unknown .widget{display:block;border:1px solid #eee;padding:1rem 1.
 <div><label>ε<sub>r</sub>: <span id="ms-ev"></span></label><input id="ms-e" type="range" min="1" max="12" step="0.01" value="4.4"></div>
 </div>
 <div>Target <input id="ms-tz" type="number" value="50" min="10" max="150"> Ω <button id="ms-solve">Find the width</button> &nbsp; Frequency for λ: <input id="ms-f" type="number" value="2400" min="1" max="100000"> MHz</div>
+<div>Presets: <button type="button" class="dc-load">Load reference design</button></div>
 <div class="readout">
 <div>Characteristic impedance Z<sub>0</sub><b id="ms-z"></b></div>
 <div>Effective ε<sub>eff</sub><b id="ms-ee"></b></div>
@@ -133,6 +169,17 @@ html.embed.w-unknown .widget{display:block;border:1px solid #eee;padding:1rem 1.
 </div>
 <canvas id="ms-c" width="760" height="220"></canvas>
 <div class="try"><b>Try this:</b> on 1.6 mm FR-4, find the 50 Ω width (about 3 mm). Now switch the height to 0.2 mm, the thickness of a thin outer layer in a 4-layer board. How wide is a 50 Ω trace now? Why does a thin dielectric make RF layout so much easier? Then compare FR-4 with air: ε<sub>eff</sub> sits between 1 and ε<sub>r</sub> because part of the field is in the air above the trace.</div>
+<div class="design" id="dc-microstrip-z0" data-dc="microstrip-z0">
+<b>Design challenge:</b> <p>Your 2.45 GHz radio has 0.5 mm wide RF pads. On a 2-layer, 1.6 mm board a 50 Ω trace is about 3 mm wide, and that won't fit. You're moving to a 4-layer FR-4 board (ε<sub>r</sub> 4.4) with <b>0.20 mm</b> of prepreg between the top copper and the ground plane. The fab's minimum trace width is 0.15 mm.</p>
+<ul class="spec"><li>Z<sub>0</sub> = 50 ± 2 Ω.</li><li>Width between 0.15 mm (fab minimum) and 0.60 mm (fits the pad without a big taper).</li><li>FR-4, ε<sub>r</sub> 4.4, h = 0.20 mm. Report ε<sub>eff</sub> and the λ/4 length at 2.45 GHz.</li></ul>
+<p class="deliver">Produce: the width, Z<sub>0</sub>, ε<sub>eff</sub>, the λ/4 length on this trace at 2.45 GHz, and one sentence on why a thin dielectric helps. Check it in the widget above.</p>
+<p class="dc-status" aria-live="polite"></p>
+<details class="hint"><summary>Hint</summary><p>For a given ε<sub>r</sub>, Z<sub>0</sub> depends on the ratio w/h, not on w and h separately. Set the frequency box to 2450 MHz so the wavelength readout is useful.</p></details>
+<details class="check"><summary>Check your design</summary><p><b>Pass if:</b> the widget is set to FR-4, h = 0.20 mm and 2450 MHz, with Z<sub>0</sub> between 48 and 52 Ω and a width between 0.15 and 0.60 mm.</p>
+<p><b>Worked answer.</b> 50 Ω on FR-4 needs w/h ≈ 1.92 (3.08 mm on 1.6 mm), so on 0.20 mm: w ≈ 0.385 mm. Take <b>w = 0.38 mm</b>: Z<sub>0</sub> = 50.4 Ω, ε<sub>eff</sub> = 3.33.</p><span class="dc-f">λ<sub>g</sub> = c / (f √ε<sub>eff</sub>) = 3×10⁸ / (2.45×10⁹ × √3.33) = 67.1 mm  →  λ/4 = 16.8 mm</span><p>A thin dielectric gives a narrow 50 Ω line that lands straight on the pad. It also holds the field tight to the ground plane, so the line radiates and couples less.</p>
+<p>Other answers can be valid if they meet every requirement.</p>
+<p>Press <b>Load reference design</b> in the presets row to set the widget to this answer.</p></details>
+</div>
 </div>
 
 <!-- ============ 4. dB chain ============ -->
@@ -141,6 +188,7 @@ html.embed.w-unknown .widget{display:block;border:1px solid #eee;padding:1rem 1.
 <p class="legend">Each block multiplies the power. In dB, multiplying becomes adding, so you can follow a signal down a chain with mental arithmetic.</p>
 <label>Source power: <span id="db-pv"></span></label><input id="db-p" type="range" min="-40" max="30" step="0.5" value="0">
 <div class="row" id="db-blocks"></div>
+<div>Presets: <button type="button" class="dc-load">Load reference design</button></div>
 <div class="readout">
 <div>Total gain<b id="db-g"></b></div>
 <div>Same as a power ratio of<b id="db-r"></b></div>
@@ -149,6 +197,17 @@ html.embed.w-unknown .widget{display:block;border:1px solid #eee;padding:1rem 1.
 </div>
 <canvas id="db-c" width="760" height="220"></canvas>
 <div class="try"><b>Try this:</b> set every block to 0 dB, then make one block −3 dB. The power halves. Two −3 dB blocks give a quarter. Now make the source −30 dBm (1 µW) and add a +30 dB amplifier: what comes out, in dBm and in mW?</div>
+<div class="design" id="dc-db-chain" data-dc="db-chain">
+<b>Design challenge:</b> <p>A 915 MHz uplink from a ground station to a drone or rocket. The chain is: radio chip (programmable output) → short jumper, −0.5 dB (<i>Cable</i> block) → PA, +20 dB gain, rated for up to +30 dBm out (<i>Amplifier</i>) → harmonic low-pass filter, −1.0 dB (<i>Filter</i>) → 5 m feedline up the mast (<i>Attenuator</i> block): thin coax at −2.5 dB or thick coax at −0.5 dB → antenna, +6 dBi.</p>
+<ul class="spec"><li>EIRP ≤ +36 dBm (US 902–928 MHz limit for digital-modulation radios: 1 W conducted with up to 6 dBi of antenna gain).</li><li>EIRP ≥ +33 dBm for link margin.</li><li>PA output ≤ +30 dBm.</li></ul>
+<p class="deliver">Produce: the radio's power setting, the feedline choice, the PA output, the power at the antenna port, the EIRP and your margin to the legal limit. Check it in the widget above.</p>
+<p class="dc-status" aria-live="polite"></p>
+<details class="hint"><summary>Hint</summary><p>Work backwards: antenna port = EIRP − 6 dBi. Try the thin coax first with the PA at its rated +30 dBm. Can it reach 33 dBm EIRP?</p></details>
+<details class="check"><summary>Check your design</summary><p><b>Pass if:</b> the blocks are set to −0.5, +20, −1.0 and either −0.5 or −2.5 dB, the PA output is ≤ +30 dBm, and EIRP = output + 6 dBi is between +33 and +36 dBm.</p>
+<p><b>Worked answer.</b></p><span class="dc-f">EIRP = P<sub>radio</sub> − 0.5 + 20 − 1.0 − L<sub>coax</sub> + 6 dBi</span><p>Thin coax: even with the PA at +30 dBm, EIRP = 30 − 1.0 − 2.5 + 6 = 32.5 dBm, which is too low. Thick coax: EIRP = PA output + 4.5 dB, so the PA output must be 28.5–30 dBm and the radio 9.0–10.5 dBm. <b>Reference: thick coax, radio at +10 dBm</b> → PA 29.5 dBm → antenna port 28.0 dBm (631 mW) → EIRP 34.0 dBm (2.5 W), 2 dB under the limit.</p>
+<p>Other answers can be valid if they meet every requirement.</p>
+<p>Press <b>Load reference design</b> in the presets row to set the widget to this answer.</p></details>
+</div>
 </div>
 
 <!-- ============ 5. polarization ============ -->
@@ -162,6 +221,7 @@ html.embed.w-unknown .widget{display:block;border:1px solid #eee;padding:1rem 1.
 <select id="pol-rt"><option value="lin" selected>Linear</option><option value="rhcp">Circular, right-hand (RHCP)</option><option value="lhcp">Circular, left-hand (LHCP)</option></select></label>
 <label>Receive tilt: <span id="pol-rav"></span></label><input id="pol-ra" type="range" min="0" max="180" value="45"></div>
 </div>
+<div>Presets: <button type="button" class="dc-load">Load reference design</button></div>
 <div class="readout">
 <div>Fraction of power received<b id="pol-f"></b></div>
 <div>Polarization loss<b id="pol-l"></b></div>
@@ -169,6 +229,17 @@ html.embed.w-unknown .widget{display:block;border:1px solid #eee;padding:1rem 1.
 <p class="verdict" id="pol-verdict"></p>
 <canvas id="pol-c" width="760" height="220"></canvas>
 <div class="try"><b>Try this:</b> with two linear antennas, set the tilts 90° apart. In theory nothing gets through. Now make one of them circular: the loss is 3 dB at <i>every</i> tilt. That's why a spinning rocket often carries a circular antenna, or why the ground station uses one.</div>
+<div class="design" id="dc-polarization" data-dc="polarization">
+<b>Design challenge:</b> <p>Your rocket carries a simple linear antenna. Seen from the ground station near the pad, looking up at the tail, its E-field rotates as the airframe rolls, often several turns a second. You get to choose the ground antenna.</p>
+<ul class="spec"><li>The rocket antenna stays linear: it's all that fits.</li><li>Polarization loss ≤ 3.5 dB at every roll angle.</li><li>Loss changes by no more than 1 dB over a full roll, so the signal doesn't fade as the rocket spins.</li></ul>
+<p class="deliver">Produce: the ground-antenna polarization, the worst-case loss, how much it varies over a roll, and one sentence explaining why. Check it in the widget above.</p>
+<p class="dc-status" aria-live="polite"></p>
+<details class="hint"><summary>Hint</summary><p>Set both antennas, then sweep the transmit tilt from 0° to 180° the way the roll would. Look at the worst value, not the best.</p></details>
+<details class="check"><summary>Check your design</summary><p><b>Pass if:</b> the transmit antenna is linear and, over every transmit tilt from 0° to 180°, the loss stays ≤ 3.5 dB and varies by ≤ 1 dB.</p>
+<p><b>Worked answer.</b> With a linear ground antenna the loss is −10 log(cos²ψ): 0 dB aligned, 3 dB at 45°, 6 dB at 60°, and a null at 90° (20–30 dB in practice). That fails both requirements.</p><span class="dc-f">linear → circular: received fraction = ½ at every angle  →  10 log 2 = 3.01 dB, variation 0 dB</span><p>Choose a <b>circular ground antenna</b> (RHCP or LHCP, for example a helix) and budget 3 dB for it. You trade 3 dB on the best case for a link that never drops into a null.</p>
+<p>Other answers can be valid if they meet every requirement.</p>
+<p>Press <b>Load reference design</b> in the presets row to set the widget to this answer.</p></details>
+</div>
 </div>
 
 <!-- ============ 6. Dk / Df loss ============ -->
@@ -189,6 +260,7 @@ html.embed.w-unknown .widget{display:block;border:1px solid #eee;padding:1rem 1.
 <div><label>Frequency: <span id="ls-fv"></span></label><input id="ls-f" type="range" min="0" max="1000" value="620"></div>
 <div><label>Trace length: <span id="ls-lv"></span></label><input id="ls-l" type="range" min="1" max="100" value="10"></div>
 </div>
+<div>Presets: <button type="button" class="dc-load">Load reference design</button></div>
 <div class="readout">
 <div>50 Ω width<b id="ls-w"></b></div>
 <div>Copper loss<b id="ls-ac"></b></div>
@@ -199,6 +271,17 @@ html.embed.w-unknown .widget{display:block;border:1px solid #eee;padding:1rem 1.
 <canvas id="ls-c" width="760" height="240"></canvas>
 <p class="legend"><span style="background:#b87333"></span>copper (conductor) loss, grows like √f <span style="background:#16a34a"></span>dielectric loss, grows like f <span style="background:#111"></span>total</p>
 <div class="try"><b>Try this:</b> on FR-4, find where the green line crosses the copper line. Switch to RO4350B: the crossover moves up a lot. Then make the dielectric thinner. The trace gets narrower and the copper loss rises. (This model uses smooth copper. Real rough copper adds more, which Module 3 covers.)</div>
+<div class="design" id="dc-dk-df-loss" data-dc="dk-df-loss">
+<b>Design challenge:</b> <p>A 5.8 GHz FPV video transmitter. The 50 Ω line from the transmitter chip to the edge-launch SMA has to be <b>10 cm</b> long, and the SMA footprint takes a center trace no wider than 1.2 mm.</p>
+<ul class="spec"><li>Loss ≤ 1.0 dB over the 10 cm at 5.8 GHz.</li><li>50 Ω trace width ≤ 1.2 mm.</li><li>Use FR-4 if it works (cheapest). Otherwise use a low-loss laminate.</li></ul>
+<p class="deliver">Produce: the material, the dielectric height, the trace width, the predicted loss, and one sentence on why FR-4 does or doesn't work. Check it in the widget above.</p>
+<p class="dc-status" aria-live="polite"></p>
+<details class="hint"><summary>Hint</summary><p>In this model dielectric loss doesn't depend on thickness, but copper loss does: a thinner dielectric means a narrower trace and more copper loss. Check FR-4's dielectric loss on its own first.</p></details>
+<details class="check"><summary>Check your design</summary><p><b>Pass if:</b> the length is 10 cm, the frequency is within 3% of 5.8 GHz, the loss over the trace is ≤ 1.0 dB, and the 50 Ω width is ≤ 1.2 mm.</p>
+<p><b>Worked answer.</b></p><span class="dc-f">α<sub>d</sub> = 8.686 · k₀ ε<sub>r</sub> (ε<sub>eff</sub> − 1) tanδ / (2 √ε<sub>eff</sub> (ε<sub>r</sub> − 1)) dB/m ;  α<sub>c</sub> = 8.686 · R<sub>s</sub> / (Z<sub>0</sub> w)</span><p>FR-4 (Df 0.020): the dielectric alone costs 0.174 dB/cm, which is 1.74 dB over 10 cm at any thickness. It fails. <b>RO4350B</b> (Df 0.0037) gives 0.030 dB/cm dielectric. At <b>h = 0.51 mm</b> (20 mil) the 50 Ω width is 1.13 mm and the copper loss is 0.030 dB/cm, so the total is <b>0.60 dB over 10 cm</b>. A 0.76 mm board would lose even less, but its 1.68 mm trace won't fit the SMA. Real copper is rough and adds loss, so keep the margin.</p>
+<p>Other answers can be valid if they meet every requirement.</p>
+<p>Press <b>Load reference design</b> in the presets row to set the widget to this answer.</p></details>
+</div>
 </div>
 
 <script>
@@ -406,6 +489,53 @@ function ls(){const [er,td]=q('ls-mat').value.split(',').map(Number),h=+q('ls-h'
  curve(o=>o.ac,'#b87333',2);curve(o=>o.ad,'#16a34a',2);curve(o=>o.ac+o.ad,'#111',2.5);
  x.strokeStyle='#f59e0b';x.setLineDash([4,4]);x.beginPath();x.moveTo(xs(f),T);x.lineTo(xs(f),B);x.stroke();x.setLineDash([])}
 ['ls-mat','ls-h','ls-f','ls-l'].forEach(i=>q(i).addEventListener('input',ls));ls();
+</script><script>
+// ---- design challenges: live check + "Load reference design" ----
+function dcSet(id,val){const e=document.getElementById(id);e.value=val;e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}))}
+function dcInit(DC){
+ document.querySelectorAll('.design[data-dc]').forEach(sec=>{
+  const id=sec.getAttribute('data-dc'),cfg=DC[id];if(!cfg)return;
+  const st=sec.querySelector('.dc-status'),wid=sec.closest('.widget')||sec;
+  const run=()=>{let items;try{items=cfg.check(sec)}catch(e){items=[[false,'check error: '+e.message]]}
+   const ok=items.length>0&&items.every(i=>i[0]);st.className='dc-status'+(ok?' pass':'');sec.setAttribute('data-pass',ok?'1':'0');
+   st.textContent='Live check of the current settings: '+(ok?'✅ meets every requirement. ':'not there yet. ')+items.map(i=>(i[0]?'✓ ':'✗ ')+i[1]).join(' · ')};
+  let pend=false;const sched=()=>{if(pend)return;pend=true;requestAnimationFrame(()=>{pend=false;run()})};
+  ['input','change','click','pointerup','pointermove'].forEach(ev=>wid.addEventListener(ev,sched));
+  const b=wid.querySelector('.dc-load');sec.querySelectorAll('details').forEach(d=>d.addEventListener('toggle',()=>{window.dispatchEvent(new Event('resize'))}));if(b&&cfg.load)b.addEventListener('click',()=>{cfg.load(sec);sched()});
+  if(cfg.poll)setInterval(run,500);
+  run();
+ });
+}
+
+dcInit({
+ 'standing-wave':{
+  load(){q('sw-r').value=sRinv(70);q('sw-x').value=sXinv(20);swText();swDraw()},
+  check(){const {R,X,g}=swState(),m=cabs(g),V=vswr(m),pd=1-m*m;
+   return [[Math.abs(R-70)<=1&&Math.abs(X-20)<=1,'load '+fmtZ(R,X)],[pd>=0.9,(100*pd).toFixed(1)+'% delivered'],[V<=2,'VSWR '+(isFinite(V)?V.toFixed(2):'∞')+':1']]}},
+ 'tdr-simulator':{
+  load(){dcSet('tdr-type','cap');dcSet('tdr-d',10);dcSet('tdr-v',651);dcSet('tdr-e',3.4);dcSet('tdr-t',35)},
+  check(){const p=tdrParams(),vp=C/Math.sqrt(p.ee),rt=2*p.d/vp*1e9,tau=Z0*p.C/2*1e12;
+   return [[p.type==='cap','capacitive bump'],[Math.abs(p.ee-3.4)<0.03,'ε_eff '+p.ee.toFixed(2)],[Math.abs(p.tr*1e12-35)<1,'rise '+(p.tr*1e12).toFixed(0)+' ps'],[Math.abs(rt-1.23)<=0.03,'round trip '+rt.toFixed(3)+' ns'],[p.type==='cap'&&Math.abs(tau-25)<=1.5,'τ '+(p.type==='cap'?tau.toFixed(1)+' ps':'n/a')]]}},
+ 'microstrip-z0':{
+  load(){dcSet('ms-mat','4.4');dcSet('ms-h',0.2);dcSet('ms-f',2450);dcSet('ms-w',0.38)},
+  check(){const w=+q('ms-w').value,h=+q('ms-h').value,er=+q('ms-e').value,f=+q('ms-f').value,{z}=microstrip(w,h,er);
+   return [[Math.abs(er-4.4)<0.005,'ε_r '+er.toFixed(2)],[Math.abs(h-0.2)<0.005,'h '+h.toFixed(2)+' mm'],[Math.abs(f-2450)<=10,f+' MHz'],[z>=48&&z<=52,'Z₀ '+z.toFixed(1)+' Ω'],[w>=0.15&&w<=0.6,'w '+w.toFixed(2)+' mm']]}},
+ 'db-chain':{
+  load(){dcSet('db-p',10);dcSet('db-b0',-0.5);dcSet('db-b1',20);dcSet('db-b2',-1);dcSet('db-b3',-0.5)},
+  check(){const p0=+q('db-p').value,b=[0,1,2,3].map(i=>+q('db-b'+i).value),pa=p0+b[0]+b[1],eirp=pa+b[2]+b[3]+6;
+   const fixed=b[0]===-0.5&&b[1]===20&&b[2]===-1&&(b[3]===-0.5||b[3]===-2.5);
+   return [[fixed,fixed?'blocks match the parts list':'set blocks to −0.5 / +20 / −1.0 / (−0.5 or −2.5) dB'],[pa<=30,'PA out '+pa.toFixed(1)+' dBm'],[eirp>=33&&eirp<=36,'EIRP '+eirp.toFixed(1)+' dBm']]}},
+ 'polarization':{
+  load(){dcSet('pol-tt','lin');dcSet('pol-ta',0);dcSet('pol-rt','rhcp');dcSet('pol-ra',0)},
+  check(){const tt=q('pol-tt').value,rt=q('pol-rt').value,ra=+q('pol-ra').value;let lo=1,hi=0;
+   for(let a=0;a<=180;a++){const f=polFrac(tt,a,rt,ra);lo=Math.min(lo,f);hi=Math.max(hi,f)}
+   const wl=lo<1e-9?Infinity:-10*Math.log10(lo),bl=-10*Math.log10(Math.max(hi,1e-12)),vr=wl-bl;
+   return [[tt==='lin','rocket antenna linear'],[wl<=3.5,'worst loss '+(isFinite(wl)?wl.toFixed(2)+' dB':'∞ (null)')],[vr<=1,'variation over a roll '+(isFinite(vr)?vr.toFixed(2)+' dB':'∞')]]}},
+ 'dk-df-loss':{
+  load(){dcSet('ls-mat','3.66,0.0037');dcSet('ls-h',0.51);dcSet('ls-f',837);dcSet('ls-l',10)},
+  check(){const [er,td]=q('ls-mat').value.split(',').map(Number),h=+q('ls-h').value,f=logF(+q('ls-f').value,1e7,2e10),L=+q('ls-l').value,a=msLoss(f,h,er,td),tot=(a.ac+a.ad)*L/100;
+   return [[L===10,'length '+L+' cm'],[Math.abs(f/5.8e9-1)<=0.03,'f '+(f/1e9).toFixed(2)+' GHz'],[tot<=1.0,'loss '+tot.toFixed(2)+' dB'],[a.w<=1.2,'w '+a.w.toFixed(2)+' mm']]}}
+});
 </script><script>
 // ---- embed mode + iframe auto-height ----
 (function(){
