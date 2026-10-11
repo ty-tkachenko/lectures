@@ -234,7 +234,7 @@
       <div class="ctrl"><label for="wG">Wire gauge</label>
         <select id="wG"><option value="14">14 AWG (thick)</option><option value="16">16 AWG</option><option value="18">18 AWG</option><option value="20">20 AWG</option><option value="22" selected>22 AWG</option><option value="24">24 AWG</option><option value="26">26 AWG</option><option value="28">28 AWG (thin)</option></select></div>
       <div class="ctrl"><label for="wR">Load resistance <b id="wRv"></b></label><input id="wR" type="range" min="0.3" max="5" step="0.1" value="1.6"></div>
-      <div class="ctrl"><label for="wA">Minimum current the load needs <b id="wAv"></b></label><input id="wA" type="range" min="0.2" max="3" step="0.1" value="1"></div>
+      <div class="ctrl"><label for="wA">Minimum current the load needs <b id="wAv"></b></label><input id="wA" type="range" min="0.2" max="5" step="0.1" value="3"></div>
     </div>
     <div>
       <canvas id="cvWire" style="height:260px" aria-label="Bar showing how the supply voltage is split between the outgoing wire, the load and the return wire"></canvas>
@@ -249,7 +249,7 @@
   </div>
   <div class="try"><b>Things to try</b><ol>
     <li>At the default settings, which piece of the circuit takes most of the 12 V? Is that what you expected?</li>
-    <li>Go to 100 m of 26 AWG. Then find the thinnest wire that still gives a 2× margin.</li>
+    <li>The default 30 m of 22 AWG leaves a 1.6 Ω load short of a 3 A pull-in. Find a length and gauge that give a 2× margin.</li>
     <li>Halving the cable length helps. So does doubling the supply voltage. Which helps more, and why?</li>
   </ol></div>
 </div>
@@ -257,13 +257,13 @@
 <p>One common example in rocketry is firing an igniter. For safety, the igniter is fired from tens of metres away, and it needs a minimum current, its <em>all-fire current</em>, to light reliably. A launch cable that's too long or too thin leaves the igniter short of that current, exactly as in the figure above, which is why many launch systems put the firing relay at the pad.</p>
 <div class="example">
   <span class="xk">Example</span>
-  <p>A solenoid works every time on the bench with a 1 m lead, then fails to pull in once it's installed at the end of a 30 m cable. Same supply, same solenoid. The difference is the cable. A 1 m lead adds almost no resistance, but tens of metres of thin wire can add several ohms, more than the solenoid itself. The current falls below what it needs.</p>
+  <p>A solenoid that needs 3 A to pull in works every time on the bench with a 1 m lead, then fails once it's installed at the end of 30 m of 22 AWG cable. Same 12 V supply, same 1.6 Ω coil. The 1 m lead adds almost nothing. The 30 m run adds about 3.2 Ω on the round trip, more than the coil itself, and the current falls to about 2.5 A.</p>
   <p>Note what <em>didn't</em> happen: the voltage didn't "run out" along the cable. Voltage gets <em>divided</em> between every resistance in the loop, and a long cable simply takes a big share.</p>
 </div>
 <details class="exercise">
   <summary><span class="ek">Design exercise</span><span class="et">More voltage, or less cable?</span></summary>
   <div class="eb">
-    <p>In the figure above, a 12 V supply drives a 1.6 Ω solenoid through 30 m of 22 AWG cable (3.17 Ω round trip). The solenoid isn't getting enough current, and you can make one change.</p>
+    <p>In the figure above, a 12 V supply drives a 1.6 Ω solenoid through 30 m of 22 AWG cable (3.17 Ω round trip). The solenoid draws about 2.5 A, short of the 3 A it needs to pull in, and you can make one change.</p>
     <div class="choice"><p>Which raises the solenoid's current more: doubling the supply voltage, or halving the cable length?</p>
     <ol class="opts">
       <li data-correct>Doubling the supply voltage.<div class="why">Current is proportional to voltage, so doubling it doubles the current. Halving the cable only removes part of the loop's resistance.</div></li>
@@ -424,14 +424,14 @@
       <span>Battery</span><span>12.0 V, internal resistance 0.05 Ω</span>
       <span>Relay contacts</span><span>0.05 Ω</span>
       <span>Cable</span><span>22 AWG, 52.9 mΩ per metre per conductor, 30 m one way</span>
-      <span>Solenoid</span><span>1.6 Ω, needs at least 1.0 A to pull in</span>
+      <span>Solenoid</span><span>1.6 Ω, needs at least 3.0 A to pull in</span>
     </div>
     <div class="check" data-ans="3.17" data-tol="2%" data-unit="Ω"><p>(a) Total cable resistance (both conductors)?</p>
       <div class="miss" data-val="1.59"><p>That's one conductor. Current goes out <em>and</em> back.</p></div>
       <div class="solution"><p>60 m × 0.0529 Ω/m = 3.17 Ω. That's already twice the solenoid's resistance.</p></div></div>
     <div class="check" data-ans="2.46" data-tol="2%" data-unit="A"><p>(b) Current through the solenoid?</p>
       <div class="hint">Everything is in one loop, so add all the resistances: battery + relay + cable + solenoid.</div>
-      <div class="solution"><p>\(R_\text{total} = 0.05 + 0.05 + 3.17 + 1.6 = 4.87\ \Omega\), so \(I = 12 / 4.87 = 2.46\ \text{A}\), about 2.5× the minimum it needs.</p></div></div>
+      <div class="solution"><p>\(R_\text{total} = 0.05 + 0.05 + 3.17 + 1.6 = 4.87\ \Omega\), so \(I = 12 / 4.87 = 2.46\ \text{A}\). That is short of the 3 A pull-in, which is why the same solenoid that works on a short bench lead fails on this cable.</p></div></div>
     <div class="check" data-ans="3.94" data-tol="2%" data-unit="V"><p>(c) Voltage actually across the solenoid?</p>
       <div class="solution"><p>\(V = I R = 2.46 \times 1.6 = 3.94\ \text{V}\). Only a third of the battery voltage reaches the solenoid. Most of the rest is lost in the cable.</p></div></div>
     <details><summary>Discussion: what would you change?</summary><p>Swap in 16 AWG (13.2 mΩ/m) and the cable drops to 0.79 Ω, so the current rises to about 4.8 A. Or move the relay next to the solenoid and run only a low-current control line back to the supply. Also check the opposite limit: at 4.8 A the 1.6 Ω coil dissipates about 37 W. Solenoids are rated for a particular voltage or current, and running one far above it overheats the coil, so more current isn't automatically better.</p></details>
