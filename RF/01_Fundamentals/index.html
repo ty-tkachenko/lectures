@@ -54,7 +54,7 @@
 
 <!-- ============ 1 DECIBELS ============ -->
 <section class="sec" id="db" data-short="Decibels">
-<h2>Decibels: the language of RF power <a class="vjump" data-t="2:00"></a></h2>
+<h2>Decibels <a class="vjump" data-t="2:00"></a></h2>
 <p>A telemetry radio transmits about 100 mW. By the time the signal reaches the ground station a few kilometres away, perhaps 0.000 000 000 01 mW arrives. Numbers spanning that many orders of magnitude are miserable to multiply, so RF engineers use a logarithmic scale, the <strong>decibel</strong>:</p>
 <div class="eq">$$\text{ratio in dB} = 10\log_{10}\frac{P_2}{P_1} \qquad\qquad P\ \text{in dBm} = 10\log_{10}\frac{P}{1\ \text{mW}}$$<div class="n">dB is a ratio (gain or loss). dBm is an absolute power referenced to 1 mW.</div></div>
 <p>The payoff: <strong>multiplying becomes adding</strong>. An amplifier with 20 dB of gain followed by a cable with 3 dB of loss gives 17 dB overall. Most of RF system design, from transmit chains to link budgets, is adding and subtracting dB.</p>
@@ -125,8 +125,8 @@
 </section>
 
 <!-- ============ 2 WIRE TO LINE ============ -->
-<section class="sec" id="lines" data-short="Wires become lines">
-<h2>When a wire becomes a transmission line <a class="vjump" data-t="7:00"></a></h2>
+<section class="sec" id="lines" data-short="Transmission lines">
+<h2>Transmission lines <a class="vjump" data-t="7:00"></a></h2>
 <p>Signals don't arrive instantly. They travel at a large fraction of the speed of light, slowed down by the material around the conductor:</p>
 <div class="eq">$$v = \frac{c}{\sqrt{\varepsilon_\text{eff}}} \qquad\qquad \lambda = \frac{v}{f}$$<div class="n">ε<sub>eff</sub> is the effective dielectric constant: 1 for air, about 2.1 for PTFE coax, about 3.3 for a microstrip trace on FR-4</div></div>
 <p>If a connection is short compared with the wavelength, every point on it sees nearly the same voltage at any instant, and ordinary circuit theory (Kirchhoff's laws, EE Module 2) works. Once the connection is a noticeable fraction of a wavelength, different points on it hold <em>different</em> voltages at the same moment. The far end lags behind the near end, and anything that happens at the far end comes back as a reflection. Then you need transmission-line thinking.</p>
@@ -184,7 +184,7 @@
 
 <!-- ============ 3 Z0 ============ -->
 <section class="sec" id="z0" data-short="Characteristic impedance">
-<h2>Characteristic impedance: what "50 Ω" means <a class="vjump" data-t="12:00"></a></h2>
+<h2>Characteristic impedance <a class="vjump" data-t="12:00"></a></h2>
 <p>Every pair of conductors has inductance along its length and capacitance between them, spread evenly per metre. A wave travelling down the line has to charge that capacitance through that inductance, and the ratio of voltage to current in the travelling wave settles at a fixed value, the <strong>characteristic impedance</strong>:</p>
 <div class="eq">$$Z_0 = \sqrt{\frac{L'}{C'}} \qquad\qquad Z_0^\text{coax} = \frac{60}{\sqrt{\varepsilon_r}}\ln\frac{D}{d}$$<div class="n">L′ and C′ are inductance and capacitance per metre. For coax, D is the dielectric (shield) diameter and d the centre conductor diameter.</div></div>
 <p>Two facts surprise almost everyone:</p>
@@ -293,7 +293,7 @@
 
 <!-- ============ 5 TDR ============ -->
 <section class="sec" id="tdr" data-short="TDR">
-<h2>TDR: seeing reflections in time <a class="vjump" data-t="22:00"></a></h2>
+<h2>Time-domain reflectometry (TDR) <a class="vjump" data-t="22:00"></a></h2>
 <p><strong>Time-domain reflectometry</strong> launches a fast voltage step into a line and watches what comes back. Every change in impedance reflects part of the step, and the echo arrives after the round trip to the discontinuity and back. A step <em>up</em> means higher impedance (an open, a narrow trace, extra inductance); a step <em>down</em> means lower impedance (a short, a wide pad, extra capacitance). The trace becomes a map of impedance along the line:</p>
 <div class="eq">$$x = \frac{v\,t}{2}$$<div class="n">distance to the discontinuity; the factor of 2 is because the echo makes a round trip</div></div>
 
@@ -324,8 +324,8 @@
 </section>
 
 <!-- ============ 6 TIME vs FREQUENCY ============ -->
-<section class="sec" id="ripple" data-short="Time vs frequency">
-<h2>The same reflections, seen in frequency <a class="vjump" data-t="26:00"></a></h2>
+<section class="sec" id="ripple" data-short="Frequency domain">
+<h2>Reflections in the frequency domain <a class="vjump" data-t="26:00"></a></h2>
 <p>Suppose a cable has two small mismatches: one at the near-end connector and one at the far end. On a TDR you'd see two echoes, separated by the round-trip delay \(2\tau\). On a VNA, which sweeps frequency, the two echoes add with a phase that changes with frequency. Sometimes they reinforce and sometimes they cancel, so the return loss shows a <strong>ripple</strong>:</p>
 <div class="eq">$$\Delta f_\text{ripple} = \frac{1}{2\tau}$$<div class="n">ripple period in frequency; τ is the one-way delay between the two discontinuities</div></div>
 <p>The two views are the same information, related by the Fourier transform. Closely spaced bumps in a return-loss plot mean the discontinuities are far apart; widely spaced bumps mean they're close together. When you see a periodic ripple on a VNA, measure the spacing and you know how far apart the problems are.</p>
@@ -368,7 +368,7 @@
 
 <!-- ============ 7 Dk Df ============ -->
 <section class="sec" id="material" data-short="Dk, Df &amp; loss">
-<h2>Dk and Df: what the board does to the signal <a class="vjump" data-t="29:00"></a></h2>
+<h2>Dielectric constant and loss (Dk and Df) <a class="vjump" data-t="29:00"></a></h2>
 <p>A PCB trace carries its signal mostly in the electric field <em>between</em> the copper and the ground plane, so the dielectric in between matters as much as the copper. Two numbers describe it:</p>
 <ul>
   <li><strong>Dk</strong> (dielectric constant, εr) sets how much the material slows the wave, and so the wavelength on the board and the trace width needed for 50 Ω.</li>
@@ -402,7 +402,7 @@
 
 <!-- ============ 8 POLARIZATION ============ -->
 <section class="sec" id="pol" data-short="Polarization">
-<h2>Polarization: which way the field points <a class="vjump" data-t="32:00"></a></h2>
+<h2>Polarization <a class="vjump" data-t="32:00"></a></h2>
 <p>A radio wave's electric field oscillates in a particular direction, its <strong>polarization</strong>. A straight dipole or monopole radiates <em>linear</em> polarization along its own axis, and it only picks up the component of an incoming field that lies along that axis. Two linear antennas at angle θ to each other lose</p>
 <div class="eq">$$L_\text{pol} = -20\log_{10}|\cos\theta|\ \text{dB}$$</div>
 <p>That's nothing at 0°, 3 dB at 45°, and in theory infinite at 90° (in practice 20–30 dB, thanks to reflections and imperfect antennas). <em>Circular</em> polarization rotates as it travels; a circular antenna receives a linear signal with a constant 3 dB loss whatever the angle.</p>

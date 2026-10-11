@@ -54,7 +54,7 @@
 
 <!-- ================= 1 CURRENT ================= -->
 <section class="sec" id="current" data-short="Current">
-<h2>Current: charge on the move <a class="vjump" data-t="2:30"></a></h2>
+<h2>Current <a class="vjump" data-t="2:30"></a></h2>
 <p>Metal wires are full of electrons that are free to move. Connect a battery across a wire and they drift along it. <strong>Current</strong> is the rate at which charge flows past a point, measured in <strong>amperes</strong> (A). One amp is one coulomb of charge per second.</p>
 <div class="eq">$$I = \frac{Q}{t}$$<div class="n">current (A) = charge (C) ÷ time (s)</div></div>
 <p>Two habits will save you a lot of confusion:</p>
@@ -74,7 +74,7 @@
 
 <!-- ================= 2 VOLTAGE ================= -->
 <section class="sec" id="voltage" data-short="Voltage &amp; ground">
-<h2>Voltage only exists between two points <a class="vjump" data-t="6:00"></a></h2>
+<h2>Voltage and ground <a class="vjump" data-t="6:00"></a></h2>
 <p><strong>Voltage</strong> is the energy each unit of charge gains or loses between two points, measured in <strong>volts</strong> (V). One volt is one joule per coulomb. A 7.4 V battery gives every coulomb that passes through it 7.4 joules, and the circuit takes that energy back out as heat, light, motion or radio waves.</p>
 <p>The key word is <em>between</em>. "This pin is at 3.3 V" is shorthand for "this pin is 3.3 V above the point we agreed to call zero." That agreed point is called <strong>ground</strong> (GND). It's usually the battery's negative terminal, and it's drawn with this symbol:
 <svg width="22" height="18" viewBox="0 0 22 18" style="vertical-align:-3px" aria-label="ground symbol"><path d="M11 0v7M2 7h18M6 11.5h10M9.5 16h3" stroke="currentColor" stroke-width="2" fill="none"/></svg></p>
@@ -177,7 +177,7 @@
 
 <!-- ================= 4 POWER ================= -->
 <section class="sec" id="power" data-short="Power &amp; ratings">
-<h2>Power: where the energy goes <a class="vjump" data-t="13:00"></a></h2>
+<h2>Power and power ratings <a class="vjump" data-t="13:00"></a></h2>
 <p>Every resistor turns electrical energy into heat. The rate at which it does so is the <strong>power</strong>, measured in <strong>watts</strong> (W), or joules per second. Multiply voltage (energy per charge) by current (charge per second) and you get energy per second:</p>
 <div class="eq">$$P = V\,I = I^2 R = \frac{V^2}{R}$$<div class="n">all three forms are the same equation, with Ohm's law substituted in</div></div>
 <p>Use whichever form matches what you know. If you know the current through a wire, use \(I^2R\). If you know the voltage across a resistor, use \(V^2/R\).</p>
@@ -207,7 +207,7 @@
 
 <!-- ================= 5 WIRES ================= -->
 <section class="sec" id="wires" data-short="Wire resistance">
-<h2>Wires aren't perfect: the igniter-cable problem <a class="vjump" data-t="16:00"></a></h2>
+<h2>Wire resistance <a class="vjump" data-t="16:00"></a></h2>
 <p>We usually draw wires as perfect conductors, and for a few centimetres of PCB trace carrying milliamps that's fine. But wire resistance grows with length and shrinks with cross-sectional area:</p>
 <div class="eq">$$R_\text{wire} = \frac{\rho\,\ell}{A}$$<div class="n">ρ is copper's resistivity (1.72 × 10⁻⁸ Ω·m), ℓ the length and A the cross-sectional area</div></div>
 <p>Wire size is often given in <strong>AWG</strong> (American Wire Gauge). The numbering runs backwards: bigger numbers mean <em>thinner</em> wire. Every 3 gauges halves the area, so it doubles the resistance per metre.</p>
@@ -270,7 +270,7 @@
 
 <!-- ================= 6 BATTERIES ================= -->
 <section class="sec" id="battery" data-short="Batteries">
-<h2>Batteries: capacity, energy and internal resistance <a class="vjump" data-t="20:00"></a></h2>
+<h2>Batteries <a class="vjump" data-t="20:00"></a></h2>
 <p>A battery isn't a perfect voltage source. A good model is an ideal voltage source in series with a small <strong>internal resistance</strong>. The more current you draw, the more voltage is lost inside the battery, and the lower the terminal voltage <em>sags</em>:</p>
 <div class="eq">$$V_\text{terminal} = V_\text{open circuit} - I\,R_\text{internal}$$</div>
 <p>Battery capacity is usually given in <strong>milliamp-hours</strong> (mAh): a 2200 mAh pack can supply 2.2 A for one hour, or 220 mA for ten hours. Energy is capacity × voltage, so a 2S (two-cell, 7.4 V) 2200 mAh pack holds about 7.4 × 2.2 ≈ 16 Wh.</p>
@@ -336,7 +336,7 @@
 
 <!-- ================= 7 MULTIMETER ================= -->
 <section class="sec" id="meter" data-short="The multimeter">
-<h2>Measuring it: the multimeter <a class="vjump" data-t="23:00"></a></h2>
+<h2>The multimeter <a class="vjump" data-t="23:00"></a></h2>
 <p>A multimeter measures the three quantities in this module, and how you connect it is different for each one:</p>
 <div class="tablewrap"><table>
   <tr><th>Mode</th><th>How to connect</th><th>Why</th><th>Meter looks like</th></tr>
@@ -369,8 +369,8 @@
 </section>
 
 <!-- ================= 8 SAFETY ================= -->
-<section class="sec" id="safety" data-short="Staying safe">
-<h2>Staying safe at the bench</h2>
+<section class="sec" id="safety" data-short="Bench safety">
+<h2>Bench safety</h2>
 <ul>
   <li><strong>Current is what hurts you, and voltage is what pushes it through you.</strong> Dry skin is a few tens of kilohms or more, so the 7.4 V on the rocket can't push a dangerous current through your body. Mains voltage and high-voltage supplies can, so treat them with respect.</li>
   <li><strong>LiPos are the real hazard on our bench.</strong> As the battery simulator showed, a short can draw hundreds of amps. That melts wires, welds tools and can start a fire. Insulate exposed leads, charge in a LiPo bag, and never charge unattended.</li>
