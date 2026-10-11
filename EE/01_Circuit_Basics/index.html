@@ -163,7 +163,7 @@
   <p>A shortcut worth memorising: <b>volts ÷ kilohms = milliamps</b>. Most signal-level circuits live in kΩ and mA, so you'll use it constantly.</p>
 </div>
 <details class="exercise">
-  <summary><span class="ek">Design exercise</span><span class="et">An "armed" indicator LED</span><span class="eo">optional</span></summary>
+  <summary><span class="ek">Design exercise</span><span class="et">An "armed" indicator LED</span></summary>
   <div class="eb">
     <p>The pad box needs an LED that lights when the pyro channel is armed. It runs from 5 V. A red LED drops about 2 V across itself whenever it's on (you'll see why in Module 5), and you want 10 mA through it.</p>
     <div class="check" data-ans="300" data-tol="3%" data-unit="Ω"><p>What series resistor sets 10 mA?</p>
@@ -193,7 +193,7 @@
   <p>A ¼ W resistor would technically be "within rating", but it would run at its maximum temperature all the time, and the rating assumes cooler conditions than an avionics bay. Applying the 50 % rule, you'd pick a ½ W part. Better still, ask whether the circuit really needs to burn a quarter of a watt at all. (And don't reach for a smaller package: smaller parts have less area to shed heat, so their ratings are <em>lower</em>.)</p>
 </div>
 <details class="exercise">
-  <summary><span class="ek">Design exercise</span><span class="et">Does the LED resistor fit in an 0402?</span><span class="eo">optional</span></summary>
+  <summary><span class="ek">Design exercise</span><span class="et">Does the LED resistor fit in an 0402?</span></summary>
   <div class="eb">
     <p>Back to the 300 Ω resistor carrying 10 mA in the arming indicator. The board is tight on space, and an 0402 resistor is rated 1/16 W (62.5 mW).</p>
     <div class="check" data-ans="30" data-tol="3%" data-unit="mW"><p>How much power does the resistor dissipate?</p>
@@ -256,7 +256,7 @@
   <p>Note what <em>didn't</em> happen: the voltage didn't "run out" along the cable. Voltage gets <em>divided</em> between every resistance in the loop, and a long cable simply takes a big share.</p>
 </div>
 <details class="exercise">
-  <summary><span class="ek">Design exercise</span><span class="et">How long can the launch cable be?</span><span class="eo">optional</span></summary>
+  <summary><span class="ek">Design exercise</span><span class="et">How long can the launch cable be?</span></summary>
   <div class="eb">
     <p>The firing box supplies 12 V. The igniter is 1.6 Ω with an all-fire current of 1 A, and you want a 2× margin (2 A). The cable is 22 AWG twin, 52.9 mΩ per metre per conductor. Ignore the battery's and relay's own resistance.</p>
     <div class="check" data-ans="41.6" data-tol="2%" data-unit="m"><p>What's the longest one-way cable length that still delivers 2 A?</p>
@@ -322,7 +322,7 @@
   </div>
 </div>
 <details class="exercise">
-  <summary><span class="ek">Design exercise</span><span class="et">Spec a pack that won't brown out</span><span class="eo">optional</span></summary>
+  <summary><span class="ek">Design exercise</span><span class="et">Spec a pack that won't brown out</span></summary>
   <div class="eb">
     <p>The main valve and the flight computer share a 2S pack. Near the end of a long pad hold the cells are at 3.5 V each (7.0 V open circuit). Opening the valve draws 8 A, and the computer's regulator needs at least 6.0 V at its input.</p>
     <div class="check" data-ans="62.5" data-tol="2%" data-unit="mΩ"><p>What's the highest internal resistance <em>per cell</em> the pack can have?</p>

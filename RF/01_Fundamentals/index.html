@@ -112,7 +112,7 @@
   <p>Break any dB value into 10s and 3s. 13 dB = 10 + 3, so ×10 × 2 = ×20. 27 dBm = 30 − 3, so 1 W ÷ 2 = 500 mW. With a little practice you'll never reach for a calculator for this.</p>
 </div>
 <details class="exercise">
-  <summary><span class="ek">Design exercise</span><span class="et">Signal level at the ground receiver</span><span class="eo">optional</span></summary>
+  <summary><span class="ek">Design exercise</span><span class="et">Signal level at the ground receiver</span></summary>
   <div class="eb">
     <p>At the ground station, the antenna delivers −95 dBm. It feeds a 20 dB low-noise amplifier mounted at the mast, then 4 dB of cable down to the receiver.</p>
     <div class="check" data-ans="-79" data-tol="0.1" data-unit="dBm"><p>What power reaches the receiver?</p>
@@ -171,7 +171,7 @@
   <div><span class="nt">It isn't only radios: fast digital edges count too</span>A digital edge with rise time \(t_r\) contains significant energy up to roughly \(0.35/t_r\). A 1 ns edge on an SPI or Ethernet line behaves like a 350 MHz signal, so a long trace or ribbon cable starts acting like a transmission line, ringing and all. This is where RF and high-speed digital design meet.</div>
 </div>
 <details class="exercise">
-  <summary><span class="ek">Design exercise</span><span class="et">The longest "lumped" trace at 2.4 GHz</span><span class="eo">optional</span></summary>
+  <summary><span class="ek">Design exercise</span><span class="et">The longest "lumped" trace at 2.4 GHz</span></summary>
   <div class="eb">
     <p>A 2.4 GHz video transmitter sits on an FR-4 board (ε<sub>eff</sub> ≈ 3.3). You'd like to route its output without impedance control.</p>
     <div class="check" data-ans="6.9" data-tol="3%" data-unit="mm"><p>Up to what trace length can you get away with it, by the λ/10 rule?</p>
@@ -218,7 +218,7 @@
 <h3>Why 50 Ω?</h3>
 <p>For air-filled coax of a given outer size, loss is lowest near 77 Ω and power handling is highest near 30 Ω. 50 Ω is a compromise between the two that stuck in the 1930s, and today nearly every RF connector, cable, amplifier and instrument is built for it. (Video and TV systems standardised on 75 Ω, which is why that coax is different.) On our PCBs, a 50 Ω microstrip is a trace of a particular width over a ground plane; you'll calculate it in Modules 2 and 4.</p>
 <details class="exercise">
-  <summary><span class="ek">Design exercise</span><span class="et">Design a 50 Ω PTFE coax</span><span class="eo">optional</span></summary>
+  <summary><span class="ek">Design exercise</span><span class="et">Design a 50 Ω PTFE coax</span></summary>
   <div class="eb">
     <p>You're specifying a semi-rigid cable with solid PTFE dielectric (ε<sub>r</sub> = 2.1).</p>
     <div class="check" data-ans="3.35" data-tol="2%" data-unit=""><p>What ratio D/d gives 50 Ω?</p>
@@ -280,7 +280,7 @@
   <div><span class="nt">The airframe is part of the antenna</span>An antenna tuned on the bench can be badly mismatched once it's inside the rocket. Carbon fibre is conductive and shields the antenna; metal bulkheads and the wiring harness change its impedance. Always measure return loss with the antenna installed in the real airframe section.</div>
 </div>
 <details class="exercise">
-  <summary><span class="ek">Design exercise</span><span class="et">A 75 Ω antenna on a 50 Ω radio</span><span class="eo">optional</span></summary>
+  <summary><span class="ek">Design exercise</span><span class="et">A 75 Ω antenna on a 50 Ω radio</span></summary>
   <div class="eb">
     <p>Someone salvaged a 75 Ω antenna and connected it straight to the 50 Ω telemetry radio.</p>
     <div class="check" data-ans="13.98" data-tol="0.15" data-unit="dB"><p>What return loss will you measure?</p>
@@ -312,7 +312,7 @@
 </div>
 <p>A VNA can compute the same view (most have a "time domain" mode, including the NanoVNA), which is how we check cable assemblies and find bad crimps on the rocket's RF harness.</p>
 <details class="exercise">
-  <summary><span class="ek">Design exercise</span><span class="et">Measure a cable's velocity factor</span><span class="eo">optional</span></summary>
+  <summary><span class="ek">Design exercise</span><span class="et">Measure a cable's velocity factor</span></summary>
   <div class="eb">
     <p>You have a spool of unknown coax. You cut exactly 2.00 m, leave the far end open, and the TDR shows the open-circuit step 19.5 ns after launch.</p>
     <div class="check" data-ans="0.684" data-tol="1.5%" data-unit=""><p>What's the cable's velocity factor?</p>
@@ -355,7 +355,7 @@
   </ol></div>
 </div>
 <details class="exercise">
-  <summary><span class="ek">Design exercise</span><span class="et">Locate a problem from the ripple</span><span class="eo">optional</span></summary>
+  <summary><span class="ek">Design exercise</span><span class="et">Locate a problem from the ripple</span></summary>
   <div class="eb">
     <p>A VNA sweep of the rocket's GPS cable assembly shows a return-loss ripple repeating every 125 MHz. The cable is PTFE, velocity factor 0.70.</p>
     <div class="check" data-ans="84" data-tol="2%" data-unit="cm"><p>How far apart are the two discontinuities causing it?</p>
@@ -428,7 +428,7 @@
   <div><span class="nt">Why this matters on a rocket</span>The rocket pitches over after launch, may roll, and swings under the parachute during descent. A linear antenna on the airframe and a linear antenna at the ground station will drift in and out of alignment, and the link fades. A circularly polarized ground antenna trades a constant 3 dB for never hitting that deep null, which is usually a good deal. Antenna patterns and choices are covered in Module 9.</div>
 </div>
 <details class="exercise">
-  <summary><span class="ek">Design exercise</span><span class="et">When does a linear ground antenna lose 6 dB?</span><span class="eo">optional</span></summary>
+  <summary><span class="ek">Design exercise</span><span class="et">When does a linear ground antenna lose 6 dB?</span></summary>
   <div class="eb">
     <p>Both antennas are linear. The link budget has 6 dB of margin set aside for polarization.</p>
     <div class="check" data-ans="60" data-tol="1.5%" data-unit="°"><p>At what tilt angle between them is that margin used up?</p>

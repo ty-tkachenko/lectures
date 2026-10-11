@@ -54,11 +54,11 @@ Copy an existing module folder (EE 1 is the reference) and keep the same structu
    - Interactive figure: `<div class="widget wide"><div class="wh"><span class="tag">Interactive</span><b>Title</b></div><div class="wb wcols">controls | canvas</div><div class="try">…</div></div>`, drawn with `Plot.widget` (static) or `Plot.animate` (animated) from `plot.js`.
    - Worked example: `<div class="example"><span class="xk">Worked example</span>…</div>`
    - Notes: `<div class="note rocket|myth|rule|tip|warn"><span class="ni">…</span><div><span class="nt">Title</span>…</div></div>`
-5. **Design exercises** are optional problems with checked answers. Short ones sit inside a section, collapsed by default:
+5. **Design exercises** are problems with checked answers. Short ones sit inside a section, collapsed by default:
 
    ```html
    <details class="exercise">
-     <summary><span class="ek">Design exercise</span><span class="et">Title</span><span class="eo">optional</span></summary>
+     <summary><span class="ek">Design exercise</span><span class="et">Title</span></summary>
      <div class="eb"><p>Scenario…</p> <div class="check" …>…</div></div>
    </details>
    ```

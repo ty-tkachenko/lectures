@@ -116,7 +116,7 @@
 </div>
 
 <details class="exercise">
-  <summary><span class="ek">Design exercise</span><span class="et">How much is left on the fuse?</span><span class="eo">optional</span></summary>
+  <summary><span class="ek">Design exercise</span><span class="et">How much is left on the fuse?</span></summary>
   <div class="eb">
     <p>A battery feeds several loads through one 5 A fuse: a microcontroller board (180 mA), a radio module while transmitting (600 mA), a camera (900 mA) and two solenoid drivers that each draw 1.5 A when on. Everything can be on at once.</p>
     <div class="check" data-ans="0.32" data-tol="3%" data-unit="A"><p>How much current is left before the fuse's rating?</p>
@@ -171,7 +171,7 @@
 </div>
 
 <details class="exercise">
-  <summary><span class="ek">Design exercise</span><span class="et">Find the bad crimp</span><span class="eo">optional</span></summary>
+  <summary><span class="ek">Design exercise</span><span class="et">Find the bad crimp</span></summary>
   <div class="eb">
     <p>A solenoid valve opens sluggishly. Its supply is 12.0 V at the battery, and with the valve energised (2.0 A) you measure 10.9 V across the valve itself, 0.3 V along the feed wire and 0.3 V along the return wire. The only other thing in the loop is a connector.</p>
     <div class="check" data-ans="0.25" data-tol="3%" data-unit="Ω"><p>What's the connector's resistance?</p>
@@ -223,7 +223,7 @@
 </div>
 
 <details class="exercise">
-  <summary><span class="ek">Design exercise</span><span class="et">Dual igniters on one cable</span><span class="eo">optional</span></summary>
+  <summary><span class="ek">Design exercise</span><span class="et">Dual igniters on one cable</span></summary>
   <div class="eb">
     <p>For redundancy, two igniters are wired in parallel at the end of the launch cable. Each is 1.6 Ω with a 1.0 A all-fire current. The cable is Module 1's 30 m of 22 AWG twin (3.17 Ω round trip), and the firing box supplies 12 V. Ignore the battery's and relay's resistance.</p>
     <div class="check" data-ans="1.51" data-tol="2%" data-unit="A"><p>How much current goes through <em>each</em> igniter?</p>
@@ -239,10 +239,11 @@
 <!-- ================= 5 DIVIDER ================= -->
 <section class="sec" id="divider" data-short="The voltage divider">
 <h2>The voltage divider <a class="vjump" data-t="13:00"></a></h2>
-<p>Battery-powered boards usually measure their own battery voltage: to log it, to warn before the pack runs flat, or to refuse to start a high-current task on a weak pack. But a 2S LiPo reaches 8.4 V and the microcontroller's ADC pin only accepts 0 to 3.3 V. Putting 8.4 V on that pin damages it.</p>
+<p>Battery-powered boards usually measure their own battery voltage: to log it, to warn before the pack runs flat, or to refuse to start a high-current task on a weak pack. The measurement is made by the microcontroller's <strong>analog-to-digital converter</strong> (ADC): a circuit inside the chip that reads the voltage on one of its pins and turns it into a number the firmware can use. A typical ADC pin accepts 0 to 3.3 V. A 2S LiPo reaches 8.4 V, and putting 8.4 V on the pin damages it.</p>
 <p>The fix is two resistors in series across the battery. The same current flows through both, so the voltage splits in proportion to their resistances, and the junction between them sits at a fixed fraction of the input:</p>
 <div class="eq">$$V_\text{out} = V_\text{in}\,\frac{R_2}{R_1 + R_2}$$<div class="n">R1 from the input to the output, R2 from the output to ground</div></div>
 <p>That fraction is the <strong>divider ratio</strong>. The firmware reads \(V_\text{out}\) and multiplies by \((R_1 + R_2)/R_2\) to get the battery voltage back.</p>
+<p>The equation assumes nothing is connected to the output, yet the ADC pin is connected to it. It still works because an ADC input draws almost no current. Electrically it looks like a very large resistance from the pin to ground, typically tens of megohms or more. Next to R2, which is around 10 kΩ, that's a path almost no current takes, so practically all of R1's current still flows through R2 and the voltage at the junction doesn't change. A multimeter on its voltage setting reads a circuit without disturbing it for the same reason: its input is about 10 MΩ. Section 6 looks at what happens when the thing you connect isn't so large compared with the divider.</p>
 
 <div class="widget wide" id="w-div">
   <div class="wh"><span class="tag">Interactive</span><b>Design a battery-voltage monitor</b></div>
@@ -286,7 +287,7 @@
 </div>
 
 <details class="exercise">
-  <summary><span class="ek">Design exercise</span><span class="et">Read the battery back</span><span class="eo">optional</span></summary>
+  <summary><span class="ek">Design exercise</span><span class="et">Read the battery back</span></summary>
   <div class="eb">
     <p>A board uses the 22 kΩ / 10 kΩ divider above. The ADC reads 2.10 V.</p>
     <div class="check" data-ans="6.72" data-tol="1%" data-unit="V"><p>What's the battery voltage?</p>
@@ -301,7 +302,7 @@
 <!-- ================= 6 LOADING ================= -->
 <section class="sec" id="loading" data-short="Loading">
 <h2>Loading <a class="vjump" data-t="17:00"></a></h2>
-<p>The divider equation assumes nothing is connected to the output. In reality something always is: the ADC pin, a multimeter, a data logger. Whatever you connect draws some current, and it sits <em>in parallel with R2</em>. That lowers the bottom half of the divider, so the output drops. This is called <strong>loading</strong>.</p>
+<p>The divider equation assumes nothing is connected to the output. In reality something always is: an ADC pin, a multimeter, a data logger. Whatever you connect draws some current, and it sits <em>in parallel with R2</em>. That lowers the bottom half of the divider, so the output drops. This is called <strong>loading</strong>. For an ADC pin on a 10 kΩ divider the effect is too small to notice, but with larger resistors or a hungrier instrument it isn't.</p>
 <div class="eq">$$V_\text{out} = V_\text{in}\,\frac{R_2 \parallel R_L}{R_1 + R_2 \parallel R_L}$$<div class="n">R<sub>L</sub> is the load: the input resistance of whatever reads the divider</div></div>
 <p>If \(R_L\) is huge compared with R2, then \(R_2 \parallel R_L \approx R_2\) and nothing changes. You saw that in the series and parallel figure: a big resistor in parallel barely matters. The trouble starts when the load is within a factor of a hundred or so of the divider's resistors.</p>
 
@@ -401,7 +402,7 @@
 <p>Thévenin also works the other way round, as a measurement. Measure the open-circuit voltage, then connect a known load and measure again. The drop tells you \(R_\text{th}\) without opening the box. It's how you find a battery's internal resistance, or the output resistance of a sensor with no datasheet. Equivalently, \(R_\text{th} = V_\text{oc}/I_\text{sc}\), the open-circuit voltage over the short-circuit current, though deliberately shorting a source is rarely a good idea.</p>
 
 <details class="exercise">
-  <summary><span class="ek">Design exercise</span><span class="et">What's inside the sensor?</span><span class="eo">optional</span></summary>
+  <summary><span class="ek">Design exercise</span><span class="et">What's inside the sensor?</span></summary>
   <div class="eb">
     <p>A cheap temperature sensor board has an analog output and no useful datasheet. With nothing connected, the output reads 3.00 V on your meter. With a 10 kΩ resistor from the output to ground, it reads 2.50 V.</p>
     <div class="check" data-ans="2000" data-tol="2%" data-unit="Ω"><p>What's the sensor's output (Thévenin) resistance?</p>
@@ -451,7 +452,7 @@
 </div>
 
 <details class="exercise">
-  <summary><span class="ek">Design exercise</span><span class="et">An unequal level shifter</span><span class="eo">optional</span></summary>
+  <summary><span class="ek">Design exercise</span><span class="et">An unequal level shifter</span></summary>
   <div class="eb">
     <p>The same circuit, but with R1 = 20 kΩ from the signal and R2 = 10 kΩ from the 3.3 V reference.</p>
     <div class="check" data-ans="1.2" data-tol="2%" data-unit="V"><p>What does the ADC see when the signal is −3.0 V?</p>
