@@ -1,24 +1,43 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 280" role="img" aria-labelledby="rcTitle rcDesc" font-family="Georgia, 'Times New Roman', serif">
-  <title id="rcTitle">RC step response</title>
-  <desc id="rcDesc">A resistor feeds a capacitor to ground. Beside the schematic, the capacitor voltage rises as a curve toward the source voltage, passing 63 percent at one time constant and nearly finishing at five.</desc>
-  <rect x="1" y="1" width="718" height="278" fill="#fff" stroke="#111"/>
-  <text x="24" y="32" font-size="20" fill="#111">The capacitor voltage cannot jump</text>
-  <line x1="40" y1="90" x2="90" y2="90" stroke="#111" stroke-width="3"/>
-  <text x="40" y="76" font-size="16" fill="#111">step</text>
-  <rect x="90" y="72" width="70" height="36" fill="#fff" stroke="#111" stroke-width="2"/>
-  <text x="125" y="96" font-size="16" fill="#111" text-anchor="middle">R</text>
-  <line x1="160" y1="90" x2="230" y2="90" stroke="#111" stroke-width="3"/>
-  <line x1="230" y1="70" x2="230" y2="130" stroke="#111" stroke-width="3"/>
-  <line x1="250" y1="70" x2="250" y2="130" stroke="#111" stroke-width="3"/>
-  <text x="262" y="104" font-size="16" fill="#111">C</text>
-  <line x1="240" y1="130" x2="240" y2="170" stroke="#111" stroke-width="2"/>
-  <line x1="40" y1="170" x2="280" y2="170" stroke="#111" stroke-width="2"/>
-  <text x="40" y="200" font-size="16" fill="#111">tau = R C</text>
-  <line x1="360" y1="200" x2="680" y2="200" stroke="#111" stroke-width="2"/>
-  <line x1="380" y1="60" x2="380" y2="200" stroke="#111" stroke-width="2"/>
-  <path d="M380 190 C 460 188, 500 80, 660 70" fill="none" stroke="#0000cc" stroke-width="3"/>
-  <line x1="470" y1="70" x2="470" y2="200" stroke="#111" stroke-width="1" stroke-dasharray="4 3"/>
-  <text x="476" y="90" font-size="14" fill="#111">1 tau, 63%</text>
-  <text x="500" y="230" font-size="14" fill="#111">time</text>
-  <text x="300" y="80" font-size="14" fill="#111">Vc</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 320" width="760" height="320" role="img" aria-labelledby="t d" font-family="system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif">
+<title id="t">RC step response</title>
+<desc id="d">A resistor feeds a capacitor whose other plate is grounded. The capacitor voltage rises toward the step, passing about 63 percent at one time constant and nearly finishing by five.</desc>
+<rect width="760" height="320" fill="#ffffff"/>
+<text x="20" y="24" font-size="14" font-weight="600" fill="#2b2b2b">The capacitor voltage cannot jump</text>
+
+<text x="36" y="70" font-size="12" fill="#2b2b2b">step</text>
+<path d="M48,88 L100,88" stroke="#2b2b2b" stroke-width="1.6" fill="none"/>
+<path d="M100,88 L106,88 L112,93 L118,83 L124,93 L130,83 L136,93 L142,83 L148,93 L154,88 L160,88" stroke="#2b2b2b" stroke-width="1.6" fill="none" stroke-linejoin="round"/>
+<text x="130" y="74" font-size="12" fill="#2b2b2b" text-anchor="middle">R</text>
+<path d="M160,88 L230,88" stroke="#2b2b2b" stroke-width="1.6" fill="none"/>
+<circle cx="230" cy="88" r="3" fill="#2b2b2b"/>
+<text x="242" y="82" font-size="12" fill="#1d4ed8">Vc</text>
+<!-- shunt capacitor: horizontal plates -->
+<line x1="230" y1="88" x2="230" y2="118" stroke="#2b2b2b" stroke-width="1.6"/>
+<line x1="214" y1="118" x2="246" y2="118" stroke="#2b2b2b" stroke-width="2.2" stroke-linecap="round"/>
+<line x1="214" y1="128" x2="246" y2="128" stroke="#2b2b2b" stroke-width="2.2" stroke-linecap="round"/>
+<text x="254" y="128" font-size="12" fill="#2b2b2b">C</text>
+<line x1="230" y1="128" x2="230" y2="168" stroke="#2b2b2b" stroke-width="1.6"/>
+<line x1="218" y1="168" x2="242" y2="168" stroke="#2b2b2b" stroke-width="1.6" stroke-linecap="round"/>
+<line x1="222" y1="174" x2="238" y2="174" stroke="#2b2b2b" stroke-width="1.6" stroke-linecap="round"/>
+<line x1="226" y1="180" x2="234" y2="180" stroke="#2b2b2b" stroke-width="1.6" stroke-linecap="round"/>
+<line x1="48" y1="168" x2="230" y2="168" stroke="#2b2b2b" stroke-width="1.6"/>
+<line x1="48" y1="88" x2="48" y2="168" stroke="#2b2b2b" stroke-width="1.6"/>
+<text x="48" y="210" font-size="12" fill="#555">τ = RC</text>
+
+<!-- curve -->
+<line x1="400" y1="60" x2="400" y2="230" stroke="#2b2b2b" stroke-width="1.4"/>
+<line x1="400" y1="230" x2="720" y2="230" stroke="#2b2b2b" stroke-width="1.4"/>
+<line x1="400" y1="78" x2="720" y2="78" stroke="#e5e7eb" stroke-width="1"/>
+<text x="392" y="74" font-size="12" fill="#555" text-anchor="end">Vs</text>
+<text x="392" y="234" font-size="12" fill="#555" text-anchor="end">0</text>
+<!-- 63% at 1 tau: y = 230 - 0.632*(230-78) = 134 -->
+<polyline points="400,230 430,196 456,168 472,134 520,104 568,90 620,84 680,80" fill="none" stroke="#1d4ed8" stroke-width="1.8" stroke-linejoin="round"/>
+<line x1="472" y1="78" x2="472" y2="230" stroke="#555" stroke-width="1" stroke-dasharray="4 3"/>
+<circle cx="472" cy="134" r="3.5" fill="#1d4ed8"/>
+<text x="488" y="168" font-size="12" fill="#1d4ed8">1τ, about 63%</text>
+<text x="590" y="64" font-size="11" fill="#555">5τ, nearly there</text>
+<text x="680" y="250" font-size="12" fill="#555">time</text>
+<text x="408" y="54" font-size="12" fill="#1d4ed8">Vc</text>
+
+<text x="20" y="292" font-size="11.5" font-style="italic" fill="#555">One time constant reaches about 63% of the step. Five time constants is close enough for most resets.</text>
 </svg>

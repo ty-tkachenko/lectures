@@ -1,25 +1,39 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 320" role="img" aria-labelledby="divTitle divDesc" font-family="Georgia, 'Times New Roman', serif">
-  <title id="divTitle">Voltage divider with a load</title>
-  <desc id="divDesc">A source feeds R1, then a node, then R2 to the 0 V rail. A load resistor hangs on that same node. The load is in parallel with R2, so the output is lower than the unloaded divider formula.</desc>
-  <rect x="1" y="1" width="718" height="318" fill="#fff" stroke="#111"/>
-  <text x="24" y="32" font-size="20" fill="#111">The load shares current with R2</text>
-  <text x="40" y="78" font-size="18" fill="#111">Vin</text>
-  <line x1="90" y1="90" x2="160" y2="90" stroke="#111" stroke-width="3"/>
-  <rect x="160" y="72" width="80" height="36" fill="#fff" stroke="#111" stroke-width="2"/>
-  <text x="200" y="96" font-size="18" fill="#111" text-anchor="middle">R1</text>
-  <line x1="240" y1="90" x2="340" y2="90" stroke="#111" stroke-width="3"/>
-  <circle cx="340" cy="90" r="5" fill="#111"/>
-  <text x="360" y="78" font-size="18" fill="#111">Vout</text>
-  <line x1="340" y1="90" x2="340" y2="150" stroke="#111" stroke-width="3"/>
-  <rect x="300" y="150" width="80" height="36" fill="#fff" stroke="#111" stroke-width="2"/>
-  <text x="340" y="174" font-size="18" fill="#111" text-anchor="middle">R2</text>
-  <line x1="340" y1="186" x2="340" y2="250" stroke="#111" stroke-width="3"/>
-  <line x1="200" y1="250" x2="520" y2="250" stroke="#111" stroke-width="3"/>
-  <text x="530" y="256" font-size="16" fill="#111">0 V</text>
-  <line x1="340" y1="90" x2="480" y2="90" stroke="#0000cc" stroke-width="3"/>
-  <line x1="480" y1="90" x2="480" y2="150" stroke="#0000cc" stroke-width="3"/>
-  <rect x="440" y="150" width="80" height="36" fill="#fff" stroke="#0000cc" stroke-width="2"/>
-  <text x="480" y="174" font-size="18" fill="#111" text-anchor="middle">Rload</text>
-  <line x1="480" y1="186" x2="480" y2="250" stroke="#0000cc" stroke-width="3"/>
-  <text x="24" y="292" font-size="16" fill="#111">Unloaded, Vout = Vin times R2 / (R1 + R2). With a load, R2 and Rload are in parallel first.</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 340" width="760" height="340" role="img" aria-labelledby="t d" font-family="system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif">
+<title id="t">Voltage divider with a load</title>
+<desc id="d">A source feeds R1 to an output node, then R2 to ground. Rload hangs on that same node, in parallel with R2, so the output is lower than the unloaded divider formula.</desc>
+<defs>
+<marker id="ah1d4ed8" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#1d4ed8"/></marker>
+</defs>
+<rect width="760" height="340" fill="#ffffff"/>
+<text x="20" y="24" font-size="14" font-weight="600" fill="#2b2b2b">The load shares current with R2</text>
+
+<line x1="70" y1="86" x2="70" y2="116" stroke="#2b2b2b" stroke-width="1.6"/>
+<line x1="54" y1="116" x2="86" y2="116" stroke="#2b2b2b" stroke-width="2.2" stroke-linecap="round"/>
+<line x1="62" y1="126" x2="78" y2="126" stroke="#2b2b2b" stroke-width="2.2" stroke-linecap="round"/>
+<line x1="70" y1="126" x2="70" y2="268" stroke="#2b2b2b" stroke-width="1.6"/>
+<text x="48" y="78" font-size="12" fill="#2b2b2b">Vin</text>
+
+<path d="M70,86 L150,86" stroke="#2b2b2b" stroke-width="1.6" fill="none"/>
+<path d="M150,86 L156,86 L162,91 L168,81 L174,91 L180,81 L186,91 L192,81 L198,91 L204,86 L210,86" stroke="#2b2b2b" stroke-width="1.6" fill="none" stroke-linejoin="round"/>
+<text x="180" y="72" font-size="12" fill="#2b2b2b" text-anchor="middle">R1</text>
+<path d="M210,86 L300,86" stroke="#2b2b2b" stroke-width="1.6" fill="none"/>
+<circle cx="300" cy="86" r="3" fill="#2b2b2b"/>
+<text x="312" y="78" font-size="12" font-weight="600" fill="#2b2b2b">Vout</text>
+
+<path d="M300,86 L300,110 L305,116 L295,122 L305,128 L295,134 L305,140 L295,146 L305,152 L300,158 L300,268" stroke="#2b2b2b" stroke-width="1.6" fill="none" stroke-linejoin="round"/>
+<text x="312" y="140" font-size="12" fill="#2b2b2b">R2</text>
+
+<!-- load in parallel, highlighted -->
+<path d="M300,86 L500,86" stroke="#1d4ed8" stroke-width="1.6" fill="none"/>
+<path d="M500,86 L500,110 L505,116 L495,122 L505,128 L495,134 L505,140 L495,146 L505,152 L500,158 L500,268" stroke="#1d4ed8" stroke-width="1.6" fill="none" stroke-linejoin="round"/>
+<text x="512" y="140" font-size="12" font-weight="600" fill="#1d4ed8">Rload</text>
+<text x="400" y="62" font-size="11" fill="#1d4ed8">in parallel with R2</text>
+
+<line x1="70" y1="268" x2="560" y2="268" stroke="#2b2b2b" stroke-width="1.6"/>
+<line x1="560" y1="268" x2="576" y2="268" stroke="#2b2b2b" stroke-width="1.6" stroke-linecap="round"/>
+<line x1="564" y1="274" x2="572" y2="274" stroke="#2b2b2b" stroke-width="1.6" stroke-linecap="round"/>
+<line x1="567" y1="280" x2="569" y2="280" stroke="#2b2b2b" stroke-width="1.6" stroke-linecap="round"/>
+<text x="584" y="272" font-size="12" fill="#555">0 V</text>
+<text x="20" y="292" font-size="11.5" font-style="italic" fill="#555">Unloaded, Vout = Vin · R2 / (R1 + R2). With a load, R2 and Rload are in parallel first.</text>
+<text x="20" y="312" font-size="11.5" font-style="italic" fill="#555">The source returns to the same 0 V rail as R2.</text>
 </svg>

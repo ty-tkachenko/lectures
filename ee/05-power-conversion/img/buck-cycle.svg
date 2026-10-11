@@ -1,46 +1,106 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 460" role="img" aria-labelledby="buckTitle buckDesc" font-family="Georgia, 'Times New Roman', serif">
-  <title id="buckTitle">Buck converter, switch closed and switch open</title>
-  <desc id="buckDesc">Two moments of a buck converter. On the left the high-side switch is closed: the input feeds the inductor and the output capacitor, and the inductor current rises. On the right the switch is open and the low-side diode or transistor conducts: the inductor keeps current flowing into the output, and the current falls. The output capacitor holds the voltage up between the two moments.</desc>
-  <rect x="1" y="1" width="718" height="458" fill="#fff" stroke="#111"/>
-  <text x="20" y="34" font-size="22" fill="#111">Buck: the switch chops, the inductor averages</text>
-  <text x="20" y="70" font-size="20" fill="#111">Switch closed</text>
-  <text x="380" y="70" font-size="20" fill="#111">Switch open</text>
-  <line x1="360" y1="50" x2="360" y2="400" stroke="#c0c0c0" stroke-width="2"/>
-  <text x="20" y="110" font-size="18" fill="#111">Vin</text>
-  <line x1="20" y1="130" x2="70" y2="130" stroke="#0000cc" stroke-width="4"/>
-  <rect x="70" y="112" width="54" height="36" fill="#111"/>
-  <text x="78" y="136" font-size="16" fill="#fff">on</text>
-  <line x1="124" y1="130" x2="180" y2="130" stroke="#0000cc" stroke-width="4"/>
-  <path d="M180 110 C200 110 200 150 220 150" fill="none" stroke="#111" stroke-width="3"/>
-  <text x="168" y="100" font-size="18" fill="#111">L</text>
-  <line x1="220" y1="150" x2="300" y2="150" stroke="#0000cc" stroke-width="4"/>
-  <text x="250" y="140" font-size="18" fill="#111">Vout</text>
-  <line x1="300" y1="150" x2="300" y2="210" stroke="#0000cc" stroke-width="4"/>
-  <rect x="270" y="210" width="60" height="36" fill="#fff" stroke="#0000cc" stroke-width="3"/>
-  <text x="286" y="234" font-size="16" fill="#111">C</text>
-  <line x1="300" y1="246" x2="300" y2="290" stroke="#0000cc" stroke-width="4"/>
-  <line x1="270" y1="290" x2="330" y2="290" stroke="#111" stroke-width="3"/>
-  <text x="20" y="340" font-size="18" fill="#111">Current in L rises.</text>
-  <text x="20" y="368" font-size="18" fill="#111">Voltage on L is Vin - Vout.</text>
-  <text x="380" y="110" font-size="18" fill="#111">Vin</text>
-  <line x1="380" y1="130" x2="430" y2="130" stroke="#111" stroke-width="3"/>
-  <rect x="430" y="112" width="54" height="36" fill="#fff" stroke="#111" stroke-width="3"/>
-  <text x="438" y="136" font-size="16" fill="#111">off</text>
-  <line x1="457" y1="148" x2="457" y2="200" stroke="#0000cc" stroke-width="4"/>
-  <polygon points="457,210 447,190 467,190" fill="#0000cc"/>
-  <text x="470" y="200" font-size="16" fill="#111">low side</text>
-  <line x1="457" y1="210" x2="457" y2="290" stroke="#0000cc" stroke-width="4"/>
-  <line x1="430" y1="290" x2="560" y2="290" stroke="#111" stroke-width="3"/>
-  <line x1="484" y1="130" x2="540" y2="130" stroke="#111" stroke-width="3"/>
-  <path d="M540 110 C560 110 560 150 580 150" fill="none" stroke="#111" stroke-width="3"/>
-  <text x="528" y="100" font-size="18" fill="#111">L</text>
-  <line x1="580" y1="150" x2="660" y2="150" stroke="#0000cc" stroke-width="4"/>
-  <line x1="660" y1="150" x2="660" y2="210" stroke="#0000cc" stroke-width="4"/>
-  <rect x="630" y="210" width="60" height="36" fill="#fff" stroke="#0000cc" stroke-width="3"/>
-  <text x="646" y="234" font-size="16" fill="#111">C</text>
-  <line x1="660" y1="246" x2="660" y2="290" stroke="#0000cc" stroke-width="4"/>
-  <text x="380" y="340" font-size="18" fill="#111">Current in L falls, but keeps flowing.</text>
-  <text x="380" y="368" font-size="18" fill="#111">Voltage on L is -Vout.</text>
-  <text x="20" y="420" font-size="18" fill="#111">The blue path is where the inductor current is flowing in that half of the cycle.</text>
-  <text x="20" y="446" font-size="18" fill="#111">Average output is about D times Vin, with D the fraction of time the switch is closed.</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 500" width="760" height="500" role="img" aria-labelledby="t d" font-family="system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif">
+<title id="t">Buck converter, switch closed and switch open</title>
+<desc id="d">Two moments of one buck. Left, high-side switch closed: current leaves Vin, through the switch and inductor, through the output capacitor and load, and back on the ground rail. Right, switch open: the same inductor current returns through the low-side diode, whose cathode is at the switch node. Both panels show the switch, the diode, L, C, and the load.</desc>
+<defs>
+<marker id="ah1d4ed8" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#1d4ed8"/></marker>
+<marker id="ahb45309" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#b45309"/></marker>
+</defs>
+<rect width="760" height="500" fill="#ffffff"/>
+<text x="20" y="24" font-size="14" font-weight="600" fill="#2b2b2b">Buck: the switch chops, the inductor averages</text>
+<line x1="380" y1="44" x2="380" y2="420" stroke="#e5e7eb" stroke-width="1"/>
+
+<!-- ===== left: switch closed ===== -->
+<text x="28" y="56" font-size="12.5" font-weight="600" fill="#1d4ed8">Switch closed</text>
+<text x="24" y="88" font-size="12" fill="#2b2b2b">Vin</text>
+<line x1="48" y1="108" x2="48" y2="128" stroke="#2b2b2b" stroke-width="1.6"/>
+<line x1="32" y1="128" x2="64" y2="128" stroke="#2b2b2b" stroke-width="2.2" stroke-linecap="round"/>
+<line x1="40" y1="138" x2="56" y2="138" stroke="#2b2b2b" stroke-width="2.2" stroke-linecap="round"/>
+<line x1="48" y1="138" x2="48" y2="320" stroke="#2b2b2b" stroke-width="1.6"/>
+
+<!-- closed switch, highlighted -->
+<path d="M48,108 L92,108" stroke="#1d4ed8" stroke-width="1.8" fill="none"/>
+<circle cx="96" cy="108" r="3.5" fill="#fff" stroke="#1d4ed8" stroke-width="1.5"/>
+<line x1="100" y1="108" x2="132" y2="108" stroke="#1d4ed8" stroke-width="1.8"/>
+<circle cx="136" cy="108" r="3.5" fill="#fff" stroke="#1d4ed8" stroke-width="1.5"/>
+<text x="96" y="98" font-size="11" fill="#1d4ed8" text-anchor="middle">on</text>
+<path d="M136,108 L168,108" stroke="#1d4ed8" stroke-width="1.8" fill="none"/>
+<circle cx="168" cy="108" r="3" fill="#1d4ed8"/>
+
+<!-- diode off, gray, cathode at the switch node -->
+<line x1="168" y1="108" x2="168" y2="148" stroke="#94a3b8" stroke-width="1.4"/>
+<line x1="156" y1="148" x2="180" y2="148" stroke="#94a3b8" stroke-width="2" stroke-linecap="round"/>
+<path d="M156,178 L180,178 L168,156 Z" fill="#fff" stroke="#94a3b8" stroke-width="1.4" stroke-linejoin="round"/>
+<line x1="168" y1="178" x2="168" y2="320" stroke="#94a3b8" stroke-width="1.4"/>
+<text x="184" y="176" font-size="11" fill="#94a3b8">diode off</text>
+
+<!-- inductor -->
+<path d="M168,108 L186,108 A10,10 0 0 1 206,108 A10,10 0 0 1 226,108 A10,10 0 0 1 246,108 L258,108" stroke="#1d4ed8" stroke-width="1.8" fill="none"/>
+<text x="214" y="96" font-size="12" fill="#1d4ed8" text-anchor="middle">L</text>
+<circle cx="270" cy="108" r="3" fill="#1d4ed8"/>
+<path d="M258,108 L320,108" stroke="#1d4ed8" stroke-width="1.8" fill="none"/>
+<text x="248" y="128" font-size="12" font-weight="600" fill="#2b2b2b">Vout</text>
+
+<!-- Cout and load -->
+<line x1="300" y1="108" x2="300" y2="150" stroke="#1d4ed8" stroke-width="1.6"/>
+<line x1="286" y1="150" x2="314" y2="150" stroke="#1d4ed8" stroke-width="2.2" stroke-linecap="round"/>
+<line x1="286" y1="160" x2="314" y2="160" stroke="#1d4ed8" stroke-width="2.2" stroke-linecap="round"/>
+<text x="320" y="160" font-size="12" fill="#2b2b2b">C</text>
+<line x1="300" y1="160" x2="300" y2="320" stroke="#1d4ed8" stroke-width="1.6"/>
+<path d="M340,108 L340,150 L345,156 L335,162 L345,168 L335,174 L345,180 L335,186 L345,192 L340,198 L340,320" stroke="#1d4ed8" stroke-width="1.6" fill="none" stroke-linejoin="round"/>
+<text x="348" y="180" font-size="12" fill="#2b2b2b">load</text>
+<line x1="48" y1="320" x2="340" y2="320" stroke="#1d4ed8" stroke-width="1.8"/>
+
+<!-- current arrows: out of the source, down the load, back on ground -->
+<line x1="70" y1="124" x2="110" y2="124" stroke="#1d4ed8" stroke-width="1.3" marker-end="url(#ah1d4ed8)"/>
+<line x1="328" y1="214" x2="328" y2="250" stroke="#1d4ed8" stroke-width="1.3" marker-end="url(#ah1d4ed8)"/>
+<line x1="200" y1="336" x2="140" y2="336" stroke="#1d4ed8" stroke-width="1.3" marker-end="url(#ah1d4ed8)"/>
+<text x="28" y="364" font-size="12" fill="#555">Current in L rises.</text>
+<text x="28" y="384" font-size="12" fill="#555">Voltage on L is Vin − Vout.</text>
+
+<!-- ===== right: switch open ===== -->
+<text x="400" y="56" font-size="12.5" font-weight="600" fill="#b45309">Switch open</text>
+<text x="396" y="88" font-size="12" fill="#2b2b2b">Vin</text>
+<line x1="424" y1="108" x2="424" y2="128" stroke="#94a3b8" stroke-width="1.6"/>
+<line x1="408" y1="128" x2="440" y2="128" stroke="#94a3b8" stroke-width="2.2" stroke-linecap="round"/>
+<line x1="416" y1="138" x2="432" y2="138" stroke="#94a3b8" stroke-width="2.2" stroke-linecap="round"/>
+<line x1="424" y1="138" x2="424" y2="320" stroke="#94a3b8" stroke-width="1.4"/>
+<path d="M424,108 L468,108" stroke="#94a3b8" stroke-width="1.4" fill="none"/>
+<circle cx="472" cy="108" r="3.5" fill="#fff" stroke="#94a3b8" stroke-width="1.5"/>
+<line x1="478" y1="104" x2="508" y2="78" stroke="#94a3b8" stroke-width="1.6" stroke-linecap="round"/>
+<circle cx="512" cy="108" r="3.5" fill="#fff" stroke="#94a3b8" stroke-width="1.5"/>
+<text x="490" y="128" font-size="11" fill="#94a3b8">off</text>
+<path d="M512,108 L544,108" stroke="#b45309" stroke-width="1.8" fill="none"/>
+<circle cx="544" cy="108" r="3" fill="#b45309"/>
+
+<!-- diode on: cathode bar at top, triangle pointing up -->
+<line x1="544" y1="108" x2="544" y2="148" stroke="#b45309" stroke-width="1.8"/>
+<line x1="530" y1="148" x2="558" y2="148" stroke="#b45309" stroke-width="2.2" stroke-linecap="round"/>
+<path d="M530,178 L558,178 L544,156 Z" fill="#fff" stroke="#b45309" stroke-width="1.6" stroke-linejoin="round"/>
+<line x1="544" y1="178" x2="544" y2="320" stroke="#b45309" stroke-width="1.8"/>
+<text x="562" y="172" font-size="11" font-weight="600" fill="#b45309">diode on</text>
+<line x1="516" y1="200" x2="516" y2="164" stroke="#b45309" stroke-width="1.3" marker-end="url(#ahb45309)"/>
+
+<!-- inductor and output, still carrying current -->
+<path d="M544,108 L562,108 A10,10 0 0 1 582,108 A10,10 0 0 1 602,108 A10,10 0 0 1 622,108 L634,108" stroke="#b45309" stroke-width="1.8" fill="none"/>
+<text x="590" y="96" font-size="12" fill="#b45309" text-anchor="middle">L</text>
+<circle cx="646" cy="108" r="3" fill="#b45309"/>
+<path d="M634,108 L730,108" stroke="#b45309" stroke-width="1.8" fill="none"/>
+<text x="620" y="128" font-size="12" font-weight="600" fill="#2b2b2b">Vout</text>
+
+<line x1="676" y1="108" x2="676" y2="150" stroke="#b45309" stroke-width="1.6"/>
+<line x1="662" y1="150" x2="690" y2="150" stroke="#b45309" stroke-width="2.2" stroke-linecap="round"/>
+<line x1="662" y1="160" x2="690" y2="160" stroke="#b45309" stroke-width="2.2" stroke-linecap="round"/>
+<text x="694" y="146" font-size="12" fill="#2b2b2b">C</text>
+<line x1="676" y1="160" x2="676" y2="320" stroke="#b45309" stroke-width="1.6"/>
+<path d="M716,108 L716,140 L721,146 L711,152 L721,158 L711,164 L721,170 L711,176 L721,182 L716,188 L716,320" stroke="#b45309" stroke-width="1.6" fill="none" stroke-linejoin="round"/>
+<text x="716" y="96" font-size="12" fill="#2b2b2b" text-anchor="middle">load</text>
+<line x1="424" y1="320" x2="716" y2="320" stroke="#b45309" stroke-width="1.8"/>
+
+<line x1="704" y1="214" x2="704" y2="250" stroke="#b45309" stroke-width="1.3" marker-end="url(#ahb45309)"/>
+<line x1="640" y1="336" x2="580" y2="336" stroke="#b45309" stroke-width="1.3" marker-end="url(#ahb45309)"/>
+<text x="400" y="364" font-size="12" fill="#555">Current in L falls, but keeps flowing.</text>
+<text x="400" y="384" font-size="12" fill="#555">Voltage on L is −Vout.</text>
+
+<text x="20" y="448" font-size="11.5" font-style="italic" fill="#555">Highlighted path is the inductor current, closed through the ground return. Gray parts are off in that half-cycle.</text>
+<text x="20" y="468" font-size="11.5" font-style="italic" fill="#555">Average Vout is about D·Vin, where D is the fraction of time the high-side switch is closed.</text>
 </svg>
