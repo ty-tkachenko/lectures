@@ -109,6 +109,9 @@ section.sec>h2 .num{font-weight:bold;margin-right:.6em}
 .eq:has(.n)::after{top:calc(50% - .7em)}
 .eq .n{font-size:.9em;font-style:italic;color:#444;text-align:center;margin:0}
 .katex-display{overflow-x:auto;overflow-y:hidden;margin:.3em 0}
+/* A long display equation scrolls inside the column instead of widening the page. */
+html[data-module^="rf"] .katex-display{max-width:100%}
+html[data-module^="rf"] .katex-display>.katex{white-space:nowrap}
 
 /* tables: horizontal rules only */
 .tablewrap{overflow-x:auto;margin:.8em 0 1.1em}

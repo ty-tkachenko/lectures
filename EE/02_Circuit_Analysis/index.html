@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Circuit Analysis · EE 2</title>
-<meta name="description" content="EE module 2: Kirchhoff's laws, series and parallel, the voltage divider for battery monitoring, loading, Thévenin equivalents, superposition, and reading schematics and datasheets.">
+<meta name="description" content="EE module 2: Kirchhoff's laws, series and parallel, the voltage divider for battery monitoring, loading, Thévenin equivalents and superposition.">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
@@ -33,12 +33,11 @@
       <li>The voltage divider, designed as a battery-voltage monitor.</li>
       <li>Loading: why the divider reads wrong once you connect something to it.</li>
       <li>Thévenin equivalents and superposition, the two tools that make bigger circuits manageable.</li>
-      <li>Reading a schematic and a datasheet, including what "typical" values mean.</li>
     </ul>
   </div>
   <div class="video" data-video="lecture" id="lecture">
     <div class="plan">
-      <p>Planned walkthrough of this page (≈ 30 min):</p>
+      <p>Planned walkthrough of this page (≈ 27 min):</p>
       <ol>
         <li data-t="0:00">Nodes, branches and loops</li>
         <li data-t="2:30">Kirchhoff's current law at a junction</li>
@@ -48,7 +47,6 @@
         <li data-t="17:00">Loading</li>
         <li data-t="20:30">Thévenin equivalents</li>
         <li data-t="24:00">Superposition: shifting a bipolar signal into the ADC</li>
-        <li data-t="27:00">Reading schematics and datasheets</li>
       </ol>
     </div>
   </div>
@@ -116,15 +114,15 @@
 </div>
 
 <details class="exercise">
-  <summary><span class="ek">Design exercise</span><span class="et">Where should the fuse go?</span></summary>
+  <summary><span class="ek">Check your understanding</span><span class="et">Where should the fuse go?</span></summary>
   <div class="eb">
     <p>A battery feeds several loads through a fuse in the positive lead. The battery's negative terminal is also connected to the metal chassis near the battery. Someone suggests moving the fuse into the ground return instead.</p>
     <div class="choice"><p>Does a fuse in the ground return protect as well as one in the positive lead?</p>
     <ol class="opts">
-      <li>Yes, in every case: KCL says the return carries the same current as the feed.<div class="why">True for current that flows through the loads and back. Think about a fault that takes a different path home.</div></li>
+      <li>Yes, in every case: KCL says the return carries the same current as the feed.<div class="why">That is true of current that goes out through the loads and back on the return wire. A short from the positive wire to the chassis is a new loop, and its current returns through the chassis instead of the return wire.</div></li>
       <li data-correct>It protects against overloads, but a short from the positive wire to the chassis returns through the chassis and bypasses it.<div class="why">KCL applies to every path, and a fault can create a new one that doesn't go through the return wire.</div></li>
       <li>No: the ground wire carries no current, so the fuse would never blow.<div class="why">The ground return carries the sum of all the load currents (KCL).</div></li>
-      <li>Only if its rating is halved.<div class="why">The rating isn't the issue. Think about which paths the fault current can take.</div></li>
+      <li>Only if its rating is halved.<div class="why">The rating is not the difference between the two positions. A chassis short returns to the battery without ever entering the ground wire, so a fuse in that wire does not see the fault at any rating.</div></li>
     </ol>
     <div class="solution"><p>For normal operation and overloads, KCL makes the two positions equivalent: everything that leaves on the feed comes back on the return. But the dangerous fault is usually a damaged positive wire touching the chassis. That current returns through the chassis straight to the battery's negative terminal, never passing through a fuse in the return wire. That's why fuses go in the positive lead, as close to the battery as possible.</p></div>
     </div>
@@ -175,7 +173,7 @@
 </div>
 
 <details class="exercise">
-  <summary><span class="ek">Design exercise</span><span class="et">Finding a bad connection with a voltmeter</span></summary>
+  <summary><span class="ek">Check your understanding</span><span class="et">Finding a bad connection with a voltmeter</span></summary>
   <div class="eb">
     <p>A solenoid valve opens sluggishly. Its loop runs from the battery through a feed wire, a connector, the valve and a return wire. You have a multimeter.</p>
     <div class="choice"><p>What's the quickest way to find a bad connection?</p>
@@ -231,9 +229,9 @@
 </div>
 
 <details class="exercise">
-  <summary><span class="ek">Design exercise</span><span class="et">A second load on a long cable</span></summary>
+  <summary><span class="ek">Check your understanding</span><span class="et">A second load on a long cable</span></summary>
   <div class="eb">
-    <p>At the end of Module 1's 30 m cable, a second solenoid is connected in parallel with the first, so both pull in together.</p>
+    <p>At the end of Module 1's 30 m cable, a second identical solenoid is connected in parallel with the first, so that both are meant to pull in together.</p>
     <div class="choice"><p>What happens to the current through the first solenoid?</p>
     <ol class="opts">
       <li>It stays the same: parallel branches don't affect each other.<div class="why">That's true when both branches connect directly across the supply. Here they share the cable.</div></li>
@@ -241,7 +239,7 @@
       <li>It increases, because the total resistance is lower.<div class="why">The total current increases, but it's split between two solenoids, and each gets a smaller voltage.</div></li>
       <li>It halves exactly.<div class="why">It drops, but by less than half, because the total current also rises.</div></li>
     </ol>
-    <div class="solution"><p>Parallel branches are independent only when nothing else is in series with them. Here the cable is shared, so adding a load raises the total current, the cable drops more of the 12 V, and each solenoid is left with less. With the numbers from Module 1, one solenoid gets about 2.5 A; with two in parallel, each gets about 1.5 A. Every load added to a long shared cable eats into the others' margin.</p></div>
+    <div class="solution"><p>Parallel branches are independent only when nothing else is in series with them. Here the cable is shared, so adding a load raises the total current, the cable drops more of the 12 V, and each solenoid is left with less. With the numbers from Module 1 (12 V, 1.6 Ω, 3.17 Ω of cable, 3 A pull-in), one solenoid gets about 2.5 A, already short of 3 A. With two in parallel, each gets about 1.5 A. Every load added to a long shared cable eats into the others' margin.</p></div>
     </div>
   </div>
 </details>
@@ -298,7 +296,7 @@
 </div>
 
 <details class="exercise">
-  <summary><span class="ek">Design exercise</span><span class="et">The wrong resistor in the divider</span></summary>
+  <summary><span class="ek">Check your understanding</span><span class="et">The wrong resistor in the divider</span></summary>
   <div class="eb">
     <p>The battery monitor above should use R1 = 22 kΩ and R2 = 10 kΩ, and the software multiplies the ADC reading by 3.2. A board is assembled with 22 kΩ in both positions.</p>
     <div class="choice"><p>What happens on that board?</p>
@@ -354,19 +352,39 @@
   <span class="ni">!</span>
   <div><span class="nt">Misconception: "the meter is wrong"</span>When a high-value divider reads low on your multimeter, the meter is reporting the voltage correctly. It's the circuit that changed when you connected the meter. Every measurement loads the thing it measures a little; the skill is knowing when "a little" is too much. Probing a megohm node with a 10 MΩ meter, or a 1 MΩ scope probe, commonly produces readings that suggest a fault that isn't there.</div>
 </div>
+<details class="exercise">
+  <summary><span class="ek">Check your understanding</span><span class="et">"The meter needs calibrating"</span></summary>
+  <div class="eb">
+    <p>A 1 MΩ / 1 MΩ divider from 10 V reads 4.76 V on a 10 MΩ meter, not 5 V. A teammate sends the meter off for calibration.</p>
+    <div class="choice"><p>What is wrong with that response?</p>
+    <ol class="opts">
+      <li>Nothing. A meter that reads 4.76 V on a 5 V node is 5 % low and out of specification.<div class="why">The node is not at 5 V once the meter is connected. The meter is reporting the voltage that is actually there.</div></li>
+      <li>The meter is right and the resistors are the wrong value.<div class="why">Two equal resistors would give 5 V with nothing else connected. The extra path is the meter's own 10 MΩ, in parallel with the lower resistor.</div></li>
+      <li data-correct>Connecting the meter puts 10 MΩ across a source whose resistance is 500 kΩ, so the meter and the divider form a new divider and the node really does fall.<div class="why">The reading changed because the circuit changed. Recalibrating the meter would not put the node back to 5 V.</div></li>
+      <li>Meters always read 5 % low on megohm circuits, and you add 5 % back in software.<div class="why">The error is \(R_\text{th}/(R_\text{th}+R_\text{meter})\), which depends on both resistances. It is not a fixed 5 % of every megohm circuit.</div></li>
+    </ol>
+    <div class="solution"><p>The unloaded midpoint is 5 V, and the divider's output resistance is \(1\ \text{M}\Omega \parallel 1\ \text{M}\Omega = 500\ \text{k}\Omega\). The meter is a 10 MΩ load on that resistance, so it reads \(5 \times 10/(0.5+10) = 4.76\ \text{V}\). The mechanism is loading, not a bad meter. The same divider built from 10 kΩ resistors has an output resistance of 5 kΩ, two thousand times smaller than the meter, and reads 5 V.</p></div>
+    </div>
+  </div>
+</details>
 </section>
 
 <!-- ================= 7 THEVENIN ================= -->
 <section class="sec" id="thevenin" data-short="Thévenin equivalents">
 <h2>Thévenin equivalents <a class="vjump" data-t="20:30"></a></h2>
-<p>Loading problems are much simpler with one of the most useful results in circuit theory. <strong>Thévenin's theorem</strong> says that any circuit made of voltage sources, current sources and resistors, looked at from two terminals, behaves exactly like one voltage source \(V_\text{th}\) in series with one resistor \(R_\text{th}\). Whatever you connect to those terminals can't tell the difference.</p>
-<p>Module 1's battery model, an ideal source with an internal resistance, is already a Thévenin equivalent. Finding one takes two steps:</p>
+<p>Loading problems are much simpler once a whole circuit can be replaced by one source and one resistor. The reason that replacement works is that a linear port has a straight-line V–I graph, and a straight line is fixed by two points.</p>
+<p>Take any circuit made of resistors and sources, and look at it from two terminals. Linearity means that if you double the voltage you apply there, the current doubles, so voltage against current is a straight line. Two measurements pin the line down:</p>
 <ol>
-  <li><strong>\(V_\text{th}\)</strong> is the <em>open-circuit voltage</em>: what the terminals show with nothing connected.</li>
-  <li><strong>\(R_\text{th}\)</strong> is the resistance you see looking back into the terminals with every source switched off. Switching a voltage source off means replacing it with a wire (0 V); a current source becomes an open circuit (0 A).</li>
+  <li><strong>Open circuit.</strong> Nothing is connected, so the current is zero. The voltage on the terminals is \(V_\text{oc}\).</li>
+  <li><strong>Short circuit.</strong> A wire across the terminals forces the voltage to zero. The current in that wire is \(I_\text{sc}\).</li>
 </ol>
-<p>For a divider, switching the source off joins the top of R1 to ground, so looking back from the output you see R1 and R2 in parallel:</p>
-<div class="eq">$$V_\text{th} = V_\text{in}\,\frac{R_2}{R_1 + R_2} \qquad R_\text{th} = R_1 \parallel R_2$$</div>
+<p>The straight line through \((I = 0,\ V = V_\text{oc})\) and \((I = I_\text{sc},\ V = 0)\) is</p>
+<div class="eq">$$V = V_\text{oc} - I\,\frac{V_\text{oc}}{I_\text{sc}}$$<div class="n">the port's whole behaviour, fixed by the two endpoints</div></div>
+<p>That is an ideal voltage \(V_\text{oc}\) with a resistor \(R_\text{th} = V_\text{oc}/I_\text{sc}\) in series. Whatever you connect cannot tell the original circuit from this pair, because both produce the same line. The pair is the <strong>Thévenin equivalent</strong>: \(V_\text{th} = V_\text{oc}\) and \(R_\text{th} = V_\text{oc}/I_\text{sc}\). Module 1's battery, an ideal cell plus an internal resistance, is already in this form.</p>
+<p>There is a second way to the same resistor. Switch every source off, replacing a voltage source by a wire and a current source by an open circuit, and measure the resistance looking back into the terminals. With the sources gone, that resistance is \(V_\text{oc}/I_\text{sc}\).</p>
+<p>A divider shows both routes giving one answer. Open-circuit, the output is the unloaded divider, \(V_\text{th} = V_\text{in}\,R_2/(R_1+R_2)\). Short the output and R2 is bypassed, so \(I_\text{sc} = V_\text{in}/R_1\), and</p>
+<div class="eq">$$R_\text{th} = \frac{V_\text{th}}{I_\text{sc}} = \frac{R_1 R_2}{R_1 + R_2} = R_1 \parallel R_2$$<div class="n">the same parallel pair you see with the source replaced by a wire</div></div>
+<p>Switching the source off joins the top of R1 to ground, so from the output R1 and R2 are in parallel. Same resistor, read off the two ends of the straight line.</p>
 
 <div class="widget">
   <div class="wh"><span class="tag">Diagram</span><b>A divider and its Thévenin equivalent are indistinguishable from the outside</b></div>
@@ -414,10 +432,10 @@
   <p>The meter reads \(5 \times 10 / (0.5 + 10) = 4.76\ \text{V}\), a 4.8 % error. The meter is only 20× the source resistance, short of the 100× rule.</p>
 </div>
 
-<p>Thévenin also works the other way round, as a measurement. Measure the open-circuit voltage, then connect a known load and measure again. The drop tells you \(R_\text{th}\) without opening the box. It's how you find a battery's internal resistance, or the output resistance of a sensor with no datasheet. Equivalently, \(R_\text{th} = V_\text{oc}/I_\text{sc}\), the open-circuit voltage over the short-circuit current, though deliberately shorting a source is rarely a good idea.</p>
+<p>The same two points are how you measure an equivalent without opening the box. \(V_\text{oc}\) is a voltmeter with nothing else connected. A dead short would give \(I_\text{sc}\) and thus \(R_\text{th} = V_\text{oc}/I_\text{sc}\), but deliberately shorting a source is rarely a good idea. Connect a known load instead and the drop from \(V_\text{oc}\) is the share \(R_\text{th}\) takes in the divider above, which you solve for \(R_\text{th}\). It's how you find a battery's internal resistance, or the output resistance of a sensor with no datasheet.</p>
 
 <details class="exercise">
-  <summary><span class="ek">Design exercise</span><span class="et">How much will a heavier load pull it down?</span></summary>
+  <summary><span class="ek">Check your understanding</span><span class="et">How much will a heavier load pull it down?</span></summary>
   <div class="eb">
     <p>You connect a 10 kΩ resistor across a sensor's output and its reading drops by 1 %.</p>
     <div class="choice"><p>Roughly how much will it drop with a 1 kΩ load instead?</p>
@@ -427,7 +445,22 @@
       <li data-correct>About 9 %.<div class="why">A 1 % drop at 10 kΩ means the output resistance is about 100 Ω. Against 1 kΩ that's about a tenth.</div></li>
       <li>About 50 %.<div class="why">That would need an output resistance close to 1 kΩ.</div></li>
     </ol>
-    <div class="solution"><p>Think Thévenin: the sensor is a voltage source with a small resistance inside it, and the load forms a divider with that resistance. A 1 % drop with 10 kΩ means the internal resistance is about 1 % of 10 kΩ, roughly 100 Ω. With 1 kΩ the fraction lost is \(100/(100 + 1000) \approx 9\ \%\). No formula needed beyond the divider: the drop is the share of the voltage the source's own resistance takes.</p></div>
+    <div class="solution"><p>The sensor is a voltage source with a small resistance inside it, and the load forms a divider with that resistance. A 1 % drop with 10 kΩ means the internal resistance is about 1 % of 10 kΩ, roughly 100 Ω. With 1 kΩ the fraction lost is \(100/(100 + 1000) \approx 9\ \%\). The drop is the share of the voltage the source's own resistance takes.</p></div>
+    </div>
+  </div>
+</details>
+<details class="exercise">
+  <summary><span class="ek">Check your understanding</span><span class="et">Why the parallel combination?</span></summary>
+  <div class="eb">
+    <p>For a divider, \(R_\text{th} = R_1 \parallel R_2\). The question is where that parallel combination comes from, not what the formula says.</p>
+    <div class="choice"><p>Which account actually produces the parallel pair?</p>
+    <ol class="opts">
+      <li>The two resistors are drawn one above the other, and parts drawn in parallel are in parallel.<div class="why">On the page R1 and R2 are in series across the supply. The parallel view appears only after you change what the source is doing.</div></li>
+      <li>Any two resistors' Thévenin resistance is their parallel combination, whatever the circuit.<div class="why">That happens to be true of this divider. A resistor in series with the port, with nothing else, would be just that resistor.</div></li>
+      <li data-correct>Replace the source by a wire and both resistors run from the output node to ground, so the resistance looking back is the two in parallel. The same number is \(V_\text{oc}/I_\text{sc}\).<div class="why">With the source off, the top of R1 is grounded. From the output, R1 and R2 are two paths to the same node.</div></li>
+      <li>The load is in parallel with R2, so \(R_\text{th}\) is R2.<div class="why">The load is what you connect afterwards. \(R_\text{th}\) is the resistance of the circuit before the load is attached.</div></li>
+    </ol>
+    <div class="solution"><p>Switching the voltage source off replaces it with a wire, which joins the top of R1 to the bottom of R2. Looking in from the output you see two resistances to ground, and two resistances to the same node are in parallel. Shorting the output instead of switching the source off gives \(I_\text{sc} = V_\text{in}/R_1\) and \(V_\text{oc} = V_\text{in} R_2/(R_1+R_2)\), and their ratio is the same parallel value. The formula is that geometry, written compactly.</p></div>
     </div>
   </div>
 </details>
@@ -471,7 +504,7 @@
 </div>
 
 <details class="exercise">
-  <summary><span class="ek">Design exercise</span><span class="et">When the reference voltage drifts</span></summary>
+  <summary><span class="ek">Check your understanding</span><span class="et">When the reference voltage drifts</span></summary>
   <div class="eb">
     <p>In the level shifter above (R1 = R2 = 10 kΩ), the 3.3 V reference sags to 3.0 V when a radio transmits.</p>
     <div class="choice"><p>What happens to the ADC voltage?</p>
@@ -487,93 +520,18 @@
 </details>
 </section>
 
-<!-- ================= 9 SCHEMATICS & DATASHEETS ================= -->
-<section class="sec" id="reading" data-short="Schematics &amp; datasheets">
-<h2>Reading schematics and datasheets <a class="vjump" data-t="27:00"></a></h2>
-<p>A schematic shows how parts are <em>connected</em>, not where they sit on the board. Here is the battery monitor from Section 5 as it would appear in a real schematic, with the conventions that most often cause mistakes marked:</p>
-
-<div class="widget">
-  <div class="wh"><span class="tag">Diagram</span><b>The battery monitor as drawn in a real schematic</b></div>
-  <div class="wb">
-  <svg viewBox="0 0 640 270" role="img" aria-label="Schematic: a VBAT power label feeds R7 33k and R8 10k to ground; the midpoint, net VBAT_SENSE, has C12 100 nF to ground and runs to input AIN0 of U1, an ADC. An SPI clock net crosses the sense wire without a junction dot. Numbered callouts mark the conventions.">
-    <g stroke="var(--ink)" stroke-width="2" fill="none" stroke-linejoin="round">
-      <!-- VBAT power flag -->
-      <path d="M110 30h-24l-8 9l8 9h24z" stroke-width="1.5"/>
-      <path d="M110 39h30v16"/>
-      <!-- R7 vertical -->
-      <path d="M140 55v6l6 3l-12 6l12 6l-12 6l12 6l-12 6l6 3v12"/>
-      <!-- R8 vertical -->
-      <path d="M140 140v6l6 3l-12 6l12 6l-12 6l12 6l-12 6l6 3v20"/>
-      <path d="M140 109v31"/>
-      <!-- sense net to the ADC -->
-      <path d="M140 125h330"/>
-      <!-- C12 -->
-      <path d="M260 125v35M246 160h28M246 168h28M260 168v24"/>
-      <!-- grounds -->
-      <path d="M128 199h24M132 204h16M137 209h6"/>
-      <path d="M248 192h24M252 197h16M257 202h6"/>
-      <!-- ADC -->
-      <rect x="470" y="70" width="120" height="160" stroke-width="1.5"/>
-      <!-- SPI clock crossing -->
-      <path d="M360 60v150h110"/>
-    </g>
-    <circle cx="140" cy="125" r="4.5" fill="var(--ink)"/><circle cx="260" cy="125" r="4.5" fill="var(--ink)"/>
-    <text x="98" y="43" font-size="11" text-anchor="middle" font-family="var(--mono)">VBAT</text>
-    <text x="156" y="80" font-size="12">R7</text><text x="156" y="95" font-size="12">33k 1%</text>
-    <text x="156" y="164" font-size="12">R8</text><text x="156" y="179" font-size="12">10k 1%</text>
-    <text x="280" y="160" font-size="12">C12</text><text x="280" y="175" font-size="12">100n</text>
-    <text x="300" y="117" font-size="11" font-family="var(--mono)">VBAT_SENSE</text>
-    <text x="370" y="56" font-size="11" font-family="var(--mono)">SPI_SCK</text>
-    <text x="530" y="62" font-size="12" text-anchor="middle" font-weight="600">U1  ADC</text>
-    <text x="478" y="129" font-size="11" font-family="var(--mono)">AIN0</text>
-    <text x="478" y="214" font-size="11" font-family="var(--mono)">SCLK</text>
-    <!-- callouts -->
-    <g font-size="11" font-weight="700" text-anchor="middle" fill="#fff">
-      <circle cx="60" cy="39" r="9" fill="var(--c2)"/><text x="60" y="43">1</text>
-      <circle cx="205" cy="70" r="9" fill="var(--c2)"/><text x="205" y="74">2</text>
-      <circle cx="118" cy="112" r="9" fill="var(--c2)"/><text x="118" y="116">3</text>
-      <circle cx="378" cy="144" r="9" fill="var(--c2)"/><text x="378" y="148">4</text>
-      <circle cx="110" cy="206" r="9" fill="var(--c2)"/><text x="110" y="210">5</text>
-      <circle cx="286" cy="112" r="9" fill="var(--c2)"/><text x="286" y="116">6</text>
-    </g>
-  </svg>
-  </div>
-</div>
-
-<ol>
-  <li><strong>Power labels.</strong> The VBAT flag connects this wire to every other VBAT flag in the whole schematic, possibly on another page. No wire is drawn between them.</li>
-  <li><strong>Reference designators and values.</strong> R7 is "the seventh resistor". The letter tells you the kind of part: R resistor, C capacitor, L inductor, D diode, Q transistor, U integrated circuit, J connector, F fuse. Values are written without the unit and with the multiplier in place of the decimal point: 4k7 is 4.7 kΩ, 100n is 100 nF.</li>
-  <li><strong>Junction dots.</strong> A dot means the wires are connected. Here three wires meet at the top of R8, and the capacitor joins at a second dot.</li>
-  <li><strong>Crossings without a dot are not connected.</strong> The SPI clock passes straight over the sense net. Good schematics avoid four-way junctions entirely, so a crossing is never ambiguous.</li>
-  <li><strong>Ground symbols</strong> are all one node, like power labels. Boards often have several named grounds (GND, AGND, PGND, chassis), and which ones are joined, and where, is a deliberate design decision (Module 12).</li>
-  <li><strong>Net labels.</strong> VBAT_SENSE names the node, so you can find it in the layout and refer to it by name. Two labels with the same name are connected, even if they're drawn pages apart.</li>
-</ol>
-
-<h3>Datasheets</h3>
-<p>Every part has a datasheet, and the numbers in it come in different kinds that mean very different things:</p>
-<div class="tablewrap"><table>
-  <tr><th>Section</th><th>What it means</th><th>How to use it</th></tr>
-  <tr><td><b>Absolute maximum ratings</b></td><td>Exceed these and the part may be damaged, even briefly</td><td>Never a place to operate. Stay well inside, with margin for transients</td></tr>
-  <tr><td><b>Recommended operating conditions</b></td><td>The range over which the part is designed to work</td><td>Design to these: supply voltage, temperature, input range</td></tr>
-  <tr><td><b>Electrical characteristics</b></td><td>Guaranteed min and max values, plus a "typical", under the stated test conditions</td><td>Design to the min or max. Check the conditions column: they may not match your circuit</td></tr>
-  <tr><td><b>Typical performance graphs</b></td><td>How a typical part behaves</td><td>Good for intuition, not a guarantee</td></tr>
-  <tr><td><b>Application circuit</b></td><td>The manufacturer's suggested schematic</td><td>The best starting point. Deviate on purpose, not by accident</td></tr>
-</table></div>
-
-<div class="note myth">
-  <span class="ni">!</span>
-  <div><span class="nt">"Typical" is not a specification</span>A typical value is what the median part does at room temperature. Your part could be anywhere between the min and max, and at −20 °C it might sit at the edge. If a design only works with the typical value, it doesn't work.</div>
-</div>
-
-<div class="note tip">
-  <span class="ni">✓</span>
-  <div><span class="nt">Where loading hides in a datasheet</span>ADC datasheets list a maximum <em>source impedance</em> (sometimes called external input impedance), often a few tens of kilohms for slow sampling and much less for fast. That's the 100× rule from the ADC's side: the Thévenin resistance of your divider has to stay below it, or the readings come out low. The 100 nF capacitor on the battery monitor avoids the problem by holding the voltage steady while the ADC samples, so slow signals like battery voltage can use larger resistors.</div>
+<!-- ================= moved ================= -->
+<section class="sec" id="reading" data-nonum data-short="Moved: schematics">
+<h2>Reading schematics and datasheets</h2>
+<div class="note">
+  <span class="ni">i</span>
+  <div><span class="nt">Moved</span>This section now lives in <a href="../12_PCB_Design/#reading">Module 12</a>, as a drafted section, because that is where you first read a schematic in order to lay out a board. The one result used earlier in the course: a datasheet's guaranteed minimum and maximum are what you design to, and a "typical" value is not a specification. Module 3's hold-up capacitor is the worked example.</div>
 </div>
 </section>
 
 <!-- ================= DESIGN EXERCISES ================= -->
-<section class="sec" id="exercises" data-nonum data-short="Design exercises">
-<h2>Design exercises</h2>
+<section class="sec" id="exercises" data-nonum data-short="Exercises">
+<h2>Exercises</h2>
 <p>Problems drawn from real hardware. Each takes a few steps. Enter numbers to check your reasoning as you go, or open the worked solutions and discussion. The figures above are useful for sanity-checking.</p>
 
 <div class="chal">
@@ -661,12 +619,12 @@
   <h3>Kirchhoff, dividers and loading</h3>
   <div class="parts"><span>Multimeter</span><span>Bench supply</span><span>Resistors: 1 kΩ, 2.2 kΩ, 4.7 kΩ, 10 kΩ (×2), 1 MΩ (×2), 47 Ω ½ W</span><span>A 9 V battery</span><span>Breadboard</span></div>
   <ol>
-    <li><b>KVL.</b> Put 1 kΩ, 2.2 kΩ and 4.7 kΩ in series across a 10 V supply. Measure the voltage across each resistor. Do they add up to the supply? Predict each one with the divider equation first.</li>
-    <li><b>KCL.</b> Rearrange so the 2.2 kΩ and 4.7 kΩ are in parallel, in series with the 1 kΩ. Measure the current in each branch by breaking it and inserting the meter. Check that the branch currents add up to the supply current, and that they split in the current-divider ratio.</li>
-    <li><b>Loading.</b> Build a divider from the two 1 MΩ resistors across 10 V. Measure the midpoint. It should read about 4.76 V rather than 5 V. Now swap in the two 10 kΩ resistors and measure again.</li>
-    <li><b>Thévenin by measurement.</b> Measure the 9 V battery's open-circuit voltage, then connect a 47 Ω resistor across it (briefly: it draws about 190 mA) and measure again. Calculate its internal resistance from the drop and the current, as in Section 7.</li>
+    <li><b>Write your prediction first.</b> For 1 kΩ, 2.2 kΩ and 4.7 kΩ in series across 10 V, write the voltage you expect across each resistor from the divider equation, and check that your three numbers add to 10 V. Then build it and measure.</li>
+    <li><b>Write your prediction first.</b> Move the 2.2 kΩ and 4.7 kΩ into parallel, still in series with the 1 kΩ. Write the supply current and each branch current before you break a wire. Then measure each branch by inserting the meter, and check that the branches add up.</li>
+    <li><b>Write your prediction first.</b> A divider of two 1 MΩ resistors across 10 V, read by a 10 MΩ meter, should sit near 4.76 V rather than 5 V. Write that number, and the number you expect after swapping in two 10 kΩ resistors. Then build both and measure the midpoint.</li>
+    <li><b>Write your prediction first.</b> A 9 V battery's internal resistance is typically an ohm or two. Write the open-circuit voltage and the loaded voltage you expect with 47 Ω across it (about 190 mA; keep the connection brief). Then measure both and calculate \(R_\text{th}\) from the drop, as in Section 7.</li>
   </ol>
-  <div class="record"><b>What you should see:</b> drops that add up to the supply within your meter's accuracy, branch currents that add up at each node, a 1 MΩ divider that reads about 5 % low on a 10 MΩ meter while the 10 kΩ version reads correctly, and a 9 V battery with one or two ohms inside it.</div>
+  <div class="record"><b>Comparison.</b> Set what you measured next to what you wrote down. Drops that add up to the supply within the meter's accuracy, branch currents that add up at each node, a 1 MΩ divider about 5 % low on a 10 MΩ meter while the 10 kΩ version reads correctly, and a 9 V battery with one or two ohms inside it, are what the predictions were aiming at. Where a measurement misses, name the assumption that failed.</div>
 </div>
 </section>
 
@@ -680,7 +638,7 @@
   <li>A divider scales a voltage by \(R_2/(R_1 + R_2)\). Its resistors trade battery drain against sensitivity to loading.</li>
   <li>Any linear circuit looks like \(V_\text{th}\) in series with \(R_\text{th}\) from two terminals. Keep the load at least 100× \(R_\text{th}\), or account for it.</li>
   <li>Superposition: with several sources, add the effect of each one alone. Linear circuits only, and never for power.</li>
-  <li>On schematics, same-named labels are connected and dotless crossings are not. In datasheets, design to min and max, not typical.</li>
+  <li>Design to a datasheet's minimum and maximum, not its typical value. The schematic conventions that go with that reading live in Module 12.</li>
 </ol>
 <div class="cheat">
   <div><b>Kirchhoff</b>\(\sum I_\text{in} = \sum I_\text{out}\)<br>\(\sum_\text{loop} V = 0\)</div>

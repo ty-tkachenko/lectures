@@ -70,6 +70,21 @@
   <span class="ni">!</span>
   <div><span class="nt">Common misconception: "the resistor uses up some of the current"</span>Put a resistor and an LED in series across a battery, and it's tempting to think the LED gets less current because the resistor "used some". It doesn't. The resistor turns some <em>energy</em> into heat, but every electron that goes in comes out the other side. There's only one path, so <b>the same current flows through everything in a single loop</b>, whatever order the parts are in. That's the first of Kirchhoff's laws, which Module 2 builds on.</div>
 </div>
+<details class="exercise">
+  <summary><span class="ek">Check your understanding</span><span class="et">Same current, less voltage</span></summary>
+  <div class="eb">
+    <p>A 12 V supply, a long cable and a solenoid are one loop. The cable drops about 8 V and the solenoid about 4 V.</p>
+    <div class="choice"><p>Why is the current in the return wire the same as the current in the solenoid?</p>
+    <ol class="opts">
+      <li>It isn't. The cable has used up current in dropping those 8 V.<div class="why">Dropping voltage takes energy from each charge. It does not destroy charge. Whatever enters one end of the cable leaves the other.</div></li>
+      <li>Only because the cable and the solenoid happen to need the same current.<div class="why">Series parts share one current whether or not their resistances match. The resistances set how the voltage is shared, not whether the current is shared.</div></li>
+      <li data-correct>There is only one loop. Every charge that leaves the supply has to return to it, so the current is the same all the way round. The voltage split is where the energy goes, as heat.<div class="why">Current is a flow of charge around a closed path. Voltage is the energy each charge gives up along that path.</div></li>
+      <li>The return wire is ground, and ground current is zero by definition.<div class="why">Ground is only the reference node. The return conductor carries the whole loop current back to the supply.</div></li>
+    </ol>
+    <div class="solution"><p>A single loop has one current. Resistances decide how the supply voltage is shared around that loop, which is where the energy is turned into heat. They do not decide how much charge gets through: every charge that leaves comes back. If the return wire carried less current than the outgoing wire, charge would be piling up somewhere, and it isn't.</p></div>
+    </div>
+  </div>
+</details>
 </section>
 
 <!-- ================= 2 VOLTAGE ================= -->
@@ -163,14 +178,14 @@
   <p>A useful shortcut: <b>volts ÷ kilohms = milliamps</b>. Most signal-level circuits work in kΩ and mA.</p>
 </div>
 <details class="exercise">
-  <summary><span class="ek">Design exercise</span><span class="et">A brighter supply, a brighter LED</span></summary>
+  <summary><span class="ek">Check your understanding</span><span class="et">A brighter supply, a brighter LED</span></summary>
   <div class="eb">
     <p>A power indicator LED runs from 5 V through a 300 Ω resistor. A red LED drops about 2 V whenever it's on (Module 5 explains why), so it gets 10 mA. The same board is now fed from 9 V, with the same resistor.</p>
     <div class="choice"><p>The supply has gone up by a factor of 1.8. What happens to the LED current?</p>
     <ol class="opts">
       <li>It rises by the same factor, 1.8×.<div class="why">That would be true if the resistor had the whole supply across it. It only has what the LED leaves.</div></li>
       <li data-correct>It rises by more than 1.8×.<div class="why">The LED keeps its 2 V, so the resistor's share goes from 3 V to 7 V, a factor of 2.3.</div></li>
-      <li>It rises by less than 1.8×.<div class="why">Think about what the LED's fixed 2 V does to the resistor's share of the extra voltage.</div></li>
+      <li>It rises by less than 1.8×.<div class="why">The LED holds its 2 V, so the extra supply voltage all lands on the resistor. The resistor's voltage rises from 3 V to 7 V, which is more than 1.8×, not less.</div></li>
       <li>It stays at 10 mA, because the LED sets its own current.<div class="why">An LED sets its own voltage, not its current. The resistor sets the current.</div></li>
     </ol>
     <div class="solution"><p>The LED takes a fixed 2 V, so all the extra supply voltage lands on the resistor: 3 V becomes 7 V, and the current goes from 10 mA to about 23 mA. A fixed drop in the loop makes the current more sensitive to the supply, not less. That's why LED resistors are sized for the highest supply voltage the board will ever see.</p></div>
@@ -197,12 +212,12 @@
   <p>A ¼ W resistor would technically be "within rating", but it would run at its maximum temperature all the time, and the rating assumes cooler conditions than a sealed enclosure in the sun. Applying the 50 % rule, you'd pick a ½ W part. It's also worth asking whether the circuit needs to dissipate a quarter of a watt at all. A smaller package doesn't help: smaller parts have less area to shed heat, so their ratings are <em>lower</em>.</p>
 </div>
 <details class="exercise">
-  <summary><span class="ek">Design exercise</span><span class="et">A smaller resistor, a hotter resistor</span></summary>
+  <summary><span class="ek">Check your understanding</span><span class="et">A smaller resistor, a hotter resistor</span></summary>
   <div class="eb">
     <p>Back to the 5 V indicator: 300 Ω, 10 mA, with 3 V across the resistor and about 30 mW in it. To make the LED brighter, someone swaps in 150 Ω.</p>
     <div class="choice"><p>What happens to the power dissipated in the resistor?</p>
     <ol class="opts">
-      <li>It halves, because the resistance halved.<div class="why">Lower resistance doesn't mean less heat here: think about what happens to the current.</div></li>
+      <li>It halves, because the resistance halved.<div class="why">The LED still leaves 3 V across the resistor, so halving the resistance doubles the current. Twice the current at the same voltage is twice the heat, not half.</div></li>
       <li>It stays the same.<div class="why">The voltage across the resistor stays the same, but the current doesn't.</div></li>
       <li data-correct>It doubles.<div class="why">The voltage across it stays at 3 V and the current doubles, so \(P = VI\) doubles.</div></li>
       <li>It quadruples, because power goes as \(I^2R\) and the current doubled.<div class="why">The current doubled, but R also halved. \(I^2R\) gives 4 × ½ = 2.</div></li>
@@ -234,7 +249,7 @@
       <div class="ctrl"><label for="wG">Wire gauge</label>
         <select id="wG"><option value="14">14 AWG (thick)</option><option value="16">16 AWG</option><option value="18">18 AWG</option><option value="20">20 AWG</option><option value="22" selected>22 AWG</option><option value="24">24 AWG</option><option value="26">26 AWG</option><option value="28">28 AWG (thin)</option></select></div>
       <div class="ctrl"><label for="wR">Load resistance <b id="wRv"></b></label><input id="wR" type="range" min="0.3" max="5" step="0.1" value="1.6"></div>
-      <div class="ctrl"><label for="wA">Minimum current the load needs <b id="wAv"></b></label><input id="wA" type="range" min="0.2" max="3" step="0.1" value="1"></div>
+      <div class="ctrl"><label for="wA">Minimum current the load needs <b id="wAv"></b></label><input id="wA" type="range" min="0.2" max="5" step="0.1" value="3"></div>
     </div>
     <div>
       <canvas id="cvWire" style="height:260px" aria-label="Bar showing how the supply voltage is split between the outgoing wire, the load and the return wire"></canvas>
@@ -249,7 +264,7 @@
   </div>
   <div class="try"><b>Things to try</b><ol>
     <li>At the default settings, which piece of the circuit takes most of the 12 V? Is that what you expected?</li>
-    <li>Go to 100 m of 26 AWG. Then find the thinnest wire that still gives a 2× margin.</li>
+    <li>The default 30 m of 22 AWG leaves a 1.6 Ω load short of a 3 A pull-in. Find a length and gauge that give a 2× margin.</li>
     <li>Halving the cable length helps. So does doubling the supply voltage. Which helps more, and why?</li>
   </ol></div>
 </div>
@@ -257,21 +272,36 @@
 <p>One common example in rocketry is firing an igniter. For safety, the igniter is fired from tens of metres away, and it needs a minimum current, its <em>all-fire current</em>, to light reliably. A launch cable that's too long or too thin leaves the igniter short of that current, exactly as in the figure above, which is why many launch systems put the firing relay at the pad.</p>
 <div class="example">
   <span class="xk">Example</span>
-  <p>A solenoid works every time on the bench with a 1 m lead, then fails to pull in once it's installed at the end of a 30 m cable. Same supply, same solenoid. The difference is the cable. A 1 m lead adds almost no resistance, but tens of metres of thin wire can add several ohms, more than the solenoid itself. The current falls below what it needs.</p>
+  <p>A solenoid that needs 3 A to pull in works every time on the bench with a 1 m lead, then fails once it's installed at the end of 30 m of 22 AWG cable. Same 12 V supply, same 1.6 Ω coil. The 1 m lead adds almost nothing. The 30 m run adds about 3.2 Ω on the round trip, more than the coil itself, and the current falls to about 2.5 A.</p>
   <p>Note what <em>didn't</em> happen: the voltage didn't "run out" along the cable. Voltage gets <em>divided</em> between every resistance in the loop, and a long cable simply takes a big share.</p>
 </div>
 <details class="exercise">
-  <summary><span class="ek">Design exercise</span><span class="et">More voltage, or less cable?</span></summary>
+  <summary><span class="ek">Check your understanding</span><span class="et">More voltage, or less cable?</span></summary>
   <div class="eb">
-    <p>In the figure above, a 12 V supply drives a 1.6 Ω solenoid through 30 m of 22 AWG cable (3.17 Ω round trip). The solenoid isn't getting enough current, and you can make one change.</p>
+    <p>In the figure above, a 12 V supply drives a 1.6 Ω solenoid through 30 m of 22 AWG cable (3.17 Ω round trip). The solenoid draws about 2.5 A, short of the 3 A it needs to pull in, and you can make one change.</p>
     <div class="choice"><p>Which raises the solenoid's current more: doubling the supply voltage, or halving the cable length?</p>
     <ol class="opts">
       <li data-correct>Doubling the supply voltage.<div class="why">Current is proportional to voltage, so doubling it doubles the current. Halving the cable only removes part of the loop's resistance.</div></li>
       <li>Halving the cable length, because the cable is most of the resistance.<div class="why">Halving the cable takes the loop from 4.77 Ω to 3.19 Ω, which raises the current by only 1.5×.</div></li>
       <li>They have the same effect.<div class="why">They would only be equal if the cable were the entire loop resistance.</div></li>
-      <li>Neither: only a thicker wire helps.<div class="why">A thicker wire helps, but so do both of these. Compare how much.</div></li>
+      <li>Neither: only a thicker wire helps.<div class="why">A thicker wire would raise the current too, and so does each of these. Doubling the voltage doubles the current; halving the cable raises it by about 1.5× here, because the coil's 1.6 Ω stays in the loop.</div></li>
     </ol>
     <div class="solution"><p>Doubling the voltage always doubles the current. Halving the cable can at best double it, and only if the cable were the whole loop; here the solenoid's own 1.6 Ω stays, so it gives 1.5×. The catch with doubling the voltage is the solenoid itself: it now dissipates four times the power it did, which can overheat a coil rated for less. Check this in the figure.</p></div>
+    </div>
+  </div>
+</details>
+<details class="exercise">
+  <summary><span class="ek">Check your understanding</span><span class="et">"The voltage ran out along the cable"</span></summary>
+  <div class="eb">
+    <p>The 30 m solenoid fails to pull in. A teammate says the 12 V has been used up by the time it travels 30 m, so the far end has no voltage left, the way pressure dies along a leaking hose.</p>
+    <div class="choice"><p>What is wrong with that claim?</p>
+    <ol class="opts">
+      <li>Nothing. A long wire consumes voltage, and past a certain length none remains.<div class="why">Voltage is energy per charge, shared among the resistances in the loop. It is not a stock of volts that the wire uses up and then runs out of.</div></li>
+      <li>The cable does consume voltage, but only on the outgoing conductor. The return wire is ground and drops nothing.<div class="why">Both conductors carry the same current and both have resistance, so both drop voltage. Ground is a reference, not a perfect conductor.</div></li>
+      <li data-correct>The same current flows out and back. The 12 V is divided between the cable and the coil in proportion to their resistances, so the coil still has voltage across it, just not enough.<div class="why">About 8 V is across the round-trip cable and about 4 V across the 1.6 Ω coil. The failure is too little current, not a voltage that disappeared on the way.</div></li>
+      <li>The claim would be right for DC and wrong for AC, because only AC cables drop voltage.<div class="why">This drop is ordinary resistance carrying DC. Frequency is not what splits the 12 V.</div></li>
+    </ol>
+    <div class="solution"><p>Nothing in the loop destroys voltage. KVL, which Module 2 names, says the supply voltage is exactly the sum of the drops. Here that sum is cable plus coil, and the coil's share is \(I \times 1.6\ \Omega \approx 4\ \text{V}\). The hose analogy fails because current cannot leak out of the wire the way water leaks out of a hose. The charge all arrives; each charge has simply given up most of its energy as heat in the copper.</p></div>
     </div>
   </div>
 </details>
@@ -331,7 +361,7 @@
   </div>
 </div>
 <details class="exercise">
-  <summary><span class="ek">Design exercise</span><span class="et">Will a bigger battery stop the brown-out?</span></summary>
+  <summary><span class="ek">Check your understanding</span><span class="et">Will a bigger battery stop the brown-out?</span></summary>
   <div class="eb">
     <p>A motor and its control electronics share a 2S pack. When the motor starts, the pack sags and the electronics reset. A teammate suggests a pack with twice the capacity (mAh) of the same chemistry.</p>
     <div class="choice"><p>Does a higher capacity fix the brown-out?</p>
@@ -393,8 +423,8 @@
 </section>
 
 <!-- ================= DESIGN EXERCISES ================= -->
-<section class="sec" id="exercises" data-nonum data-short="Design exercises">
-<h2>Design exercises</h2>
+<section class="sec" id="exercises" data-nonum data-short="Exercises">
+<h2>Exercises</h2>
 <p>Problems drawn from real hardware. Each takes a few steps. Enter numbers to check your reasoning as you go, or open the worked solutions and discussion. The simulators above are useful for sanity-checking.</p>
 
 <div class="chal">
@@ -424,14 +454,14 @@
       <span>Battery</span><span>12.0 V, internal resistance 0.05 Ω</span>
       <span>Relay contacts</span><span>0.05 Ω</span>
       <span>Cable</span><span>22 AWG, 52.9 mΩ per metre per conductor, 30 m one way</span>
-      <span>Solenoid</span><span>1.6 Ω, needs at least 1.0 A to pull in</span>
+      <span>Solenoid</span><span>1.6 Ω, needs at least 3.0 A to pull in</span>
     </div>
     <div class="check" data-ans="3.17" data-tol="2%" data-unit="Ω"><p>(a) Total cable resistance (both conductors)?</p>
       <div class="miss" data-val="1.59"><p>That's one conductor. Current goes out <em>and</em> back.</p></div>
       <div class="solution"><p>60 m × 0.0529 Ω/m = 3.17 Ω. That's already twice the solenoid's resistance.</p></div></div>
     <div class="check" data-ans="2.46" data-tol="2%" data-unit="A"><p>(b) Current through the solenoid?</p>
       <div class="hint">Everything is in one loop, so add all the resistances: battery + relay + cable + solenoid.</div>
-      <div class="solution"><p>\(R_\text{total} = 0.05 + 0.05 + 3.17 + 1.6 = 4.87\ \Omega\), so \(I = 12 / 4.87 = 2.46\ \text{A}\), about 2.5× the minimum it needs.</p></div></div>
+      <div class="solution"><p>\(R_\text{total} = 0.05 + 0.05 + 3.17 + 1.6 = 4.87\ \Omega\), so \(I = 12 / 4.87 = 2.46\ \text{A}\). That is short of the 3 A pull-in, which is why the same solenoid that works on a short bench lead fails on this cable.</p></div></div>
     <div class="check" data-ans="3.94" data-tol="2%" data-unit="V"><p>(c) Voltage actually across the solenoid?</p>
       <div class="solution"><p>\(V = I R = 2.46 \times 1.6 = 3.94\ \text{V}\). Only a third of the battery voltage reaches the solenoid. Most of the rest is lost in the cable.</p></div></div>
     <details><summary>Discussion: what would you change?</summary><p>Swap in 16 AWG (13.2 mΩ/m) and the cable drops to 0.79 Ω, so the current rises to about 4.8 A. Or move the relay next to the solenoid and run only a low-current control line back to the supply. Also check the opposite limit: at 4.8 A the 1.6 Ω coil dissipates about 37 W. Solenoids are rated for a particular voltage or current, and running one far above it overheats the coil, so more current isn't automatically better.</p></details>
@@ -476,13 +506,13 @@
   <h3>Making Ohm's law physical</h3>
   <div class="parts"><span>Multimeter</span><span>Current-limited bench supply</span><span>Resistors: 47 Ω ¼ W, 100 Ω, 1 kΩ, 10 kΩ</span><span>AA cell + 10 Ω load</span><span>5 m of thin hookup wire</span><span>Breadboard</span></div>
   <ol>
-    <li><b>Read and measure.</b> Read each resistor's colour code, then measure it with power off. Is it within the tolerance band (often ±1 % or ±5 %)?</li>
-    <li><b>Verify Ohm's law.</b> Put the 1 kΩ across the supply. Step the voltage from 0 to 10 V in 2 V steps, measuring the current in series each time. Plot I against V. The slope should be 1/R.</li>
-    <li><b>Feel the derating rule.</b> Set the supply to 3.4 V across the 47 Ω ¼ W resistor (≈ 0.25 W). After a minute, check its temperature with an IR thermometer, or carefully with a fingertip. It will be hot.</li>
-    <li><b>Measure internal resistance.</b> Measure the AA cell's open-circuit voltage. Connect the 10 Ω load and measure again. Calculate \(R_\text{int} = (V_\text{oc} - V_\text{load}) / I\).</li>
-    <li><b>The long-wire problem.</b> Pass 1 A through 5 m of thin wire (current-limit the supply). Measure the voltage drop end to end and calculate the wire's resistance per metre. Compare it with the AWG table.</li>
+    <li><b>Write your prediction first.</b> Read each resistor's colour code and write down the value and the tolerance band (often ±1 % or ±5 %) before the meter comes out. Then measure each one with the power off.</li>
+    <li><b>Write your prediction first.</b> For a 1 kΩ resistor, write the current you expect at 0, 2, 4, 6, 8 and 10 V, and the slope of I against V. Then put the resistor across the supply, measure the current in series at each step, and plot it.</li>
+    <li><b>Write your prediction first.</b> A 47 Ω ¼ W resistor at 3.4 V dissipates about 0.25 W, its full rating. Write whether you expect it to be warm or too hot to hold. Then set that voltage and, after a minute, check with an IR thermometer or carefully with a fingertip.</li>
+    <li><b>Write your prediction first.</b> A fresh AA cell has a few tenths of an ohm inside it. Write the open-circuit voltage you expect and the drop you expect across a 10 Ω load. Then measure both and calculate \(R_\text{int} = (V_\text{oc} - V_\text{load}) / I\).</li>
+    <li><b>Write your prediction first.</b> Look up the Ω/m of the thin wire's gauge and write the drop you expect along 5 m at 1 A. Then pass 1 A through it (current-limit the supply), measure the drop end to end, and find the Ω/m.</li>
   </ol>
-  <div class="record"><b>What you should see:</b> a straight V–I line whose slope is 1/R, an AA cell with a few tenths of an ohm inside it, and a thin wire whose Ω/m matches the gauge table to within a few percent.</div>
+  <div class="record"><b>Comparison.</b> Set what you measured next to what you wrote down. A straight V–I line whose slope is 1/R, an AA cell with a few tenths of an ohm inside it, and a thin wire whose Ω/m matches the gauge table to within a few percent, are what the predictions were aiming at. A miss is worth more than a lucky guess: note which assumption was wrong.</div>
 </div>
 </section>
 

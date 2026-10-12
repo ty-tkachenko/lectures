@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 330" width="760" height="330" role="img" aria-labelledby="t d" font-family="system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif">
+<title id="t">S-parameters of a two-port</title><desc id="d">A box with port 1 on the left and port 2 on the right. Incident waves a1 and a2 enter, outgoing waves b1 and b2 leave. S11 is b1 over a1 (input reflection), S21 is b2 over a1 (forward transmission), S12 is b1 over a2 (reverse), S22 is b2 over a2 (output reflection), each measured with the other port terminated in Z0.</desc>
+<defs><marker id="ah3b82f6" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#3b82f6"/></marker><marker id="ahef4444" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#ef4444"/></marker><marker id="ah7c3aed" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#7c3aed"/></marker><marker id="ah16a34a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#16a34a"/></marker><marker id="ah94a3b8" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#94a3b8"/></marker></defs>
+<rect width="760" height="330" fill="#ffffff"/>
+<text x="20" y="24" font-size="14" fill="#2b2b2b" font-weight="600">S-parameters: waves in (a) and waves out (b) at each port</text>
+<rect x="280" y="70" width="200" height="150" rx="10" stroke="#94a3b8" stroke-width="1.5" fill="#f8fafc"/>
+<text x="380" y="139" font-size="13" fill="#2b2b2b" text-anchor="middle" font-weight="600">two-port</text>
+<text x="380" y="157" font-size="11" fill="#555" text-anchor="middle">filter, amplifier, cable…</text>
+<text x="268" y="149" font-size="12" fill="#2b2b2b" text-anchor="end" font-weight="600">port 1</text>
+<text x="492" y="149" font-size="12" fill="#2b2b2b" font-weight="600">port 2</text>
+<circle cx="280" cy="110" r="4" stroke-width="1" fill="#2b2b2b"/>
+<circle cx="280" cy="180" r="4" stroke-width="1" fill="#2b2b2b"/>
+<circle cx="480" cy="110" r="4" stroke-width="1" fill="#2b2b2b"/>
+<circle cx="480" cy="180" r="4" stroke-width="1" fill="#2b2b2b"/>
+<line x1="110" y1="110" x2="272" y2="110" stroke="#3b82f6" stroke-width="2.2" fill="none" stroke-linecap="round" marker-end="url(#ah3b82f6)"/>
+<text x="150" y="102" font-size="12" fill="#1d4ed8">a₁ incident</text>
+<line x1="272" y1="180" x2="110" y2="180" stroke="#ef4444" stroke-width="2.2" fill="none" stroke-linecap="round" marker-end="url(#ahef4444)"/>
+<text x="150" y="172" font-size="12" fill="#b91c1c">b₁ outgoing</text>
+<line x1="650" y1="110" x2="488" y2="110" stroke="#3b82f6" stroke-width="2.2" fill="none" stroke-linecap="round" marker-end="url(#ah3b82f6)"/>
+<text x="610" y="102" font-size="12" fill="#1d4ed8" text-anchor="end">a₂ incident</text>
+<line x1="488" y1="180" x2="650" y2="180" stroke="#ef4444" stroke-width="2.2" fill="none" stroke-linecap="round" marker-end="url(#ahef4444)"/>
+<text x="610" y="172" font-size="12" fill="#b91c1c" text-anchor="end">b₂ outgoing</text>
+<path d="M294,110 C330,110 330,180 294,180" stroke="#7c3aed" stroke-width="1.6" fill="none" stroke-linejoin="round" marker-end="url(#ah7c3aed)"/>
+<text x="332" y="185" font-size="12" fill="#7c3aed" font-weight="600">S₁₁</text>
+<path d="M466,110 C430,110 430,180 466,180" stroke="#7c3aed" stroke-width="1.6" fill="none" stroke-linejoin="round" marker-end="url(#ah7c3aed)"/>
+<text x="428" y="185" font-size="12" fill="#7c3aed" text-anchor="end" font-weight="600">S₂₂</text>
+<line x1="304" y1="94" x2="456" y2="94" stroke="#16a34a" stroke-width="1.6" fill="none" stroke-linecap="round" marker-end="url(#ah16a34a)"/>
+<text x="380" y="88" font-size="11.5" fill="#15803d" text-anchor="middle" font-weight="600">S₂₁ (forward)</text>
+<line x1="456" y1="206" x2="304" y2="206" stroke="#94a3b8" stroke-width="1.6" fill="none" stroke-linecap="round" marker-end="url(#ah94a3b8)"/>
+<text x="380" y="236" font-size="11.5" fill="#555" text-anchor="middle" font-weight="600">S₁₂ (reverse)</text>
+<text x="20" y="274" font-size="13" fill="#2b2b2b">b₁ = S₁₁ a₁ + S₁₂ a₂</text>
+<text x="220" y="274" font-size="13" fill="#2b2b2b">b₂ = S₂₁ a₁ + S₂₂ a₂</text>
+<text x="20" y="304" font-size="11.5" fill="#555">First index = port the wave comes out of, second = port it went in. Each is measured with the other port terminated in Z₀ (so a = 0 there).</text>
+<text x="20" y="320" font-size="11.5" fill="#555" font-style="italic">|a|² and |b|² are the incident and outgoing powers: a = V⁺/√Z₀, b = V⁻/√Z₀.</text>
+</svg>

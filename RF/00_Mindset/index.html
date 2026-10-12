@@ -4,31 +4,451 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Mindset Shift: Why RF Is Different · RF 0</title>
-<meta name="description" content="RF & High-Speed Design module 0: Lumped vs distributed, return current, and &quot;ground is not ground&quot;. In development.">
+<meta name="description" content="RF module 0: why a wire stops being a wire, why RF current crowds to the surface, why return current hugs the trace, and why ground is not ground.">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
 <link rel="stylesheet" href="../../assets/site.css">
 <script src="../../assets/course.js"></script>
 <script src="../../assets/site.js"></script>
+<script src="../../assets/plot.js"></script>
 </head>
 <body>
 <div class="layout">
 <aside class="side" aria-label="Module contents"></aside>
 <main class="content">
 
-<!-- Placeholder: replace this page with the module when it's written (see README.md, "Writing a module"). -->
 <header class="hero">
   <div class="eyebrow">RF &amp; High-Speed Design · Module 0</div>
-  <h1>Mindset Shift: Why RF Is Different</h1>
-  <p class="lede">Lumped vs distributed, return current, and &quot;ground is not ground&quot;.</p>
+  <h1>Why RF is different</h1>
+  <p class="lede">A first circuits course treats a wire as a perfect connection, ground as 0 V everywhere, and current as something that flows through the copper like water in a pipe. At radio frequency all three of those break. The rest of the RF notes are what you do once they have broken. This module is the reason they break.</p>
+  <p class="meta">Builds on: voltage, current, resistance and Ohm's law (EE Module 1), and the idea of a frequency in hertz. No electromagnetics is assumed.</p>
+  <div class="resources">This module has 2 interactive figures, a <a href="#lecture">lecture video</a> (coming soon), a <a href="#bench">lab demonstration</a> (coming soon), and <a href="#checks">understanding questions</a>.</div>
+  <div class="objectives">
+    <h3>What's covered</h3>
+    <ul>
+      <li>When a connection is long compared with a wavelength, and why λ/10 is the usual line between "just a wire" and a transmission line.</li>
+      <li>Why RF current crowds into a thin skin at the surface of the copper.</li>
+      <li>Why the return current runs under the trace, and what a slot in the ground plane does.</li>
+      <li>Why two points on the same ground net are not at the same voltage at RF.</li>
+      <li>Why the energy of the signal travels in the fields, mostly in the board, not inside the copper.</li>
+    </ul>
+  </div>
+  <div class="video" data-video="lecture" id="lecture">
+    <div class="plan">
+      <p>Planned walkthrough of this page (≈ 25 min):</p>
+      <ol>
+        <li data-t="0:00">The three ideas that break</li>
+        <li data-t="3:00">Wavelength, and the wire that is no longer a wire</li>
+        <li data-t="9:00">Skin effect: why the current leaves the middle</li>
+        <li data-t="14:00">Return current and the slot you must not cut</li>
+        <li data-t="18:00">A via that is not a short</li>
+        <li data-t="21:00">Energy in the fields</li>
+      </ol>
+    </div>
+  </div>
 </header>
 
-<section class="sec" id="status" data-nonum data-short="In development">
-<h2>In development</h2>
-<p>This module hasn't been written yet. The other modules are listed in the strip at the top of the page, and the links below go to the neighbouring ones.</p>
+<section class="sec" id="wire" data-short="Wavelength">
+<h2>When a wire stops being a wire <a class="vjump" data-t="3:00"></a></h2>
+<p>A change of voltage does not reach the far end of a wire instantly. It travels as a wave, at a large fraction of the speed of light. For a slow signal the wave arrives long before the signal has had time to change, so the whole wire sits at one voltage and ordinary circuit laws (EE Module 2) are fine. A fast signal can change <em>while the wave is still on the way</em>. Then one end is at one voltage and the other end is at another, at the same instant. The wire has become a <strong>transmission line</strong>: a path that guides a travelling wave. Module 1 is that theory. What decides "slow" or "fast" is the length of the wire compared with the <strong>wavelength</strong>.</p>
+<p>Wavelength is the distance the wave travels during one cycle:</p>
+<div class="eq">$$\lambda = \frac{v}{f} \qquad\qquad \lambda_\text{board} = \frac{c}{f\sqrt{\varepsilon_\text{eff}}}$$<div class="n">v is the speed of the wave. In air, v is c. On a board the material slows the wave by √ε_eff. For a trace on FR-4, ε_eff ≈ 3.4, so the wave runs at about 54 % of c.</div></div>
+<p>At 915 MHz, a common telemetry frequency, the wavelength in air is \(3\times10^8 / 915\times10^6 = 32.8\ \text{cm}\). On FR-4 it is \(32.8/\sqrt{3.4} = 17.8\ \text{cm}\).</p>
+<div class="tablewrap"><table>
+  <tr><th>Frequency</th><th>Where you meet it</th><th>λ in air</th><th>λ on FR-4</th><th>λ/10 on FR-4</th></tr>
+  <tr><td>60 Hz</td><td>Wall power</td><td>5 000 km</td><td>—</td><td>—</td></tr>
+  <tr><td>915 MHz</td><td>Telemetry</td><td>32.8 cm</td><td>17.8 cm</td><td>18 mm</td></tr>
+  <tr><td>2.4 GHz</td><td>Wi-Fi, many radios</td><td>12.5 cm</td><td>6.8 cm</td><td>6.8 mm</td></tr>
+  <tr><td>5.8 GHz</td><td>Some video links</td><td>5.17 cm</td><td>2.81 cm</td><td>2.8 mm</td></tr>
+</table></div>
+<p class="small">Air wavelengths use \(c = 3\times10^8\ \text{m/s}\). FR-4 uses \(\varepsilon_\text{eff} = 3.4\). The 915 MHz and 2.4 GHz columns are rounded (17.78 cm, 6.78 cm).</p>
+<img src="img/wavelength-vs-board.svg" alt="One wavelength drawn to scale on an FR-4 trace at 915 MHz, 2.4 GHz and 5.8 GHz, with λ/10 marked, next to a 50 mm board.">
+<p class="small">One wavelength on an FR-4 trace, to scale. At 915 MHz, λ/10 is 18 mm. At 2.4 GHz it is 6.8 mm, a small fraction of a 50 mm board.</p>
+<div class="note rule">
+  <span class="ni">λ</span>
+  <div><span class="nt">Rule of thumb</span>If a trace is longer than about <b>λ/10</b>, treat it as a transmission line, not a wire. At 2.4 GHz on FR-4 that is only 6.8 mm, shorter than many traces on a real board.</div>
+</div>
+<details>
+  <summary>Go deeper: why λ/10?</summary>
+  <p>One wavelength is one full cycle, 360°. Over λ/10 the wave has already moved through 36°, so the two ends of the trace are noticeably out of step. Kirchhoff's laws assume the voltage is the same all along a wire at one instant. That is the lumped model. Past about λ/10 the assumption is too crude, and you need the distributed model, where voltage and current vary along the line (Module 1). λ/10 is not a law. It is a convenient threshold, and some designers use λ/20 when the signal is precious.</p>
+</details>
+
+<div class="widget wide" id="w-wave">
+  <div class="wh"><span class="tag">Interactive</span><b>Wavelength against a trace</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label for="wF">Frequency <b id="wFv"></b></label><input id="wF" type="range" min="7" max="9.78" step="0.01" value="8.96"></div>
+      <div class="ctrl"><label>Board</label>
+        <div class="seg" id="wE"><button type="button" data-v="1">Air</button><button type="button" data-v="3.4" class="on">FR-4 microstrip</button><button type="button" data-v="2.7">Rogers 4350B</button><button type="button" data-v="4.4">FR-4 stripline</button></div></div>
+      <div class="ctrl"><label for="wL">Trace length <b id="wLv"></b></label><input id="wL" type="range" min="1" max="200" step="1" value="25"></div>
+    </div>
+    <div>
+      <canvas id="cvWl" style="height:210px" aria-label="A sine wave and a trace drawn to the same scale, with the λ/10 mark"></canvas>
+      <div class="readout">
+        <div class="stat"><div class="k">Wavelength λ</div><div class="v" id="wLam"></div></div>
+        <div class="stat"><div class="k">λ/10</div><div class="v" id="w10"></div></div>
+        <div class="stat"><div class="k">λ/4</div><div class="v" id="w4"></div></div>
+        <div class="stat"><div class="k">Trace / λ</div><div class="v" id="wFrac"></div></div>
+      </div>
+      <div class="verdict" id="wVerdict"></div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>Set the trace to 25 mm and slide from 100 MHz up to 6 GHz. Note the frequency where the verdict changes.</li>
+    <li>Switch from FR-4 to air. The threshold moves up, because the wave is faster and the wavelength is longer.</li>
+  </ol></div>
+</div>
+</section>
+
+<section class="sec" id="skin" data-short="Skin effect">
+<h2>Skin effect <a class="vjump" data-t="9:00"></a></h2>
+<p>At DC, current spreads through the whole thickness of a copper trace. At radio frequency it does not. The reason is inside the metal, not a rule about surfaces.</p>
+<p>A changing current produces a changing magnetic field. A changing magnetic field induces an electric field (Faraday's law). That induced field opposes the change that created it (Lenz's law), so it drives a current <em>against</em> the applied current. In the middle of the conductor you are surrounded by changing current, and the opposing field is strong enough to cancel the current there. Near the surface there is less conductor outside you to produce that opposing field, so the current survives. The faster the current changes, the stronger the opposition, and the thinner the layer that is left. That layer is the skin.</p>
+<p>This is why RF loss depends on the <em>surface</em> of the copper, its roughness and its plating, and only a little on how thick the copper is, once the copper is already several skins thick.</p>
+<img src="img/skin-depth.svg" alt="Cross-sections of a 35 micrometre copper trace: current uniform at DC, crowded into a thin skin at 915 MHz, and crowded toward the ground plane when a plane is present.">
+<p class="small">Where the current flows in 1 oz (35 µm) copper. At DC it fills the trace. At 915 MHz it lives in a skin about 2.2 µm deep. Over a ground plane it also crowds toward the plane.</p>
+<p><strong>Skin depth</strong> δ is the depth at which the current density has fallen to \(1/e\), about 37 %, of its value at the surface:</p>
+<div class="eq">$$\delta = \sqrt{\frac{2\rho}{\omega\mu}}$$<div class="n">ρ is resistivity (1.68×10⁻⁸ Ω·m for copper). ω = 2πf. μ for copper is μ₀ = 4π×10⁻⁷ H/m. δ shrinks as 1/√f.</div></div>
+<p>At 915 MHz that comes out to 2.2 µm (2.16 µm before rounding). A standard 1 oz trace is 35 µm thick, so nearly all the current is in the outer couple of micrometres, about the size of the bumps on the copper. Rough copper therefore adds loss. Module 3 comes back to that.</p>
+<div class="tablewrap"><table>
+  <tr><th>Frequency</th><th>Skin depth in copper</th></tr>
+  <tr><td>60 Hz</td><td>8.4 mm</td></tr>
+  <tr><td>1 MHz</td><td>65 µm</td></tr>
+  <tr><td>915 MHz</td><td>2.2 µm</td></tr>
+  <tr><td>2.4 GHz</td><td>1.3 µm</td></tr>
+</table></div>
+
+<div class="widget wide" id="w-skin">
+  <div class="wh"><span class="tag">Interactive</span><b>Current in the cross-section of a trace</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label for="sF">Frequency <b id="sFv"></b></label><input id="sF" type="range" min="3" max="9.78" step="0.01" value="8.96"></div>
+      <div class="ctrl"><label>Copper</label>
+        <div class="seg" id="sT"><button type="button" data-v="17.5">½ oz</button><button type="button" data-v="35" class="on">1 oz</button><button type="button" data-v="70">2 oz</button></div></div>
+      <p class="small">An isolated strip, current from both faces. Over a ground plane the current crowds onto the face toward the plane instead.</p>
+    </div>
+    <div>
+      <canvas id="cvSkin" style="height:240px" aria-label="Trace cross-section shaded by current density, darker where more current flows"></canvas>
+      <div class="readout">
+        <div class="stat"><div class="k">Skin depth δ</div><div class="v" id="sD"></div></div>
+        <div class="stat"><div class="k">Within 1 δ of a surface</div><div class="v" id="sP"></div></div>
+        <div class="stat"><div class="k">RF / DC resistance</div><div class="v" id="sR"></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>Start at 1 kHz, where the shading is even. Slide up to 915 MHz and see how much of the 35 µm is actually carrying current.</li>
+    <li>At 2.4 GHz, switch from ½ oz to 2 oz. The skin depth does not change, and the RF resistance barely does either.</li>
+  </ol></div>
+</div>
+</section>
+
+<section class="sec" id="return" data-short="Return current">
+<h2>Return current takes the path of least inductance <a class="vjump" data-t="14:00"></a></h2>
+<p>Current flows in a loop: out on the signal trace and back on a return path, usually the ground plane underneath. At DC the return current spreads across the plane, looking for the lowest <em>resistance</em>. At RF it looks for the lowest <em>inductance</em>. Inductance grows with the area of the loop. The smallest loop is the one where the return current runs directly under the trace, a mirror image of the signal.</p>
+<img src="img/return-current.svg" alt="Top views of a ground plane: at DC the return current spreads in wide arcs; at RF it runs in a narrow band under the trace; a slot forces the return current to detour.">
+<p class="small">Return current in the plane under a trace. At DC it spreads. At RF it follows the trace. A slot forces a detour and opens a loop.</p>
+<p>Cut a slot in the ground plane under an RF trace, for example to route another signal through, and the return current cannot follow the trace. It detours around the slot. Three things follow from that larger loop:</p>
+<ol>
+  <li>The loop <strong>radiates</strong>. The trace has become an accidental antenna.</li>
+  <li>The impedance jumps at the slot, so part of the signal <strong>reflects</strong> (Module 1).</li>
+  <li>Nearby circuits <strong>pick up</strong> the radiated energy. That is interference (Module 7).</li>
+</ol>
+<div class="note rule">
+  <span class="ni">⊥</span>
+  <div><span class="nt">Rule</span>Do not route an RF trace over a gap in its ground plane.</div>
+</div>
+</section>
+
+<section class="sec" id="ground" data-short="Ground">
+<h2>"Ground is not ground" <a class="vjump" data-t="18:00"></a></h2>
+<p>On a schematic, every ground symbol is the same perfect 0 V. On a board, ground is copper planes tied together by <strong>vias</strong>, the plated holes between layers, and every piece of copper has a little inductance. An inductor's opposition to a changing current is its reactance:</p>
+<div class="eq">$$X_L = 2\pi f L$$<div class="n">A typical PCB via is about 0.5 to 1 nH. Reactance is EE Module 4; the only fact needed here is that X_L grows in proportion to frequency.</div></div>
+<div class="example">
+  <span class="xk">Worked example</span>
+  <p>A 1 nH ground via at 2.4 GHz: \(X_L = 2\pi \times 2.4\times10^9 \times 1\times10^{-9} = 15\ \Omega\). Fifteen ohms is not a short circuit. Two points on the "same" ground can sit at different RF voltages. The plane behaves like a network of small inductors.</p>
+</div>
+<p>N vias in parallel have about \(1/N\) of the inductance of one, so the practical answer is many ground vias, close to every RF part's ground pin. Module 4 is where that stitching is laid out. At 5.8 GHz the same 1 nH via is 36 Ω, even less like a piece of wire.</p>
+</section>
+
+<section class="sec" id="fields" data-short="Fields">
+<h2>The energy travels in the fields <a class="vjump" data-t="21:00"></a></h2>
+<p>The most surprising idea in the module: the signal's energy does not travel inside the copper. It travels in the electric field, between conductors at different voltages, and the magnetic field, around conductors carrying current, in the space around and between them. The copper only guides the wave, the way rails guide a train. On a PCB most of those fields sit in the board material between the trace and the ground plane.</p>
+<img src="img/microstrip-fields.svg" alt="Cross-section of a microstrip: electric field lines from the trace down to the ground plane, mostly inside the board, and magnetic field lines circling the trace.">
+<p class="small">Fields around a trace over a ground plane. E runs from the trace to the plane, mostly through the board. H circles the trace. The power flows along the trace, in the space between the conductors.</p>
+<div class="note">
+  <span class="ni">E</span>
+  <div><span class="nt">The board carries the signal</span>The copper guides it. The dielectric's properties matter as much as the copper's. Its dielectric constant sets the speed (this module and Module 1). Its loss tangent sets how much of the field energy turns into heat each cycle (Module 1).</div>
+</div>
+<details>
+  <summary>Go deeper: the Poynting vector</summary>
+  <p>The direction and the amount of power flowing through space is \(\vec S = \vec E \times \vec H\), in watts per square metre. For a trace over a ground plane, \(\vec S\) points along the trace and is concentrated in the dielectric just under it. That is why a material's dielectric constant and loss tangent show up in every RF calculation, even in calculations that look like they are only about the copper.</p>
+</details>
+</section>
+
+<section class="sec" id="model" data-short="Mental model">
+<h2>The RF designer's mental model</h2>
+<ol>
+  <li><strong>Think in waves, not only in currents.</strong> Ask where the wave goes, and what it runs into.</li>
+  <li><strong>Every discontinuity reflects.</strong> A bend, a via, a pad or a connector changes what the wave sees, and part of the wave bounces back (Module 1).</li>
+  <li><strong>Anything near a quarter wavelength can radiate</strong> if you leave it as a loop or a stub. It receives just as well.</li>
+  <li><strong>The three enemies are reflections, loss and interference.</strong> The rest of these notes is how to keep them small.</li>
+</ol>
+</section>
+
+<section class="sec" id="checks" data-nonum data-short="Understanding">
+<h2>Check your understanding</h2>
+<p>Three kinds of question: explain the mechanism, find the flaw in a plausible claim, and say what assumption broke. They stay closed until you want them.</p>
+
+<h3>Explain it from the mechanism</h3>
+<details class="exercise">
+  <summary><span class="ek">Check your understanding</span><span class="et">Why λ/10 is the threshold</span></summary>
+  <div class="eb">
+    <div class="choice"><p>Why does a trace longer than about λ/10 stop being "just a wire"?</p>
+      <ol class="opts">
+        <li>The copper's resistance becomes larger than 50 Ω.<div class="why">The DC resistance of a short trace is milliohms. The failure is that the two ends are no longer at the same voltage at one instant.</div></li>
+        <li data-correct>One wavelength is 360° of phase. λ/10 is 36° of lag, so the far end is already a tenth of a cycle behind the near end. Kirchhoff's laws assumed that lag was zero.<div class="why">The lumped model is the assumption that broke. The distributed model is what replaces it.</div></li>
+        <li>λ/10 is the length at which the trace becomes an antenna and radiates all the power.<div class="why">Radiation becomes serious nearer λ/4, and only if the trace is not a proper line. λ/10 is where the voltage is already uneven, which is earlier.</div></li>
+        <li>It is a manufacturing limit: fabs cannot control impedance on shorter traces.<div class="why">The threshold comes from the phase along the trace, not from a fabrication rule. Some designers use λ/20 for the same physical reason, with a smaller lag.</div></li>
+      </ol>
+      <div class="solution"><p>A wave advances 360° in one wavelength. In a tenth of that distance it advances 36°. The voltage at the load end is not the voltage at the source end. Every lumped calculation (a single current, a single voltage drop) assumed they were. Past that point you treat the connection as a transmission line.</p></div>
+    </div>
+  </div>
+</details>
+<details class="exercise">
+  <summary><span class="ek">Check your understanding</span><span class="et">Why the current leaves the middle of the wire</span></summary>
+  <div class="eb">
+    <div class="choice"><p>At 915 MHz the current in a copper trace occupies about 2 µm at the surface, not the whole 35 µm. What pushes it out there?</p>
+      <ol class="opts">
+        <li>The electrons repel each other more at high frequency, so they move apart to the surface.<div class="why">Electron repulsion is there at DC too, and at DC the current fills the copper. The new ingredient is a changing magnetic field.</div></li>
+        <li>The surface is a better conductor than the bulk.<div class="why">The copper is the same material all the way through. What changes is the induced electric field, which is stronger in the interior.</div></li>
+        <li data-correct>The changing current makes a changing magnetic field, which induces an electric field opposing that current. The opposition is strongest in the interior, where the conductor is surrounded by changing current, so the net current is left at the surface.<div class="why">Faraday plus Lenz. Higher frequency, faster change, thinner skin, as 1/√f.</div></li>
+        <li>The ground plane attracts the current to the bottom face, and that is the whole of the skin effect.<div class="why">A ground plane does pull current toward the near face. The skin effect happens in an isolated wire too, with no plane at all. The plane is an extra preference, not the cause.</div></li>
+      </ol>
+      <div class="solution"><p>Start from the fields. Changing I makes changing B. Changing B makes an E that opposes the change. Inside the metal that E cancels the applied field; at the surface it does not fully, because there is less metal outside. The remaining layer's thickness is the skin depth, \(\delta = \sqrt{2\rho/(\omega\mu)}\), 2.2 µm in copper at 915 MHz.</p></div>
+    </div>
+  </div>
+</details>
+
+<h3>Find the flaw</h3>
+<details class="exercise">
+  <summary><span class="ek">Check your understanding</span><span class="et">"25 mm is short, so it is just a wire"</span></summary>
+  <div class="eb">
+    <p>A 915 MHz trace on FR-4 (\(\varepsilon_\text{eff} = 3.4\)) runs 25 mm from the radio to the connector. A teammate says 25 mm is obviously short, so it can stay an ordinary trace with no impedance control.</p>
+    <div class="choice"><p>What was missed?</p>
+      <ol class="opts">
+        <li>25 mm is several wavelengths, so the trace is an antenna.<div class="why">The wavelength on the board is 17.8 cm. 25 mm is 0.14 of that, not several. 0.14 is already past λ/10.</div></li>
+        <li data-correct>"Short" means short beside the wavelength, not beside a finger. 25 mm is 25/178 ≈ 0.14 λ, about 51°, and λ/10 is 36°. The ends are not at the same voltage.<div class="why">λ/10 at 915 MHz on FR-4 is 18 mm. 25 mm is past it.</div></li>
+        <li>FR-4 is slower than air, so 25 mm is electrically shorter than it looks and the trace is fine.<div class="why">Slower means a shorter wavelength, so the same millimetres are a larger fraction of a cycle. The dielectric makes the trace electrically longer.</div></li>
+        <li>Impedance control only matters above 2.4 GHz.<div class="why">The test is ℓ/λ at the frequency you are using. At 915 MHz, λ/10 is already 18 mm.</div></li>
+      </ol>
+      <div class="solution"><p>λ on the board is 17.8 cm, so λ/10 is 18 mm and 25 mm is 0.14 λ, about 51°. The trace is a transmission line. The word "short" was a comparison with a hand, and the wave does not care about hands.</p></div>
+    </div>
+  </div>
+</details>
+<details class="exercise">
+  <summary><span class="ek">Check your understanding</span><span class="et">"2 oz copper will halve the RF loss"</span></summary>
+  <div class="eb">
+    <p>At 2.4 GHz the skin depth in copper is 1.3 µm. A teammate wants to move an RF trace from 1 oz (35 µm) to 2 oz (70 µm) to cut its loss in half.</p>
+    <div class="choice"><p>Why does that not work?</p>
+      <ol class="opts">
+        <li>Heavier copper raises the dielectric loss.<div class="why">Dielectric loss is the board, not the copper weight. The claim was about conductor loss, and that is the part which fails to improve.</div></li>
+        <li>2 oz copper has twice the resistance, because the current has further to spread.<div class="why">At DC, thicker copper has less resistance, not more. At RF the current never reaches the extra copper.</div></li>
+        <li data-correct>The current already occupies only about a micrometre at each surface. Copper beyond a few skin depths carries essentially nothing, so doubling the thickness doubles the DC copper and leaves the RF resistance almost unchanged.<div class="why">Once the trace is many δ thick, the RF resistance per square is about ρ/δ, which does not contain the thickness.</div></li>
+        <li>It does work: loss is proportional to thickness, so twice the copper is half the loss.<div class="why">That is the DC story. It stops being true when δ is much smaller than the thickness, which at 2.4 GHz it is (1.3 µm against 35 µm).</div></li>
+      </ol>
+      <div class="solution"><p>At 2.4 GHz, δ = 1.3 µm. Both 35 µm and 70 µm are many skin depths, so both present about the same RF resistance, set by ρ/δ. Thicker copper lowers the DC resistance only. Less RF loss comes from a smoother surface and a lower-loss finish, because the current lives in the outer micrometre. Try the two weights in the figure above: the RF/DC ratio gets worse as the copper gets thicker, which is the extra unused copper, not a better RF path.</p></div>
+    </div>
+  </div>
+</details>
+
+<h3>What assumption broke?</h3>
+<details class="exercise">
+  <summary><span class="ek">Check your understanding</span><span class="et">A slot that is fine at 1 kHz</span></summary>
+  <div class="eb">
+    <p>A ground plane has a slot under a trace so that another signal can cross. At 1 kHz nobody notices. At 2.4 GHz the trace radiates and the signal reflects.</p>
+    <div class="choice"><p>Which assumption, true at 1 kHz, failed at 2.4 GHz?</p>
+      <ol class="opts">
+        <li>The slot is an open circuit at low frequency and a short at high frequency.<div class="why">The slot is a gap in the return path at every frequency. What changes is which path the return current chooses.</div></li>
+        <li data-correct>At low frequency the return current spreads out to find the lowest resistance, and a detour around a slot costs almost nothing. At RF it must hug the trace to keep the loop small, and the slot forces a large loop.<div class="why">Inductance, not resistance, is what the RF return current is minimising. The loop area is the inductance.</div></li>
+        <li>Copper stops conducting at 2.4 GHz, so the current has to jump the slot through the air.<div class="why">The copper still conducts. The current goes around the slot, in the plane, and that long path is the loop that radiates.</div></li>
+        <li>The trace's resistance crossed 50 Ω between 1 kHz and 2.4 GHz.<div class="why">The symptom is radiation and reflection from a larger loop, not the trace resistance reaching 50 Ω.</div></li>
+      </ol>
+      <div class="solution"><p>The assumption was "return current may wander". That is harmless when the current is steady, because a wider path in the plane is only a tiny extra resistance. A changing current pays for loop area as inductance, \(X_L = 2\pi f L\), and at 2.4 GHz that bill is large. The slot makes the area large. The fix is to keep the plane continuous under the trace, and cross the other signal somewhere else.</p></div>
+    </div>
+  </div>
+</details>
+<details class="exercise">
+  <summary><span class="ek">Check your understanding</span><span class="et">"Ground is 0 V, so a via is a short"</span></summary>
+  <div class="eb">
+    <p>A schematic shows two ground pins tied by a via and a bit of plane. Someone treats that via as 0 Ω at 2.4 GHz because both ends are the ground symbol.</p>
+    <div class="choice"><p>What broke?</p>
+      <ol class="opts">
+        <li>The via is open at RF because of the skin effect.<div class="why">Skin effect raises the resistance of the via a little. The dominant term is the inductance, about 1 nH, and 2πfL at 2.4 GHz is 15 Ω.</div></li>
+        <li>Ground symbols are only valid below 1 MHz, so the net should be renamed.<div class="why">The net is still the return path. What failed is the idea that every point on it is at the same voltage once the current is changing quickly.</div></li>
+        <li data-correct>A ground symbol means 0 V only if nothing inductive sits between the two points. A 1 nH via has \(X_L = 2\pi f L \approx 15\ \Omega\) at 2.4 GHz, so the two "grounds" differ by I times that.<div class="why">The schematic hid the inductance. The frequency made it matter.</div></li>
+        <li>The via is 15 Ω of ordinary resistance, measurable with an ohmmeter.<div class="why">An ohmmeter sees the DC resistance, milliohms. The 15 Ω is reactance. It is there only while the current is changing at 2.4 GHz.</div></li>
+      </ol>
+      <div class="solution"><p>The assumption was "one ground symbol, one voltage". The via is an inductor. At 2.4 GHz, 1 nH is \(2\pi\times2.4\times10^9\times10^{-9} = 15\ \Omega\), which is a real voltage drop \(I X_L\) between two points the schematic drew as the same node. Several vias in parallel bring that down roughly as 1/N. At 5.8 GHz the same via is 36 Ω.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<section class="sec" id="bench" data-nonum data-short="At the bench">
+<h2>At the bench</h2>
+<div class="video" data-video="lab">
+  <div class="plan">
+    <p>Planned lab (≈ 15 min, a board and a ruler, no VNA yet):</p>
+    <ol>
+      <li>Mark λ and λ/10 on a spare board at the radio's frequency</li>
+      <li>Find one trace that is already a transmission line, and one that is not</li>
+      <li>Find a ground-plane gap under a trace, if the board has one</li>
+    </ol>
+  </div>
+</div>
+<div class="lab">
+  <h3>Is this trace a wire?</h3>
+  <div class="parts"><span>A flight board, or a photo of one with a scale</span><span>The radio frequency</span><span>A ruler</span></div>
+  <ol>
+    <li><b>Write your prediction first.</b> At the radio's frequency, on FR-4, how long is λ/10? Which traces on the board do you expect to be longer than that?</li>
+    <li><b>Compute λ/10</b> from \(c/(f\sqrt{3.4})/10\) and mark that length on a slip of paper.</li>
+    <li><b>Compare.</b> Lay the slip on the RF trace from the radio to the antenna connector. If the trace is longer than the slip, it is a transmission line and Module 1 applies. If it is shorter, say so, and say how much margin you have.</li>
+    <li><b>Write your prediction first.</b> If the ground plane under that trace is cut, what do you expect the return current to do at this frequency, and what would you expect at 1 kHz?</li>
+    <li><b>Look at the plane</b> under the trace. A slot, a split, or a row of holes is a detour for the return current.</li>
+  </ol>
+  <div class="record"><b>What you should see:</b> at 915 MHz the slip is about 18 mm, and at 2.4 GHz about 7 mm. Most real RF routes are longer than the slip. A continuous plane under the trace is the one you want.</div>
+</div>
+</section>
+
+<section class="sec" id="summary" data-nonum data-short="Summary">
+<h2>Summary &amp; cheat sheet</h2>
+<ol class="takeaways">
+  <li>Compare every length with the wavelength. Past about λ/10, a trace is a transmission line. λ/10 is 36° of lag.</li>
+  <li>On FR-4 the wave runs at about half the speed of light, so the wavelength is about half what it is in air. At 915 MHz, λ is 17.8 cm and λ/10 is 18 mm.</li>
+  <li>RF current flows in a skin at the surface, because a changing B induces an opposing E inside the copper. At 915 MHz the skin is about 2 µm. Thicker copper does not fix that.</li>
+  <li>Return current runs under the trace. A slot forces a loop, which radiates and reflects.</li>
+  <li>Ground has impedance at RF. A 1 nH via is 15 Ω at 2.4 GHz. Use many vias.</li>
+  <li>The energy travels in the fields, mostly in the board under the trace. The copper only guides it.</li>
+</ol>
+<div class="cheat">
+  <div><b>Wavelength</b>\(\lambda = c/(f\sqrt{\varepsilon_\text{eff}})\)<br><span class="small">line if ℓ &gt; λ/10 · 36° of lag</span></div>
+  <div><b>FR-4, 915 MHz</b>λ ≈ 17.8 cm<br><span class="small">λ/10 ≈ 18 mm · ε_eff ≈ 3.4</span></div>
+  <div><b>Skin depth</b>\(\delta = \sqrt{2\rho/(\omega\mu)}\)<br><span class="small">copper, 915 MHz: 2.2 µm · ∝ 1/√f</span></div>
+  <div><b>A via</b>\(X_L = 2\pi f L\)<br><span class="small">1 nH at 2.4 GHz ≈ 15 Ω</span></div>
+</div>
+<h3>Where this continues</h3>
+<p class="small">Module 1 builds transmission lines, reflections and loss on top of this. Module 4 is where the vias and the stackup get drawn.</p>
+<div class="deeper">
+  <a href="../01_Fundamentals/index.html#lines">Transmission lines<small>Module 1. Z₀, reflections, and the same λ/10 rule with the arithmetic</small></a>
+  <a href="../01_Fundamentals/index.html#material">Dk, Df and loss<small>Module 1. What the board does to the wave once you accept that the fields are in it</small></a>
+</div>
+<h3>Further reading</h3>
+<ul class="small">
+  <li><em>Microwave Engineering</em> (Pozar), chapter 1: electromagnetic theory, including plane waves, the skin effect, and power flow in the fields.</li>
+</ul>
 </section>
 
 <nav class="pager"></nav>
 </main>
 </div>
 <footer class="site">Hardware Engineering Fundamentals · RF &amp; High-Speed Design</footer>
+
+<script>
+'use strict';
+const $ = s => document.querySelector(s);
+const {col, si, fmt, lin, log, ticks, axes, line, text, dot, rgba, rrect} = Plot;
+const C0 = 299792458;
+
+/* wavelength explorer */
+(() => {
+  const med = Plot.seg('#wE', upd);
+  let s = {};
+  function upd(){
+    const f = Math.pow(10, +$('#wF').value), e = +med(), Lmm = +$('#wL').value, L = Lmm/1000;
+    const lam = C0/(f*Math.sqrt(e)), frac = L/lam;
+    s = {f, L, lam, frac};
+    $('#wFv').textContent = si(f, 'Hz');
+    $('#wLv').textContent = Lmm + ' mm';
+    $('#wLam').textContent = si(lam, 'm');
+    $('#w10').textContent = si(lam/10, 'm');
+    $('#w4').textContent = si(lam/4, 'm');
+    $('#wFrac').textContent = (frac < 0.01 ? fmt(frac*1000, 3) + ' × 10⁻³ λ' : fmt(frac, 3) + ' λ');
+    const v = $('#wVerdict');
+    if (frac < 0.1) Plot.verdict(v, 'ok', '<b>Lumped.</b> Shorter than λ/10. Treating it as a plain wire is reasonable.');
+    else if (frac < 0.25) Plot.verdict(v, 'warn', '<b>A transmission line.</b> Longer than λ/10 (' + fmt(360*frac, 3) + '°). Control its impedance.');
+    else Plot.verdict(v, 'bad', '<b>Long.</b> Around λ/4 or more (' + fmt(frac, 3) + ' λ). It can resonate if it is not designed as a line.');
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvWl'), (ctx, W, H) => {
+    const {L, lam, frac} = s; if (!lam) return;
+    const P = {l:16, r:W-16, t:16, b:H-28};
+    const span = Math.max(lam*1.15, L*1.25);
+    const sc = (P.r - P.l) / span;
+    const y0 = (P.t + P.b)/2 - 8;
+    const pts = [];
+    const n = Math.max(2, Math.floor(P.r - P.l));
+    for (let i = 0; i <= n; i++){
+      const d = (i/n)*span;
+      pts.push([P.l + i/n*(P.r-P.l), y0 - 28*Math.sin(2*Math.PI*d/lam)]);
+    }
+    line(ctx, pts, col.c1, 2);
+    const tw = Math.max(2, L*sc);
+    ctx.fillStyle = rgba(col.c2, .85);
+    ctx.fillRect(P.l, P.b - 22, tw, 8);
+    text(ctx, 'trace ' + fmt(L*1000, 3) + ' mm', P.l, P.b - 30, {color: col.ink2});
+    const x10 = P.l + (lam/10)*sc;
+    if (x10 < P.r){
+      line(ctx, [[x10, P.t], [x10, P.b - 8]], col.c3, 1.4, [4,3]);
+      text(ctx, 'λ/10', x10 + 4, P.t + 8, {color: col.c3});
+    }
+    text(ctx, (frac < 0.1 ? 'under λ/10' : 'past λ/10') + '   ·   one λ = ' + si(lam, 'm'), P.l, H - 8, {color: col.muted});
+  });
+  ['#wF','#wL'].forEach(id => $(id).addEventListener('input', upd));
+  upd();
+})();
+
+/* skin depth */
+(() => {
+  const thick = Plot.seg('#sT', upd);
+  const rho = 1.68e-8, mu = 4*Math.PI*1e-7;
+  let s = {};
+  function stats(f, t){
+    const d = Math.sqrt(2*rho/(2*Math.PI*f*mu));
+    const N = 400; let tot = 0, near = 0, prof = [];
+    for (let i = 0; i < N; i++){
+      const z = (i+0.5)/N*t, a = Math.min(z, t-z), J = Math.exp(-a/d);
+      prof.push(J); tot += J; if (a <= d) near += J;
+    }
+    return {d, frac: near/tot, ratio: t/(2*d) > 1 ? t/(2*d) : 1, prof};
+  }
+  function upd(){
+    const f = Math.pow(10, +$('#sF').value), t = +thick()*1e-6;
+    s = Object.assign({f, t}, stats(f, t));
+    $('#sFv').textContent = si(f, 'Hz');
+    $('#sD').textContent = si(s.d, 'm');
+    $('#sP').textContent = Math.round(100*Math.min(1, s.frac)) + ' %';
+    $('#sR').textContent = fmt(s.ratio, 3) + '×';
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvSkin'), (ctx, W, H) => {
+    const {t, d, prof} = s; if (!t || !prof) return;
+    const top = 28, bot = H - 36, left = 36, right = W - 16;
+    const h = bot - top, mx = Math.max(...prof);
+    for (let i = 0; i < prof.length; i++){
+      const J = prof[i]/mx;
+      ctx.fillStyle = rgba(col.c2, 0.12 + 0.88*J);
+      ctx.fillRect(left, top + i*h/prof.length, right-left, h/prof.length + 1);
+    }
+    ctx.strokeStyle = col.ink; ctx.lineWidth = 1; ctx.strokeRect(left+0.5, top+0.5, right-left, h);
+    text(ctx, 'top surface', left, top - 10, {color: col.ink2});
+    text(ctx, 'bottom surface', left, bot + 14, {color: col.ink2});
+    text(ctx, fmt(t*1e6, 3) + ' µm copper · δ = ' + si(d, 'm') + ' · darker = more current', left, H - 8, {color: col.muted});
+  });
+  $('#sF').addEventListener('input', upd);
+  upd();
+})();
+</script>
 </body>
 </html>
