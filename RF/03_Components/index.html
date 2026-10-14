@@ -38,7 +38,7 @@
   </div>
   <div class="video" data-video="lecture" id="lecture">
     <div class="plan">
-      <p>Planned walkthrough of this page (≈ 45 min):</p>
+      <p>Planned walkthrough of this page (≈ 55 min):</p>
       <ol>
         <li data-t="0:00">A radio as a chain of blocks</li>
         <li data-t="3:00">Connectors</li>
@@ -106,6 +106,44 @@
 <section class="sec" id="connectors" data-short="Connectors">
 <h2>Connectors <a class="vjump" data-t="3:00"></a></h2>
 <p>An RF connector is a short piece of transmission line that can be taken apart. To keep it a good one, the inner and outer conductors must stay concentric with the right diameter ratio for 50 Ω all the way through, and the outer contact must be continuous around the circumference (Module 0's pigtail problem). The upper frequency is set by higher-order modes (Module 2), so smaller connectors go higher.</p>
+<p>The connector's impedance comes from the same geometry as coax. For two concentric conductors, the inductance and capacitance per unit length depend only on the ratio of the outer conductor's inside diameter D to the inner conductor's diameter d, and on the dielectric between them:</p>
+<div class="eq">$$Z_0 = \frac{60\ \Omega}{\sqrt{\varepsilon_r}}\,\ln\frac{D}{d}$$<div class="n">an SMA connector: d = 1.27 mm, D = 4.11 mm, PTFE (εr = 2.05), giving 49 Ω</div></div>
+<p>Every connector family is a different way of holding that ratio constant through a joint that can be separated. Smaller diameters push the first higher-order mode up in frequency, which is why the small connectors reach higher frequencies than the large ones, while the large ones handle more power and survive more handling.</p>
+
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>Inside a coaxial connector, and common connectors to scale</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 230" role="img" aria-label="Left: cross-section of a coaxial connector, an inner conductor of diameter d inside a PTFE dielectric inside an outer conductor of inside diameter D. Right: outlines of N, BNC, SMA, MMCX and u.FL connectors drawn to the same scale, from about 20 millimetres down to 2 millimetres across.">
+    <circle cx="100" cy="115" r="72" fill="#c8893a"/>
+    <circle cx="100" cy="115" r="62" fill="#eef1f5" stroke="#8a5a20" stroke-width="1"/>
+    <circle cx="100" cy="115" r="19" fill="#c8893a" stroke="#8a5a20" stroke-width="1"/>
+    <g stroke="var(--ink)" stroke-width="1" fill="none">
+      <path d="M38 200h124M38 194v12M162 194v12"/>
+      <path d="M81 38h38M81 32v12M119 32v12"/>
+      <path d="M81 44v52M119 44v52" stroke-dasharray="2 3"/>
+      <path d="M38 194v-79M162 194v-79" stroke-dasharray="2 3"/>
+      <path d="M112 128l70 30M140 80l42 -14M165 160l17 10"/>
+    </g>
+    <g font-size="11.5">
+      <text x="100" y="26" text-anchor="middle">d</text>
+      <text x="100" y="218" text-anchor="middle">D</text>
+      <text x="186" y="70">PTFE dielectric</text>
+      <text x="186" y="162">inner conductor</text>
+      <text x="186" y="182">outer conductor</text>
+    </g>
+    <g fill="#e2e2e2" stroke="var(--ink)" stroke-width="1.2">
+      <circle cx="364" cy="110" r="46"/><circle cx="460" cy="110" r="33"/><circle cx="530" cy="110" r="18"/><circle cx="577" cy="110" r="8"/><circle cx="606" cy="110" r="4.5"/>
+    </g>
+    <g fill="#c8893a"><circle cx="364" cy="110" r="5"/><circle cx="460" cy="110" r="3.5"/><circle cx="530" cy="110" r="2.5"/><circle cx="577" cy="110" r="1.5"/></g>
+    <g font-size="11.5" text-anchor="middle">
+      <text x="364" y="178">N</text><text x="460" y="178">BNC</text><text x="530" y="178">SMA</text><text x="577" y="178">MMCX</text><text x="608" y="94">u.FL</text>
+      <text x="364" y="194" fill="var(--muted)" font-size="10.5">≈ 20 mm</text><text x="460" y="194" fill="var(--muted)" font-size="10.5">≈ 15 mm</text><text x="530" y="194" fill="var(--muted)" font-size="10.5">8 mm</text><text x="577" y="194" fill="var(--muted)" font-size="10.5">≈ 4 mm</text><text x="608" y="78" fill="var(--muted)" font-size="10.5">2 mm</text>
+      <text x="485" y="40" fill="var(--muted)">outer size, to scale</text>
+    </g>
+  </svg>
+  </div>
+</div>
+
 <div class="tablewrap"><table>
   <tr><th>Connector</th><th>Typical limit</th><th>Mating cycles</th><th>Where you'll see it</th></tr>
   <tr><td><b>SMA</b></td><td>18 GHz</td><td>500</td><td>Bench test ports, antennas, modules; the default for anything that will be connected repeatedly</td></tr>
@@ -144,6 +182,73 @@
   <li><strong>Isolation</strong>: how little of the reverse power leaks into the same port.</li>
   <li><strong>Directivity</strong>: isolation minus coupling, how well the coupler tells the two directions apart. It sets how small a reflection the coupler can measure.</li>
 </ul>
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>A coupled-line directional coupler</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 210" role="img" aria-label="Top view of a coupled-line coupler. A main line runs from port 1 on the left to port 2 on the right. A second line runs parallel and close to it for about a quarter-wavelength, ending in port 3 at the left and port 4 at the right. The forward wave from port 1 produces a sample at port 3; a reflected wave travelling back from port 2 produces a sample at port 4.">
+    <defs>
+      <marker id="arF" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--c1)"/></marker>
+      <marker id="arR" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--c2)"/></marker>
+    </defs>
+    <g fill="#c8893a">
+      <rect x="90" y="96" width="460" height="10"/>
+      <rect x="200" y="118" width="240" height="10"/>
+      <rect x="200" y="118" width="10" height="56"/><rect x="430" y="118" width="10" height="56"/>
+    </g>
+    <g fill="#fff" stroke="var(--ink)" stroke-width="1.4"><circle cx="86" cy="101" r="5"/><circle cx="554" cy="101" r="5"/><circle cx="205" cy="178" r="5"/><circle cx="435" cy="178" r="5"/></g>
+    <g fill="none" stroke-width="1.8">
+      <path d="M250 76h140" stroke="var(--c1)" marker-end="url(#arF)"/>
+      <path d="M390 60h-140" stroke="var(--c2)" marker-end="url(#arR)"/>
+      <path d="M190 150v34" stroke="var(--c1)" marker-end="url(#arF)"/>
+      <path d="M450 150v34" stroke="var(--c2)" marker-end="url(#arR)"/>
+    </g>
+    <path d="M200 140h240" stroke="var(--muted)" stroke-width="1"/><path d="M200 136v8M440 136v8" stroke="var(--muted)" stroke-width="1"/>
+    <g font-size="11.5">
+      <text x="80" y="88" text-anchor="end">1 input</text>
+      <text x="560" y="88">2 through</text>
+      <text x="560" y="120" fill="var(--muted)">(to antenna)</text>
+      <text x="205" y="202" text-anchor="middle" fill="var(--c1)">3 coupled: forward sample</text>
+      <text x="470" y="202" fill="var(--c2)">4 isolated: reflected sample</text>
+      <text x="320" y="72" text-anchor="middle" fill="var(--c1)">forward wave</text>
+      <text x="320" y="54" text-anchor="middle" fill="var(--c2)" dy="-2">reflected wave</text>
+      <text x="320" y="155" text-anchor="middle" fill="var(--muted)">coupled section, about λ/4</text>
+    </g>
+  </svg>
+  </div>
+</div>
+<p>Two details of this layout follow from the physics. The coupled section is about a quarter-wavelength long, because that's where the contributions from all along the section add in phase at the coupled port; a coupler is therefore inherently a band-limited part, with the coupling falling away either side of its design frequency. And in a coupled-line coupler the forward sample appears at the end <em>nearest the input</em>: the coupled wave travels backwards. Couplers are also made from lumped components and transformers, which work over wider bandwidths at lower frequencies.</p>
+
+<div class="example">
+  <span class="xk">Application</span>
+  <p>Most transmitters monitor their own output. A 20 dB coupler after the PA sends 1 % of the forward power to a power detector, a diode or logarithmic amplifier whose DC output tracks the RF level, so 1 W at the antenna port puts 10 mW on the detector.</p>
+  <p>Adding a second detector on the isolated port gives the reflected power too. The radio can then reduce power or raise an alarm when the antenna's return loss collapses, for example when a cable is crushed or an antenna is damaged.</p>
+</div>
+
+<div class="widget wide" id="w-cpl">
+  <div class="wh"><span class="tag">Interactive</span><b>How directivity limits a return-loss measurement</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label for="cR">True return loss of the load <b id="cRv"></b></label><input id="cR" type="range" min="1" max="40" step="0.5" value="25"></div>
+      <div class="ctrl"><label for="cD">Coupler directivity <b id="cDv"></b></label><input id="cD" type="range" min="10" max="45" step="0.5" value="15"></div>
+      <p class="small">The leakage of forward power into the reflected port adds to the real reflection with an unknown phase, so the reading can fall anywhere in the shaded band.</p>
+    </div>
+    <div>
+      <canvas id="cvCpl" style="height:290px" aria-label="Plot of measured return loss against true return loss, showing the range of possible readings as a shaded band that widens as the true return loss approaches the directivity"></canvas>
+      <div class="legend"><span style="--c:var(--c1)">range of possible readings</span><span class="dash" style="--c:var(--muted)">perfect coupler</span></div>
+      <div class="readout">
+        <div class="stat"><div class="k">Reading could be</div><div class="v" id="cM"></div></div>
+        <div class="stat" id="cES"><div class="k">Worst-case error</div><div class="v" id="cE"></div></div>
+      </div>
+      <div class="verdict" id="cVerdict"></div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>With 15 dB of directivity, measure a 25 dB load. Then raise the directivity to 35 dB.</li>
+    <li>How far below the directivity does the true return loss need to be for the error to stay within about 1 dB?</li>
+    <li>Measure a badly matched load, 6 dB. Does a poor coupler still give a useful answer?</li>
+  </ol></div>
+</div>
+
 
 <details class="exercise">
   <summary><span class="ek">Design exercise</span><span class="et">Measuring a good match with a poor coupler</span></summary>
@@ -168,6 +273,52 @@
 <p>Both are transistor amplifiers, but they're optimised for opposite jobs.</p>
 <p>A <strong>low-noise amplifier</strong> (LNA) sits at the front of a receiver. Every component adds some noise, and a weak signal can only be recovered if it stays above that noise. An amplifier at the very front raises the signal before the later stages add their own noise, so those later contributions matter much less. That makes the LNA's own noise, its <strong>noise figure</strong> (NF, in dB), the most important number in the receiver. Its gain matters too, because it's what makes the later stages' noise negligible. Module 6 quantifies all of this; for now, the principle is that the first stage dominates.</p>
 <p>A <strong>power amplifier</strong> (PA) sits at the end of the transmitter and has to deliver power, typically 0.1 to a few watts for telemetry, as efficiently as possible. Its figures of merit are output power, gain, efficiency (RF power out divided by DC power in) and linearity.</p>
+
+<p>Whichever job it does, an RF amplifier is surrounded by the same handful of parts. The transistor needs DC bias at its input and output terminals, but the bias supply mustn't load the RF signal, and the DC mustn't leak into the RF ports. A <strong>bias tee</strong> does both: an <strong>RF choke</strong> (an inductor with a high reactance at the operating frequency) passes DC from the supply while blocking RF, and a <strong>DC-blocking capacitor</strong> passes RF while blocking DC. Matching networks on each side transform 50 Ω to whatever impedance the transistor needs.</p>
+
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>A single-stage RF amplifier with its bias and matching</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 210" role="img" aria-label="Schematic. RF input, a DC-blocking capacitor, an input matching network, the transistor, an output matching network, another DC-blocking capacitor and the RF output. Gate bias enters through an RF choke between the input match and the transistor, and the drain supply enters through an RF choke at the transistor output. Each bias line has a decoupling capacitor to ground.">
+    <g fill="none" stroke="var(--ink)" stroke-width="1.6">
+      <path d="M26 130H62M72 130H100M170 130H236M300 130H380M450 130H482M492 130H606"/>
+      <path d="M62 118v24M72 118v24M482 118v24M492 118v24"/>
+      <rect x="100" y="110" width="70" height="40"/><rect x="380" y="110" width="70" height="40"/>
+      <path d="M236 98L300 130L236 162Z"/>
+      <path d="M200 130V114a6 6 0 0 0 0-12a6 6 0 0 0 0-12a6 6 0 0 0 0-12a6 6 0 0 0 0-12V30"/>
+      <path d="M340 130V114a6 6 0 0 1 0-12a6 6 0 0 1 0-12a6 6 0 0 1 0-12a6 6 0 0 1 0-12V30"/>
+      <path d="M200 46H160V56M150 56h20M150 63h20M160 63V74M152 74h16M155 78h10M158 82h4"/>
+      <path d="M340 46H380V56M370 56h20M370 63h20M380 63V74M372 74h16M375 78h10M378 82h4"/>
+    </g>
+    <g fill="var(--ink)"><circle cx="200" cy="130" r="3"/><circle cx="340" cy="130" r="3"/><circle cx="200" cy="46" r="3"/><circle cx="340" cy="46" r="3"/></g>
+    <g fill="#fff" stroke="var(--ink)" stroke-width="1.4"><circle cx="22" cy="130" r="4"/><circle cx="610" cy="130" r="4"/></g>
+    <g font-size="11.5" text-anchor="middle">
+      <text x="22" y="114">RF in</text><text x="610" y="114">RF out</text>
+      <text x="67" y="160">DC block</text><text x="487" y="160">DC block</text>
+      <text x="135" y="127">input</text><text x="135" y="141">match</text>
+      <text x="415" y="127">output</text><text x="415" y="141">match</text>
+      <text x="258" y="134">FET</text>
+      <text x="200" y="22">gate bias</text><text x="340" y="22">V<tspan font-size="9" dy="2">DD</tspan></text>
+      <text x="190" y="94" text-anchor="end">RF choke</text><text x="350" y="94" text-anchor="start">RF choke</text>
+      <text x="128" y="62" text-anchor="end" fill="var(--muted)">decoupling</text><text x="412" y="62" text-anchor="start" fill="var(--muted)">decoupling</text>
+    </g>
+    <text x="320" y="196" font-size="11" text-anchor="middle" fill="var(--muted)">choke: high impedance to RF, passes DC · DC block: low impedance to RF, blocks DC</text>
+  </svg>
+  </div>
+</div>
+<p>The same structure appears outside amplifiers. An active GPS antenna has an LNA inside the antenna housing, and the receiver powers it through the coax itself: a bias tee at the receiver puts DC on the centre conductor, and a second bias tee at the antenna takes it off again to power the LNA, while the RF passes through both.</p>
+
+<div class="tablewrap"><table>
+  <tr><th></th><th>Typical LNA</th><th>Typical PA</th></tr>
+  <tr><td><b>Gain</b></td><td>15–25 dB</td><td>15–35 dB, often over two or three stages</td></tr>
+  <tr><td><b>Noise figure</b></td><td>0.5–1.5 dB</td><td>Rarely specified; 4–8 dB is common</td></tr>
+  <tr><td><b>Output P1dB</b></td><td>0 to +20 dBm</td><td>+20 to +40 dBm (0.1–10 W)</td></tr>
+  <tr><td><b>Efficiency</b></td><td>Unimportant: draws a few milliwatts to tens of milliwatts</td><td>30–60 %, the main design target</td></tr>
+  <tr><td><b>Matched for</b></td><td>Lowest noise at the input, not maximum gain</td><td>Maximum output power at the output, not conjugate match</td></tr>
+</table></div>
+<p>The last row is a first-principles consequence of what limits each device. An LNA's input is matched to the source impedance that minimises the transistor's noise, which isn't quite the conjugate match that maximises gain. A PA's output is limited by how far the voltage can swing (up to about twice the supply) and how much current the transistor can carry, so its load is chosen to use both limits fully. A sine wave of amplitude V into a resistance R delivers V²/2R; with a 3.3 V supply and a voltage swing of roughly 3 V, delivering 1 W requires</p>
+<div class="eq">$$R_\text{opt} \approx \frac{V^2}{2P} = \frac{3^2}{2 \times 1} \approx 4.5\ \Omega$$</div>
+<p>So a 1 W PA on a low-voltage supply wants to see about 5 Ω, and its output network transforms 50 Ω down to that. Present 50 Ω directly and the voltage swing hits the supply limit at only about 90 mW. This is why low-voltage PAs need output matching networks with large impedance ratios, and why their datasheets specify a load impedance rather than a match.</p>
 
 <h3>Compression</h3>
 <p>No amplifier can output more than its supply allows. As the input rises, the output first follows it proportionally, then gradually stops increasing: the amplifier <strong>compresses</strong>, and eventually saturates. The <strong>1 dB compression point</strong> (P1dB) is where the gain has fallen 1 dB below its small-signal value, and it's the usual way to state how much power an amplifier can handle cleanly.</p>
@@ -200,6 +351,31 @@
   </ol></div>
 </div>
 
+<p>Compression on the power curve corresponds to a visible change in the waveform. As the drive rises, the peaks of the sine wave flatten against the supply limits, and the flattened wave is no longer a pure sine: it contains harmonics. The 2nd harmonic appears because a real amplifier clips its positive and negative peaks at different levels; perfectly symmetric clipping produces only odd harmonics.</p>
+<div class="widget wide" id="w-wave">
+  <div class="wh"><span class="tag">Interactive</span><b>What compression does to the waveform and its spectrum</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label for="hD">Drive level <b id="hDv"></b></label><input id="hD" type="range" min="-20" max="10" step="0.5" value="-8"></div>
+      <p class="small">0 dB drive is the input level whose amplified peak would just reach the positive saturation limit. The negative peak saturates at 80 % of that, as in a real transistor whose two limits are set by different mechanisms.</p>
+    </div>
+    <div>
+      <canvas id="cvWave" style="height:330px" aria-label="Top: the amplifier output waveform compared with an undistorted sine. Bottom: the levels of the fundamental and the 2nd to 5th harmonics in dB relative to the fundamental."></canvas>
+      <div class="legend"><span style="--c:var(--c1)">output</span><span class="dash" style="--c:var(--muted)">undistorted sine</span></div>
+      <div class="readout">
+        <div class="stat"><div class="k">Gain compression</div><div class="v" id="hC"></div></div>
+        <div class="stat"><div class="k">2nd harmonic</div><div class="v" id="h2"></div></div>
+        <div class="stat"><div class="k">3rd harmonic</div><div class="v" id="h3"></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>At −20 dB drive, how far below the fundamental are the harmonics?</li>
+    <li>Raise the drive to 0 dB. By how much do the harmonics rise for each dB of extra drive?</li>
+    <li>At +10 dB the output is nearly a square wave. Which harmonics dominate, and why?</li>
+  </ol></div>
+</div>
+
 <details class="exercise">
   <summary><span class="ek">Design exercise</span><span class="et">Filter before or after the LNA?</span></summary>
   <div class="eb">
@@ -228,6 +404,69 @@
   <li><strong>Elliptic</strong>: ripple in both bands and zeros of transmission in the stopband, giving the steepest transition of all.</li>
 </ul>
 <p>The technology depends on frequency and size. Lumped LC filters work up to a few gigahertz. SAW (surface acoustic wave) and BAW filters, which convert the signal into a mechanical wave in a piezoelectric crystal, give sharp band-pass responses in a tiny package and are what most radio modules use. Ceramic resonator and cavity filters handle more power with lower loss, at larger size.</p>
+
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>Two LC filters and a SAW filter</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 290" role="img" aria-label="Top left: a fifth-order low-pass filter of three shunt capacitors and two series inductors. Top right: a third-order band-pass filter of a shunt parallel resonator, a series resonator and another shunt parallel resonator. Bottom: a SAW filter, two comb-shaped interdigital transducers on a piezoelectric crystal with an acoustic wave travelling between them.">
+    <g fill="none" stroke="var(--ink)" stroke-width="1.6">
+      <!-- low-pass: C L C L C -->
+      <path d="M24 50H85a6 6 0 0 1 12 0a6 6 0 0 1 12 0a6 6 0 0 1 12 0a6 6 0 0 1 12 0H185a6 6 0 0 1 12 0a6 6 0 0 1 12 0a6 6 0 0 1 12 0a6 6 0 0 1 12 0H296"/>
+      <path d="M60 50V76M50 76h20M50 83h20M60 83V110"/>
+      <path d="M160 50V76M150 76h20M150 83h20M160 83V110"/>
+      <path d="M260 50V76M250 76h20M250 83h20M260 83V110"/>
+      <path d="M24 110H296"/>
+      <!-- band-pass: shunt tank, series LC, shunt tank -->
+      <path d="M344 50H442a6 6 0 0 1 12 0a6 6 0 0 1 12 0a6 6 0 0 1 12 0H490M498 50H616"/>
+      <path d="M490 38v24M498 38v24"/>
+      <path d="M370 50V58a6 6 0 0 1 0 12a6 6 0 0 1 0 12a6 6 0 0 1 0 12V110M370 50H396V76M386 76h20M386 83h20M396 83V110"/>
+      <path d="M560 50V58a6 6 0 0 1 0 12a6 6 0 0 1 0 12a6 6 0 0 1 0 12V110M560 50H586V76M576 76h20M576 83h20M586 83V110"/>
+      <path d="M344 110H616"/>
+    </g>
+    <g fill="#fff" stroke="var(--ink)" stroke-width="1.4"><circle cx="20" cy="50" r="4"/><circle cx="300" cy="50" r="4"/><circle cx="20" cy="110" r="4"/><circle cx="300" cy="110" r="4"/><circle cx="340" cy="50" r="4"/><circle cx="620" cy="50" r="4"/><circle cx="340" cy="110" r="4"/><circle cx="620" cy="110" r="4"/></g>
+    <g font-size="11.5" text-anchor="middle">
+      <text x="160" y="134">5th-order low-pass</text>
+      <text x="160" y="150" fill="var(--muted)" font-size="10.5">series L passes low f, shunt C shorts high f</text>
+      <text x="480" y="134">3rd-order band-pass</text>
+      <text x="480" y="150" fill="var(--muted)" font-size="10.5">each resonator is tuned to the centre frequency</text>
+    </g>
+    <!-- SAW -->
+    <rect x="40" y="180" width="560" height="74" fill="#eef1f5" stroke="var(--line2)"/>
+    <g fill="#c8893a">
+      <rect x="110" y="186" width="96" height="6"/><rect x="110" y="242" width="96" height="6"/>
+      <rect x="114" y="192" width="4" height="40"/><rect x="134" y="192" width="4" height="40"/><rect x="154" y="192" width="4" height="40"/><rect x="174" y="192" width="4" height="40"/><rect x="194" y="192" width="4" height="40"/>
+      <rect x="124" y="202" width="4" height="40"/><rect x="144" y="202" width="4" height="40"/><rect x="164" y="202" width="4" height="40"/><rect x="184" y="202" width="4" height="40"/>
+      <rect x="434" y="186" width="96" height="6"/><rect x="434" y="242" width="96" height="6"/>
+      <rect x="438" y="192" width="4" height="40"/><rect x="458" y="192" width="4" height="40"/><rect x="478" y="192" width="4" height="40"/><rect x="498" y="192" width="4" height="40"/><rect x="518" y="192" width="4" height="40"/>
+      <rect x="448" y="202" width="4" height="40"/><rect x="468" y="202" width="4" height="40"/><rect x="488" y="202" width="4" height="40"/><rect x="508" y="202" width="4" height="40"/>
+    </g>
+    <path d="M222 217q8-10 16 0t16 0t16 0t16 0t16 0t16 0t16 0t16 0t16 0t16 0t16 0t16 0" fill="none" stroke="var(--c1)" stroke-width="1.6"/>
+    <path d="M414 217l-8 -5v10z" fill="var(--c1)"/>
+    <g font-size="11.5" text-anchor="middle">
+      <text x="158" y="174">input transducer</text><text x="482" y="174">output transducer</text>
+      <text x="320" y="204" fill="var(--c1)">surface acoustic wave</text>
+      <text x="320" y="276" fill="var(--muted)">piezoelectric crystal: finger spacing sets the frequency the transducers respond to</text>
+    </g>
+  </svg>
+  </div>
+</div>
+<p>The two LC schematics show the structure behind the figure below. In the low-pass ladder each series inductor's reactance rises with frequency and each shunt capacitor's falls, so high frequencies are increasingly blocked and shorted at every stage; each stage adds 20 dB per decade to the roll-off. The band-pass version replaces each element with a resonator tuned to the centre frequency: series resonators pass only near resonance, shunt parallel resonators short everything except near resonance.</p>
+<p>The SAW filter works on a different principle. The input transducer's interleaved fingers, on a piezoelectric crystal, convert the electrical signal into a mechanical wave on the crystal's surface. The wave only builds up strongly when its wavelength matches the finger spacing, so the transducers themselves are frequency-selective. Because sound travels about 100 000 times slower than light, the acoustic wavelength at 1 GHz is a few micrometres, so a filter that would need many centimetres of transmission line fits in a package of 1 or 2 mm.</p>
+
+<div class="tablewrap"><table>
+  <tr><th>Technology</th><th>Frequency</th><th>Insertion loss</th><th>Size</th><th>Typical use</th></tr>
+  <tr><td><b>Lumped LC</b></td><td>DC to about 6 GHz</td><td>0.3–2 dB</td><td>A few mm</td><td>Harmonic filters after PAs; broad band-pass filters</td></tr>
+  <tr><td><b>Printed</b> (stubs, coupled lines)</td><td>1–100 GHz</td><td>0.5–3 dB</td><td>Large below a few GHz</td><td>Free to make, but frequency follows the board's εr</td></tr>
+  <tr><td><b>SAW</b></td><td>50 MHz to 2.5 GHz</td><td>1–3 dB</td><td>1–3 mm</td><td>Sharp band-pass filters in receivers; limited power</td></tr>
+  <tr><td><b>BAW / FBAR</b></td><td>1.5–7 GHz</td><td>1–2 dB</td><td>1–2 mm</td><td>Like SAW at higher frequencies and powers; cellular and Wi-Fi</td></tr>
+  <tr><td><b>Ceramic resonator</b></td><td>0.4–6 GHz</td><td>0.5–2 dB</td><td>5–20 mm</td><td>Low-loss band-pass with moderate power</td></tr>
+  <tr><td><b>Cavity</b></td><td>0.1–40 GHz</td><td>0.1–0.5 dB</td><td>Centimetres to decimetres</td><td>Ground stations and high-power transmitters</td></tr>
+</table></div>
+
+<div class="example">
+  <span class="xk">Application</span>
+  <p>A GPS receiver in a vehicle that also carries a telemetry transmitter needs to hear signals around −130 dBm at 1575 MHz while a transmitter radiating watts sits a short distance away. A SAW or ceramic band-pass filter in front of the GPS LNA rejects the transmitter by 40 dB or more, keeping the LNA out of compression. On the transmitter, an LC low-pass filter after the PA removes the harmonics, which could otherwise interfere with other receivers, including ones on the same vehicle.</p>
+</div>
 
 <div class="widget wide" id="w-flt">
   <div class="wh"><span class="tag">Interactive</span><b>Low-pass filter response: order and family</b></div>
@@ -279,6 +518,48 @@
 <div class="eq">$$f_\text{image} = 2f_\text{LO} - f_\text{RF}$$<div class="n">twice the IF away from the wanted signal</div></div>
 <p>Once a signal at the image frequency reaches the mixer, it's indistinguishable from the wanted one. The only defence is to remove it before the mixer, with the RF band-pass filter. That's why a higher IF is easier to filter (the image is further away), and why many modern chips use image-reject mixers or convert straight to zero IF.</p>
 
+<p>Physically, multiplication is done with switches. In the most common passive mixer, the <strong>double-balanced diode ring</strong>, the LO is strong enough to switch the diodes fully on and off. On one half of each LO cycle, one pair of diodes conducts and connects the RF signal to the IF port directly; on the other half, the other pair conducts and connects it inverted. The IF output is the RF signal multiplied by a square wave of ±1 at the LO frequency. A square wave is a sine at the LO frequency plus odd harmonics, so the output contains the sum and difference frequencies (plus weaker products at 3f<sub>LO</sub> ± f<sub>RF</sub> and so on, which the IF filter removes).</p>
+
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>A double-balanced diode ring mixer</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 250" role="img" aria-label="Schematic. A ring of four diodes all pointing the same way around the ring. An LO transformer on the left connects across the top and bottom corners of the ring. An RF transformer on the right connects across the left and right corners. The IF output is taken from the centre tap of the RF transformer's secondary.">
+    <g fill="none" stroke="var(--ink)" stroke-width="1.6">
+      <path d="M320 50L380 110L320 170L260 110Z"/>
+      <!-- LO transformer -->
+      <path d="M78 74H118V80a6 6 0 0 1 0 12a6 6 0 0 1 0 12a6 6 0 0 1 0 12a6 6 0 0 1 0 12V146H96V154M88 154h16M91 158h10M94 162h4"/>
+      <path d="M168 50V80a6 6 0 0 0 0 12a6 6 0 0 0 0 12a6 6 0 0 0 0 12a6 6 0 0 0 0 12V170"/>
+      <path d="M168 50H320M168 170H320"/>
+      <!-- RF transformer -->
+      <path d="M562 94H522V100a6 6 0 0 0 0 12a6 6 0 0 0 0 12a6 6 0 0 0 0 12a6 6 0 0 0 0 12V166H544V174M536 174h16M539 178h10M542 182h4"/>
+      <path d="M472 94V100a6 6 0 0 1 0 12a6 6 0 0 1 0 12a6 6 0 0 1 0 12a6 6 0 0 1 0 12V166"/>
+      <path d="M472 94V30H226V110H260"/>
+      <path d="M472 166V184H426V110H380"/>
+      <path d="M472 124H448V218H512"/>
+    </g>
+    <path d="M139 80V140M147 80V140M493 100V160M501 100V160" stroke="var(--ink)" stroke-width="1.2"/>
+    <g fill="var(--ink)">
+      <g transform="translate(350 80) rotate(45)"><path d="M-7 -7L7 0L-7 7Z"/><path d="M7 -7V7" stroke="var(--ink)" stroke-width="2"/></g>
+      <g transform="translate(350 140) rotate(135)"><path d="M-7 -7L7 0L-7 7Z"/><path d="M7 -7V7" stroke="var(--ink)" stroke-width="2"/></g>
+      <g transform="translate(290 140) rotate(225)"><path d="M-7 -7L7 0L-7 7Z"/><path d="M7 -7V7" stroke="var(--ink)" stroke-width="2"/></g>
+      <g transform="translate(290 80) rotate(315)"><path d="M-7 -7L7 0L-7 7Z"/><path d="M7 -7V7" stroke="var(--ink)" stroke-width="2"/></g>
+      <circle cx="320" cy="50" r="3"/><circle cx="380" cy="110" r="3"/><circle cx="320" cy="170" r="3"/><circle cx="260" cy="110" r="3"/>
+    </g>
+    <g fill="#fff" stroke="var(--ink)" stroke-width="1.4"><circle cx="74" cy="74" r="4"/><circle cx="566" cy="94" r="4"/><circle cx="516" cy="218" r="4"/></g>
+    <g font-size="11.5">
+      <text x="74" y="60" text-anchor="middle">LO</text>
+      <text x="566" y="80" text-anchor="middle">RF</text>
+      <text x="526" y="222">IF</text>
+      <text x="143" y="196" text-anchor="middle" fill="var(--muted)">LO balun</text>
+      <text x="520" y="206" text-anchor="middle" fill="var(--muted)">RF balun</text>
+      <text x="320" y="114" text-anchor="middle" fill="var(--muted)">diode ring</text>
+      <text x="452" y="240" fill="var(--muted)" text-anchor="middle">centre tap</text>
+    </g>
+  </svg>
+  </div>
+</div>
+<p>"Balanced" refers to the symmetry. Because the LO drives the ring through a balun and the IF is taken from the centre tap of the other balun, the LO voltage appears equally on both halves of the RF balun and cancels at the IF port, and the RF signal cancels at the LO port. A double-balanced mixer therefore has good isolation between all three ports by construction, which keeps the strong LO out of the IF and out of the antenna. Radio chips use the same switching principle with transistors (the Gilbert cell, or switched-FET mixers) instead of diodes.</p>
+
 <div class="widget wide" id="w-mix">
   <div class="wh"><span class="tag">Interactive</span><b>A mixer moving a 915 MHz signal to a 70 MHz IF</b></div>
   <div class="wb wcols">
@@ -325,7 +606,73 @@
 <h2>Switches, attenuators and baluns <a class="vjump" data-t="28:00"></a></h2>
 <p><strong>RF switches</strong> route a signal between paths: an antenna between transmit and receive, or a radio between two antennas. They're built from PIN diodes or field-effect transistors, and described by insertion loss in the on state, isolation in the off state (how much leaks through), switching time, and power handling. A transmit/receive switch is a good example of why isolation matters: if 1 W goes to the antenna and the switch isolates the receiver by 25 dB, the LNA still sees about 3 mW.</p>
 <p>An <strong>attenuator</strong> reduces a signal by a fixed amount while staying matched at both ports. It's a resistor network (the π-attenuator in Module 2's S-parameter figure), so unlike a filter it absorbs rather than reflects. Attenuators protect instruments from strong signals, set levels between stages, and improve a mismatch: a 3 dB attenuator in front of a poorly matched load improves its return loss by 6 dB, by Module 2's round-trip argument.</p>
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>A transmit/receive switch and a π attenuator</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 200" role="img" aria-label="Left: a single-pole double-throw switch connecting an antenna to either the PA or the LNA. With the switch on the transmit side, a small fraction of the PA power leaks across to the LNA, set by the isolation. Right: a pi attenuator of a shunt resistor, a series resistor and another shunt resistor.">
+    <defs><marker id="arS" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--bad)"/></marker></defs>
+    <g fill="none" stroke="var(--ink)" stroke-width="1.6">
+      <path d="M40 60H120M40 150H120"/>
+      <path d="M126 60L196 102"/>
+      <path d="M202 105H262V70M250 70l12-20l12 20"/>
+      <path d="M364 60H452M512 60H600M404 60V74l6 3l-12 6l12 6l-12 6l12 6l-6 3V120M560 60V74l6 3l-12 6l12 6l-12 6l12 6l-6 3V120"/>
+      <path d="M364 120H600"/>
+    </g>
+    <path d="M452 60l4-8l8 16l8-16l8 16l8-16l8 16l8-16l4 8" fill="none" stroke="var(--ink)" stroke-width="1.6"/>
+    <g fill="#fff" stroke="var(--ink)" stroke-width="1.4"><circle cx="124" cy="60" r="4"/><circle cx="124" cy="150" r="4"/><circle cx="198" cy="105" r="4"/><circle cx="360" cy="60" r="4"/><circle cx="604" cy="60" r="4"/><circle cx="360" cy="120" r="4"/><circle cx="604" cy="120" r="4"/></g>
+    <path d="M140 76C150 110 150 120 136 140" fill="none" stroke="var(--bad)" stroke-width="1.4" stroke-dasharray="4 3" marker-end="url(#arS)"/>
+    <g font-size="11.5">
+      <text x="34" y="64" text-anchor="end">PA</text><text x="34" y="154" text-anchor="end">LNA</text>
+      <text x="262" y="40" text-anchor="middle">antenna</text>
+      <text x="158" y="128" fill="var(--bad)">leakage set by isolation</text>
+      <text x="20" y="186" fill="var(--muted)">1 W with 25 dB isolation: 3 mW reaches the LNA</text>
+      <text x="382" y="98" text-anchor="end">R<tspan font-size="9" dy="2">1</tspan></text><text x="580" y="98">R<tspan font-size="9" dy="2">1</tspan></text>
+      <text x="482" y="40" text-anchor="middle">R<tspan font-size="9" dy="2">2</tspan></text>
+      <text x="482" y="150" text-anchor="middle" fill="var(--muted)">π attenuator, matched to Z₀ at both ports</text>
+    </g>
+  </svg>
+  </div>
+</div>
+<p>A π attenuator's resistors are chosen so that, with a matched load on one side, the other side also looks like Z₀, while the voltage drops by the required ratio K = 10<sup>A/20</sup>. Working from those two conditions gives R₁ = Z₀(K + 1)/(K − 1) for the shunt resistors and R₂ = Z₀(K² − 1)/2K for the series one. For 50 Ω:</p>
+<div class="tablewrap"><table>
+  <tr><th>Attenuation</th><th>3 dB</th><th>6 dB</th><th>10 dB</th><th>20 dB</th></tr>
+  <tr><td><b>Shunt R₁</b></td><td>292 Ω</td><td>150 Ω</td><td>96.2 Ω</td><td>61.1 Ω</td></tr>
+  <tr><td><b>Series R₂</b></td><td>17.6 Ω</td><td>37.4 Ω</td><td>71.2 Ω</td><td>248 Ω</td></tr>
+</table></div>
+<p>As the attenuation rises, the shunt resistors approach Z₀ and the series one grows: in the limit, each port just sees a matched termination, and nothing gets through. On a PCB these are often three 0402 resistors on a small pad pattern, fitted with a 0 Ω link in the series position until the bench shows how much attenuation the chain needs.</p>
+
+
 <p>A <strong>balun</strong> (balanced to unbalanced) converts between a signal referenced to ground, such as coax, and a balanced signal on two conductors that are equal and opposite, such as a dipole antenna's two arms or a differential radio chip's RF pins. Without one, a dipole fed directly from coax drives current down the outside of the shield, which then radiates as part of the antenna and makes the pattern and the match depend on how the cable is routed. Baluns can be transformers, quarter-wave structures on the cable, or small lumped LC networks next to the chip.</p>
+
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>Feeding a dipole with and without a balun</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 230" role="img" aria-label="Left: a dipole fed directly from coax. Current on the arms is drawn, and an extra current flows down the outside of the coax shield, so the cable radiates. Right: the same dipole with a choke of ferrite beads on the cable just below the feed point, which blocks the current on the outside of the shield.">
+    <defs><marker id="arD" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--c1)"/></marker><marker id="arX" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--bad)"/></marker></defs>
+    <g stroke="var(--ink)" stroke-width="3" fill="none">
+      <path d="M40 50H154M166 50H280"/>
+      <path d="M360 50H474M486 50H600"/>
+    </g>
+    <g fill="#9aa3ad"><rect x="152" y="54" width="16" height="150"/><rect x="472" y="54" width="16" height="150"/></g>
+    <g fill="#555"><rect x="466" y="74" width="28" height="12" rx="3"/><rect x="466" y="90" width="28" height="12" rx="3"/><rect x="466" y="106" width="28" height="12" rx="3"/></g>
+    <g fill="none" stroke-width="1.6">
+      <path d="M70 40H140" stroke="var(--c1)" marker-end="url(#arD)"/><path d="M180 40H250" stroke="var(--c1)" marker-end="url(#arD)"/>
+      <path d="M390 40H460" stroke="var(--c1)" marker-end="url(#arD)"/><path d="M500 40H570" stroke="var(--c1)" marker-end="url(#arD)"/>
+      <path d="M180 70V180" stroke="var(--bad)" marker-end="url(#arX)"/>
+      <path d="M140 80Q120 100 140 120Q160 140 140 160" stroke="var(--bad)" stroke-dasharray="3 3"/>
+    </g>
+    <g font-size="11.5">
+      <text x="160" y="222" text-anchor="middle">no balun</text>
+      <text x="480" y="222" text-anchor="middle">with a choke balun</text>
+      <text x="188" y="120" fill="var(--bad)">current on the</text><text x="188" y="135" fill="var(--bad)">outside of the shield</text>
+      <text x="116" y="104" fill="var(--bad)" text-anchor="end">cable radiates</text>
+      <text x="502" y="96">ferrite beads</text>
+      <text x="502" y="150" fill="var(--muted)">no shield current:</text><text x="502" y="165" fill="var(--muted)">cable is not part</text><text x="502" y="180" fill="var(--muted)">of the antenna</text>
+      <text x="160" y="28" text-anchor="middle" fill="var(--c1)">arm currents</text>
+    </g>
+  </svg>
+  </div>
+</div>
 
 <details class="exercise">
   <summary><span class="ek">Design exercise</span><span class="et">A dipole fed straight from coax</span></summary>
@@ -364,6 +711,44 @@
 <p>A <strong>circulator</strong> separates signals by direction. It's a three-port junction built around a magnetised ferrite, a material whose response to a magnetic field depends on the direction it rotates. Power entering port 1 leaves at port 2, power entering port 2 leaves at port 3, and power entering port 3 leaves at port 1. It's <em>non-reciprocal</em>, one of the few passive components where S₂₁ ≠ S₁₂.</p>
 <p>Terminate the third port of a circulator in a matched load and it becomes an <strong>isolator</strong>: power passes forward from port 1 to port 2, but anything reflected back into port 2 goes to the load and is absorbed instead of returning to port 1. An isolator after a PA protects it from a damaged or detuned antenna, and stops the PA's output changing with the antenna's impedance.</p>
 
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>A diplexer, a circulator and an isolator</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 210" role="img" aria-label="Left: a diplexer, a common antenna port splitting into a low-pass filter to a 915 megahertz radio and a high-pass filter to a 1575 megahertz GPS receiver. Middle: a circulator symbol, a circle with three ports and a clockwise arrow, power going from port 1 to 2 to 3 to 1. Right: an isolator, a circulator with port 3 terminated in a matched resistor; power from the PA passes to the antenna and reflections go to the resistor.">
+    <defs>
+      <marker id="arC" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--ink)"/></marker>
+      <marker id="arC2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--bad)"/></marker>
+    </defs>
+    <g fill="none" stroke="var(--ink)" stroke-width="1.6">
+      <path d="M30 105H70V60H96M70 105V150H96M156 60H180M156 150H180"/>
+      <rect x="96" y="44" width="60" height="32"/><rect x="96" y="134" width="60" height="32"/>
+      <circle cx="370" cy="105" r="34"/>
+      <path d="M314 105H336M404 105H426M370 139V161"/>
+      <path d="M352 105A18 18 0 1 1 370 123" stroke-width="1.4" marker-end="url(#arC)"/>
+      <circle cx="540" cy="105" r="34"/>
+      <path d="M470 105H506M574 105H612M540 139V146l6 3l-12 6l12 6l-12 6l12 6l-6 3V184M532 184h16M535 188h10M538 192h4"/>
+      <path d="M522 105A18 18 0 1 1 540 123" stroke-width="1.4" marker-end="url(#arC)"/>
+    </g>
+    <g fill="#fff" stroke="var(--ink)" stroke-width="1.4"><circle cx="26" cy="105" r="4"/><circle cx="184" cy="60" r="4"/><circle cx="184" cy="150" r="4"/><circle cx="310" cy="105" r="4"/><circle cx="430" cy="105" r="4"/><circle cx="370" cy="165" r="4"/></g>
+    <path d="M612 118H584" fill="none" stroke="var(--bad)" stroke-width="1.4" marker-end="url(#arC2)"/>
+    <g font-size="11.5" text-anchor="middle">
+      <text x="126" y="64">low-pass</text><text x="126" y="154">high-pass</text>
+      <text x="26" y="90">antenna</text>
+      <text x="210" y="64" text-anchor="start">915 MHz</text><text x="210" y="78" text-anchor="start" fill="var(--muted)">radio</text>
+      <text x="210" y="154" text-anchor="start">1575 MHz</text><text x="210" y="168" text-anchor="start" fill="var(--muted)">GPS</text>
+      <text x="310" y="90">1</text><text x="430" y="90">2</text><text x="384" y="170">3</text>
+      <text x="370" y="58">circulator</text>
+      <text x="540" y="58">isolator</text>
+      <text x="482" y="94">from PA</text><text x="612" y="92">antenna</text>
+      <text x="610" y="136" fill="var(--bad)">reflection</text>
+      <text x="566" y="172" text-anchor="start" fill="var(--bad)">absorbed</text>
+      <text x="100" y="200" fill="var(--muted)">diplexer: separates by frequency</text>
+      <text x="456" y="200" fill="var(--muted)">separate by direction: 1 → 2 → 3 → 1</text>
+    </g>
+  </svg>
+  </div>
+</div>
+
 <details class="exercise">
   <summary><span class="ek">Design exercise</span><span class="et">Protecting a PA from a broken antenna</span></summary>
   <div class="eb">
@@ -391,6 +776,69 @@
   <li>A <strong>Wilkinson divider</strong> uses two quarter-wave lines of 70.7 Ω (Module 2's transformer, matching 100 Ω to 50 Ω at each output) and a 100 Ω resistor between the outputs. With equal signals at both outputs, there's no voltage across the resistor and it absorbs nothing, so each output gets the full 3 dB share. If one output is mismatched, the reflected power is absorbed in the resistor instead of reaching the other output, so the outputs are isolated from each other.</li>
 </ul>
 <p>Splitters feed antenna arrays and multiple receivers from one antenna. As combiners, Wilkinsons add the outputs of two amplifiers, and if the two signals aren't equal in amplitude and phase, the difference is dissipated in the resistor, which is exactly what keeps the two amplifiers from interacting.</p>
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>A Wilkinson divider in microstrip, and a resistive splitter</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 220" role="img" aria-label="Left: top view of a microstrip Wilkinson divider. A 50 ohm input line meets two curved quarter-wave arms of 70.7 ohms, which end at two output lines; a 100 ohm resistor bridges the ends of the arms. Right: a resistive splitter, three resistors of 16.7 ohms meeting at a central node.">
+    <g fill="none" stroke="#c8893a" stroke-linecap="butt">
+      <path d="M30 110H112" stroke-width="10"/>
+      <path d="M112 110A60 60 0 0 1 214 68" stroke-width="5"/>
+      <path d="M112 110A60 60 0 0 0 214 152" stroke-width="5"/>
+      <path d="M212 68H300M212 152H300" stroke-width="10"/>
+    </g>
+    <rect x="207" y="96" width="14" height="28" fill="#333"/>
+    <path d="M214 73V96M214 124V147" stroke="#c8893a" stroke-width="5"/>
+    <g fill="none" stroke="var(--ink)" stroke-width="1.6">
+      <path d="M364 110H390l3-6l6 12l6-12l6 12l6-12l6 12l3-6H460V60H476l3-6l6 12l6-12l6 12l6-12l6 12l3-6H600M460 110V160H476l3-6l6 12l6-12l6 12l6-12l6 12l3-6H600"/>
+    </g>
+    <circle cx="460" cy="110" r="3" fill="var(--ink)"/>
+    <g fill="#fff" stroke="var(--ink)" stroke-width="1.4"><circle cx="360" cy="110" r="4"/><circle cx="604" cy="60" r="4"/><circle cx="604" cy="160" r="4"/></g>
+    <g font-size="11.5">
+      <text x="30" y="96">50 Ω in</text>
+      <text x="304" y="72">out 2</text><text x="304" y="156">out 3</text>
+      <text x="150" y="44" text-anchor="middle">70.7 Ω, λ/4</text><text x="150" y="186" text-anchor="middle">70.7 Ω, λ/4</text>
+      <text x="228" y="114">100 Ω</text>
+      <text x="410" y="96" text-anchor="middle">16.7 Ω</text><text x="510" y="46" text-anchor="middle">16.7 Ω</text><text x="510" y="182" text-anchor="middle">16.7 Ω</text>
+      <text x="360" y="96" text-anchor="middle">in</text>
+      <text x="165" y="212" text-anchor="middle" fill="var(--muted)">Wilkinson: −3 dB per output, outputs isolated</text>
+      <text x="485" y="212" text-anchor="middle" fill="var(--muted)">resistive: −6 dB per output, any frequency</text>
+    </g>
+  </svg>
+  </div>
+</div>
+
+<div class="widget wide" id="w-wil">
+  <div class="wh"><span class="tag">Interactive</span><b>Wilkinson and resistive splitters across frequency</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label for="wF">Frequency <b id="wFv"></b></label><input id="wF" type="range" min="300" max="1500" step="5" value="915"></div>
+      <div class="ctrl"><label>Output 3</label><div class="seg" id="wT"><button type="button" data-v="0" class="on">Matched load</button><button type="button" data-v="1">Disconnected (open)</button></div></div>
+      <p class="small">Wilkinson designed for 915 MHz. The resistive splitter's response is the same at every frequency.</p>
+    </div>
+    <div>
+      <canvas id="cvWil" style="height:290px" aria-label="Plot of the Wilkinson divider's transmission to an output, input reflection and isolation between outputs against frequency, with the resistive splitter's flat transmission for comparison"></canvas>
+      <div class="legend"><span style="--c:var(--c1)">Wilkinson S₂₁</span><span style="--c:var(--c2)">Wilkinson S₁₁</span><span style="--c:var(--c5)">Wilkinson S₃₂ (isolation)</span><span class="dash" style="--c:var(--muted)">resistive S₂₁</span></div>
+      <div class="readout">
+        <div class="stat"><div class="k">Wilkinson, output 2</div><div class="v" id="wW"></div></div>
+        <div class="stat"><div class="k">Resistive, output 2</div><div class="v" id="wR"></div></div>
+        <div class="stat"><div class="k">Wilkinson isolation</div><div class="v" id="wI"></div></div>
+      </div>
+      <div class="verdict" id="wVerdict"></div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>Over what range around 915 MHz does the Wilkinson keep its isolation better than 20 dB?</li>
+    <li>At 915 MHz, disconnect output 3. What happens to output 2 with each splitter?</li>
+    <li>Repeat at 600 MHz. Is the Wilkinson's isolation still doing its job?</li>
+  </ol></div>
+</div>
+
+<div class="example">
+  <span class="xk">Application</span>
+  <p>A long, cylindrical vehicle with one antenna on its side has a deep null on the far side of its body. A common solution is two antennas on opposite sides, fed from one radio through a Wilkinson divider.</p>
+  <p>The divider keeps each antenna matched even if the other is detuned by its surroundings, and its isolation stops one antenna's reflection from reaching the other. The cost is 3 dB in the direction where only one antenna is visible, and an interference pattern of peaks and nulls where both are, a trade-off revisited in Module 9.</p>
+</div>
+
 </section>
 
 <!-- ================= 10 WAVEGUIDE ================= -->
@@ -399,6 +847,28 @@
 <p>A rectangular waveguide carries the TE₁₀ mode introduced in Module 2: the electric field spans the narrow dimension, strongest in the middle of the broad wall and zero at the side walls. That pattern only fits when half a wavelength is shorter than the broad dimension a, which sets the cutoff frequency:</p>
 <div class="eq">$$f_c = \frac{c}{2a}$$<div class="n">for an air-filled guide; WR-90, with a = 22.86 mm, cuts off at 6.56 GHz and is used from 8.2 to 12.4 GHz</div></div>
 <p>Below the cutoff, fields decay exponentially along the guide instead of propagating. Waveguide has much lower loss than coax at microwave frequencies (no centre conductor, no dielectric) and handles far more power, which is why it's used for radar, satellite ground stations and high-power transmitters. Below a few gigahertz the guide becomes impractically large, so it rarely appears in small systems. The cutoff principle does turn up elsewhere, though: the ventilation holes in a screened enclosure are short waveguides below cutoff, which is why small holes let air through but block RF.</p>
+
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>The TE₁₀ mode in a rectangular waveguide</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 210" role="img" aria-label="Left: cross-section of a rectangular waveguide with broad dimension a and narrow dimension b. Vertical electric field arrows are longest in the centre and shrink to zero at the side walls, half a sine wave across the guide. Right: a side view along the guide, showing the field strength varying as a wave with the guide wavelength.">
+    <defs><marker id="arE" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--c1)"/></marker></defs>
+    <rect x="40" y="56" width="240" height="100" fill="#eef1f5" stroke="#8a5a20" stroke-width="6"/>
+    <g stroke="var(--c1)" stroke-width="1.6" marker-end="url(#arE)"><path d="M60 116.9V98.1"/><path d="M80 127.0V88.0"/><path d="M100 135.7V79.3"/><path d="M120 142.4V72.6"/><path d="M140 146.6V68.4"/><path d="M160 148.0V67.0"/><path d="M180 146.6V68.4"/><path d="M200 142.4V72.6"/><path d="M220 135.7V79.3"/><path d="M240 127.0V88.0"/><path d="M260 116.9V98.1"/></g>
+    <g stroke="var(--ink)" stroke-width="1" fill="none"><path d="M37 176H283M37 170v12M283 170v12M300 53V159M294 53h12M294 159h12"/></g>
+    <rect x="360" y="56" width="250" height="100" fill="#eef1f5" stroke="#8a5a20" stroke-width="6"/>
+    <path d="M366 74.5L367 73.6L368 72.9L369 72.2L370 71.6L371 71.1L372 70.7L373 70.4L374 70.2L375 70.0L376 70.0L377 70.0L378 70.2L379 70.4L380 70.7L381 71.1L382 71.6L383 72.2L384 72.9L385 73.6L386 74.5L387 75.4L388 76.4L389 77.4L390 78.6L391 79.8L392 81.0L393 82.4L394 83.8L395 85.2L396 86.7L397 88.3L398 89.9L399 91.5L400 93.2L401 94.9L402 96.6L403 98.4L404 100.1L405 101.9L406 103.7L407 105.5L408 107.4L409 109.2L410 111.0L411 112.7L412 114.5L413 116.3L414 118.0L415 119.7L416 121.3L417 122.9L418 124.5L419 126.0L420 127.5L421 128.9L422 130.3L423 131.6L424 132.9L425 134.0L426 135.1L427 136.2L428 137.1L429 138.0L430 138.8L431 139.5L432 140.1L433 140.6L434 141.1L435 141.4L436 141.7L437 141.9L438 142.0L439 142.0L440 141.9L441 141.7L442 141.4L443 141.1L444 140.6L445 140.1L446 139.5L447 138.8L448 138.0L449 137.1L450 136.2L451 135.1L452 134.0L453 132.9L454 131.6L455 130.3L456 128.9L457 127.5L458 126.0L459 124.5L460 122.9L461 121.3L462 119.7L463 118.0L464 116.3L465 114.5L466 112.7L467 111.0L468 109.2L469 107.4L470 105.5L471 103.7L472 101.9L473 100.1L474 98.4L475 96.6L476 94.9L477 93.2L478 91.5L479 89.9L480 88.3L481 86.7L482 85.2L483 83.8L484 82.4L485 81.0L486 79.8L487 78.6L488 77.4L489 76.4L490 75.4L491 74.5L492 73.6L493 72.9L494 72.2L495 71.6L496 71.1L497 70.7L498 70.4L499 70.2L500 70.0L501 70.0L502 70.0L503 70.2L504 70.4L505 70.7L506 71.1L507 71.6L508 72.2L509 72.9L510 73.6L511 74.5L512 75.4L513 76.4L514 77.4L515 78.6L516 79.8L517 81.0L518 82.4L519 83.8L520 85.2L521 86.7L522 88.3L523 89.9L524 91.5L525 93.2L526 94.9L527 96.6L528 98.4L529 100.1L530 101.9L531 103.7L532 105.5L533 107.4L534 109.2L535 111.0L536 112.7L537 114.5L538 116.3L539 118.0L540 119.7L541 121.3L542 122.9L543 124.5L544 126.0L545 127.5L546 128.9L547 130.3L548 131.6L549 132.9L550 134.0L551 135.1L552 136.2L553 137.1L554 138.0L555 138.8L556 139.5L557 140.1L558 140.6L559 141.1L560 141.4L561 141.7L562 141.9L563 142.0L564 142.0L565 141.9L566 141.7L567 141.4L568 141.1L569 140.6L570 140.1L571 139.5L572 138.8L573 138.0L574 137.1L575 136.2L576 135.1L577 134.0L578 132.9L579 131.6L580 130.3L581 128.9L582 127.5L583 126.0L584 124.5L585 122.9L586 121.3L587 119.7L588 118.0L589 116.3L590 114.5L591 112.7L592 111.0L593 109.2L594 107.4L595 105.5L596 103.7L597 101.9L598 100.1L599 98.4L600 96.6L601 94.9L602 93.2L603 91.5L604 89.9L605 88.3L606 86.7" fill="none" stroke="var(--c1)" stroke-width="2"/>
+    <g stroke="var(--ink)" stroke-width="1" fill="none"><path d="M376 176H501M376 170v12M501 170v12"/></g>
+    <g font-size="11.5" text-anchor="middle">
+      <text x="160" y="194">a (broad wall)</text><text x="314" y="110" text-anchor="start">b</text>
+      <text x="160" y="40">cross-section: E field across the guide</text>
+      <text x="485" y="40">side view: field along the guide</text>
+      <text x="438" y="194">guide wavelength λg</text>
+    </g>
+  </svg>
+  </div>
+</div>
+<p>The guide wavelength λ<sub>g</sub> is longer than the free-space wavelength, and grows without limit as the frequency approaches cutoff: \(\lambda_g = \lambda/\sqrt{1 - (f_c/f)^2}\). One way to picture it is that the TE₁₀ mode is two plane waves bouncing between the side walls at an angle; near cutoff they bounce almost straight across and make very slow progress along the guide.</p>
 
 <details class="exercise">
   <summary><span class="ek">Design exercise</span><span class="et">Holes in a shielded box</span></summary>
@@ -651,6 +1121,150 @@ const dbm2w = d => Math.pow(10, d/10)/1000, w2dbm = w => 10*Math.log10(w*1000);
     if (on && Math.abs(img - lo) === ifw) Plot.text(ctx, '+ interferer, same frequency', Xb(ifw) + 8, B.b - 0.25*(B.b - B.t), {color: col.bad});
   });
   $('#mL').addEventListener('input', upd);
+  upd();
+})();
+/* ============ 4. Coupler directivity ============ */
+(() => {
+  const CAP = 60;
+  const range = (rl, d) => { const g = Math.pow(10, -rl/20), gd = Math.pow(10, -d/20), lo = -20*Math.log10(g + gd), dd = Math.abs(g - gd); return [lo, dd < Math.pow(10, -CAP/20) ? CAP : Math.min(CAP, -20*Math.log10(dd))]; };
+  let s = {};
+  function upd(){
+    const rl = +$('#cR').value, d = +$('#cD').value, [lo, hi] = range(rl, d), err = Math.max(rl - lo, hi - rl);
+    s = {rl, d, lo, hi};
+    $('#cRv').textContent = fmt(rl, 3) + ' dB'; $('#cDv').textContent = fmt(d, 3) + ' dB';
+    $('#cM').textContent = fmt(lo, 3) + ' to ' + (hi >= CAP ? '> 60' : fmt(hi, 3)) + ' dB';
+    $('#cE').textContent = hi >= CAP ? 'unbounded' : '± ' + fmt(err, 2) + ' dB';
+    $('#cES').className = 'stat ' + (err > 6 ? 'bad' : err > 1.5 ? 'warn' : '');
+    const v = $('#cVerdict');
+    if (err <= 1.5) setVerdict(v, 'ok', `<b>Trustworthy.</b> The directivity is ${fmt(d - rl, 2)} dB better than the reflection being measured, so leakage changes the reading by at most ${fmt(err, 2)} dB.`);
+    else if (d > rl) setVerdict(v, 'warn', `<b>Uncertain.</b> The leakage is only ${fmt(d - rl, 2)} dB below the real reflection. Depending on its phase, the reading lands anywhere from ${fmt(lo, 3)} to ${hi >= CAP ? 'over 60' : fmt(hi, 3)} dB.`);
+    else setVerdict(v, 'bad', `<b>Measuring the coupler, not the load.</b> The leakage is larger than the real reflection, so the reading mostly reflects the coupler's directivity. A ${fmt(rl, 3)} dB load can't be measured with ${fmt(d, 3)} dB of directivity.`);
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvCpl'), (ctx, W, H) => {
+    const {rl, d, lo, hi} = s; if (lo === undefined) return;
+    const P = {l: 52, r: W - 14, t: 14, b: H - 40};
+    const X = Plot.lin(0, 40, P.l, P.r), Y = Plot.lin(0, CAP, P.b, P.t);
+    Plot.axes(ctx, P, X, Y, {xt: [0, 10, 20, 30, 40], yt: [0, 10, 20, 30, 40, 50, 60], xl: 'true return loss (dB)', yl: 'measured return loss (dB)', xgrid: true});
+    Plot.clip(ctx, P);
+    const up = [], dn = [];
+    for (let i = 0; i <= 400; i++){ const x = 40*i/400, [a, b] = range(x, d); dn.push([X(x), Y(a)]); up.push([X(x), Y(b)]); }
+    ctx.fillStyle = Plot.rgba(col.c1, .16); ctx.beginPath(); dn.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); up.slice().reverse().forEach(([x, y]) => ctx.lineTo(x, y)); ctx.closePath(); ctx.fill();
+    Plot.line(ctx, dn, col.c1, 1.6); Plot.line(ctx, up, col.c1, 1.6);
+    Plot.line(ctx, [[X(0), Y(0)], [X(40), Y(40)]], col.muted, 1.4, [6, 5]);
+    Plot.line(ctx, [[X(d), P.t], [X(d), P.b]], col.bad, 1, [3, 3]);
+    Plot.line(ctx, [[X(rl), Y(lo)], [X(rl), Y(hi)]], col.c2, 3);
+    Plot.dot(ctx, X(rl), Y(lo), 4, col.c2); Plot.dot(ctx, X(rl), Y(hi), 4, col.c2);
+    ctx.restore();
+    Plot.text(ctx, 'directivity', X(d) + 4, P.t + 8, {color: col.bad, align: X(d) > P.r - 70 ? 'right' : 'left'});
+  });
+  ['#cR', '#cD'].forEach(id => $(id).addEventListener('input', upd));
+  upd();
+})();
+
+/* ============ 5. Compressed waveform and harmonics ============ */
+(() => {
+  const N = 256, POS = 1, NEG = 0.8;
+  const f = x => x >= 0 ? x/Math.pow(1 + Math.pow(x/POS, 4), 0.25) : x/Math.pow(1 + Math.pow(-x/NEG, 4), 0.25);
+  const harm = a => {
+    const y = []; for (let n = 0; n < N; n++) y.push(f(a*Math.sin(2*Math.PI*n/N)));
+    const H = []; for (let k = 1; k <= 5; k++){ let re = 0, im = 0; for (let n = 0; n < N; n++){ re += y[n]*Math.cos(2*Math.PI*k*n/N); im -= y[n]*Math.sin(2*Math.PI*k*n/N); } H.push(2*Math.hypot(re, im)/N); }
+    return H;
+  };
+  const dbc = (h, h1) => Math.max(-90, 20*Math.log10(h/h1 + 1e-12));
+  let s = {};
+  function upd(){
+    const dr = +$('#hD').value, a = Math.pow(10, dr/20), H = harm(a);
+    s = {a, H};
+    $('#hDv').textContent = (dr > 0 ? '+' : '') + fmt(dr, 3) + ' dB';
+    $('#hC').textContent = fmt(20*Math.log10(a/H[0]), 2) + ' dB';
+    $('#h2').textContent = dbc(H[1], H[0]) <= -89 ? '< −90 dBc' : fmt(dbc(H[1], H[0]), 3) + ' dBc';
+    $('#h3').textContent = dbc(H[2], H[0]) <= -89 ? '< −90 dBc' : fmt(dbc(H[2], H[0]), 3) + ' dBc';
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvWave'), (ctx, W, H) => {
+    const {a, H: h} = s; if (!h) return;
+    const A = {l: 44, r: W - 14, t: 14, b: H*0.5}, B = {l: 44, r: W - 14, t: H*0.62, b: H - 34};
+    const m = Math.max(a, 1)*1.1, X = Plot.lin(0, 2, A.l, A.r), Y = Plot.lin(-m, m, A.b, A.t);
+    Plot.axes(ctx, A, X, Y, {xt: [], yt: [-0.8, 0, 1], yf: v => v === 0 ? '0' : fmt(v, 2)});
+    Plot.text(ctx, 'two cycles of the output', A.l + 4, A.b + 12, {color: col.muted});
+    Plot.clip(ctx, A);
+    Plot.line(ctx, [[A.l, Y(POS)], [A.r, Y(POS)]], col.bad, 1, [3, 3]); Plot.line(ctx, [[A.l, Y(-NEG)], [A.r, Y(-NEG)]], col.bad, 1, [3, 3]);
+    const ideal = [], out = [];
+    for (let i = 0; i <= 400; i++){ const t = 2*i/400, x = a*Math.sin(2*Math.PI*t); ideal.push([X(t), Y(x)]); out.push([X(t), Y(f(x))]); }
+    Plot.line(ctx, ideal, col.muted, 1.3, [5, 4]); Plot.line(ctx, out, col.c1, 2.4);
+    ctx.restore();
+    const Xb = Plot.lin(0.4, 5.6, B.l, B.r), Yb = Plot.lin(-90, 0, B.b, B.t);
+    Plot.axes(ctx, B, Xb, Yb, {xt: [1, 2, 3, 4, 5], yt: [-90, -60, -30, 0], xf: k => k === 1 ? 'f' : k + 'f', yl: 'dBc'});
+    const bw = Math.min(28, (B.r - B.l)/12);
+    h.forEach((v, i) => {
+      const d = dbc(v, h[0]), x = Xb(i + 1);
+      ctx.fillStyle = i ? (i === 1 ? col.c2 : col.c3) : col.c1; ctx.fillRect(x - bw/2, Yb(d), bw, B.b - Yb(d));
+      if (i) Plot.text(ctx, d <= -89 ? '< −90' : Math.round(d), x, Math.min(Yb(d), B.b) - 9, {align: 'center', color: col.ink2});
+    });
+  });
+  $('#hD').addEventListener('input', upd);
+  upd();
+})();
+
+/* ============ 6. Wilkinson vs resistive splitter ============ */
+(() => {
+  const term = seg('#wT', upd);
+  const F0 = 915e6, R0 = 50, ZW = 50*Math.SQRT2, RISO = 100;
+  const C = (re, im = 0) => ({re, im});
+  const add = (a, b) => C(a.re + b.re, a.im + b.im), sub = (a, b) => C(a.re - b.re, a.im - b.im);
+  const mul = (a, b) => C(a.re*b.re - a.im*b.im, a.re*b.im + a.im*b.re);
+  const div = (a, b) => { const d = b.re*b.re + b.im*b.im; return C((a.re*b.re + a.im*b.im)/d, (a.im*b.re - a.re*b.im)/d); };
+  const abs = a => Math.hypot(a.re, a.im);
+  function inv(M){
+    const n = M.length, A = M.map((r, i) => r.concat(M.map((_, j) => C(i === j ? 1 : 0))));
+    for (let c = 0; c < n; c++){
+      let p = c; for (let r = c + 1; r < n; r++) if (abs(A[r][c]) > abs(A[p][c])) p = r;
+      [A[c], A[p]] = [A[p], A[c]];
+      const pv = A[c][c]; for (let j = 0; j < 2*n; j++) A[c][j] = div(A[c][j], pv);
+      for (let r = 0; r < n; r++) if (r !== c){ const fct = A[r][c]; for (let j = 0; j < 2*n; j++) A[r][j] = sub(A[r][j], mul(fct, A[c][j])); }
+    }
+    return A.map(r => r.slice(n));
+  }
+  function wilk(f){
+    // nodal admittance of two lambda/4 lines (node 1 to 2, node 1 to 3) and the isolation resistor (2 to 3), normalised to 50 ohms
+    const th = Math.PI/2*f/F0, ys = C(0, -R0/(ZW*Math.tan(th))), ym = C(0, R0/(ZW*Math.sin(th))), g = C(R0/RISO);
+    const y = [[add(ys, ys), ym, ym], [ym, add(ys, g), C(-g.re)], [ym, C(-g.re), add(ys, g)]];
+    const I = (i, j) => C(i === j ? 1 : 0);
+    const Ap = y.map((r, i) => r.map((v, j) => add(I(i, j), v))), Am = y.map((r, i) => r.map((v, j) => sub(I(i, j), v)));
+    const Ai = inv(Ap);
+    return Am.map((r, i) => r.map((_, j) => r.reduce((acc, v, k) => add(acc, mul(v, Ai[k][j])), C(0))));
+  }
+  // with port 3 open (reflection +1): S21' = S21 + S23 S31 / (1 - S33)
+  const s21open = S => add(S[1][0], div(mul(S[1][2], S[2][0]), sub(C(1), S[2][2])));
+  const db = v => Math.max(-60, 20*Math.log10(v + 1e-12));
+  let st = {};
+  function upd(){
+    const f = +$('#wF').value*1e6, open = term() === '1', S = wilk(f);
+    const ww = db(abs(open ? s21open(S) : S[1][0])), wr = db(open ? 0.75 : 0.5), iso = -db(abs(S[2][1]));
+    st = {f, open};
+    $('#wFv').textContent = Math.round(f/1e6) + ' MHz';
+    $('#wW').textContent = fmt(ww, 3) + ' dB'; $('#wR').textContent = fmt(wr, 3) + ' dB'; $('#wI').textContent = iso >= 59.9 ? '> 60 dB' : fmt(iso, 3) + ' dB';
+    const v = $('#wVerdict'), w0 = db(abs(S[1][0]));
+    if (open) setVerdict(v, iso > 20 ? 'ok' : 'warn', `<b>Output 3 disconnected.</b> Wilkinson output 2 changes by ${fmt(ww - w0, 2)} dB, because the reflection from the open port ${iso > 20 ? 'is absorbed in the 100 Ω resistor' : 'is only partly absorbed at this frequency'}. The resistive splitter's output 2 rises by 3.5 dB: the reflection from output 3 passes straight through to output 2.`);
+    else if (iso > 20) setVerdict(v, 'ok', `<b>Close to the design frequency.</b> Each output is ${fmt(-w0, 3)} dB below the input, the input is well matched, and the outputs are isolated from each other by ${iso >= 59.9 ? 'over 60' : fmt(iso, 3)} dB.`);
+    else setVerdict(v, 'warn', `<b>Away from the design frequency.</b> The arms are no longer a quarter-wavelength, so the input match and the isolation between outputs both degrade. The resistive splitter is unaffected.`);
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvWil'), (ctx, W, H) => {
+    const {f} = st; if (!f) return;
+    const P = {l: 52, r: W - 14, t: 14, b: H - 40};
+    const X = Plot.lin(300e6, 1500e6, P.l, P.r - 12), Y = Plot.lin(-40, 0, P.b, P.t);
+    Plot.axes(ctx, P, X, Y, {xt: [300e6, 600e6, 900e6, 1200e6, 1500e6], yt: [-40, -30, -20, -10, -6, -3, 0], xl: 'frequency', yl: 'dB', xf: t => si(t, 'Hz').replace(' ', ''), xgrid: true});
+    Plot.clip(ctx, P);
+    const a = [], b = [], c = [];
+    for (let i = 0; i <= 300; i++){ const ff = 300e6 + 1200e6*i/300, S = wilk(ff); a.push([X(ff), Y(db(abs(S[1][0])))]); b.push([X(ff), Y(db(abs(S[0][0])))]); c.push([X(ff), Y(db(abs(S[2][1])))]); }
+    Plot.line(ctx, [[P.l, Y(-6.02)], [P.r, Y(-6.02)]], col.muted, 1.4, [6, 5]);
+    Plot.line(ctx, b, col.c2, 2); Plot.line(ctx, c, col.c5, 2); Plot.line(ctx, a, col.c1, 2.4);
+    Plot.line(ctx, [[X(f), P.t], [X(f), P.b]], col.ink2, 1, [3, 3]);
+    ctx.restore();
+  });
+  $('#wF').addEventListener('input', upd);
   upd();
 })();
 </script>
