@@ -4,31 +4,655 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>RF Components &amp; Circuit Blocks · RF 3</title>
-<meta name="description" content="RF & High-Speed Design module 3: LNAs, PAs, filters, mixers, switches and couplers. In development.">
+<meta name="description" content="RF module 3: connectors, directional couplers, LNAs, power amplifiers, filters, mixers, switches, attenuators and baluns, where loss comes from, diplexers, circulators and isolators, splitters and combiners, and waveguide.">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
 <link rel="stylesheet" href="../../assets/site.css">
 <script src="../../assets/course.js"></script>
 <script src="../../assets/site.js"></script>
+<script src="../../assets/plot.js"></script>
 </head>
 <body>
 <div class="layout">
 <aside class="side" aria-label="Module contents"></aside>
 <main class="content">
 
-<!-- Placeholder: replace this page with the module when it's written (see README.md, "Writing a module"). -->
+<!-- ================= HERO ================= -->
 <header class="hero">
   <div class="eyebrow">RF &amp; High-Speed Design · Module 3</div>
-  <h1>RF Components &amp; Circuit Blocks</h1>
-  <p class="lede">LNAs, PAs, filters, mixers, switches and couplers.</p>
+  <h1>RF components &amp; circuit blocks</h1>
+  <p class="lede">A radio is built from a small set of standard blocks: connectors, filters, amplifiers, mixers, switches, couplers and splitters. Each one is described by S-parameters and a few figures of merit, and each has a characteristic way of failing. This module goes through them in the order a signal meets them, explaining what each does physically before looking at what the datasheet numbers mean.</p>
+  <p class="meta">Builds on: RF modules 0–2. Bench: NanoVNA or any VNA, a spectrum analyzer if available, sample filters, attenuators and splitters.</p>
+  <div class="resources" data-auto></div>
+  <div class="objectives">
+    <h3>What's covered</h3>
+    <ul>
+      <li>Where each block sits in a transmitter and receiver, and what job it does there.</li>
+      <li>Connectors, directional couplers, switches, attenuators and baluns, and the numbers that describe them.</li>
+      <li>Low-noise and power amplifiers: gain, noise, compression and why amplifiers distort.</li>
+      <li>Filters: types, order, and the trade-off between rejection, loss and delay.</li>
+      <li>Mixers and the image frequency.</li>
+      <li>Diplexers, duplexers, circulators, isolators, splitters, combiners and waveguide, and where the loss in each comes from.</li>
+    </ul>
+  </div>
+  <div class="video" data-video="lecture" id="lecture">
+    <div class="plan">
+      <p>Planned walkthrough of this page (≈ 45 min):</p>
+      <ol>
+        <li data-t="0:00">A radio as a chain of blocks</li>
+        <li data-t="3:00">Connectors</li>
+        <li data-t="6:00">Directional couplers</li>
+        <li data-t="10:00">LNAs and power amplifiers</li>
+        <li data-t="17:00">Filters</li>
+        <li data-t="23:00">Mixers and the image frequency</li>
+        <li data-t="28:00">Switches, attenuators and baluns</li>
+        <li data-t="32:00">Where the loss goes</li>
+        <li data-t="35:00">Diplexers, duplexers, circulators and isolators</li>
+        <li data-t="39:00">Splitters and combiners</li>
+        <li data-t="42:00">Waveguide</li>
+      </ol>
+    </div>
+  </div>
 </header>
 
-<section class="sec" id="status" data-nonum data-short="In development">
-<h2>In development</h2>
-<p>This module hasn't been written yet. The other modules are listed in the strip at the top of the page, and the links below go to the neighbouring ones.</p>
+<!-- ================= 0 OVERVIEW ================= -->
+<section class="sec" id="chain" data-short="A radio as blocks">
+<h2>A radio as a chain of blocks <a class="vjump" data-t="0:00"></a></h2>
+<p>Before looking at individual parts, it helps to see where they go. The diagram is a typical transceiver of the kind used for telemetry: a transmit path and a receive path sharing one antenna. Most radio chips integrate the mixer, oscillator and much of the amplification, but the blocks around the chip (filters, switches, external amplifiers, connectors) are on the board you design.</p>
+
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>The blocks of a typical transceiver</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 240" role="img" aria-label="Block diagram. Receive path: antenna, connector, transmit/receive switch, band-pass filter, low-noise amplifier, mixer driven by a local oscillator, IF filter, to the demodulator. Transmit path: modulator, mixer, power amplifier, low-pass filter, back into the switch and the antenna.">
+    <defs><marker id="arB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--ink2)"/></marker></defs>
+    <g font-size="11.5" text-anchor="middle">
+      <g fill="#fff" stroke="var(--ink)" stroke-width="1.4">
+        <rect x="70" y="95" width="56" height="40"/>
+        <rect x="150" y="40" width="64" height="36"/><rect x="236" y="40" width="56" height="36"/><rect x="314" y="40" width="56" height="36"/><rect x="392" y="40" width="64" height="36"/><rect x="478" y="40" width="80" height="36"/>
+        <rect x="150" y="154" width="64" height="36"/><rect x="236" y="154" width="56" height="36"/><rect x="314" y="154" width="56" height="36"/><rect x="478" y="154" width="80" height="36"/>
+        <rect x="314" y="97" width="56" height="36"/>
+      </g>
+      <text x="98" y="112">T/R</text><text x="98" y="126">switch</text>
+      <text x="182" y="56">band-pass</text><text x="182" y="69">filter</text>
+      <text x="264" y="62">LNA</text>
+      <text x="342" y="62">mixer</text>
+      <text x="424" y="56">IF</text><text x="424" y="69">filter</text>
+      <text x="518" y="56">demodulator</text><text x="518" y="69">(data out)</text>
+      <text x="182" y="170">low-pass</text><text x="182" y="183">filter</text>
+      <text x="264" y="176">PA</text>
+      <text x="342" y="176">mixer</text>
+      <text x="518" y="170">modulator</text><text x="518" y="183">(data in)</text>
+      <text x="342" y="113">local</text><text x="342" y="126">oscillator</text>
+    </g>
+    <g stroke="var(--ink2)" stroke-width="1.4" fill="none" marker-end="url(#arB)">
+      <path d="M126 105h4v-47h18"/><path d="M214 58h20"/><path d="M292 58h20"/><path d="M370 58h20"/><path d="M456 58h20"/>
+      <path d="M476 172h-104"/><path d="M314 172h-20"/><path d="M236 172h-20"/><path d="M150 172h-20v-47h-2"/>
+      <path d="M342 97v-19"/><path d="M342 133v19"/>
+    </g>
+    <path d="M70 115h-30" stroke="var(--ink)" stroke-width="1.6"/>
+    <path d="M40 115v-50M28 65l12 -18l12 18" stroke="var(--ink)" stroke-width="1.6" fill="none"/>
+    <text x="40" y="34" font-size="11.5" text-anchor="middle">antenna</text>
+    <text x="40" y="134" font-size="11" fill="var(--muted)" text-anchor="middle">connector</text>
+    <text x="364" y="30" font-size="12" fill="var(--c1)" text-anchor="middle">receive</text>
+    <text x="364" y="216" font-size="12" fill="var(--c2)" text-anchor="middle">transmit</text>
+  </svg>
+  </div>
+</div>
+<p>The receive path has to pick a weak signal out of noise and interference: the filter removes signals at other frequencies, the LNA raises the signal before anything else adds noise, and the mixer moves it to a lower frequency where it's easier to filter and process. The transmit path does the reverse and then has to deliver power cleanly: the PA provides the power, and the low-pass filter removes its harmonics before they reach the antenna.</p>
+</section>
+
+<!-- ================= 1 CONNECTORS ================= -->
+<section class="sec" id="connectors" data-short="Connectors">
+<h2>Connectors <a class="vjump" data-t="3:00"></a></h2>
+<p>An RF connector is a short piece of transmission line that can be taken apart. To keep it a good one, the inner and outer conductors must stay concentric with the right diameter ratio for 50 Ω all the way through, and the outer contact must be continuous around the circumference (Module 0's pigtail problem). The upper frequency is set by higher-order modes (Module 2), so smaller connectors go higher.</p>
+<div class="tablewrap"><table>
+  <tr><th>Connector</th><th>Typical limit</th><th>Mating cycles</th><th>Where you'll see it</th></tr>
+  <tr><td><b>SMA</b></td><td>18 GHz</td><td>500</td><td>Bench test ports, antennas, modules; the default for anything that will be connected repeatedly</td></tr>
+  <tr><td><b>u.FL / IPEX MHF</b></td><td>6 GHz</td><td>About 30</td><td>Board-to-cable inside an enclosure; tiny and cheap, but fragile and only rated for a few dozen connections</td></tr>
+  <tr><td><b>MMCX</b></td><td>6 GHz</td><td>500</td><td>Snap-on, rotates freely; compact modules and GPS receivers</td></tr>
+  <tr><td><b>N-type</b></td><td>11–18 GHz</td><td>500</td><td>Outdoor and high-power: ground-station antennas and amplifiers</td></tr>
+  <tr><td><b>BNC</b></td><td>About 2–4 GHz</td><td>500</td><td>Oscilloscopes and low-frequency test equipment; quick bayonet coupling</td></tr>
+</table></div>
+<p>Threaded connectors such as SMA and N need to be tightened to a specified torque (about 0.9 N·m for SMA): too loose and the outer contact is intermittent, too tight and the centre pin or the threads are damaged. A torque wrench costs much less than the instrument port it protects.</p>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">A u.FL connector as a test port</span></summary>
+  <div class="eb">
+    <p>A board brings its radio output to a u.FL connector, and during development the team connects and disconnects a test cable there every day to measure output power.</p>
+    <div class="choice"><p>What's the likely result?</p>
+    <ol class="opts">
+      <li>Nothing: u.FL is rated to 6 GHz, well above the operating frequency.<div class="why">Frequency isn't the limit here. Think about how many times it will be connected.</div></li>
+      <li data-correct>After a few weeks the connector wears out: it's only rated for about 30 mating cycles, so contact and repeatability degrade and the measurements drift.<div class="why">u.FL is designed to be connected a few times during assembly, not used as a test port.</div></li>
+      <li>The connector's impedance changes from 50 Ω to 75 Ω.<div class="why">Wear affects the contact, not the design impedance.</div></li>
+      <li>It works indefinitely as long as it's kept clean.<div class="why">Cleanliness matters, but mechanical wear is the limit for u.FL.</div></li>
+    </ol>
+    <div class="solution"><p>u.FL connectors are rated for roughly 30 matings. After that the spring contact loosens, the outer contact becomes intermittent, and readings start to vary from one connection to the next, which looks like the radio's output changing. For development, add an SMA test point, or keep one adapter cable permanently fitted and make connections at its SMA end.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 2 COUPLERS ================= -->
+<section class="sec" id="couplers" data-short="Directional couplers">
+<h2>Directional couplers <a class="vjump" data-t="6:00"></a></h2>
+<p>A <strong>directional coupler</strong> samples a small fraction of the power travelling in one direction along a line, and ignores power travelling the other way. That makes it possible to measure forward and reflected power separately while the system is running, which is how transmitters monitor their output power and detect a broken antenna.</p>
+<p>The simplest version is two parallel lines close together. A wave on the main line couples to the second line both through the electric field (capacitively) and through the magnetic field (inductively). The two couplings produce currents in the second line that add in one direction and cancel in the other. So the coupled power comes out at one end only, the end that tells you which way the main wave was travelling.</p>
+<p>A coupler is described by three numbers, all in dB:</p>
+<ul>
+  <li><strong>Coupling</strong>: how much of the forward power appears at the coupled port, for example 20 dB (1 %).</li>
+  <li><strong>Isolation</strong>: how little of the reverse power leaks into the same port.</li>
+  <li><strong>Directivity</strong>: isolation minus coupling, how well the coupler tells the two directions apart. It sets how small a reflection the coupler can measure.</li>
+</ul>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">Measuring a good match with a poor coupler</span></summary>
+  <div class="eb">
+    <p>A transmitter uses a coupler with 15 dB of directivity to measure the antenna's return loss. The antenna actually has a return loss of 25 dB.</p>
+    <div class="choice"><p>What will the measurement show?</p>
+    <ol class="opts">
+      <li>About 25 dB, the true value.<div class="why">The coupler can't resolve a reflection smaller than its directivity allows.</div></li>
+      <li>40 dB, coupling plus return loss.<div class="why">Directivity doesn't add to the reading. It sets a floor on what can be measured.</div></li>
+      <li>Exactly 15 dB, always.<div class="why">The leakage and the real reflection add with some phase, so the result can land anywhere around 15 dB.</div></li>
+      <li data-correct>Something near 15 dB, possibly better or worse, because forward power leaking into the reflected port is larger than the real reflection.<div class="why">The leakage from the forward wave is 15 dB below it, larger than the 25 dB reflection.</div></li>
+    </ol>
+    <div class="solution"><p>Directivity tells you how much forward power leaks into the "reflected" reading. With 15 dB of directivity, the leakage alone looks like a 15 dB return loss, ten times larger in power than the antenna's real 25 dB reflection. The two add with an unknown phase, so the reading wanders around 15 dB. A coupler can only measure return losses comfortably smaller than its directivity, which is why VNAs use couplers or bridges with 30–40 dB or more after calibration.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 3 AMPLIFIERS ================= -->
+<section class="sec" id="amplifiers" data-short="LNAs and PAs">
+<h2>Low-noise amplifiers and power amplifiers <a class="vjump" data-t="10:00"></a></h2>
+<p>Both are transistor amplifiers, but they're optimised for opposite jobs.</p>
+<p>A <strong>low-noise amplifier</strong> (LNA) sits at the front of a receiver. Every component adds some noise, and a weak signal can only be recovered if it stays above that noise. An amplifier at the very front raises the signal before the later stages add their own noise, so those later contributions matter much less. That makes the LNA's own noise, its <strong>noise figure</strong> (NF, in dB), the most important number in the receiver. Its gain matters too, because it's what makes the later stages' noise negligible. Module 6 quantifies all of this; for now, the principle is that the first stage dominates.</p>
+<p>A <strong>power amplifier</strong> (PA) sits at the end of the transmitter and has to deliver power, typically 0.1 to a few watts for telemetry, as efficiently as possible. Its figures of merit are output power, gain, efficiency (RF power out divided by DC power in) and linearity.</p>
+
+<h3>Compression</h3>
+<p>No amplifier can output more than its supply allows. As the input rises, the output first follows it proportionally, then gradually stops increasing: the amplifier <strong>compresses</strong>, and eventually saturates. The <strong>1 dB compression point</strong> (P1dB) is where the gain has fallen 1 dB below its small-signal value, and it's the usual way to state how much power an amplifier can handle cleanly.</p>
+<p>Compression isn't just a ceiling. A compressed amplifier is flattening the peaks of the waveform, and a flattened sine wave contains harmonics: energy at 2f, 3f and higher. It also mixes signals together, creating distortion products near the wanted signal (Module 6). That's why PAs need a low-pass filter after them, and why amplifiers carrying signals with varying amplitude are run below compression ("backed off").</p>
+
+<div class="widget wide" id="w-pa">
+  <div class="wh"><span class="tag">Interactive</span><b>A power amplifier going into compression</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label for="aP">Input power <b id="aPv"></b></label><input id="aP" type="range" min="-10" max="20" step="0.1" value="5"></div>
+      <div class="ctrl"><label>Amplifier type</label><div class="seg" id="aK"><button type="button" data-v="1" class="on">Soft compression</button><button type="button" data-v="4">Hard limiting</button></div></div>
+      <p class="small">Small-signal gain 20 dB, saturated output 33 dBm (2 W). The dashed line is the ideal, perfectly linear amplifier.</p>
+    </div>
+    <div>
+      <canvas id="cvPa" style="height:300px" aria-label="Plot of output power against input power, with the ideal linear response and the 1 dB compression point"></canvas>
+      <div class="legend"><span style="--c:var(--c1)">output power</span><span class="dash" style="--c:var(--muted)">ideal linear</span></div>
+      <div class="readout">
+        <div class="stat"><div class="k">Output power</div><div class="v" id="aO"></div></div>
+        <div class="stat"><div class="k">Gain</div><div class="v" id="aG"></div></div>
+        <div class="stat" id="aCS"><div class="k">Compression</div><div class="v" id="aC"></div></div>
+        <div class="stat"><div class="k">P1dB (output)</div><div class="v" id="a1"></div></div>
+      </div>
+      <div class="verdict" id="aVerdict"></div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>Raise the input from −10 dBm. Over what range does each extra dB in give a dB out?</li>
+    <li>Push the input 10 dB past P1dB. How much more output do you get?</li>
+    <li>Compare soft and hard compression. Which reaches its P1dB closer to saturation?</li>
+  </ol></div>
+</div>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">Filter before or after the LNA?</span></summary>
+  <div class="eb">
+    <p>A receiver front end has a band-pass filter with 2 dB of loss and an LNA with a 1 dB noise figure. The designer can put the filter before the LNA or after it.</p>
+    <div class="choice"><p>What's the trade-off?</p>
+    <ol class="opts">
+      <li data-correct>Filter first protects the LNA from strong out-of-band signals that could overload it, but its 2 dB loss adds directly to the noise figure. LNA first gives the best noise figure but leaves it exposed.<div class="why">Loss before the first amplifier adds dB-for-dB to the noise figure, but strong interferers can compress an unprotected LNA.</div></li>
+      <li>None: the gains and losses add up the same either way.<div class="why">They do for the signal level, but not for the noise (compare Module 1's amplifier-at-the-mast exercise).</div></li>
+      <li>Filter first is always better, because filters don't add noise.<div class="why">A lossy component adds noise equal to its loss, and in front of the LNA that counts in full.</div></li>
+      <li>LNA first is always better, because noise figure is all that matters.<div class="why">If a nearby transmitter overloads the LNA, the noise figure no longer matters.</div></li>
+    </ol>
+    <div class="solution"><p>A passive loss in front of the first amplifier raises the system noise figure by the loss: filter first gives about 3 dB, LNA first about 1 dB (plus a little from the filter after it). But an LNA with nothing in front of it sees every signal the antenna picks up, and a strong one (a nearby transmitter, the system's own transmit leakage) can compress it and block reception altogether. Receivers in crowded spectrum, or next to their own transmitter, put a low-loss filter first. Quiet, sensitivity-critical receivers such as GPS often put the LNA first, or use a very low-loss filter.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 4 FILTERS ================= -->
+<section class="sec" id="filters" data-short="Filters">
+<h2>Filters <a class="vjump" data-t="17:00"></a></h2>
+<p>An RF filter passes a range of frequencies and reflects or absorbs the rest. The four basic types are low-pass (removing harmonics after a PA), high-pass, band-pass (selecting a band in front of a receiver) and band-stop (removing one interferer). EE Module 4 introduces the RC low-pass; RF filters are built from inductors and capacitors, or from resonant structures, so that ideally they reflect rather than absorb the rejected signal.</p>
+<p>Each reactive element adds one order to the filter. A higher order gives a steeper transition between the passband and the stopband, so better rejection close to the band edge, at the cost of more components, more insertion loss (every real component has some resistance) and more group delay. The shape of the response is chosen by the design family:</p>
+<ul>
+  <li><strong>Butterworth</strong>: as flat as possible in the passband, with a gradual roll-off of 20 dB per decade per order.</li>
+  <li><strong>Chebyshev</strong>: allows a small ripple in the passband (0.5 dB, say) in exchange for a much steeper roll-off for the same order.</li>
+  <li><strong>Elliptic</strong>: ripple in both bands and zeros of transmission in the stopband, giving the steepest transition of all.</li>
+</ul>
+<p>The technology depends on frequency and size. Lumped LC filters work up to a few gigahertz. SAW (surface acoustic wave) and BAW filters, which convert the signal into a mechanical wave in a piezoelectric crystal, give sharp band-pass responses in a tiny package and are what most radio modules use. Ceramic resonator and cavity filters handle more power with lower loss, at larger size.</p>
+
+<div class="widget wide" id="w-flt">
+  <div class="wh"><span class="tag">Interactive</span><b>Low-pass filter response: order and family</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label>Family</label><div class="seg" id="fF"><button type="button" data-v="bw" class="on">Butterworth</button><button type="button" data-v="ch">Chebyshev, 0.5 dB ripple</button></div></div>
+      <div class="ctrl"><label for="fN">Order <b id="fNv"></b></label><input id="fN" type="range" min="1" max="9" step="1" value="5"></div>
+      <p class="small">Cut-off 1.1 GHz, designed for a 915 MHz transmitter whose harmonics fall at 1830 and 2745 MHz. Ideal lossless components.</p>
+    </div>
+    <div>
+      <canvas id="cvFlt" style="height:290px" aria-label="Plot of filter transmission in decibels against frequency, with the transmitter frequency and its harmonics marked"></canvas>
+      <div class="readout">
+        <div class="stat"><div class="k">Loss at 915 MHz</div><div class="v" id="fP"></div></div>
+        <div class="stat"><div class="k">Rejection at 1830 MHz</div><div class="v" id="f2"></div></div>
+        <div class="stat"><div class="k">Rejection at 2745 MHz</div><div class="v" id="f3"></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>With a 5th-order Butterworth, how much is the second harmonic attenuated? Then switch to Chebyshev at the same order.</li>
+    <li>What order of Butterworth gives 40 dB at the second harmonic? Why doesn't a real design just keep adding order?</li>
+  </ol></div>
+</div>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">Just add more order?</span></summary>
+  <div class="eb">
+    <p>A low-pass filter after a PA isn't attenuating the second harmonic quite enough, so someone proposes going from 5th to 9th order.</p>
+    <div class="choice"><p>Apart from extra rejection, what does the higher order cost?</p>
+    <ol class="opts">
+      <li>Nothing: an ideal lossless filter has no passband loss at any order.<div class="why">Ideal components are lossless. Real ones aren't.</div></li>
+      <li>A lower cut-off frequency.<div class="why">The cut-off is a design choice, and it can be kept the same at any order.</div></li>
+      <li data-correct>More passband insertion loss and heat (every real inductor and capacitor has some resistance), more group delay, more parts, and more sensitivity to component tolerance.<div class="why">Each added element brings its own loss and tolerance, and the steeper response stores more energy.</div></li>
+      <li>The filter starts amplifying in the passband.<div class="why">A passive filter can't amplify.</div></li>
+    </ol>
+    <div class="solution"><p>After a PA, every 0.1 dB of passband loss is transmit power turned into heat in the filter's components, and a higher-order filter has more of them. Steep filters also have more group delay variation near the band edge and are more sensitive to component tolerance, so they're harder to build repeatably. Often a better fix is a Chebyshev or elliptic response at the same order, or a transmission zero placed right at the harmonic.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 5 MIXERS ================= -->
+<section class="sec" id="mixers" data-short="Mixers">
+<h2>Mixers and the image frequency <a class="vjump" data-t="23:00"></a></h2>
+<p>A <strong>mixer</strong> multiplies two signals. The reason that's useful is a trigonometric identity: the product of two sine waves is the sum of two others, at the sum and the difference of their frequencies.</p>
+<div class="eq">$$\cos(2\pi f_\text{RF} t)\cdot\cos(2\pi f_\text{LO} t) = \tfrac12\cos\!\big(2\pi (f_\text{RF} - f_\text{LO}) t\big) + \tfrac12\cos\!\big(2\pi (f_\text{RF} + f_\text{LO}) t\big)$$</div>
+<p>Mix the received signal (RF) with a local oscillator (LO) and filter out the sum, and you have the same signal, with the same modulation, moved down to the <strong>intermediate frequency</strong> (IF), \(f_\text{IF} = |f_\text{RF} - f_\text{LO}|\). At a lower, fixed IF, sharp filters and high gain are much easier to build, and tuning the receiver only means changing the LO.</p>
+<p>The catch is in the absolute value. A signal on the other side of the LO, at the same distance, produces exactly the same IF:</p>
+<div class="eq">$$f_\text{image} = 2f_\text{LO} - f_\text{RF}$$<div class="n">twice the IF away from the wanted signal</div></div>
+<p>Once a signal at the image frequency reaches the mixer, it's indistinguishable from the wanted one. The only defence is to remove it before the mixer, with the RF band-pass filter. That's why a higher IF is easier to filter (the image is further away), and why many modern chips use image-reject mixers or convert straight to zero IF.</p>
+
+<div class="widget wide" id="w-mix">
+  <div class="wh"><span class="tag">Interactive</span><b>A mixer moving a 915 MHz signal to a 70 MHz IF</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label for="mL">LO frequency <b id="mLv"></b></label><input id="mL" type="range" min="800" max="1030" step="1" value="845"></div>
+      <div class="ctrl"><label>Interferer at the image frequency</label><div class="seg" id="mI"><button type="button" data-v="0" class="on">Off</button><button type="button" data-v="1">On</button></div></div>
+      <p class="small">The wanted signal is at 915 MHz. The IF filter passes 70 MHz ± 5 MHz.</p>
+    </div>
+    <div>
+      <canvas id="cvMix" style="height:320px" aria-label="Top: the input spectrum with the wanted signal, the local oscillator and the image frequency. Bottom: the mixer's output spectrum around the IF, with the IF filter's passband."></canvas>
+      <div class="readout">
+        <div class="stat"><div class="k">IF from the wanted signal</div><div class="v" id="mF"></div></div>
+        <div class="stat"><div class="k">Image frequency</div><div class="v" id="mIm"></div></div>
+        <div class="stat"><div class="k">Sum product</div><div class="v" id="mS"></div></div>
+      </div>
+      <div class="verdict" id="mVerdict"></div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>Set the LO to 845 MHz, then 985 MHz. Both give a 70 MHz IF; where is the image in each case?</li>
+    <li>Turn on the interferer. Can the IF filter remove it? Where would a filter have to be to stop it?</li>
+  </ol></div>
+</div>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">A higher or lower IF?</span></summary>
+  <div class="eb">
+    <p>A receiver's RF band-pass filter can only reject signals more than about 50 MHz from 915 MHz. The designer is choosing between an IF of 10.7 MHz and one of 70 MHz.</p>
+    <div class="choice"><p>Which IF makes the image easier to reject?</p>
+    <ol class="opts">
+      <li>10.7 MHz, because a lower IF is easier to filter.<div class="why">A low IF is easier for the IF filter, but the image is only 21.4 MHz from the wanted signal, inside the RF filter's passband.</div></li>
+      <li data-correct>70 MHz, because the image is 140 MHz away from the wanted signal, far enough for the RF filter to reject it.<div class="why">The image sits twice the IF away from the wanted signal.</div></li>
+      <li>Neither: the IF filter removes the image.<div class="why">By the time it reaches the IF filter, the image has become the same frequency as the wanted signal.</div></li>
+      <li>Both equally: the image is always at the LO frequency.<div class="why">The image is on the far side of the LO, twice the IF from the wanted signal.</div></li>
+    </ol>
+    <div class="solution"><p>The image is at \(2f_\text{LO} - f_\text{RF}\), twice the IF away from the wanted signal. With a 10.7 MHz IF it's only 21.4 MHz away and passes straight through a filter that can't reject anything closer than 50 MHz. With a 70 MHz IF it's 140 MHz away and easily rejected. Superheterodyne receivers often convert twice for this reason: first to a high IF for image rejection, then to a low IF for selectivity.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 6 SWITCHES, ATTENUATORS, BALUNS ================= -->
+<section class="sec" id="switches" data-short="Switches, attenuators, baluns">
+<h2>Switches, attenuators and baluns <a class="vjump" data-t="28:00"></a></h2>
+<p><strong>RF switches</strong> route a signal between paths: an antenna between transmit and receive, or a radio between two antennas. They're built from PIN diodes or field-effect transistors, and described by insertion loss in the on state, isolation in the off state (how much leaks through), switching time, and power handling. A transmit/receive switch is a good example of why isolation matters: if 1 W goes to the antenna and the switch isolates the receiver by 25 dB, the LNA still sees about 3 mW.</p>
+<p>An <strong>attenuator</strong> reduces a signal by a fixed amount while staying matched at both ports. It's a resistor network (the π-attenuator in Module 2's S-parameter figure), so unlike a filter it absorbs rather than reflects. Attenuators protect instruments from strong signals, set levels between stages, and improve a mismatch: a 3 dB attenuator in front of a poorly matched load improves its return loss by 6 dB, by Module 2's round-trip argument.</p>
+<p>A <strong>balun</strong> (balanced to unbalanced) converts between a signal referenced to ground, such as coax, and a balanced signal on two conductors that are equal and opposite, such as a dipole antenna's two arms or a differential radio chip's RF pins. Without one, a dipole fed directly from coax drives current down the outside of the shield, which then radiates as part of the antenna and makes the pattern and the match depend on how the cable is routed. Baluns can be transformers, quarter-wave structures on the cable, or small lumped LC networks next to the chip.</p>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">A dipole fed straight from coax</span></summary>
+  <div class="eb">
+    <p>A half-wave dipole is connected directly to a coax cable, with the centre conductor on one arm and the shield on the other. The match changes whenever someone moves the cable.</p>
+    <div class="choice"><p>Why?</p>
+    <ol class="opts">
+      <li data-correct>Without a balun, current flows on the outside of the shield, so the cable becomes part of the antenna and its position changes the antenna's behaviour.<div class="why">The dipole is balanced and the coax isn't, so the imbalance current returns along the outside of the shield.</div></li>
+      <li>The coax's characteristic impedance changes as it bends.<div class="why">A gentle bend barely changes Z₀. Something else is radiating.</div></li>
+      <li>The dipole is the wrong length.<div class="why">The wrong length would give a poor match, but not one that changes when the cable moves.</div></li>
+      <li>The connector is loose.<div class="why">Possible, but this is the classic symptom of a missing balun.</div></li>
+    </ol>
+    <div class="solution"><p>A dipole needs equal and opposite currents in its two arms. Coax provides them on the inside of the shield, but at the end of the cable the outer surface of the shield is also connected to one arm, and some current flows down it. The cable then radiates and is part of the antenna. Adding a balun, a choke of ferrite beads on the cable, or a quarter-wave sleeve stops the outer-shield current and makes the antenna independent of the cable.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 7 LOSS ================= -->
+<section class="sec" id="loss" data-short="Where the loss goes">
+<h2>Conductor, dielectric and radiation loss <a class="vjump" data-t="32:00"></a></h2>
+<p>Every passive component turns some of the power passing through it into something other than the output signal. There are three mechanisms, each from an earlier module:</p>
+<ul>
+  <li><strong>Conductor loss</strong>: current flowing through resistance. At RF the skin effect confines it to a thin surface layer (Module 0), so conductor loss rises with √f and depends on surface finish and roughness.</li>
+  <li><strong>Dielectric loss</strong>: the insulator's molecules absorb a fraction of the field's energy every cycle, set by the loss tangent Df (Module 1). It rises in proportion to frequency and dominates on FR-4 above about a gigahertz.</li>
+  <li><strong>Radiation loss</strong>: energy that escapes as a radio wave because the structure isn't fully enclosed. Open microstrip discontinuities, bends and resonators radiate a little; antennas are designed to radiate as much as possible.</li>
+</ul>
+<p>The quality factor Q of a resonant component (EE Module 4) summarises all three: the ratio of energy stored to energy lost per cycle. A filter built from low-Q resonators has more passband loss and a less sharp response, which is why high-performance filters use ceramic or cavity resonators with Q in the hundreds or thousands instead of chip inductors with a Q of 30 to 60.</p>
+</section>
+
+<!-- ================= 8 DIPLEXERS, CIRCULATORS ================= -->
+<section class="sec" id="duplex" data-short="Duplexers and circulators">
+<h2>Diplexers, duplexers, circulators and isolators <a class="vjump" data-t="35:00"></a></h2>
+<p>These components let several signals share one port, separated by frequency or by direction.</p>
+<p>A <strong>diplexer</strong> splits one port into two by frequency: a low-pass and a high-pass filter (or two band-pass filters) joined at a common port, designed so each filter looks like an open circuit in the other's band. A single antenna can then serve, for example, a 915 MHz telemetry radio and a 1575 MHz GPS receiver. A <strong>duplexer</strong> is the same idea for one radio's transmit and receive frequencies, so it can transmit and receive at the same time without a switch.</p>
+<p>A <strong>circulator</strong> separates signals by direction. It's a three-port junction built around a magnetised ferrite, a material whose response to a magnetic field depends on the direction it rotates. Power entering port 1 leaves at port 2, power entering port 2 leaves at port 3, and power entering port 3 leaves at port 1. It's <em>non-reciprocal</em>, one of the few passive components where S₂₁ ≠ S₁₂.</p>
+<p>Terminate the third port of a circulator in a matched load and it becomes an <strong>isolator</strong>: power passes forward from port 1 to port 2, but anything reflected back into port 2 goes to the load and is absorbed instead of returning to port 1. An isolator after a PA protects it from a damaged or detuned antenna, and stops the PA's output changing with the antenna's impedance.</p>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">Protecting a PA from a broken antenna</span></summary>
+  <div class="eb">
+    <p>A transmitter will sometimes operate with its antenna damaged, so nearly all its output power is reflected. An isolator is proposed between the PA and the antenna.</p>
+    <div class="choice"><p>Where does the reflected power end up?</p>
+    <ol class="opts">
+      <li>Back in the PA, but reduced by the isolator's insertion loss.<div class="why">The isolator's job is to stop reflected power reaching the PA at all.</div></li>
+      <li>Radiated by the antenna on a second attempt.<div class="why">The antenna reflected it; nothing sends it back again.</div></li>
+      <li>It disappears, because isolators are lossless.<div class="why">Energy has to go somewhere. Here it's the termination.</div></li>
+      <li data-correct>In the load on the isolator's third port, which has to be rated to absorb the full reflected power.<div class="why">The circulator steers anything coming back from the antenna into the terminated port.</div></li>
+    </ol>
+    <div class="solution"><p>Reflected power entering the isolator's output is steered by the circulator into its third port, where the matched load turns it into heat. The PA always sees a good match, whatever the antenna does. The catch is the load's rating: for a transmitter that must survive a completely broken antenna, the termination has to dissipate the PA's full output continuously.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 9 SPLITTERS ================= -->
+<section class="sec" id="splitters" data-short="Splitters and combiners">
+<h2>Splitters and combiners <a class="vjump" data-t="39:00"></a></h2>
+<p>A <strong>power splitter</strong> divides a signal between two or more outputs; run backwards, it's a <strong>combiner</strong>. Splitting power equally between two outputs halves the power in each, a loss of 3.01 dB that isn't really a loss at all: the power is all still there, divided. Anything beyond 3 dB per output is real loss, called excess loss.</p>
+<p>The obvious way to split a 50 Ω line, joining two 50 Ω lines to it, presents 25 Ω at the junction: a mismatch. Two designs solve this:</p>
+<ul>
+  <li>A <strong>resistive splitter</strong> uses three resistors. It's matched and works at any frequency down to DC, but each output gets only a quarter of the power (6 dB), half of it lost as heat.</li>
+  <li>A <strong>Wilkinson divider</strong> uses two quarter-wave lines of 70.7 Ω (Module 2's transformer, matching 100 Ω to 50 Ω at each output) and a 100 Ω resistor between the outputs. With equal signals at both outputs, there's no voltage across the resistor and it absorbs nothing, so each output gets the full 3 dB share. If one output is mismatched, the reflected power is absorbed in the resistor instead of reaching the other output, so the outputs are isolated from each other.</li>
+</ul>
+<p>Splitters feed antenna arrays and multiple receivers from one antenna. As combiners, Wilkinsons add the outputs of two amplifiers, and if the two signals aren't equal in amplitude and phase, the difference is dissipated in the resistor, which is exactly what keeps the two amplifiers from interacting.</p>
+</section>
+
+<!-- ================= 10 WAVEGUIDE ================= -->
+<section class="sec" id="waveguide" data-short="Waveguide">
+<h2>Waveguide <a class="vjump" data-t="42:00"></a></h2>
+<p>A rectangular waveguide carries the TE₁₀ mode introduced in Module 2: the electric field spans the narrow dimension, strongest in the middle of the broad wall and zero at the side walls. That pattern only fits when half a wavelength is shorter than the broad dimension a, which sets the cutoff frequency:</p>
+<div class="eq">$$f_c = \frac{c}{2a}$$<div class="n">for an air-filled guide; WR-90, with a = 22.86 mm, cuts off at 6.56 GHz and is used from 8.2 to 12.4 GHz</div></div>
+<p>Below the cutoff, fields decay exponentially along the guide instead of propagating. Waveguide has much lower loss than coax at microwave frequencies (no centre conductor, no dielectric) and handles far more power, which is why it's used for radar, satellite ground stations and high-power transmitters. Below a few gigahertz the guide becomes impractically large, so it rarely appears in small systems. The cutoff principle does turn up elsewhere, though: the ventilation holes in a screened enclosure are short waveguides below cutoff, which is why small holes let air through but block RF.</p>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">Holes in a shielded box</span></summary>
+  <div class="eb">
+    <p>A metal enclosure needs ventilation. One option is a single 30 mm square opening; the other is a grid of many 3 mm holes with the same total area.</p>
+    <div class="choice"><p>Which shields better against 2.4 GHz interference?</p>
+    <ol class="opts">
+      <li>The same: the total open area is the same.<div class="why">Shielding depends on the size of each opening relative to the wavelength, not the total area.</div></li>
+      <li>The single opening, because it has less edge length.<div class="why">Edge length isn't the controlling factor here.</div></li>
+      <li data-correct>The grid of small holes: each 3 mm hole is a waveguide far below cutoff at 2.4 GHz, while the 30 mm opening is much closer to passing the wave.<div class="why">A 3 mm hole cuts off around 50 GHz. A 30 mm opening cuts off at 5 GHz, and leaks far more at 2.4 GHz.</div></li>
+      <li>Neither: any hole lets RF through.<div class="why">Small holes leak, but very little when they're far below cutoff.</div></li>
+    </ol>
+    <div class="solution"><p>An opening behaves like a short waveguide, and a field below cutoff decays rapidly through it. Each 3 mm hole has a cutoff near 50 GHz, so at 2.4 GHz almost nothing gets through, especially if the holes are as deep as they are wide. The 30 mm opening has a cutoff near 5 GHz, only a factor of two above 2.4 GHz, so far more leaks through. Many small holes beat one large one, which is why shielded vents use honeycomb panels.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= DESIGN EXERCISES ================= -->
+<section class="sec" id="exercises" data-nonum data-short="Design exercises">
+<h2>Design exercises</h2>
+<p>Problems drawn from real hardware. Each takes a few steps. Enter numbers to check your reasoning as you go, or open the worked solutions and discussion. The figures above are useful for sanity-checking.</p>
+
+<div class="chal">
+  <div class="ch"><span class="cn">Exercise 1</span><span class="cd">Analysis · ●○○</span><span class="ctitle">Splitting a signal two ways</span></div>
+  <div class="cbody">
+    <p>A +20 dBm signal is split between two receivers.</p>
+    <div class="check" data-ans="16.5" data-tol="1%" data-unit="dBm"><p>(a) With a Wilkinson divider that has 0.5 dB of excess loss, what power reaches each output?</p>
+      <div class="hint">An equal split costs 3 dB per output, plus the excess loss.</div>
+      <div class="solution"><p>20 − 3 − 0.5 = 16.5 dBm (about 45 mW each).</p></div></div>
+    <div class="check" data-ans="14" data-tol="1%" data-unit="dBm"><p>(b) With a resistive splitter instead?</p>
+      <div class="solution"><p>A resistive splitter delivers a quarter of the power to each output: 20 − 6 = 14 dBm (25 mW each). The other half of the input power is dissipated in its resistors.</p></div></div>
+    <details><summary>Discussion: when to use which</summary><p>The Wilkinson wins on loss and isolation but only works over a limited bandwidth around its design frequency, because it's built from quarter-wave lines. The resistive splitter works from DC to many gigahertz and is simple, so it's common in test setups where the extra 3 dB doesn't matter.</p></details>
+  </div>
+</div>
+
+<div class="chal">
+  <div class="ch"><span class="cn">Exercise 2</span><span class="cd">Design · ●●○</span><span class="ctitle">A harmonic filter for a 915 MHz transmitter</span></div>
+  <div class="cbody">
+    <p>A transmitter's PA produces a second harmonic at 1830 MHz. A low-pass filter with a cut-off of 1.1 GHz follows it.</p>
+    <div class="check" data-ans="22.1" data-tol="2%" data-unit="dB"><p>(a) How much does a 5th-order Butterworth filter attenuate the second harmonic?</p>
+      <div class="hint">\(|S_{21}|^2 = 1/\big(1 + (f/f_c)^{2n}\big)\).</div>
+      <div class="solution"><p>\(f/f_c = 1.664\), \((1.664)^{10} \approx 162\), so the attenuation is \(10\log_{10}(163) \approx 22.1\ \text{dB}\).</p></div></div>
+    <div class="check" data-ans="32.5" data-tol="2%" data-unit="dB"><p>(b) And a 5th-order Chebyshev with 0.5 dB ripple?</p>
+      <div class="hint">\(|S_{21}|^2 = 1/\big(1 + \varepsilon^2 T_5^2(f/f_c)\big)\), with \(\varepsilon^2 = 10^{0.05} - 1 = 0.122\) and \(T_5(x) = \cosh(5\cosh^{-1}x)\) above cut-off.</div>
+      <div class="solution"><p>\(\cosh^{-1}(1.664) = 1.096\), \(T_5 = \cosh(5.48) \approx 120\), so \(|S_{21}|^2 \approx 1/(1 + 0.122 \times 14\,450) \approx 1/1760\): about 32.5 dB, ten decibels better than the Butterworth with the same number of parts.</p></div></div>
+    <details><summary>Discussion: what the numbers leave out</summary><p>These are ideal filters. Real components have parasitics (Module 0): the inductors self-resonate and the capacitors become inductive at some frequency above the cut-off, so far up the stopband the rejection stops improving and can get worse. The filter also has to be laid out so the harmonic can't simply couple around it, through a shared ground or by radiation between input and output traces.</p></details>
+  </div>
+</div>
+
+<div class="chal">
+  <div class="ch"><span class="cn">Exercise 3</span><span class="cd">Design · ●●○</span><span class="ctitle">Planning a receiver's frequencies</span></div>
+  <div class="cbody">
+    <p>A receiver tunes to 915 MHz and uses a 70 MHz IF, with the LO below the signal (low-side injection).</p>
+    <div class="check" data-ans="845" data-tol="0.5%" data-unit="MHz"><p>(a) LO frequency?</p>
+      <div class="solution"><p>\(f_\text{LO} = 915 - 70 = 845\ \text{MHz}\).</p></div></div>
+    <div class="check" data-ans="775" data-tol="0.5%" data-unit="MHz"><p>(b) Image frequency?</p>
+      <div class="miss" data-val="985"><p>That's the image for a high-side LO at 985 MHz. With the LO at 845 MHz, the image is on the low side.</p></div>
+      <div class="hint">\(f_\text{image} = 2f_\text{LO} - f_\text{RF}\).</div>
+      <div class="solution"><p>\(2 \times 845 - 915 = 775\ \text{MHz}\), 140 MHz below the wanted signal.</p></div></div>
+    <details><summary>Discussion: choosing low-side or high-side</summary><p>Either works; the choice depends on what's at the image. A high-side LO puts the image at 1055 MHz. If there's a strong transmitter near one of the two image frequencies, choose the other side. The LO itself must also be kept out of the antenna: an LO at 845 MHz leaking backwards through the LNA is radiated, and can fall in someone else's band.</p></details>
+  </div>
+</div>
+</section>
+
+<!-- ================= BENCH ================= -->
+<section class="sec" id="bench" data-nonum data-short="At the bench">
+<h2>At the bench</h2>
+<div class="video" data-video="lab">
+  <div class="plan">
+    <p>Planned lab demo (≈ 20 min, filmed at the bench):</p>
+    <ol>
+      <li>Measuring a filter's passband and stopband on the VNA</li>
+      <li>A splitter and an attenuator: S₂₁ and where the power goes</li>
+      <li>An amplifier pushed into compression on a spectrum analyzer</li>
+      <li>Finding the image response of a receiver module</li>
+    </ol>
+  </div>
+</div>
+<div class="lab">
+  <h3>Characterising RF blocks</h3>
+  <div class="parts"><span>NanoVNA (or any VNA) and calibration kit</span><span>A signal generator and spectrum analyzer, if available</span><span>A low-pass or SAW filter on an evaluation board</span><span>A 2-way splitter</span><span>Fixed attenuators</span><span>A small evaluation-board amplifier</span></div>
+  <ol>
+    <li><b>Filter.</b> Measure S₂₁ and S₁₁ of the filter. Find its cut-off (or passband), its insertion loss, and its rejection at the harmonics of the frequency it's meant for. Compare S₁₁ in the stopband: is the rejected power reflected or absorbed?</li>
+    <li><b>Splitter.</b> Measure S₂₁ and S₃₁ from the input to each output, and S₃₂ between the outputs. Check the 3 dB split, the excess loss, and the isolation between outputs.</li>
+    <li><b>Compression.</b> Drive the amplifier from the signal generator through an attenuator and measure its output on the spectrum analyzer while raising the input in 1 dB steps. Find P1dB, and watch the second harmonic grow as the amplifier compresses.</li>
+  </ol>
+  <div class="record"><b>What you should see:</b> a filter that reflects most of the rejected power, a splitter with a little over 3 dB per output and good isolation between outputs, and an amplifier whose output stops tracking its input near P1dB while its harmonics rise quickly.</div>
+</div>
+</section>
+
+<!-- ================= SUMMARY ================= -->
+<section class="sec" id="summary" data-nonum data-short="Summary">
+<h2>Summary &amp; cheat sheet</h2>
+<ol class="takeaways">
+  <li>A radio is a chain of standard blocks, each described by S-parameters and a few figures of merit.</li>
+  <li>Connectors are short transmission lines with a frequency limit and a mating-cycle limit. Couplers sample one direction; their directivity limits what they can measure.</li>
+  <li>The LNA's noise figure dominates a receiver's sensitivity; loss in front of it adds directly. A PA compresses as it approaches saturation, generating harmonics and distortion.</li>
+  <li>Higher filter order gives more rejection at the cost of loss, delay and parts. Chebyshev and elliptic responses are steeper than Butterworth for the same order.</li>
+  <li>A mixer produces sum and difference frequencies. The image, at 2f<sub>LO</sub> − f<sub>RF</sub>, must be filtered out before the mixer.</li>
+  <li>Attenuators absorb, filters reflect. A balun connects balanced and unbalanced circuits; circulators and isolators separate signals by direction.</li>
+  <li>An equal two-way split costs 3 dB per output; a Wilkinson adds little more, a resistive splitter costs 6 dB.</li>
+</ol>
+<div class="cheat">
+  <div><b>Mixer</b>\(f_\text{IF} = |f_\text{RF} - f_\text{LO}|\)<br><span class="small">image: \(2f_\text{LO} - f_\text{RF}\)</span></div>
+  <div><b>Butterworth</b>\(|S_{21}|^2 = 1/\big(1 + (f/f_c)^{2n}\big)\)<br><span class="small">20n dB per decade far above cut-off</span></div>
+  <div><b>Coupler</b>directivity = isolation − coupling</div>
+  <div><b>Splitter</b>equal 2-way: 3.01 dB · resistive: 6 dB<br><span class="small">Wilkinson: 70.7 Ω λ/4 lines, 100 Ω resistor</span></div>
+  <div><b>Waveguide</b>\(f_c = c/2a\) (TE₁₀, air)</div>
+  <div><b>Amplifier</b>P1dB: gain down 1 dB<br><span class="small">loss before the LNA adds to NF</span></div>
+</div>
+<h3>Further reading</h3>
+<ul class="small">
+  <li><em>Microwave Engineering</em> (Pozar), chapter 7: power dividers and directional couplers, including the Wilkinson divider and coupled-line couplers.</li>
+  <li><em>Microwave Engineering</em> (Pozar), chapter 8: microwave filters, including Butterworth and Chebyshev responses and filter implementation.</li>
+  <li><em>Microwave Engineering</em> (Pozar), chapter 9: ferrimagnetic components, including circulators and isolators.</li>
+  <li><em>Microwave Engineering</em> (Pozar), chapters 10 to 13: noise and nonlinear distortion, active devices, amplifier design, and oscillators and mixers.</li>
+  <li><em>Microwave Engineering</em> (Pozar), chapter 3: waveguide modes and cutoff.</li>
+</ul>
 </section>
 
 <nav class="pager"></nav>
 </main>
 </div>
 <footer class="site">Hardware Engineering Fundamentals · RF &amp; High-Speed Design</footer>
+
+<script>
+'use strict';
+const $ = s => document.querySelector(s);
+const {col, si, fmt} = Plot;
+function seg(id, cb){
+  const el = $(id);
+  el.addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    el.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
+    cb();
+  });
+  return () => el.querySelector('button.on').dataset.v;
+}
+function setVerdict(el, cls, html){ el.className = 'verdict ' + cls; el.innerHTML = html; }
+const dbm2w = d => Math.pow(10, d/10)/1000, w2dbm = w => 10*Math.log10(w*1000);
+
+/* ============ 1. PA compression (Rapp model) ============ */
+(() => {
+  const kind = seg('#aK', upd);
+  const G = 20, PSAT = 33;
+  // Rapp model on amplitude: Aout = g Ain / (1 + (g Ain / Asat)^(2p))^(1/2p), with power ∝ amplitude²
+  const pout = (pin, p) => { const a = Math.sqrt(dbm2w(pin))*Math.pow(10, G/20), as = Math.sqrt(dbm2w(PSAT)); return w2dbm(Math.pow(a/Math.pow(1 + Math.pow(a/as, 2*p), 1/(2*p)), 2)); };
+  const p1 = p => { let lo = -20, hi = 30; for (let i = 0; i < 60; i++){ const m = (lo + hi)/2; if (m + G - pout(m, p) < 1) lo = m; else hi = m; } return (lo + hi)/2; };
+  let s = {};
+  function upd(){
+    const p = +kind(), pin = +$('#aP').value, po = pout(pin, p), comp = pin + G - po, i1 = p1(p);
+    s = {p, pin, po, i1};
+    $('#aPv').textContent = fmt(pin, 3) + ' dBm';
+    $('#aO').textContent = fmt(po, 3) + ' dBm'; $('#aG').textContent = fmt(po - pin, 3) + ' dB';
+    $('#aC').textContent = fmt(comp, 2) + ' dB'; $('#a1').textContent = fmt(pout(i1, p), 3) + ' dBm';
+    $('#aCS').className = 'stat ' + (comp > 3 ? 'bad' : comp > 1 ? 'warn' : '');
+    const v = $('#aVerdict');
+    if (comp < 0.3) setVerdict(v, 'ok', `<b>Linear.</b> Output tracks input with the full 20 dB of gain. The waveform is undistorted and harmonics are low.`);
+    else if (comp < 1) setVerdict(v, 'ok', `<b>Starting to compress.</b> ${fmt(comp, 2)} dB below the linear line: still usable for most signals, with harmonics starting to rise.`);
+    else if (comp < 3) setVerdict(v, 'warn', `<b>Past P1dB.</b> The gain is ${fmt(comp, 2)} dB down. Peaks are being flattened, so harmonics and distortion are rising quickly. Fine for constant-amplitude signals like FSK, bad for amplitude-modulated ones.`);
+    else setVerdict(v, 'bad', `<b>Saturated.</b> Each extra dB of input now buys almost nothing at the output, and the excess drive becomes harmonics and heat.`);
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvPa'), (ctx, W, H) => {
+    const {p, pin, po, i1} = s; if (po === undefined) return;
+    const P = {l: 52, r: W - 14, t: 14, b: H - 40};
+    const X = Plot.lin(-10, 20, P.l, P.r), Y = Plot.lin(10, 40, P.b, P.t);
+    Plot.axes(ctx, P, X, Y, {xt: [-10, -5, 0, 5, 10, 15, 20], yt: [10, 15, 20, 25, 30, 35, 40], xl: 'input power (dBm)', yl: 'output power (dBm)', xgrid: true});
+    Plot.clip(ctx, P);
+    Plot.line(ctx, [[X(-10), Y(10)], [X(20), Y(40)]], col.muted, 1.4, [6, 5]);
+    Plot.line(ctx, [[P.l, Y(PSAT)], [P.r, Y(PSAT)]], col.bad, 1, [3, 3]);
+    const pts = []; for (let i = 0; i <= 200; i++){ const x = -10 + 30*i/200; pts.push([X(x), Y(pout(x, p))]); }
+    Plot.line(ctx, pts, col.c1, 2.4);
+    ctx.restore();
+    Plot.text(ctx, 'saturation 33 dBm', P.l + 6, Y(PSAT) - 9, {color: col.bad});
+    const y1 = pout(i1, p); Plot.dot(ctx, X(i1), Y(y1), 5, col.c2); Plot.text(ctx, 'P1dB', X(i1) + 8, Y(y1) + 12, {color: col.c2, bold: true});
+    Plot.line(ctx, [[X(pin), P.t], [X(pin), P.b]], col.ink2, 1, [3, 3]); Plot.dot(ctx, X(pin), Y(po), 5, col.c1); Plot.dot(ctx, X(pin), Y(po), 2, '#fff');
+  });
+  $('#aP').addEventListener('input', upd);
+  upd();
+})();
+
+/* ============ 2. Filter response ============ */
+(() => {
+  const fam = seg('#fF', upd);
+  const FC = 1.1e9, E2 = Math.pow(10, 0.05) - 1;
+  const cheb = (n, x) => Math.abs(x) <= 1 ? Math.cos(n*Math.acos(x)) : Math.cosh(n*Math.acosh(Math.abs(x)));
+  const att = (f, n, fm) => { const x = f/FC; return 10*Math.log10(fm === 'bw' ? 1 + Math.pow(x, 2*n) : 1 + E2*Math.pow(cheb(n, x), 2)); };
+  let s = {};
+  function upd(){
+    const fm = fam(), n = +$('#fN').value;
+    s = {fm, n};
+    $('#fNv').textContent = n;
+    $('#fP').textContent = fmt(att(915e6, n, fm), 2) + ' dB'; $('#f2').textContent = fmt(att(1830e6, n, fm), 3) + ' dB'; $('#f3').textContent = fmt(att(2745e6, n, fm), 3) + ' dB';
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvFlt'), (ctx, W, H) => {
+    const {fm, n} = s; if (!n) return;
+    const P = {l: 52, r: W - 14, t: 14, b: H - 40};
+    const X = Plot.lin(0, 3.2e9, P.l, P.r), Y = Plot.lin(-80, 10, P.b, P.t);
+    Plot.axes(ctx, P, X, Y, {xt: W < 520 ? [0, 1e9, 2e9, 3e9] : [0, 0.5e9, 1e9, 1.5e9, 2e9, 2.5e9, 3e9], yt: [-80, -60, -40, -20, 0], xl: 'frequency', yl: 'S₂₁ (dB)', xf: t => si(t, 'Hz').replace(' ', ''), xgrid: true});
+    Plot.clip(ctx, P);
+    [[915e6, 'carrier'], [1830e6, '2nd'], [2745e6, '3rd']].forEach(([f, lab], i) => { Plot.line(ctx, [[X(f), P.t], [X(f), P.b]], i ? col.bad : col.c5, 1, [2, 3]); Plot.text(ctx, lab, X(f) + 4, P.t + 10, {color: i ? col.bad : col.c5}); });
+    // the other family, faint, for comparison
+    const other = fm === 'bw' ? 'ch' : 'bw';
+    const draw = (ff, c, wd) => { const pts = []; for (let i = 1; i <= 400; i++){ const f = 3.2e9*i/400; pts.push([X(f), Y(-att(f, n, ff))]); } Plot.line(ctx, pts, c, wd); };
+    draw(other, Plot.rgba(col.c3, .3), 1.4); draw(fm, col.c3, 2.4);
+    ctx.restore();
+    Plot.text(ctx, 'faint: ' + (other === 'bw' ? 'Butterworth' : 'Chebyshev') + ', same order', P.r - 4, P.b - 10, {align: 'right', color: col.muted});
+  });
+  $('#fN').addEventListener('input', upd);
+  upd();
+})();
+
+/* ============ 3. Mixer and image ============ */
+(() => {
+  const intf = seg('#mI', upd);
+  const RF = 915, IF = 70, BW = 5;
+  let s = {};
+  function upd(){
+    const lo = +$('#mL').value, on = intf() === '1', ifw = Math.abs(RF - lo), img = 2*lo - RF;
+    s = {lo, on, ifw, img};
+    $('#mLv').textContent = lo + ' MHz';
+    $('#mF').textContent = ifw + ' MHz'; $('#mIm').textContent = img + ' MHz'; $('#mS').textContent = (RF + lo) + ' MHz';
+    const inIF = Math.abs(ifw - IF) <= BW, v = $('#mVerdict');
+    if (!inIF) setVerdict(v, 'warn', `<b>Not tuned.</b> The wanted signal lands at ${ifw} MHz, outside the 70 MHz IF filter. Set the LO to 845 or 985 MHz.`);
+    else if (on) setVerdict(v, 'bad', `<b>The image gets through.</b> The interferer at ${img} MHz also mixes to ${Math.abs(img - lo)} MHz, inside the IF filter, on top of the wanted signal. Nothing after the mixer can separate them; it has to be filtered out at RF.`);
+    else setVerdict(v, 'ok', `<b>Tuned.</b> The wanted 915 MHz signal comes out at ${ifw} MHz, inside the IF filter. The image frequency is ${img} MHz: anything there must be removed before the mixer.`);
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvMix'), (ctx, W, H) => {
+    const {lo, on, ifw, img} = s; if (!lo) return;
+    const A = {l: 30, r: W - 14, t: 26, b: H*0.38}, B = {l: 30, r: W - 14, t: H*0.64, b: H - 40};
+    const Xa = Plot.lin(650, 1150, A.l, A.r), Xb = Plot.lin(0, 250, B.l, B.r);
+    const bar = (X, P, f, hgt, c, lab) => { if (f < X.inv(P.l) || f > X.inv(P.r)) return; const x = X(f); Plot.line(ctx, [[x, P.b], [x, P.b - hgt*(P.b - P.t)]], c, 3); Plot.text(ctx, lab, x, P.b - hgt*(P.b - P.t) - 9, {align: 'center', color: c}); };
+    Plot.axes(ctx, A, Xa, Plot.lin(0, 1, A.b, A.t), {xt: [700, 800, 900, 1000, 1100], yt: [], xl: 'input frequency (MHz)'});
+    Plot.text(ctx, 'mixer input', A.l, A.t - 14, {color: col.ink2, bold: true});
+    bar(Xa, A, RF, 0.55, col.c1, 'wanted 915');
+    bar(Xa, A, lo, 0.75, col.c3, 'LO ' + lo);
+    ctx.save(); ctx.setLineDash([3, 3]); ctx.strokeStyle = col.bad; ctx.beginPath(); const xi = Xa(img); if (img > 650 && img < 1150){ ctx.moveTo(xi, A.t); ctx.lineTo(xi, A.b); ctx.stroke(); } ctx.restore();
+    if (img > 650 && img < 1150) Plot.text(ctx, 'image ' + img, img < lo ? xi - 4 : xi + 4, A.t + 4, {color: col.bad, base: 'top', align: img < lo ? 'right' : 'left'});
+    if (on) bar(Xa, A, img, 0.5, col.bad, '');
+    Plot.axes(ctx, B, Xb, Plot.lin(0, 1, B.b, B.t), {xt: [0, 50, 100, 150, 200, 250], yt: [], xl: 'mixer output frequency (MHz)'});
+    Plot.text(ctx, 'mixer output (the sum, near 1.8 GHz, is off this scale)', B.l, B.t - 14, {color: col.ink2, bold: true});
+    ctx.fillStyle = Plot.rgba(col.good, .12); ctx.fillRect(Xb(IF - BW), B.t, Xb(IF + BW) - Xb(IF - BW), B.b - B.t);
+    Plot.text(ctx, 'IF filter', Xb(IF + BW) + 4, B.t + 8, {color: col.good});
+    bar(Xb, B, ifw, 0.55, col.c1, 'from wanted');
+    if (on) bar(Xb, B, Math.abs(img - lo), 0.4, col.bad, Math.abs(img - lo) === ifw ? '' : 'from interferer');
+    if (on && Math.abs(img - lo) === ifw) Plot.text(ctx, '+ interferer, same frequency', Xb(ifw) + 8, B.b - 0.25*(B.b - B.t), {color: col.bad});
+  });
+  $('#mL').addEventListener('input', upd);
+  upd();
+})();
+</script>
 </body>
 </html>

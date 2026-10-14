@@ -37,8 +37,8 @@ window.COURSE = {
         {id:'rf00', n:0, status:'ready',   path:'RF/00_Mindset/',                  title:'Mindset Shift: Why RF Is Different', blurb:'Lumped vs distributed, return current, and "ground is not ground".'},
         {id:'rf01', n:1, status:'ready',   path:'RF/01_Fundamentals/',             title:'RF Fundamentals', blurb:'Decibels, transmission lines, Z₀, reflections, VSWR and TDR.'},
         {id:'rf02', n:2, status:'ready',   path:'RF/02_Lines_and_Matching/',       title:'Transmission Lines & Matching', blurb:'Microstrip, the Smith chart, matching networks and S-parameters.'},
-        {id:'rf03', n:3, status:'planned', path:'RF/03_Components/',               title:'RF Components & Circuit Blocks', blurb:'LNAs, PAs, filters, mixers, switches and couplers.'},
-        {id:'rf04', n:4, status:'planned', path:'RF/04_PCB_Layout/',               title:'PCB Design & Layout Essentials', blurb:'Stackups, controlled impedance, vias and return paths.'},
+        {id:'rf03', n:3, status:'ready',   path:'RF/03_Components/',               title:'RF Components & Circuit Blocks', blurb:'LNAs, PAs, filters, mixers, switches and couplers.'},
+        {id:'rf04', n:4, status:'ready',   path:'RF/04_PCB_Layout/',               title:'PCB Design & Layout Essentials', blurb:'Stackups, controlled impedance, vias and return paths.'},
         {id:'rf05', n:5, status:'planned', path:'RF/05_Measurements/',             title:'Measurements & Lab Tools', blurb:'VNAs, calibration, spectrum analyzers and power meters.'},
         {id:'rf06', n:6, status:'planned', path:'RF/06_System_Performance/',       title:'System-Level Performance', blurb:'Noise figure, link budgets, compression and intermodulation.'},
         {id:'rf07', n:7, status:'planned', path:'RF/07_EMC_and_Regulatory/',       title:'EMI/EMC, Integrity & Regulations', blurb:'Crosstalk, shielding, power integrity and regulatory limits.'},
@@ -61,5 +61,7 @@ window.COURSE.videos = {
   ee03: {lecture: '', lab: ''},
   rf00: {lecture: '', lab: ''},
   rf01: {lecture: '', lab: ''},
-  rf02: {lecture: '', lab: ''}
+  rf02: {lecture: '', lab: ''},
+  rf03: {lecture: '', lab: ''},
+  rf04: {lecture: '', lab: ''}
 };

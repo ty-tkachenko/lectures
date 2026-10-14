@@ -4,31 +4,688 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>PCB Design &amp; Layout Essentials · RF 4</title>
-<meta name="description" content="RF & High-Speed Design module 4: Stackups, controlled impedance, vias and return paths. In development.">
+<meta name="description" content="RF module 4: stackup selection, board materials, trace width and controlled impedance, solder mask and surface finish, via transitions, grounding and return paths, stitching vias and fencing, parasitics and self-resonance, differential RF pairs, and PA thermal design.">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
 <link rel="stylesheet" href="../../assets/site.css">
 <script src="../../assets/course.js"></script>
 <script src="../../assets/site.js"></script>
+<script src="../../assets/plot.js"></script>
 </head>
 <body>
 <div class="layout">
 <aside class="side" aria-label="Module contents"></aside>
 <main class="content">
 
-<!-- Placeholder: replace this page with the module when it's written (see README.md, "Writing a module"). -->
+<!-- ================= HERO ================= -->
 <header class="hero">
   <div class="eyebrow">RF &amp; High-Speed Design · Module 4</div>
-  <h1>PCB Design &amp; Layout Essentials</h1>
-  <p class="lede">Stackups, controlled impedance, vias and return paths.</p>
+  <h1>PCB design &amp; layout essentials</h1>
+  <p class="lede">At RF the board is part of the circuit. Every trace is a transmission line, every via is an inductor with a resonant stub, and every gap in a ground plane changes where the return current flows. This module turns the physics of Modules 0 to 2 into layout decisions: how to choose a stackup and material, how to route, transition between layers and ground an RF circuit, and how to get the heat out of a power amplifier.</p>
+  <p class="meta">Builds on: RF modules 0–3, EE module 3. Bench: NanoVNA or any VNA, test coupons or an RF evaluation board, a thermal camera or thermocouple if available.</p>
+  <div class="resources" data-auto></div>
+  <div class="objectives">
+    <h3>What's covered</h3>
+    <ul>
+      <li>Choosing a stackup and a board material for an RF design, and what the fab needs to know.</li>
+      <li>How trace width, solder mask and surface finish affect impedance and loss.</li>
+      <li>What a via does to an RF signal, why via stubs resonate, and how to give the return current a path.</li>
+      <li>Ground planes, stitching vias and via fences.</li>
+      <li>Component parasitics and self-resonance in layout, and routing differential RF pairs.</li>
+      <li>The thermal path from a PA's junction to ambient, and how to design it.</li>
+    </ul>
+  </div>
+  <div class="video" data-video="lecture" id="lecture">
+    <div class="plan">
+      <p>Planned walkthrough of this page (≈ 45 min):</p>
+      <ol>
+        <li data-t="0:00">Stackup selection</li>
+        <li data-t="6:00">Board materials</li>
+        <li data-t="10:00">Trace width and controlled impedance</li>
+        <li data-t="14:00">Solder mask and surface finish</li>
+        <li data-t="17:00">Via transitions</li>
+        <li data-t="24:00">Grounding and return paths</li>
+        <li data-t="28:00">Stitching vias and fencing</li>
+        <li data-t="32:00">Parasitics and self-resonance</li>
+        <li data-t="36:00">Differential RF pairs</li>
+        <li data-t="39:00">PA thermal design</li>
+      </ol>
+    </div>
+  </div>
 </header>
 
-<section class="sec" id="status" data-nonum data-short="In development">
-<h2>In development</h2>
-<p>This module hasn't been written yet. The other modules are listed in the strip at the top of the page, and the links below go to the neighbouring ones.</p>
+<!-- ================= 1 STACKUP ================= -->
+<section class="sec" id="stackup" data-short="Stackup selection">
+<h2>Stackup selection <a class="vjump" data-t="0:00"></a></h2>
+<p>The <strong>stackup</strong> is the sequence of copper layers and dielectric layers that make up the board, with their thicknesses and materials. For RF it's the first layout decision, because it fixes the distance from each signal layer to its reference plane, and that distance sets the trace width for 50 Ω and how tightly the fields are confined.</p>
+<p>Module 2 showed that a microstrip's impedance depends on the ratio of width to height, w/h. On a standard 1.6 mm two-layer board, a 50 Ω microstrip on FR-4 is about 3 mm wide, wider than the pads of most RF parts, so every pad is a step in width and impedance. Its fields also spread out a long way, so it couples to anything nearby. Put a ground plane 0.2 mm below the top layer instead and the same 50 Ω line is about 0.4 mm wide, matching the component pads, with fields confined close to the trace.</p>
+
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>A typical four-layer stackup for a board with RF</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 240" role="img" aria-label="Cross-section of a four-layer board. Layer 1 carries RF traces and components above a thin 0.2 millimetre prepreg. Layer 2 is a solid ground plane. A thick core separates it from layer 3, used for power. Another thin prepreg separates layer 3 from layer 4, used for low-speed signals. The electric field of a top-layer microstrip is drawn between the trace and the layer 2 ground.">
+    <g stroke="none">
+      <rect x="40" y="60" width="400" height="30" fill="#e6efd9"/>
+      <rect x="40" y="98" width="400" height="70" fill="#dde8cc"/>
+      <rect x="40" y="176" width="400" height="30" fill="#e6efd9"/>
+      <g fill="#c8893a">
+        <rect x="216" y="52" width="48" height="8"/><rect x="40" y="52" width="130" height="8"/><rect x="310" y="52" width="130" height="8"/>
+        <rect x="40" y="90" width="400" height="8"/>
+        <rect x="40" y="168" width="400" height="8"/>
+        <rect x="70" y="206" width="40" height="8"/><rect x="160" y="206" width="30" height="8"/><rect x="300" y="206" width="60" height="8"/>
+      </g>
+    </g>
+    <g fill="none" stroke="var(--c1)" stroke-width="1.2">
+      <path d="M220 60v30M240 60v30M260 60v30"/>
+      <path d="M216 58c-12 2 -20 14 -22 32M264 58c12 2 20 14 22 32"/>
+      <path d="M216 55c-24 0 -38 16 -42 35M264 55c24 0 38 16 42 35"/>
+    </g>
+    <text x="240" y="42" font-size="11.5" text-anchor="middle">50 Ω trace, w ≈ 0.4 mm</text>
+    <text x="105" y="44" font-size="11" text-anchor="middle" fill="var(--muted)">ground pour</text>
+    <text x="375" y="44" font-size="11" text-anchor="middle" fill="var(--muted)">ground pour</text>
+    <g font-size="11.5">
+      <text x="456" y="60"><tspan font-weight="600">L1</tspan> RF signals and parts</text>
+      <text x="456" y="79" fill="var(--muted)">prepreg, 0.2 mm</text>
+      <text x="456" y="98"><tspan font-weight="600">L2</tspan> solid ground</text>
+      <text x="456" y="137" fill="var(--muted)">core, about 1.0 mm</text>
+      <text x="456" y="176"><tspan font-weight="600">L3</tspan> power</text>
+      <text x="456" y="195" fill="var(--muted)">prepreg, 0.2 mm</text>
+      <text x="456" y="214"><tspan font-weight="600">L4</tspan> low-speed signals</text>
+    </g>
+    <text x="240" y="232" font-size="11" text-anchor="middle" fill="var(--muted)">total about 1.6 mm; vertical scale exaggerated</text>
+  </svg>
+  </div>
+</div>
+<p>The stackup in the figure is the common starting point. Layer 2 is a solid, unbroken ground plane that every top-layer RF trace references. Power and low-speed signals go on the inner and bottom layers, where they can't interfere with the RF routing. The thin prepreg (the bonding layer between copper layers) under layer 1 keeps RF traces narrow; the fab can usually offer several prepreg thicknesses, and the exact value goes into the impedance calculation.</p>
+<p>Two practical points. First, keep the stackup symmetric about the centre: copper and dielectric thicknesses mirrored top to bottom, so the board doesn't warp in reflow. Second, ask the fab for its standard controlled-impedance stackup before designing, rather than inventing one: their dielectric thicknesses and εr values are the ones the boards will actually have.</p>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">Two layers or four?</span></summary>
+  <div class="eb">
+    <p>A small 915 MHz telemetry board could be made on a 1.6 mm two-layer board or a four-layer board with a ground plane 0.2 mm below the top layer.</p>
+    <div class="choice"><p>What's the main RF advantage of the four-layer board?</p>
+    <ol class="opts">
+      <li>Four layers have less dielectric loss.<div class="why">Both use the same material, so the loss per wavelength is similar.</div></li>
+      <li data-correct>The 50 Ω traces are about 0.4 mm instead of 3 mm, so they match component pads, take less space, and keep their fields close to the trace, with a solid ground plane right underneath for every return current.<div class="why">The thin dielectric to an unbroken reference plane is what makes RF layout manageable.</div></li>
+      <li>Four layers allow higher transmit power.<div class="why">Power handling isn't the limit for either board at telemetry power levels.</div></li>
+      <li>Two-layer boards can't carry RF at all.<div class="why">They can, with care (coplanar waveguide is common on two-layer boards), but routing is harder.</div></li>
+    </ol>
+    <div class="solution"><p>With 1.6 mm to the ground plane, a 50 Ω microstrip is around 3 mm wide, with fields spreading several millimetres either side, and the bottom layer has to be both ground and a routing layer, which breaks the return paths. With a 0.2 mm prepreg, RF traces are about the width of an 0402 pad, crosstalk is far lower, and layer 2 can stay solid. For a small RF board, the extra cost of four layers is almost always worthwhile.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 2 MATERIALS ================= -->
+<section class="sec" id="materials" data-short="Materials">
+<h2>Board materials <a class="vjump" data-t="6:00"></a></h2>
+<p>A board material matters for RF through three properties: its dielectric constant εr (which sets impedance and wavelength), its loss tangent Df (which sets dielectric loss, Module 1), and how well both are controlled from batch to batch and across frequency.</p>
+<div class="tablewrap"><table>
+  <tr><th>Material</th><th>εr</th><th>Loss tangent Df</th><th>Typical use</th></tr>
+  <tr><td><b>Standard FR-4</b></td><td>4.2–4.6, varies with resin content and frequency</td><td>0.015–0.02</td><td>Most boards; fine for short RF runs below a few gigahertz</td></tr>
+  <tr><td><b>Low-loss FR-4</b> (e.g. Isola 370HR, FR408HR)</td><td>3.7–4.0</td><td>0.009–0.012</td><td>High-speed digital, RF to about 6 GHz</td></tr>
+  <tr><td><b>Hydrocarbon ceramic</b> (e.g. Rogers RO4350B)</td><td>3.48 ± 0.05</td><td>0.0037</td><td>RF and microwave boards; processes like FR-4</td></tr>
+  <tr><td><b>PTFE (Teflon) based</b> (e.g. RT/duroid 5880)</td><td>2.2</td><td>0.0009</td><td>Millimetre-wave, low-loss antennas; harder to fabricate</td></tr>
+</table></div>
+<p>The loss figures matter in proportion to how many wavelengths the signal travels. A 2 cm trace at 915 MHz on FR-4 loses a few hundredths of a decibel: irrelevant. A 10 cm trace at 10 GHz on the same material loses several decibels. Material tolerance matters for anything that relies on a precise electrical length: filters, couplers and antennas printed on the board shift in frequency if εr is off.</p>
+<p>A common compromise is a <strong>hybrid stackup</strong>: a low-loss RF laminate for the top dielectric only, where the RF traces are, bonded to ordinary FR-4 for the rest of the board. It costs less than an all-RF-laminate board but needs a fab experienced with mixed materials.</p>
+<p>FR-4 is a woven glass fabric in epoxy resin, and glass (εr ≈ 6) and resin (εr ≈ 3) have very different dielectric constants. A narrow trace that happens to lie along a glass bundle sees a higher εr than one lying over resin. For RF lines this is a small impedance variation; for the two lines of a fast differential pair it can cause skew between them, which is why high-speed boards specify spread glass styles or route at a small angle to the weave.</p>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">When is a Rogers laminate worth it?</span></summary>
+  <div class="eb">
+    <p>Two designs are being considered for an RF laminate instead of FR-4. One is a 915 MHz telemetry board where the radio sits 15 mm from the antenna connector. The other is a 10 GHz board with a printed band-pass filter and a 60 mm feed line.</p>
+    <div class="choice"><p>Which one benefits?</p>
+    <ol class="opts">
+      <li>Both equally: RF always needs an RF laminate.<div class="why">FR-4 is fine for many RF designs. The question is how much loss and tolerance matter.</div></li>
+      <li>The 915 MHz board, because lower frequencies are more sensitive to εr.<div class="why">The opposite: lower frequencies mean fewer wavelengths and smaller effects.</div></li>
+      <li>Neither: FR-4's loss is the same as an RF laminate's.<div class="why">FR-4's loss tangent is four to five times higher than RO4350B's.</div></li>
+      <li data-correct>The 10 GHz board: the feed line is many wavelengths long, so FR-4's loss is significant, and the printed filter needs a well-controlled εr to land on frequency. The 915 MHz board's short trace barely notices.<div class="why">Both the loss and the tolerance argument point the same way.</div></li>
+    </ol>
+    <div class="solution"><p>Dielectric loss scales with frequency and with length in wavelengths. At 915 MHz, 15 mm is under a tenth of a wavelength in FR-4 and loses almost nothing. At 10 GHz, 60 mm is about four wavelengths and loses roughly a decibel or more, and a printed filter's centre frequency moves directly with the material's εr, so FR-4's wide tolerance would shift it. The 10 GHz board is a good candidate for an RF laminate, at least for its top dielectric layer.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 3 TRACE WIDTH ================= -->
+<section class="sec" id="width" data-short="Trace width and impedance">
+<h2>Trace width and controlled impedance <a class="vjump" data-t="10:00"></a></h2>
+<p>Module 2's trace calculator gives the width for a target impedance from the stackup. In production, the fab adjusts the width slightly to hit the impedance with their actual materials and etching. That's what <strong>controlled impedance</strong> means on a fab order: you mark which traces are impedance-controlled and their target (50 Ω ± 10 % is standard), and the fab tunes the width and verifies it on a test coupon built at the edge of the panel.</p>
+<p>A few layout rules follow from treating every RF trace as a transmission line:</p>
+<ul>
+  <li><strong>Keep the width constant</strong> along the whole route. Where a trace has to meet a pad of a different width, keep the transition short.</li>
+  <li><strong>Avoid sharp 90° corners</strong>; the extra copper in the corner adds capacitance. Use 45° chamfers or curves. Below a few gigahertz the effect is small, but chamfering costs nothing.</li>
+  <li><strong>Keep ground pours away from the trace</strong> by at least two or three trace widths, or the pour becomes part of the line and lowers its impedance. If you want ground alongside the trace, design it as a <strong>grounded coplanar waveguide</strong> (GCPW) with a specified gap and include it in the impedance calculation. GCPW is popular for RF because it confines the fields and isolates neighbouring traces well.</li>
+  <li><strong>Pads wider than the trace add capacitance.</strong> On thin dielectrics this is small. Where pads are much wider than the 50 Ω trace (a connector's centre pin, a large capacitor), some designs cut out the ground under the pad on layer 2 to remove the excess capacitance.</li>
+</ul>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">A ground pour that creeps up to the trace</span></summary>
+  <div class="eb">
+    <p>A board was designed with a 50 Ω microstrip, then a ground pour was added around it with the CAD tool's default clearance of 0.15 mm.</p>
+    <div class="choice"><p>What happens to the line's impedance?</p>
+    <ol class="opts">
+      <li data-correct>It drops below 50 Ω, because the pour adds capacitance along the trace's edges. The line is now an unintended coplanar waveguide.<div class="why">The pour pulls field lines towards it, raising capacitance per unit length and lowering Z₀.</div></li>
+      <li>Nothing: the pour is on the same layer, so it doesn't interact.<div class="why">Field lines from the trace's edges terminate on nearby copper, whichever layer it's on.</div></li>
+      <li>It rises, because the pour removes the field from the dielectric.<div class="why">More nearby copper raises capacitance, which lowers impedance.</div></li>
+      <li>It becomes a differential pair.<div class="why">A differential pair needs two signal conductors driven in opposition.</div></li>
+    </ol>
+    <div class="solution"><p>Z₀ = √(L′/C′), and copper close to the trace's edges adds capacitance per unit length, so the impedance falls, by several ohms for a gap comparable to the dielectric height. Either increase the clearance to several trace widths, or design the line deliberately as GCPW with a calculated width and gap and a row of ground vias along each side.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 4 MASK AND FINISH ================= -->
+<section class="sec" id="finish" data-short="Mask and surface finish">
+<h2>Solder mask and surface finish <a class="vjump" data-t="14:00"></a></h2>
+<p><strong>Solder mask</strong> is the thin coloured polymer coating over the outer layers. On a microstrip, part of the field passes through the mask on its way from the top of the trace to the ground plane, so the mask raises the effective dielectric constant and lowers the impedance, typically by 1 to 3 Ω, and adds a little loss (its loss tangent is poor, around 0.02 to 0.03). Fabs include the mask in their impedance calculations. Some high-frequency designs remove the mask over RF traces; below a few gigahertz it's usually left on and simply accounted for.</p>
+<p>The <strong>surface finish</strong> is the metal coating on exposed copper that keeps it solderable. It matters for RF because the skin effect (Module 0) puts the current in the outermost few micrometres of the conductor, which is the finish itself on exposed pads and any trace without mask:</p>
+<ul>
+  <li><strong>ENIG</strong> (electroless nickel, immersion gold): flat and reliable, the most common finish. Nickel is ferromagnetic and a poor conductor, so its skin depth is tiny, and at several gigahertz it adds noticeable conductor loss on exposed copper.</li>
+  <li><strong>Immersion silver</strong>: excellent conductor and flat, lowest loss, but tarnishes in storage.</li>
+  <li><strong>OSP</strong> (organic coating): bare copper electrically, cheap, but a short shelf life and limited reflow cycles.</li>
+  <li><strong>HASL</strong> (hot-air solder levelling): cheap and robust but uneven, poor for fine-pitch parts and precise pads.</li>
+</ul>
+<p>The copper's own roughness matters in the same way: the rough side of the foil, bonded to the dielectric for adhesion, carries the current, and teeth a few micrometres high lengthen the current's path at frequencies where the skin depth is comparable. Low-profile copper is specified for low-loss boards above a few gigahertz.</p>
+</section>
+
+<!-- ================= 5 VIAS ================= -->
+<section class="sec" id="vias" data-short="Via transitions">
+<h2>Via transitions <a class="vjump" data-t="17:00"></a></h2>
+<p>A via is a short vertical conductor, and like any conductor it has inductance, roughly 0.5 to 1 nH for a through-hole via in a 1.6 mm board. More importantly, it's a transition between two transmission lines with different reference planes, and it carries two hidden problems: a path for the return current, and a stub.</p>
+
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>A signal via from a top-layer microstrip to an inner stripline</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 250" role="img" aria-label="Cross-section of a four-layer board with ground on layers 2 and 4. A microstrip on layer 1 drops through a signal via to a stripline on layer 3. The via barrel continues below layer 3 to the bottom of the board, forming a stub. A ground via next to it connects layers 2 and 4 so the return current can follow the signal.">
+    <defs><marker id="arV" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--good)"/></marker></defs>
+    <rect x="40" y="58" width="520" height="36" fill="#e6efd9"/><rect x="40" y="100" width="520" height="40" fill="#dde8cc"/><rect x="40" y="146" width="520" height="44" fill="#e6efd9"/>
+    <g fill="#c8893a">
+      <rect x="40" y="52" width="252" height="6"/><rect x="284" y="50" width="32" height="8"/>
+      <rect x="40" y="94" width="232" height="6"/><rect x="328" y="94" width="232" height="6"/>
+      <rect x="308" y="140" width="252" height="6"/>
+      <rect x="40" y="190" width="232" height="6"/><rect x="328" y="190" width="232" height="6"/>
+      <rect x="294" y="58" width="12" height="82"/>
+      <rect x="374" y="94" width="12" height="102"/>
+    </g>
+    <rect x="294" y="146" width="12" height="44" fill="var(--bad)"/>
+    <rect x="284" y="196" width="32" height="6" fill="var(--bad)"/>
+    <g fill="none" stroke="var(--good)" stroke-width="1.6" stroke-dasharray="5 4">
+      <path d="M60 104H268M332 104H362"/>
+    </g>
+        <g fill="none" stroke="var(--good)" stroke-width="1.6" marker-end="url(#arV)">
+      <path d="M362 104v80"/>
+      <path d="M392 186h150"/>
+    </g>
+    <path d="M140 104h20" fill="none" stroke="var(--good)" stroke-width="1.6" marker-end="url(#arV)"/>
+    <g font-size="11.5">
+      <text x="120" y="44">microstrip on L1</text>
+      <text x="440" y="134" text-anchor="middle">stripline on L3</text>
+      <text x="330" y="38" text-anchor="middle">signal via</text>
+      <text x="236" y="218" fill="var(--bad)" text-anchor="end">stub: barrel below L3</text>
+      <text x="400" y="80">ground via</text>
+      <text x="100" y="124" fill="var(--good)">return current on L2</text>
+      <text x="420" y="214" fill="var(--good)">return continues on L4 and L2</text>
+      <text x="580" y="98" fill="var(--muted)">L2 ground</text>
+      <text x="580" y="194" fill="var(--muted)">L4 ground</text>
+      <text x="300" y="242" fill="var(--muted)" text-anchor="middle">clearance holes (antipads) in L2 and L4 around the signal via; the return current flows around them</text>
+    </g>
+  </svg>
+  </div>
+</div>
+
+<h3>The return path</h3>
+<p>Module 0 established that the return current flows in the reference plane directly under the signal. When the signal moves from layer 1 (referenced to layer 2) to a layer referenced to a different plane, the return current also has to change planes, and it can only do that through a conductor. Without a ground via close by, it has to find a path through the plane-to-plane capacitance or a distant via, creating a large current loop that adds inductance, radiates and couples into other signals. The rule is simple: <strong>every signal via that changes reference plane gets a ground via next to it</strong>, ideally two, one on each side.</p>
+
+<h3>Via stubs</h3>
+<p>A through-hole via goes all the way through the board. If the signal only travels from layer 1 to layer 3, the barrel below layer 3 is a short length of transmission line, open at the bottom, hanging off the signal path: a <strong>stub</strong>. Module 2 showed what an open stub does. At the frequency where it is a quarter-wavelength long, its open end transforms to a short circuit at the junction, shorting the signal to ground:</p>
+<div class="eq">$$f_\text{notch} = \frac{c}{4L\sqrt{\varepsilon_r}}$$<div class="n">L is the stub length; for a 1.4 mm stub in FR-4, this is about 26 GHz</div></div>
+<p>Below the notch, the stub still adds capacitance and a growing loss. For most RF work below 6 GHz in a 1.6 mm board, stubs are harmless. For multi-gigabit serial links, whose spectrum reaches well beyond 10 GHz, they're a primary concern. The fixes are to transition between layers that leave no stub (top to bottom), to <strong>back-drill</strong> the unused barrel out after plating, or to use blind and buried vias.</p>
+
+<div class="widget wide" id="w-stub">
+  <div class="wh"><span class="tag">Interactive</span><b>Transmission through a via with a stub</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label for="vL">Stub length <b id="vLv"></b></label><input id="vL" type="range" min="0.1" max="3" step="0.05" value="1.4"></div>
+      <div class="ctrl"><label for="vF">Signal frequency <b id="vFv"></b></label><input id="vF" type="range" min="1" max="40" step="0.5" value="10"></div>
+      <p class="small">FR-4, εr = 4.2. The stub is modelled as an open-circuited line hanging off a 50 Ω path. A back-drilled via leaves a stub of about 0.1–0.2 mm.</p>
+    </div>
+    <div>
+      <canvas id="cvStub" style="height:280px" aria-label="Plot of transmission through the via in decibels against frequency, showing a notch at the stub's quarter-wave frequency"></canvas>
+      <div class="readout">
+        <div class="stat"><div class="k">First notch</div><div class="v" id="vN"></div></div>
+        <div class="stat" id="vSS"><div class="k">Loss at the signal frequency</div><div class="v" id="vS"></div></div>
+      </div>
+      <div class="verdict" id="vVerdict"></div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>In a 1.6 mm board, a transition from the top layer to an inner layer 0.2 mm below it leaves a stub of about 1.4 mm. At what frequency is the notch?</li>
+    <li>A thicker 3 mm backplane leaves a 3 mm stub. Where does the notch move? What about a 25 Gb/s link, whose spectrum reaches about 12.5 GHz?</li>
+    <li>Shorten the stub to 0.15 mm, as back-drilling would. What's left of the problem?</li>
+  </ol></div>
+</div>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">A layer change with no ground via</span></summary>
+  <div class="eb">
+    <p>An RF trace runs on layer 1 over the layer 2 ground, then changes to layer 4, which is referenced to a layer 3 ground plane. There are no ground vias near the signal via; the two ground planes are connected only by vias at the board's corners.</p>
+    <div class="choice"><p>What does the return current do at the transition?</p>
+    <ol class="opts">
+      <li>It follows the signal through the signal via.<div class="why">The return current flows in the reference planes, not in the signal conductor.</div></li>
+      <li>It stays on layer 2.<div class="why">On layer 4, the field and the return current are between layer 4 and layer 3.</div></li>
+      <li data-correct>It has to get from layer 2 to layer 3 through the nearest connection: the planes' mutual capacitance or the distant corner vias. The loop is large, adding inductance, radiating, and coupling noise into other circuits sharing the planes.<div class="why">A return current that can't follow its signal takes the next-lowest-impedance path, whatever that is.</div></li>
+      <li>Nothing: return currents don't matter at RF.<div class="why">They matter more at RF than anywhere else (Module 0).</div></li>
+    </ol>
+    <div class="solution"><p>The return current must move from layer 2 to layer 3 at the point where the signal changes layer. With no via there, it spreads out through the planes looking for a connection, and the large loop it makes is an inductance in series with the signal and an antenna. Placing a ground via within a millimetre or so of the signal via gives the return current a short path and keeps the transition behaving like a continuous transmission line.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 6 GROUNDING ================= -->
+<section class="sec" id="grounding" data-short="Grounding and return paths">
+<h2>Grounding and return paths <a class="vjump" data-t="24:00"></a></h2>
+<p>Everything in Module 0 about return current applies directly to layout. An RF trace's return current flows in a narrow band of the reference plane directly underneath it, so the most important grounding rule is that the plane under an RF trace must be <strong>continuous</strong> along the trace's whole length. Specifically:</p>
+<ul>
+  <li><strong>Don't route RF over a split</strong> in the reference plane, or over a gap between two pours. The return current has to detour around the gap, adding inductance and radiating.</li>
+  <li><strong>Don't cut the ground plane with routing.</strong> A trace on layer 2, even a short one, breaks the plane for everything above it. If something must be routed on the ground layer, keep it away from RF.</li>
+  <li><strong>Watch rows of vias and clearances.</strong> A dense row of through-hole vias or connector pins, each with its clearance hole, can perforate the plane into a slot just as effectively as a cut.</li>
+  <li><strong>Ground component pads directly.</strong> A shunt capacitor or a chip's ground pad should reach the plane through its own via, as close to the pad as possible, not through a thin trace. Module 0 showed that a few millimetres of connection is several ohms at a gigahertz.</li>
+</ul>
+<p>Older advice suggests splitting a board into separate analog and digital grounds joined at one point. For RF and mixed-signal boards, a single continuous ground plane with careful component <em>placement</em> (keeping noisy digital circuits and their return currents physically away from sensitive RF) almost always works better, because a split forces return currents to detour and creates exactly the large loops it was meant to prevent.</p>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">Routing across a split plane</span></summary>
+  <div class="eb">
+    <p>An RF trace on layer 1 crosses the boundary between two separate ground regions on layer 2, joined only at one point 20 mm away.</p>
+    <div class="choice"><p>What happens?</p>
+    <ol class="opts">
+      <li>Nothing, as long as the two regions are both at 0 V.<div class="why">DC potential doesn't decide where an RF return current flows; the path does.</div></li>
+      <li data-correct>The return current has to go around through the joint, forming a large loop: the trace sees a large added inductance at the gap, and the loop radiates and picks up interference.<div class="why">Module 0's slot figure shows exactly this detour.</div></li>
+      <li>The trace's impedance drops at the gap.<div class="why">Losing the plane removes capacitance and adds inductance, so the impedance rises locally.</div></li>
+      <li>The two ground regions couple capacitively, so the gap doesn't matter at RF.<div class="why">Edge-to-edge capacitance across a split is small; the gap is a real discontinuity.</div></li>
+    </ol>
+    <div class="solution"><p>The return current under the trace can't cross the gap, so it flows to the joint and back, 40 mm of detour around a loop the size of the split. To the RF signal that's a series inductance at the crossing; to the rest of the board it's a slot antenna. Route RF traces only over continuous plane, or, if a crossing is unavoidable, place a stitching capacitor across the gap right next to the trace.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 7 STITCHING ================= -->
+<section class="sec" id="stitching" data-short="Stitching vias and fencing">
+<h2>Stitching vias and fencing <a class="vjump" data-t="28:00"></a></h2>
+<p>A ground pour on the top layer is only at ground potential where it's connected to the plane below. Between connections it's a sheet of metal over a plane, which is a resonator: a patch of pour connected at only one point can resonate as an antenna at the frequency where its free edge is a quarter-wavelength from the connection. <strong>Stitching vias</strong> connect pours to the plane at regular intervals so that no part of the pour is far enough from a via to resonate at the frequencies present.</p>
+<p>The usual guideline is a via spacing no more than <strong>λ/20</strong> at the highest frequency of concern, where λ is the wavelength in the dielectric (some designers use λ/10 as an upper limit). At 2.4 GHz in FR-4 that's about 3 mm.</p>
+
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>A grounded coplanar waveguide with via fences, top view</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 170" role="img" aria-label="Top view of an RF trace between two ground pours, with a gap on each side. A row of stitching vias runs along the edge of each pour close to the gap, forming a via fence, with spacing less than a twentieth of a wavelength.">
+    <rect x="40" y="20" width="560" height="48" fill="#e7c89b"/>
+    <rect x="40" y="102" width="560" height="48" fill="#e7c89b"/>
+    <rect x="40" y="76" width="560" height="18" fill="#c8893a"/>
+    <g fill="#fff" stroke="#8a5a20" stroke-width="1.4">
+      <circle cx="70" cy="56" r="5"/><circle cx="120" cy="56" r="5"/><circle cx="170" cy="56" r="5"/><circle cx="220" cy="56" r="5"/><circle cx="270" cy="56" r="5"/><circle cx="320" cy="56" r="5"/><circle cx="370" cy="56" r="5"/><circle cx="420" cy="56" r="5"/><circle cx="470" cy="56" r="5"/><circle cx="520" cy="56" r="5"/><circle cx="570" cy="56" r="5"/>
+      <circle cx="70" cy="114" r="5"/><circle cx="120" cy="114" r="5"/><circle cx="170" cy="114" r="5"/><circle cx="220" cy="114" r="5"/><circle cx="270" cy="114" r="5"/><circle cx="320" cy="114" r="5"/><circle cx="370" cy="114" r="5"/><circle cx="420" cy="114" r="5"/><circle cx="470" cy="114" r="5"/><circle cx="520" cy="114" r="5"/><circle cx="570" cy="114" r="5"/>
+      <circle cx="95" cy="32" r="5"/><circle cx="195" cy="32" r="5"/><circle cx="295" cy="32" r="5"/><circle cx="395" cy="32" r="5"/><circle cx="495" cy="32" r="5"/>
+      <circle cx="145" cy="138" r="5"/><circle cx="245" cy="138" r="5"/><circle cx="345" cy="138" r="5"/><circle cx="445" cy="138" r="5"/><circle cx="545" cy="138" r="5"/>
+    </g>
+    <g font-size="11.5">
+      <text x="320" y="89" text-anchor="middle" fill="#fff" font-weight="600">RF trace</text>
+      <path d="M120 44h50" stroke="var(--ink)" stroke-width="1"/><path d="M120 40v8M170 40v8" stroke="var(--ink)" stroke-width="1"/>
+      <text x="145" y="164" text-anchor="middle" fill="var(--muted)">spacing &lt; λ/20</text>
+      <text x="606" y="74" fill="var(--muted)">gap</text>
+      <text x="606" y="40" fill="var(--muted)">pour</text>
+      <text x="606" y="130" fill="var(--muted)">pour</text>
+    </g>
+    <path d="M145 44v-2" stroke="none"/>
+    <path d="M145 150v-2" stroke="none"/>
+  </svg>
+  </div>
+</div>
+<p>Placed in a row along each side of an RF trace, close to the gap, stitching vias form a <strong>via fence</strong>. The fence ties the coplanar grounds firmly to the plane below so they can't support unwanted modes between the layers, and it acts as a wall that blocks coupling from the RF line to neighbouring circuits. The same idea, along the edge of the whole board, stops the space between the planes from radiating out of the board edge; for the strongest effect, fabs can plate the board edge itself.</p>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">A pour connected by one via</span></summary>
+  <div class="eb">
+    <p>A ground pour island on the top layer, about 30 mm long, is connected to the ground plane by a single via at one end. The board has a 2.4 GHz radio.</p>
+    <div class="choice"><p>What's the concern?</p>
+    <ol class="opts">
+      <li data-correct>The far end of the pour is a significant fraction of a wavelength from its only ground connection, so the island can resonate and act as an antenna, coupling the radio's signal into everything nearby.<div class="why">30 mm is about half a wavelength in FR-4 at 2.4 GHz, well past a quarter-wave.</div></li>
+      <li>None: it's connected to ground, so it's at ground.<div class="why">It's at ground at the via. A wavelength-scale distance away, it isn't.</div></li>
+      <li>The pour adds too much capacitance to the ground plane.<div class="why">The capacitance is harmless; the problem is the resonance.</div></li>
+      <li>The pour causes the via to overheat.<div class="why">There's no significant current involved.</div></li>
+    </ol>
+    <div class="solution"><p>The island and the plane beneath it form a structure much like a patch antenna, and with only one connection at one end, its resonance falls near the frequency where it's a quarter-wavelength long: about 15 mm at 2.4 GHz in FR-4. A 30 mm island has resonances right in the radio's band. Either stitch it with vias every 3 mm or so, or delete it. A pour that isn't properly stitched is worse than no pour at all.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 8 PARASITICS ================= -->
+<section class="sec" id="parasitics" data-short="Parasitics and self-resonance">
+<h2>Parasitics and self-resonance <a class="vjump" data-t="32:00"></a></h2>
+<p>Module 0 showed a chip capacitor becoming an inductor above its self-resonant frequency (SRF), and EE Module 3 used the same effect for decoupling. In RF layout, part parasitics are design parameters, and the pads and vias are part of each component:</p>
+<ul>
+  <li><strong>Matching components</strong> must be well below their SRF, or they behave as something other than their nominal value. A 10 nH 0402 inductor might self-resonate around 4 GHz; at 2.4 GHz its effective inductance is already noticeably higher than 10 nH. RF inductors from RF-specific series (wire-wound or thin-film) have higher SRF and Q than general-purpose ones.</li>
+  <li><strong>DC-blocking capacitors</strong> are often chosen so that their series resonance (Module 0's minimum impedance) falls at the operating frequency. A 33–100 pF 0402 capacitor resonates near 1–2 GHz, where it looks like a very small resistance: an ideal series block.</li>
+  <li><strong>Bias inductors (RF chokes)</strong> feed DC to an amplifier while blocking RF. They need a high impedance at the operating frequency, so they're chosen to have their SRF (the parallel resonance, where the impedance peaks) at or above it.</li>
+  <li><strong>Smaller packages have smaller parasitics.</strong> 0402 and 0201 parts have less inductance and pad capacitance than 0603, which is why RF designs above a gigahertz rarely use larger sizes in the signal path.</li>
+  <li><strong>The pads count.</strong> A shunt capacitor's ground via adds about 0.3–0.5 nH, which at 2.4 GHz is several ohms of reactance in series with it. Simulations and matching-network calculations should include the pad and via, or the network will be tuned on the bench anyway.</li>
+</ul>
+<p>Because of all this, the matching network values that work on a vendor's evaluation board only work if the layout around them is copied too: same stackup, same pad sizes, same via placement. That's why radio chip datasheets come with a reference layout, and why departing from it usually means re-tuning the match on a VNA.</p>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">A DC block for a 915 MHz line</span></summary>
+  <div class="eb">
+    <p>A 915 MHz RF line needs a series capacitor to block DC. The candidates are 0402 capacitors of 10 nF, 1 nF and 47 pF.</p>
+    <div class="choice"><p>Which is the best choice?</p>
+    <ol class="opts">
+      <li>10 nF, because a bigger capacitor has a lower impedance.<div class="why">Only below SRF. A 10 nF 0402 resonates well under 100 MHz and is an inductor at 915 MHz.</div></li>
+      <li>1 nF, as a compromise.<div class="why">It resonates around 200 MHz and is already inductive at 915 MHz.</div></li>
+      <li>Any of them: at RF, all capacitors look like a short.<div class="why">Above their SRF, they look like inductors, which grow with frequency.</div></li>
+      <li data-correct>47 pF, because its self-resonance is near the operating frequency, where its impedance is at a minimum.<div class="why">Near series resonance, the capacitor's reactance and its parasitic inductance cancel.</div></li>
+    </ol>
+    <div class="solution"><p>A 0402 package has about 0.5 nH of inductance. A 47 pF capacitor with 0.5 nH resonates at about 1.0 GHz, so at 915 MHz it's near its minimum impedance, well under an ohm. A 10 nF capacitor is an inductor at 915 MHz with a reactance of about 3 Ω, small but not negligible, and its parasitic inductance is what's in the signal path. Choosing the capacitor whose SRF is near the operating frequency is standard practice for RF coupling capacitors.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 9 DIFFERENTIAL ================= -->
+<section class="sec" id="differential" data-short="Differential RF pairs">
+<h2>Differential RF pairs <a class="vjump" data-t="36:00"></a></h2>
+<p>Many radio chips have differential RF ports: two pins carrying equal and opposite signals. A differential signal's fields largely cancel at a distance, so it radiates less and picks up less interference than a single-ended one, and noise that appears equally on both lines (common-mode) is rejected by the receiver.</p>
+<p>A <strong>differential pair</strong> is two traces routed together, designed as a coupled transmission line with a specified <strong>differential impedance</strong>: 100 Ω is common for digital links, while RF differential ports often have other impedances given in the datasheet. The benefits only hold if the two lines are identical:</p>
+<ul>
+  <li>Route the two traces <strong>symmetrically</strong>: same length, same width, same spacing, and the same features (vias, bends, components) in the same places on both.</li>
+  <li>Match lengths to a small fraction of a wavelength. A length difference turns part of the differential signal into common-mode, which radiates and isn't rejected.</li>
+  <li>Keep the reference plane continuous under both lines; an obstacle under only one of them breaks the symmetry.</li>
+</ul>
+<p>Most differential RF ports connect to a single-ended 50 Ω antenna through a balun (Module 3), often an integrated chip balun or a small lumped LC network placed right next to the chip. Keep the differential section between the chip and the balun short and symmetric, and everything after the balun is ordinary single-ended routing.</p>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">An asymmetric pair</span></summary>
+  <div class="eb">
+    <p>A differential pair from a radio chip to its balun has one trace 3 mm longer than the other, because of how the pins were fanned out.</p>
+    <div class="choice"><p>At 2.4 GHz, what's the effect?</p>
+    <ol class="opts">
+      <li>None: 3 mm is a tiny length.<div class="why">3 mm is about a twentieth of a wavelength in FR-4 at 2.4 GHz: a phase error of roughly 18°.</div></li>
+      <li>The differential impedance doubles.<div class="why">The impedance is set by the cross-section, not the length difference.</div></li>
+      <li data-correct>The two signals are no longer exactly opposite, so part of the signal becomes common-mode: it isn't delivered by the balun, and can radiate or couple elsewhere.<div class="why">The phase error converts differential signal into common-mode.</div></li>
+      <li>The longer trace has more loss, which is the only effect.<div class="why">The added loss is negligible; the phase error matters much more.</div></li>
+    </ol>
+    <div class="solution"><p>A 3 mm length difference at 2.4 GHz is about 18° of phase, so the two signals aren't 180° apart at the balun, and part of the signal is common-mode. The balun only delivers the differential part to the antenna; the common-mode part is lost or radiated from the traces, and for a receiver, common-mode noise is no longer fully rejected. Match lengths at the point where the asymmetry arises, close to the pins.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 10 THERMAL ================= -->
+<section class="sec" id="thermal" data-short="PA thermal design">
+<h2>PA thermal design <a class="vjump" data-t="39:00"></a></h2>
+<p>A power amplifier converts DC power into RF power, and the rest becomes heat. Efficiency η is RF output divided by DC input, so the power dissipated in the device is:</p>
+<div class="eq">$$P_\text{diss} = P_\text{DC} - P_\text{out} = P_\text{out}\left(\frac{1}{\eta} - 1\right)$$<div class="n">a 1 W PA at 40 % efficiency dissipates 1.5 W, more than its output</div></div>
+<p>Heat flows from the transistor junction to the surroundings through a chain of thermal resistances, in K/W (kelvins of temperature rise per watt of heat flow), exactly as current flows through series resistors (EE Module 1). The temperature rise across each is the heat flow times the resistance:</p>
+<div class="eq">$$T_j = T_a + P_\text{diss}\,(\theta_\text{JC} + \theta_\text{board} + \theta_\text{BA})$$<div class="n">junction-to-case, through the board, board to ambient</div></div>
+<p>The weak link is usually the board. FR-4 is a poor thermal conductor, so the heat from the PA's exposed pad has to be carried through the board by <strong>thermal vias</strong>: plated holes, each one a small copper tube with a thermal resistance of roughly 100–200 K/W through a 1.6 mm board. Many vias in parallel divide that resistance, just as parallel resistors do. The heat then has to spread into copper planes and leave the board through a heatsink, the enclosure, or the air.</p>
+<p>Designing the thermal path follows from that model:</p>
+<ul>
+  <li>Put as many thermal vias under the exposed pad as the datasheet's recommended pattern allows, typically a grid at about 1 mm pitch.</li>
+  <li>Connect them to large, solid copper areas on inner and bottom layers, and from there to a heatsink or the enclosure if the power requires it.</li>
+  <li>Open vias under a pad wick solder away during reflow, leaving voids under the part. Use small vias, or have them filled and capped (plated over) by the fab.</li>
+  <li>Design for the worst-case ambient, including the inside of a closed enclosure in the sun, and keep the junction well below the device's maximum (125 °C is a common design limit for long life).</li>
+</ul>
+
+<div class="widget wide" id="w-th">
+  <div class="wh"><span class="tag">Interactive</span><b>Junction temperature of a PA</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label for="tP">RF output power <b id="tPv"></b></label><input id="tP" type="range" min="0.1" max="5" step="0.1" value="1"></div>
+      <div class="ctrl"><label for="tE">Efficiency <b id="tEv"></b></label><input id="tE" type="range" min="20" max="70" step="1" value="40"></div>
+      <div class="ctrl"><label for="tN">Thermal vias under the pad <b id="tNv"></b></label><input id="tN" type="range" min="1" max="30" step="1" value="9"></div>
+      <div class="ctrl"><label for="tA">Ambient temperature <b id="tAv"></b></label><input id="tA" type="range" min="-20" max="85" step="1" value="60"></div>
+      <p class="small">θ<sub>JC</sub> = 5 K/W; each via 160 K/W; board to ambient θ<sub>BA</sub> = 20 K/W. Maximum junction temperature 150 °C.</p>
+    </div>
+    <div>
+      <canvas id="cvTh" style="height:230px" aria-label="Bar showing temperature rising from ambient through the board-to-ambient, via and junction-to-case thermal resistances to the junction temperature, with the design limit and maximum marked"></canvas>
+      <div class="readout">
+        <div class="stat"><div class="k">Dissipated power</div><div class="v" id="tD"></div></div>
+        <div class="stat"><div class="k">Total θ</div><div class="v" id="tT"></div></div>
+        <div class="stat" id="tJS"><div class="k">Junction temperature</div><div class="v" id="tJ"></div></div>
+      </div>
+      <div class="verdict" id="tVerdict"></div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>Start at 1 W, 40 %, 9 vias and 60 °C. Which part of the chain has the largest temperature rise?</li>
+    <li>Reduce to 1 via, as if the pad had only a single ground via. What happens to the junction?</li>
+    <li>Compare improving efficiency from 40 % to 55 % with doubling the via count. Which helps more?</li>
+  </ol></div>
+</div>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">Where to spend effort on cooling</span></summary>
+  <div class="eb">
+    <p>A PA runs too hot. Its thermal chain is θ<sub>JC</sub> = 5 K/W, 4 thermal vias at 160 K/W each, and θ<sub>BA</sub> = 20 K/W.</p>
+    <div class="choice"><p>Which change helps most?</p>
+    <ol class="opts">
+      <li data-correct>More thermal vias: going from 4 to 16 reduces the via resistance from 40 K/W to 10 K/W.<div class="why">The vias are the largest resistance in the chain, so they're where the gain is.</div></li>
+      <li>A PA with a lower θ<sub>JC</sub> of 3 K/W.<div class="why">That saves 2 K/W of a total of 65 K/W.</div></li>
+      <li>A thicker copper top layer.<div class="why">It helps spreading a little, but the bottleneck is getting through the board.</div></li>
+      <li>A larger enclosure.<div class="why">That may reduce θBA slightly, but it's not the dominant term.</div></li>
+    </ol>
+    <div class="solution"><p>The series resistances are 5 + 40 + 20 = 65 K/W, and the 4 vias account for 40 of them. Going to 16 vias cuts that to 10 K/W, bringing the total to 35 K/W and nearly halving the temperature rise. As with any series chain, improve the largest term first. Only once the vias are no longer dominant does it pay to work on the heatsink path (θBA).</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= DESIGN EXERCISES ================= -->
+<section class="sec" id="exercises" data-nonum data-short="Design exercises">
+<h2>Design exercises</h2>
+<p>Problems drawn from real hardware. Each takes a few steps. Enter numbers to check your reasoning as you go, or open the worked solutions and discussion. The figures above are useful for sanity-checking.</p>
+
+<div class="chal">
+  <div class="ch"><span class="cn">Exercise 1</span><span class="cd">Design · ●○○</span><span class="ctitle">Stitching via spacing</span></div>
+  <div class="cbody">
+    <p>A board in FR-4 (εr = 4.2) has a 2.4 GHz radio, and the designer wants ground stitching at λ/20 of the wavelength in the dielectric.</p>
+    <div class="check" data-ans="61" data-tol="2%" data-unit="mm"><p>(a) What's the wavelength in the dielectric at 2.4 GHz?</p>
+      <div class="miss" data-val="125"><p>That's the free-space wavelength. In the dielectric, waves travel slower by √εr.</p></div>
+      <div class="hint">\(\lambda = c/(f\sqrt{\varepsilon_r})\).</div>
+      <div class="solution"><p>\(\lambda = 3\times10^8/(2.4\times10^9 \times \sqrt{4.2}) = 125/2.05 \approx 61\ \text{mm}\).</p></div></div>
+    <div class="check" data-ans="3.05" data-tol="3%" data-unit="mm"><p>(b) Maximum via spacing?</p>
+      <div class="solution"><p>61/20 ≈ 3.05 mm. In practice, about 3 mm or less.</p></div></div>
+    <details><summary>Discussion: which frequency to design for</summary><p>Use the highest frequency that matters, not only the carrier. A 2.4 GHz PA's third harmonic is at 7.2 GHz, where the same rule gives about 1 mm. Designs usually compromise: tight stitching close to the PA and its output filter, where harmonics are strong, and the carrier-frequency spacing elsewhere.</p></details>
+  </div>
+</div>
+
+<div class="chal">
+  <div class="ch"><span class="cn">Exercise 2</span><span class="cd">Analysis · ●●○</span><span class="ctitle">A via stub on a high-speed link</span></div>
+  <div class="cbody">
+    <p>A signal changes from the top layer to an inner layer 0.2 mm below it through a through-hole via, leaving a stub from that layer to the bottom of the board. The material is FR-4 with εr = 4.2.</p>
+    <div class="check" data-ans="26.1" data-tol="2%" data-unit="GHz"><p>(a) In a 1.6 mm board the stub is 1.4 mm long. At what frequency is the notch?</p>
+      <div class="hint">The stub is open at the bottom, so it shorts the signal when it's a quarter-wavelength long.</div>
+      <div class="solution"><p>\(f = c/(4L\sqrt{\varepsilon_r}) = 3\times10^8/(4 \times 1.4\times10^{-3} \times 2.05) \approx 26.1\ \text{GHz}\).</p></div></div>
+    <div class="check" data-ans="12.2" data-tol="2%" data-unit="GHz"><p>(b) The same transition in a 3.2 mm thick board leaves a 3.0 mm stub. Where's the notch now?</p>
+      <div class="solution"><p>\(3\times10^8/(4 \times 3.0\times10^{-3} \times 2.05) \approx 12.2\ \text{GHz}\).</p></div></div>
+    <details><summary>Discussion: what to do about it</summary><p>A 25 Gb/s link has significant energy up to about 12.5 GHz, so the 3.0 mm stub's notch lands right on it, while the 1.4 mm stub's is comfortably above. The options are to change layers top to bottom so there's no stub, to back-drill the via, or to use blind vias. The insertion loss also starts rising well below the notch, so the margin needs to be generous.</p></details>
+  </div>
+</div>
+
+<div class="chal">
+  <div class="ch"><span class="cn">Exercise 3</span><span class="cd">Design · ●●○</span><span class="ctitle">Cooling a 1 W PA</span></div>
+  <div class="cbody">
+    <p>A PA delivers 1 W of RF at 40 % efficiency. θ<sub>JC</sub> = 5 K/W, 9 thermal vias each 160 K/W, θ<sub>BA</sub> = 20 K/W, ambient 85 °C.</p>
+    <div class="check" data-ans="1.5" data-tol="2%" data-unit="W"><p>(a) Dissipated power?</p>
+      <div class="miss" data-val="2.5"><p>That's the DC input power. Subtract the 1 W that leaves as RF.</p></div>
+      <div class="solution"><p>\(P_\text{DC} = 1/0.4 = 2.5\ \text{W}\), so \(P_\text{diss} = 2.5 - 1 = 1.5\ \text{W}\).</p></div></div>
+    <div class="check" data-ans="149" data-tol="1%" data-unit="°C"><p>(b) Junction temperature?</p>
+      <div class="hint">The vias are in parallel: 160/9 K/W. Then add the three resistances in series.</div>
+      <div class="solution"><p>θ = 5 + 17.8 + 20 = 42.8 K/W. \(T_j = 85 + 1.5 \times 42.8 \approx 149\ \text{°C}\).</p></div></div>
+    <details><summary>Discussion: is that acceptable?</summary><p>149 °C is right at a typical 150 °C absolute maximum, with no margin, and well above a 125 °C design target. Doubling the vias to 18 brings θ to 33.9 K/W and T<sub>j</sub> to 136 °C; improving the board-to-ambient path matters next. Also check the worst-case duty cycle: a telemetry transmitter that only sends in bursts has a much lower average dissipation, though the junction still heats during each burst.</p></details>
+  </div>
+</div>
+</section>
+
+<!-- ================= BENCH ================= -->
+<section class="sec" id="bench" data-nonum data-short="At the bench">
+<h2>At the bench</h2>
+<div class="video" data-video="lab">
+  <div class="plan">
+    <p>Planned lab demo (≈ 20 min, filmed at the bench):</p>
+    <ol>
+      <li>Test coupons: a good 50 Ω line, a line over a split plane, and a line with an unstitched pour</li>
+      <li>Measuring each on the VNA: S₁₁, S₂₁ and TDR</li>
+      <li>A PA evaluation board under a thermal camera</li>
+    </ol>
+  </div>
+</div>
+<div class="lab">
+  <h3>Layout effects on a VNA</h3>
+  <div class="parts"><span>NanoVNA (or any VNA) and calibration kit</span><span>A test board with several microstrip variants (or an RF evaluation board)</span><span>SMA edge-launch connectors</span><span>A thermal camera or thermocouple, if available</span></div>
+  <ol>
+    <li><b>Reference line.</b> Measure S₂₁ and S₁₁ of a plain 50 Ω microstrip over a solid plane. This is the baseline: low loss, low reflection across the band.</li>
+    <li><b>Split plane.</b> Measure a line of the same length that crosses a gap in the plane. Compare S₂₁ and S₁₁, and if the VNA has a TDR mode, find the discontinuity at the gap.</li>
+    <li><b>Floating pour.</b> Measure a line next to a pour connected at one point. Look for narrow dips in S₂₁ where the pour resonates, then compare with a stitched version.</li>
+    <li><b>Thermal.</b> If a PA evaluation board is available, run it at full power and measure the temperature of the case and the board under it. Estimate θ from the temperature rise and the dissipated power.</li>
+  </ol>
+  <div class="record"><b>What you should see:</b> a clean reference line, a clear impedance step and loss at the split, resonant dips from the floating pour that disappear when it's stitched, and a temperature rise roughly matching the thermal-resistance calculation.</div>
+</div>
+</section>
+
+<!-- ================= SUMMARY ================= -->
+<section class="sec" id="summary" data-nonum data-short="Summary">
+<h2>Summary &amp; cheat sheet</h2>
+<ol class="takeaways">
+  <li>Choose the stackup first: a thin dielectric to a solid ground plane under every RF layer keeps 50 Ω traces narrow and fields confined.</li>
+  <li>FR-4 is fine for short runs at low gigahertz; low-loss laminates matter for long lines, high frequencies and printed filters or antennas.</li>
+  <li>Specify controlled impedance with the fab; keep width constant, keep pours away or design for GCPW, and account for solder mask and surface finish.</li>
+  <li>Every via that changes reference plane needs a ground via next to it. Via stubs notch at a quarter-wavelength; back-drill or avoid them at high frequencies.</li>
+  <li>Never route RF over a split or gap in its reference plane. Stitch pours at λ/20 or closer and fence RF lines.</li>
+  <li>Choose RF parts by their SRF; include pads and vias in matching. Route differential pairs symmetrically.</li>
+  <li>PA heat flows through series thermal resistances; thermal vias under the exposed pad are usually the bottleneck.</li>
+</ol>
+<div class="cheat">
+  <div><b>Via stub notch</b>\(f = c/(4L\sqrt{\varepsilon_r})\)<br><span class="small">1.4 mm in FR-4: ≈ 26 GHz</span></div>
+  <div><b>Stitching</b>spacing ≤ λ/20 in the dielectric<br><span class="small">2.4 GHz, FR-4: ≈ 3 mm</span></div>
+  <div><b>PA dissipation</b>\(P_\text{diss} = P_\text{out}(1/\eta - 1)\)</div>
+  <div><b>Junction</b>\(T_j = T_a + P_\text{diss}\sum\theta\)<br><span class="small">n vias in parallel: θ<sub>via</sub>/n</span></div>
+  <div><b>50 Ω microstrip, FR-4</b>h = 0.2 mm → w ≈ 0.4 mm<br><span class="small">h = 1.6 mm → w ≈ 3 mm</span></div>
+  <div><b>DC block</b>choose SRF near the operating frequency<br><span class="small">47 pF 0402 ≈ 1 GHz</span></div>
+</div>
+<h3>Further reading</h3>
+<ul class="small">
+  <li><em>Microwave Engineering</em> (Pozar), chapter 3: microstrip, stripline and coplanar lines, including the effect of the substrate on impedance.</li>
+  <li><em>Microwave Engineering</em> (Pozar), chapter 2: the open and shorted stub, the basis of the via stub notch.</li>
+  <li><em>Microwave Engineering</em> (Pozar), chapter 1: conductor loss, surface resistance and skin depth, behind surface-finish and roughness loss.</li>
+  <li><em>Microwave Engineering</em> (Pozar), chapter 12: practical amplifier design, including biasing networks and RF chokes.</li>
+</ul>
 </section>
 
 <nav class="pager"></nav>
 </main>
 </div>
 <footer class="site">Hardware Engineering Fundamentals · RF &amp; High-Speed Design</footer>
+
+<script>
+'use strict';
+const $ = s => document.querySelector(s);
+const {col, si, fmt} = Plot;
+function setVerdict(el, cls, html){ el.className = 'verdict ' + cls; el.innerHTML = html; }
+
+/* ============ 1. Via stub notch ============ */
+(() => {
+  const ER = 4.2, C0 = 3e8, Z0 = 50, ZS = 45;
+  const s21 = (f, fn) => {
+    // open stub of electrical length (pi/2)(f/fn) with a small loss; shunt admittance tanh(gamma l)/Zs
+    const b = Math.PI/2*f/fn, a = 0.03*Math.sqrt(f/fn), d = Math.cosh(2*a) + Math.cos(2*b);
+    const tr = Math.sinh(2*a)/d, ti = Math.sin(2*b)/d, k = Z0/ZS;
+    return 10*Math.log10(4/((2 + k*tr)**2 + (k*ti)**2));
+  };
+  let s = {};
+  function upd(){
+    const L = +$('#vL').value, f = +$('#vF').value*1e9, fn = C0/(4*L*1e-3*Math.sqrt(ER)), loss = -s21(f, fn);
+    s = {L, f, fn};
+    $('#vLv').textContent = fmt(L, 2) + ' mm'; $('#vFv').textContent = fmt(f/1e9, 3) + ' GHz';
+    $('#vN').textContent = fn > 200e9 ? '> 200 GHz' : si(fn, 'Hz'); $('#vS').textContent = fmt(loss, 2) + ' dB';
+    $('#vSS').className = 'stat ' + (loss > 3 ? 'bad' : loss > 0.5 ? 'warn' : '');
+    const v = $('#vVerdict');
+    if (loss < 0.5) setVerdict(v, 'ok', `<b>Harmless.</b> The signal is well below the notch at ${si(fn, 'Hz')}; the stub adds only a little capacitance.`);
+    else if (loss < 3) setVerdict(v, 'warn', `<b>Noticeable.</b> ${fmt(loss, 2)} dB lost at the signal frequency, and more at higher frequencies in the signal's spectrum. Consider back-drilling or a different layer pair.`);
+    else setVerdict(v, 'bad', `<b>The stub is eating the signal.</b> ${fmt(loss, 2)} dB lost: the stub is close to a quarter-wavelength and shorting the signal to ground.`);
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvStub'), (ctx, W, H) => {
+    const {f, fn} = s; if (!fn) return;
+    const P = {l: 52, r: W - 24, t: 14, b: H - 40};
+    const X = Plot.lin(0, 40e9, P.l, P.r), Y = Plot.lin(-30, 1, P.b, P.t);
+    Plot.axes(ctx, P, X, Y, {xt: W < 520 ? [0, 10e9, 20e9, 30e9, 40e9] : [0, 5e9, 10e9, 15e9, 20e9, 25e9, 30e9, 35e9, 40e9], yt: [-30, -20, -10, -3, 0], xl: 'frequency', yl: 'S₂₁ (dB)', xf: t => si(t, 'Hz').replace(' ', ''), xgrid: true});
+    Plot.clip(ctx, P);
+    const pts = []; for (let i = 1; i <= 800; i++){ const ff = 40e9*i/800; pts.push([X(ff), Y(Math.max(-30, s21(ff, fn)))]); }
+    Plot.line(ctx, pts, col.c1, 2.4);
+    Plot.line(ctx, [[X(f), P.t], [X(f), P.b]], col.c2, 1.2, [4, 4]);
+    Plot.dot(ctx, X(f), Y(Math.max(-30, s21(f, fn))), 5, col.c2);
+    ctx.restore();
+    Plot.text(ctx, 'signal', X(f) + 6, P.b - 12, {color: col.c2});
+    if (fn < 40e9) Plot.text(ctx, 'λ/4 notch', X(fn) + 8, Y(-25), {color: col.bad});
+  });
+  ['#vL', '#vF'].forEach(id => $(id).addEventListener('input', upd));
+  upd();
+})();
+
+/* ============ 2. PA thermal chain ============ */
+(() => {
+  const JC = 5, VIA = 160, BA = 20;
+  let s = {};
+  function upd(){
+    const po = +$('#tP').value, eta = +$('#tE').value/100, n = +$('#tN').value, ta = +$('#tA').value;
+    const pd = po*(1/eta - 1), tv = VIA/n, tj = ta + pd*(JC + tv + BA);
+    s = {pd, tv, ta, tj};
+    $('#tPv').textContent = fmt(po, 2) + ' W'; $('#tEv').textContent = Math.round(eta*100) + ' %'; $('#tNv').textContent = n; $('#tAv').textContent = ta + ' °C';
+    $('#tD').textContent = fmt(pd, 3) + ' W'; $('#tT').textContent = fmt(JC + tv + BA, 3) + ' K/W'; $('#tJ').textContent = Math.round(tj) + ' °C';
+    $('#tJS').className = 'stat ' + (tj > 150 ? 'bad' : tj > 125 ? 'warn' : '');
+    const v = $('#tVerdict');
+    if (tj > 150) setVerdict(v, 'bad', `<b>Over the maximum.</b> The junction would reach ${Math.round(tj)} °C, past the 150 °C limit. The device will be damaged or shut down. Reduce dissipation or the thermal resistance.`);
+    else if (tj > 125) setVerdict(v, 'warn', `<b>Too hot for long life.</b> ${Math.round(tj)} °C is under the absolute maximum, but above a 125 °C design target. Lifetime falls quickly with junction temperature.`);
+    else setVerdict(v, 'ok', `<b>Acceptable.</b> ${Math.round(tj)} °C at the junction, with ${Math.round(125 - tj)} °C of margin to a 125 °C design target.`);
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvTh'), (ctx, W, H) => {
+    const {pd, tv, ta, tj} = s; if (pd === undefined) return;
+    const P = {l: 16, r: W - 16, t: 62, b: H - 40};
+    const X = Plot.lin(-20, 250, P.l, P.r);
+    Plot.axes(ctx, P, X, Plot.lin(0, 1, P.b, P.t), {xt: [0, 50, 100, 150, 200, 250], yt: [], xl: 'temperature (°C)', xgrid: true});
+    const y0 = P.t + 24, h = P.b - P.t - 40;
+    const segs = [[ta, ta + pd*BA, col.c5, 'board → air'], [ta + pd*BA, ta + pd*(BA + tv), col.c3, 'vias'], [ta + pd*(BA + tv), tj, col.c2, 'junction → case']];
+    Plot.clip(ctx, P);
+    ctx.fillStyle = col.line; ctx.fillRect(X(-20), y0, X(ta) - X(-20), h);
+    segs.forEach(([a, b, c]) => { ctx.fillStyle = c; ctx.fillRect(X(a), y0, Math.max(1, X(b) - X(a)), h); });
+    [[125, col.warn], [150, col.bad]].forEach(([t, c]) => Plot.line(ctx, [[X(t), P.t], [X(t), P.b]], c, 1.6, [5, 4]));
+    ctx.restore();
+    Plot.text(ctx, '125 °C', X(125) - 4, P.t - 8, {align: 'right', color: col.warn});
+    Plot.text(ctx, '150 °C max', X(150) + 4, P.t - 8, {color: col.bad});
+    Plot.text(ctx, 'ambient ' + ta + ' °C', P.l + 4, y0 - 10, {color: col.muted});
+    // legend row above the bar
+    let lx = P.l, ly = 13;
+    segs.forEach(([a, b, c, lab]) => {
+      const t = lab + ' +' + Math.round(b - a) + ' K';
+      ctx.save(); ctx.font = '12px sans-serif'; const tw = ctx.measureText(t).width; ctx.restore();
+      if (lx > P.l && lx + 14 + tw > P.r){ lx = P.l; ly += 18; }
+      ctx.fillStyle = c; ctx.fillRect(lx, ly - 5, 10, 10);
+      Plot.text(ctx, t, lx + 14, ly, {color: col.ink2});
+      lx += 14 + tw + 14;
+    });
+    if (tj > 250) Plot.text(ctx, 'Tj ' + Math.round(tj) + ' °C →', P.r - 4, y0 + h/2, {align: 'right', color: '#fff', bold: true});
+    else Plot.text(ctx, 'Tj', X(tj) + 6, y0 + h/2, {color: col.ink, bold: true});
+  });
+  ['#tP', '#tE', '#tN', '#tA'].forEach(id => $(id).addEventListener('input', upd));
+  upd();
+})();
+</script>
 </body>
 </html>
