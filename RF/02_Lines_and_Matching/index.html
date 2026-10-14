@@ -4,31 +4,995 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Transmission Lines &amp; Matching · RF 2</title>
-<meta name="description" content="RF & High-Speed Design module 2: Microstrip, the Smith chart, matching networks and S-parameters. In development.">
+<meta name="description" content="RF module 2: propagation modes, microstrip, stripline and coplanar waveguide, the Smith chart, lumped-element matching, input impedance and quarter-wave transformers, S-parameters, return and insertion loss, and bandwidth.">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
 <link rel="stylesheet" href="../../assets/site.css">
 <script src="../../assets/course.js"></script>
 <script src="../../assets/site.js"></script>
+<script src="../../assets/plot.js"></script>
 </head>
 <body>
 <div class="layout">
 <aside class="side" aria-label="Module contents"></aside>
 <main class="content">
 
-<!-- Placeholder: replace this page with the module when it's written (see README.md, "Writing a module"). -->
+<!-- ================= HERO ================= -->
 <header class="hero">
   <div class="eyebrow">RF &amp; High-Speed Design · Module 2</div>
-  <h1>Transmission Lines &amp; Matching</h1>
-  <p class="lede">Microstrip, the Smith chart, matching networks and S-parameters.</p>
+  <h1>Transmission lines, propagation &amp; matching</h1>
+  <p class="lede">Module 1 showed that a mismatch reflects power. This module is about controlling impedance: building lines with a known impedance on a circuit board, seeing what a line does to the impedance at its far end, and designing networks that make a load look like 50 Ω. Along the way it introduces the two tools RF engineers use to think about all of this, the Smith chart and S-parameters.</p>
+  <p class="meta">Builds on: RF modules 0–1, EE modules 3–4. Bench: NanoVNA or any VNA, a few chip capacitors and inductors, a test board.</p>
+  <div class="resources" data-auto></div>
+  <div class="objectives">
+    <h3>What's covered</h3>
+    <ul>
+      <li>Propagation modes: why coax and planar lines carry one field pattern, and what limits their frequency range.</li>
+      <li>Microstrip, stripline, coplanar waveguide and grounded coplanar waveguide, and how to size a 50 Ω trace.</li>
+      <li>The Smith chart, built from first principles, and what moving along a line does to an impedance.</li>
+      <li>Matching a load with two components (an L-network), and with quarter-wave transformers.</li>
+      <li>S-parameters, return loss and insertion loss, and why every match has a bandwidth.</li>
+    </ul>
+  </div>
+  <div class="video" data-video="lecture" id="lecture">
+    <div class="plan">
+      <p>Planned walkthrough of this page (≈ 45 min):</p>
+      <ol>
+        <li data-t="0:00">Propagation modes and why lines have a frequency limit</li>
+        <li data-t="6:00">Microstrip, stripline and coplanar waveguide</li>
+        <li data-t="13:00">Building the Smith chart</li>
+        <li data-t="21:00">Matching with an L-network</li>
+        <li data-t="28:00">Input impedance and the quarter-wave transformer</li>
+        <li data-t="34:00">S-parameters</li>
+        <li data-t="39:00">Return loss and insertion loss</li>
+        <li data-t="41:00">Bandwidth</li>
+      </ol>
+    </div>
+  </div>
 </header>
 
-<section class="sec" id="status" data-nonum data-short="In development">
-<h2>In development</h2>
-<p>This module hasn't been written yet. The other modules are listed in the strip at the top of the page, and the links below go to the neighbouring ones.</p>
+<!-- ================= 1 MODES ================= -->
+<section class="sec" id="modes" data-short="Propagation modes">
+<h2>Propagation modes <a class="vjump" data-t="0:00"></a></h2>
+<p>A transmission line guides an electromagnetic wave, and the pattern the fields take across the line's cross-section is called a <strong>mode</strong>. Different structures support different modes, and that decides what a line can and can't do.</p>
+<p>The simplest is the <strong>TEM</strong> (transverse electromagnetic) mode, where both the electric and magnetic fields lie entirely in the cross-section, at right angles to the direction of travel. Coax carries a TEM wave: the electric field runs radially from the centre conductor to the shield, and the magnetic field circles the centre conductor. TEM needs at least two separate conductors, because the electric field has to start on one and end on the other. Its useful properties follow from that: it works all the way down to DC, its speed doesn't depend on frequency, and its characteristic impedance is a constant.</p>
+<p>A microstrip trace has two conductors too, but its fields are partly in the board and partly in the air above, two materials with different speeds. The wave can't be purely TEM, but at frequencies where the trace is small compared with the wavelength it behaves almost exactly like one. That's called <strong>quasi-TEM</strong>, and it's why microstrip uses an <em>effective</em> dielectric constant somewhere between air's and the board's.</p>
+<p>A hollow metal pipe, a <strong>waveguide</strong>, has only one conductor, so it can't carry TEM at all. It carries TE or TM modes instead, field patterns that "fit" between the walls, and each has a <strong>cutoff frequency</strong> below which it can't propagate. A waveguide is a high-pass structure: nothing gets through below the cutoff of its lowest mode.</p>
+
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>Field patterns in coax, microstrip and a rectangular waveguide</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 250" role="img" aria-label="Three cross-sections. Coax: radial electric field lines from the centre conductor to the shield, with circular magnetic field lines. Microstrip: electric field from the trace to the ground plane, mostly in the dielectric with some in the air. Rectangular waveguide TE10 mode: vertical electric field strongest in the middle of the broad wall and zero at the side walls.">
+    <!-- coax -->
+    <circle cx="110" cy="110" r="70" fill="var(--sunk)" stroke="var(--c4)" stroke-width="6"/>
+    <circle cx="110" cy="110" r="14" fill="var(--c4)"/>
+    <g stroke="var(--c1)" stroke-width="1.4">
+      <path d="M124 110h42M96 110h-42M110 96v-42M110 124v42M120 100l30 -30M100 100l-30 -30M120 120l30 30M100 120l-30 30"/>
+    </g>
+    <g fill="none" stroke="var(--c3)" stroke-width="1.3" stroke-dasharray="4 3"><circle cx="110" cy="110" r="32"/><circle cx="110" cy="110" r="52"/></g>
+    <text x="110" y="208" font-size="13" text-anchor="middle" font-weight="600">Coax: TEM</text>
+    <text x="110" y="226" font-size="12" text-anchor="middle" fill="var(--muted)">works from DC upward</text>
+    <!-- microstrip -->
+    <rect x="230" y="150" width="180" height="40" fill="var(--sunk)"/>
+    <rect x="230" y="190" width="180" height="8" fill="var(--c4)"/>
+    <rect x="305" y="142" width="30" height="8" fill="var(--c4)"/>
+    <g stroke="var(--c1)" stroke-width="1.4" fill="none">
+      <path d="M312 150v40M320 150v40M328 150v40"/>
+      <path d="M306 150q-18 18 -22 40"/><path d="M334 150q18 18 22 40"/>
+      <path d="M305 146q-48 0 -60 44"/><path d="M335 146q48 0 60 44"/>
+      <path d="M312 142q-6 -40 -60 -40"/><path d="M328 142q6 -40 60 -40" opacity=".6"/>
+    </g>
+    <text x="238" y="168" font-size="11" fill="var(--muted)">board</text>
+    <text x="400" y="120" font-size="11" text-anchor="end" fill="var(--muted)">air</text>
+    <text x="320" y="226" font-size="13" text-anchor="middle" font-weight="600">Microstrip: quasi-TEM</text>
+    <text x="320" y="244" font-size="12" text-anchor="middle" fill="var(--muted)">fields split between board and air</text>
+    <!-- waveguide -->
+    <rect x="460" y="70" width="160" height="80" fill="var(--sunk)" stroke="var(--c4)" stroke-width="5"/>
+    <g stroke="var(--c1)" fill="none">
+      <path d="M480 74v72" stroke-width="0.8"/><path d="M500 74v72" stroke-width="1.6"/><path d="M520 74v72" stroke-width="2.4"/><path d="M540 74v72" stroke-width="2.8"/>
+      <path d="M560 74v72" stroke-width="2.4"/><path d="M580 74v72" stroke-width="1.6"/><path d="M600 74v72" stroke-width="0.8"/>
+    </g>
+    <text x="540" y="186" font-size="13" text-anchor="middle" font-weight="600">Waveguide: TE<tspan font-size="9" dy="3">10</tspan></text>
+    <text x="540" y="204" font-size="12" text-anchor="middle" fill="var(--muted)">field must fit between the walls;</text>
+    <text x="540" y="220" font-size="12" text-anchor="middle" fill="var(--muted)">nothing propagates below cutoff</text>
+    <text x="320" y="24" font-size="12" text-anchor="middle" fill="var(--muted)">solid: electric field · dashed: magnetic field · line weight: field strength</text>
+  </svg>
+  </div>
+</div>
+
+<p>Lines that are meant to carry TEM can also carry higher-order modes once the frequency is high enough for a TE or TM pattern to fit inside them. For coax, the first one appears when the circumference is roughly a wavelength in the dielectric:</p>
+<div class="eq">$$f_c \approx \frac{c}{\pi\,(a + b)\sqrt{\varepsilon_r}}$$<div class="n">a and b are the inner and outer conductor radii</div></div>
+<p>Above that frequency, energy can travel in two field patterns at two different speeds, and the line no longer behaves predictably. That, not loss, is what sets the top frequency of a cable or connector, and it's why higher-frequency connectors are physically smaller.</p>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">Why an SMA connector has a frequency limit</span></summary>
+  <div class="eb">
+    <p>SMA connectors are rated to about 18 GHz. Smaller 3.5 mm and 2.92 mm connectors go to 26 GHz and 40 GHz.</p>
+    <div class="choice"><p>What mainly sets an SMA's upper frequency limit?</p>
+    <ol class="opts">
+      <li>Loss in the PTFE dielectric becomes too high.<div class="why">Loss does rise with frequency, but it rises gradually. Something more abrupt sets the limit.</div></li>
+      <li>Above a certain frequency its dimensions let a second field pattern (a higher-order mode) propagate, so the connector stops behaving like a simple 50 Ω line.<div class="why">The limit comes from the size of the structure compared with the wavelength, which is why smaller connectors go higher.</div></li>
+      <li>The threads can't be tightened enough.<div class="why">Torque matters for repeatability, but it isn't what sets the rating.</div></li>
+      <li>The centre pin's inductance.<div class="why">The connector is designed as a 50 Ω line, so its inductance is balanced by its capacitance.</div></li>
+    </ol>
+    <div class="solution"><p>Coax carries TEM at any frequency, but once the wavelength in the dielectric becomes comparable to the circumference, a TE mode can also propagate. Energy split between two modes travelling at different speeds produces unpredictable reflections and resonances. Shrinking the connector pushes that frequency up, which is why each step up in frequency rating comes with a smaller connector.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 2 PLANAR LINES ================= -->
+<section class="sec" id="planar" data-short="Lines on a board">
+<h2>Microstrip, stripline and coplanar waveguide <a class="vjump" data-t="6:00"></a></h2>
+<p>On a circuit board, a transmission line is a trace with a defined geometry relative to one or more ground conductors. Module 1 showed that \(Z_0 = \sqrt{L'/C'}\), the square root of inductance per metre over capacitance per metre. That's enough to reason about every board line from first principles: anything that adds capacitance per metre (a wider trace, a closer plane, a higher dielectric constant, extra ground nearby) lowers the impedance, and anything that adds inductance per metre (a narrower trace, more distance to the return path) raises it.</p>
+
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>The four common planar transmission lines, in cross-section</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 210" role="img" aria-label="Four cross-sections: microstrip, a trace on top of a dielectric over a ground plane; stripline, a trace buried between two ground planes; coplanar waveguide, a trace with ground on either side in the same layer; grounded coplanar waveguide, the same plus a ground plane underneath, joined with vias.">
+    <g font-size="13" text-anchor="middle" font-weight="600">
+      <text x="80" y="22">Microstrip</text><text x="240" y="22">Stripline</text><text x="400" y="22">CPW</text><text x="560" y="22">Grounded CPW</text>
+    </g>
+    <!-- microstrip -->
+    <rect x="20" y="90" width="120" height="36" fill="var(--sunk)"/><rect x="20" y="126" width="120" height="7" fill="var(--c4)"/><rect x="66" y="83" width="28" height="7" fill="var(--c4)"/>
+    <!-- stripline -->
+    <rect x="180" y="58" width="120" height="7" fill="var(--c4)"/><rect x="180" y="65" width="120" height="61" fill="var(--sunk)"/><rect x="180" y="126" width="120" height="7" fill="var(--c4)"/><rect x="226" y="92" width="28" height="7" fill="var(--c4)"/>
+    <!-- CPW -->
+    <rect x="340" y="90" width="120" height="43" fill="var(--sunk)"/><rect x="340" y="83" width="40" height="7" fill="var(--c4)"/><rect x="386" y="83" width="28" height="7" fill="var(--c4)"/><rect x="420" y="83" width="40" height="7" fill="var(--c4)"/>
+    <!-- GCPW -->
+    <rect x="500" y="90" width="120" height="36" fill="var(--sunk)"/><rect x="500" y="126" width="120" height="7" fill="var(--c4)"/><rect x="500" y="83" width="40" height="7" fill="var(--c4)"/><rect x="546" y="83" width="28" height="7" fill="var(--c4)"/><rect x="580" y="83" width="40" height="7" fill="var(--c4)"/>
+    <rect x="512" y="90" width="6" height="36" fill="var(--c4)" opacity=".7"/><rect x="602" y="90" width="6" height="36" fill="var(--c4)" opacity=".7"/>
+    <g font-size="11.5" text-anchor="middle" fill="var(--ink2)">
+      <text x="80" y="156">outer layer, one plane</text><text x="80" y="172">easy to route and tune</text><text x="80" y="188">fields partly in air</text>
+      <text x="240" y="156">inner layer, two planes</text><text x="240" y="172">fully shielded, pure TEM</text><text x="240" y="188">needs vias to reach parts</text>
+      <text x="400" y="156">ground beside the trace</text><text x="400" y="172">no plane needed below</text><text x="400" y="188">rare on multilayer boards</text>
+      <text x="560" y="156">ground beside and below</text><text x="560" y="172">stitching vias along it</text><text x="560" y="188">good isolation, compact</text>
+    </g>
+  </svg>
+  </div>
+</div>
+
+<div class="tablewrap"><table>
+  <tr><th>Line</th><th>Return path</th><th>Use it for</th><th>Watch out for</th></tr>
+  <tr><td><b>Microstrip</b></td><td>The plane below</td><td>Most RF routing on outer layers: radio to antenna connector, filter and matching networks</td><td>Radiates a little and picks up coupling from nearby traces; impedance changes with solder mask and conformal coating</td></tr>
+  <tr><td><b>Stripline</b></td><td>Planes above and below</td><td>Long runs that must be shielded, inner-layer routing</td><td>Every connection to a component needs a via, and vias are discontinuities</td></tr>
+  <tr><td><b>CPW</b></td><td>Coplanar grounds on each side</td><td>Two-layer boards without a full plane, on-chip and probe structures</td><td>The two side grounds must be tied together, or unwanted modes appear</td></tr>
+  <tr><td><b>Grounded CPW</b></td><td>Coplanar grounds and the plane below, stitched with vias</td><td>Dense RF boards: the side grounds contain the fields, reducing coupling to neighbours</td><td>Via spacing must be well under λ/10; the gap to the side grounds controls Z₀ as much as the width does</td></tr>
+</table></div>
+
+<p>Exact formulas for these lines are approximations fitted to field solutions. The ones below, for microstrip and stripline, are the standard ones from Pozar and are accurate to about 1 %. Real boards differ further because of copper thickness, solder mask and manufacturing tolerance, so the board fabricator's own stackup calculator has the final word.</p>
+
+<div class="widget wide" id="w-line">
+  <div class="wh"><span class="tag">Interactive</span><b>Characteristic impedance of a board trace</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label>Line type</label><div class="seg" id="lT"><button type="button" data-v="ms" class="on">Microstrip</button><button type="button" data-v="sl">Stripline</button></div></div>
+      <div class="ctrl"><label for="lW">Trace width <b id="lWv"></b></label><input id="lW" type="range" min="0.05" max="3" step="0.01" value="0.4"></div>
+      <div class="ctrl"><label for="lH">Dielectric thickness to each plane <b id="lHv"></b></label><input id="lH" type="range" min="0.08" max="1.6" step="0.01" value="0.2"></div>
+      <div class="ctrl"><label>Material</label><div class="seg" id="lE"><button type="button" data-v="4.2" class="on">FR-4 (4.2)</button><button type="button" data-v="3.66">Rogers 4350B (3.66)</button><button type="button" data-v="2.2">PTFE (2.2)</button></div></div>
+    </div>
+    <div>
+      <canvas id="cvLine" style="height:220px" aria-label="Cross-section of the trace drawn to scale, with the result"></canvas>
+      <div class="readout">
+        <div class="stat" id="lZS"><div class="k">Z₀</div><div class="v" id="lZ"></div></div>
+        <div class="stat"><div class="k">ε<sub>eff</sub></div><div class="v" id="lEe"></div></div>
+        <div class="stat"><div class="k">Delay</div><div class="v" id="lD"></div></div>
+        <div class="stat"><div class="k">Width for 50 Ω</div><div class="v" id="l50"></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>Find the width for 50 Ω microstrip on 0.2 mm of FR-4, then on 1.6 mm. How wide is a 50 Ω trace on a thick two-layer board?</li>
+    <li>Switch to stripline with the same thickness to each plane. Is the 50 Ω trace wider or narrower, and why?</li>
+    <li>Double the width. Does Z₀ halve?</li>
+  </ol></div>
+</div>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">From the outer layer to an inner layer</span></summary>
+  <div class="eb">
+    <p>A 50 Ω microstrip trace sits on 0.2 mm of FR-4 above a ground plane. The same signal has to be rerouted on an inner layer as stripline, with 0.2 mm of the same FR-4 to the plane above and 0.2 mm to the plane below.</p>
+    <div class="choice"><p>To stay at 50 Ω, how must the trace width change?</p>
+    <ol class="opts">
+      <li>It stays the same: the distance to the nearest plane is the same.<div class="why">Think about what the second plane does to the capacitance per metre.</div></li>
+      <li>It must be narrower, because the second plane adds capacitance and all the field is now in the FR-4, so less width gives the same Z₀.<div class="why">More capacitance per metre lowers Z₀, and a narrower trace brings it back up.</div></li>
+      <li>It must be wider, because the trace is now buried.<div class="why">Burying the trace adds capacitance, which lowers Z₀. A wider trace would lower it further.</div></li>
+      <li>It must be wider, to compensate for slower propagation.<div class="why">Propagation speed and impedance are separate. Look at the capacitance.</div></li>
+    </ol>
+    <div class="solution"><p>From \(Z_0 = \sqrt{L'/C'}\): the stripline has a plane on both sides, roughly doubling the capacitance per metre, and all its field is in FR-4 instead of partly in air. Both lower Z₀, so the trace has to be narrower: about 0.19 mm instead of 0.40 mm here. Try it in the calculator above. It's a common layout surprise: 50 Ω on an inner layer is noticeably thinner than on the outside.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 3 SMITH CHART ================= -->
+<section class="sec" id="smith" data-short="The Smith chart">
+<h2>The Smith chart <a class="vjump" data-t="13:00"></a></h2>
+<p>Module 1 introduced the reflection coefficient, \(\Gamma = (Z_L - Z_0)/(Z_L + Z_0)\). For a passive load it's a complex number with magnitude at most 1, so every passive impedance in the universe corresponds to a point inside a circle of radius 1 on the complex plane. A matched load (\(\Gamma = 0\)) is the centre; a short (\(\Gamma = -1\)) is the left edge; an open (\(\Gamma = +1\)) is the right edge. The <strong>Smith chart</strong> is just that circle, with impedances written on it.</p>
+<p>To make the grid, take each resistance and reactance and work out where it lands. Normalise first, \(z = Z_L/Z_0\), then \(\Gamma = (z - 1)/(z + 1)\). All the impedances with the same resistance (say z = 1 + jx for every x) turn out to lie on a circle, and so do all those with the same reactance. Those two families of circles are the chart's grid:</p>
+<ul>
+  <li><strong>Constant-resistance circles</strong> all touch the right edge. The r = 1 circle passes through the centre: every point on it has exactly 50 Ω of resistance.</li>
+  <li><strong>Constant-reactance arcs</strong> curve out from the right edge. The upper half is inductive (positive reactance), the lower half capacitive. The horizontal line through the middle is pure resistance.</li>
+</ul>
+<p>The chart earns its place through one more fact. On a lossless line, a wave reflected from the load travels back to you, so at a distance d from the load the reflection has picked up an extra round-trip phase of \(2\beta d\):</p>
+<div class="eq">$$\Gamma(d) = \Gamma_L\,e^{-j2\beta d} \qquad \beta = \frac{2\pi}{\lambda}$$<div class="n">moving towards the generator rotates Γ clockwise at constant |Γ|; half a wavelength is one full turn</div></div>
+<p>So <b>adding line in front of a load rotates its point clockwise around the centre</b>. The distance from the centre, |Γ|, doesn't change, which is why VSWR is the same everywhere on a lossless line. Every matching problem on the chart becomes geometry: move the point to the centre.</p>
+
+<div class="widget wide" id="w-smith">
+  <div class="wh"><span class="tag">Interactive</span><b>A load on the Smith chart, seen through a length of line</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label for="mR">Load resistance <b id="mRv"></b></label><input id="mR" type="range" min="0.7" max="2.6" step="0.005" value="1.4"></div>
+      <div class="ctrl"><label for="mX">Load reactance <b id="mXv"></b></label><input id="mX" type="range" min="-150" max="150" step="1" value="40"></div>
+      <div class="ctrl"><label for="mL">Line length (50 Ω) <b id="mLv"></b></label><input id="mL" type="range" min="0" max="0.5" step="0.002" value="0.1"></div>
+      <div class="ctrl"><label>Presets</label><div class="btns" id="mPre"><button type="button" data-r="50" data-x="0">Matched</button><button type="button" data-r="5" data-x="0">Near short</button><button type="button" data-r="400" data-x="0">Near open</button><button type="button" data-r="100" data-x="0">100 Ω</button><button type="button" data-r="25" data-x="-30">25 − j30 Ω</button></div></div>
+    </div>
+    <div>
+      <canvas id="cvSmith" style="height:380px" aria-label="Smith chart with the load point, the path along the line, and the impedance seen at the input"></canvas>
+      <div class="legend"><span style="--c:var(--c2)">load</span><span style="--c:var(--c1)">seen through the line</span></div>
+      <div class="readout" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))">
+        <div class="stat"><div class="k">|Γ|</div><div class="v" id="mG"></div></div>
+        <div class="stat"><div class="k">VSWR</div><div class="v" id="mS"></div></div>
+        <div class="stat"><div class="k">Z at the load</div><div class="v" id="mZl"></div></div>
+        <div class="stat"><div class="k">Z at the input</div><div class="v" id="mZi"></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>Pick "100 Ω" and add line. Where is the point after a quarter-wavelength? After half a wavelength?</li>
+    <li>Sweep the reactance with no line. Which half of the chart is inductive?</li>
+    <li>Pick "Near short" and add a quarter-wavelength. What does a short look like through λ/4 of line?</li>
+  </ol></div>
+</div>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">Adding cable to a mismatched antenna</span></summary>
+  <div class="eb">
+    <p>An antenna has a VSWR of 2:1 measured at its connector. Someone adds 30 cm of good, low-loss 50 Ω cable between it and the radio.</p>
+    <div class="choice"><p>What does the radio see?</p>
+    <ol class="opts">
+      <li>A better match, because the cable absorbs the reflection.<div class="why">A low-loss cable absorbs almost nothing. Think about what the cable does on the Smith chart.</div></li>
+      <li>A different impedance, but still a 2:1 VSWR: the point rotates around the chart at the same distance from the centre.<div class="why">A lossless line rotates Γ without changing its magnitude, so VSWR is unchanged.</div></li>
+      <li>A worse VSWR, because the cable adds its own mismatch.<div class="why">A good 50 Ω cable is matched to the system. It moves the impedance but doesn't change |Γ|.</div></li>
+      <li>Exactly the same impedance.<div class="why">The impedance does change, unless the cable happens to be a multiple of half a wavelength long.</div></li>
+    </ol>
+    <div class="solution"><p>The cable rotates the antenna's point around the Smith chart by twice its electrical length, so the impedance the radio sees changes, but its distance from the centre doesn't, so the VSWR stays at 2:1. Changing cable lengths can't fix a mismatch; it only moves it. (A lossy cable does make the VSWR look better at the radio, by absorbing part of the reflection on its way back. Section 7 returns to that.)</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 4 L-NETWORK ================= -->
+<section class="sec" id="lmatch" data-short="Lumped-element matching">
+<h2>Lumped-element matching <a class="vjump" data-t="21:00"></a></h2>
+<p>Matching means adding a network between a source and a load so that the source sees 50 Ω. It has to be lossless, otherwise it wastes the power it's meant to deliver, so it's built from inductors and capacitors. The simplest is the <strong>L-network</strong>: one component in series and one in parallel (shunt).</p>
+<p>The reasoning from first principles goes like this. Suppose the load is 10 Ω and the source wants 50 Ω. A series reactance can't change resistance, only reactance. A shunt reactance, though, can transform resistance: put a reactance across a resistor and the combination has a different resistance and a reactance. So the recipe is:</p>
+<ol>
+  <li>Add a series reactance to the low-resistance side, so that the combination, viewed as a parallel circuit, has exactly 50 Ω of resistance in parallel with some reactance.</li>
+  <li>Add a shunt reactance that cancels that parallel reactance, leaving 50 Ω.</li>
+</ol>
+<p>Working it through gives a single number that sets both components, the <strong>loaded Q</strong> of the network:</p>
+<div class="eq">$$Q = \sqrt{\frac{R_\text{high}}{R_\text{low}} - 1} \qquad X_\text{series} = Q\,R_\text{low} \qquad X_\text{shunt} = \frac{R_\text{high}}{Q}$$<div class="n">for purely resistive source and load</div></div>
+<p>On the Smith chart, a series element moves the point along a circle of constant resistance, and a shunt element moves it along a circle of constant conductance. An L-network is two such moves that end at the centre. There are always two solutions (one moves up first, the other down), typically a low-pass and a high-pass version. Q also sets the bandwidth: a large impedance ratio means a high Q and a narrow match.</p>
+
+<div class="widget wide" id="w-lnet">
+  <div class="wh"><span class="tag">Interactive</span><b>Designing an L-network to match a load to 50 Ω</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label for="nR">Load resistance <b id="nRv"></b></label><input id="nR" type="range" min="0.7" max="2.7" step="0.005" value="1"></div>
+      <div class="ctrl"><label for="nX">Load reactance <b id="nXv"></b></label><input id="nX" type="range" min="-100" max="100" step="1" value="0"></div>
+      <div class="ctrl"><label>Solution</label><div class="seg" id="nS"><button type="button" data-v="0" class="on">Solution 1</button><button type="button" data-v="1">Solution 2</button></div></div>
+      <p class="small">Designed at 915 MHz, source 50 Ω. The load's reactance is treated as an inductor or capacitor, so it changes with frequency too.</p>
+    </div>
+    <div>
+      <canvas id="cvLnet" style="height:340px" aria-label="Schematic of the matching network with component values, and a plot of return loss against frequency"></canvas>
+      <div class="readout">
+        <div class="stat"><div class="k">Loaded Q</div><div class="v" id="nQ"></div></div>
+        <div class="stat"><div class="k">Return loss at 915 MHz</div><div class="v" id="nRL"></div></div>
+        <div class="stat"><div class="k">Bandwidth (RL &gt; 10 dB)</div><div class="v" id="nBW"></div></div>
+      </div>
+      <div class="verdict" id="nVerdict"></div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>Match 10 Ω. Compare the two solutions: which is low-pass and which is high-pass?</li>
+    <li>Move the load to 25 Ω, then to 5 Ω. What happens to Q and to the bandwidth?</li>
+    <li>Give the load some reactance. How do the component values change?</li>
+  </ol></div>
+</div>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">A harder match</span></summary>
+  <div class="eb">
+    <p>Two power amplifiers need their outputs matched to 50 Ω with an L-network. One has an output resistance of 25 Ω, the other 5 Ω.</p>
+    <div class="choice"><p>Which match has the wider bandwidth?</p>
+    <ol class="opts">
+      <li>The 5 Ω one, because its components are larger.<div class="why">Larger reactances relative to the resistance mean more stored energy, which narrows the bandwidth.</div></li>
+      <li>The 25 Ω one, because the smaller impedance ratio means a lower Q.<div class="why">Q = √(50/25 − 1) = 1 against √(50/5 − 1) = 3.</div></li>
+      <li>They're the same: both are matched perfectly at the design frequency.<div class="why">Both are perfect at one frequency. Bandwidth is about how quickly the match degrades away from it.</div></li>
+      <li>Neither has a bandwidth: an L-network is broadband.<div class="why">Every reactive match has a bandwidth, set by its Q.</div></li>
+    </ol>
+    <div class="solution"><p>The loaded Q is set by the impedance ratio: Q = 1 for 25 Ω and Q = 3 for 5 Ω. A higher Q means the network stores more energy relative to what it passes, so its impedance changes faster with frequency and the match is narrower. Low-impedance transistor outputs are hard to match broadband for exactly this reason, and Section 8 shows the standard way round it: match in several smaller steps.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 5 INPUT IMPEDANCE ================= -->
+<section class="sec" id="zin" data-short="Input impedance, λ/4">
+<h2>Input impedance and quarter-wave transformers <a class="vjump" data-t="28:00"></a></h2>
+<p>The Smith chart rotation can be written as a formula. At distance ℓ from the load, the voltage and current are each the sum of a forward wave and a reflected wave. Dividing one by the other, and using \(\Gamma(\ell) = \Gamma_L e^{-j2\beta\ell}\), gives the impedance seen looking into the line:</p>
+<div class="eq">$$Z_\text{in} = Z_0\,\frac{Z_L + jZ_0\tan\beta\ell}{Z_0 + jZ_L\tan\beta\ell}$$</div>
+<p>Three special lengths are worth knowing by heart, because each one turns the formula into something simple:</p>
+<ul>
+  <li><strong>Half a wavelength</strong>: \(\tan\beta\ell = 0\), so \(Z_\text{in} = Z_L\). A λ/2 line repeats the load, whatever Z₀ is (one full turn on the Smith chart).</li>
+  <li><strong>A quarter-wavelength</strong>: \(\tan\beta\ell \to \infty\), so \(Z_\text{in} = Z_0^2 / Z_L\). A λ/4 line inverts the load: a short becomes an open, a low impedance becomes a high one.</li>
+  <li><strong>A short length shorted at the end</strong> looks like an inductor; <strong>open at the end</strong>, a capacitor. These <em>stubs</em> are how transmission lines replace lumped components at high frequency.</li>
+</ul>
+<p>The quarter-wave inversion gives a matching network made of nothing but a line. To match a real load \(R_L\) to \(Z_0\), insert a quarter-wavelength of line with impedance</p>
+<div class="eq">$$Z_1 = \sqrt{Z_0\,R_L}$$<div class="n">the geometric mean; to match 100 Ω to 50 Ω, a 70.7 Ω line</div></div>
+<p>Then \(Z_\text{in} = Z_1^2/R_L = Z_0\). It's exact at one frequency, where the line is precisely λ/4, and degrades away from it.</p>
+
+<div class="widget wide" id="w-zin">
+  <div class="wh"><span class="tag">Interactive</span><b>Impedance seen at the input of a 50 Ω line, against its length</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label>Load</label><div class="seg" id="zL"><button type="button" data-v="0,0">Short</button><button type="button" data-v="1e9,0">Open</button><button type="button" data-v="25,0">25 Ω</button><button type="button" data-v="100,0" class="on">100 Ω</button><button type="button" data-v="30,-40">30 − j40 Ω</button></div></div>
+      <div class="ctrl"><label for="zLen">Line length <b id="zLenv"></b></label><input id="zLen" type="range" min="0" max="0.5" step="0.002" value="0.25"></div>
+    </div>
+    <div>
+      <canvas id="cvZin" style="height:300px" aria-label="Plot of the input resistance and reactance against line length in wavelengths, with a cursor at the chosen length"></canvas>
+      <div class="legend"><span style="--c:var(--c1)">input resistance</span><span style="--c:var(--c2)">input reactance</span></div>
+      <div class="readout">
+        <div class="stat"><div class="k">Z<sub>in</sub></div><div class="v" id="zZ"></div></div>
+        <div class="stat"><div class="k">Behaves like</div><div class="v" id="zB"></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>With the 100 Ω load, read Z<sub>in</sub> at λ/4 and at λ/2. Check them against the special cases above.</li>
+    <li>Choose the short. Over what range of lengths does it look inductive, and where does it look like an open?</li>
+  </ol></div>
+</div>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">A quarter-wave transformer at twice its frequency</span></summary>
+  <div class="eb">
+    <p>A 70.7 Ω quarter-wave transformer matches a 100 Ω load to 50 Ω at 915 MHz. The same board is used for a second product at 1830 MHz.</p>
+    <div class="choice"><p>What does the 50 Ω source see at 1830 MHz?</p>
+    <ol class="opts">
+      <li>50 Ω: the transformer still matches.<div class="why">The transformer only works where the line is a quarter-wavelength long.</div></li>
+      <li>About 100 Ω: at twice the frequency the line is half a wavelength, which repeats the load, so the source sees the mismatch as if the transformer weren't there.<div class="why">A λ/2 line returns the load impedance unchanged.</div></li>
+      <li>About 25 Ω: the inversion doubles.<div class="why">Inversion only happens at odd multiples of λ/4.</div></li>
+      <li>An open circuit.<div class="why">That would need a short at the load and a quarter-wave line.</div></li>
+    </ol>
+    <div class="solution"><p>The line's electrical length is proportional to frequency. At 1830 MHz the quarter-wave line is a half-wave line, and a half-wave line repeats its load: the source sees 100 Ω again, a 2:1 VSWR. The transformer matches again at 3 × 915 MHz (three quarter-wavelengths). Every matching network built from lines is periodic in frequency like this.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 6 S-PARAMETERS ================= -->
+<section class="sec" id="sparams" data-short="S-parameters">
+<h2>S-parameters <a class="vjump" data-t="34:00"></a></h2>
+<p>At low frequency you describe a circuit by voltages and currents at its terminals, measured with opens and shorts. At RF that doesn't work: open and short circuits are hard to make at the end of a line (it's never a perfect open), and many devices oscillate or break when you try. Instead, RF engineers describe a network by what it does to <em>waves</em>, with every port terminated in Z₀.</p>
+<p>Send a wave into port 1 of a two-port network. Some of it reflects back out of port 1, some comes out of port 2, and the rest is absorbed or radiated. The <strong>scattering parameters</strong> are the ratios:</p>
+<div class="eq">$$S_{11} = \frac{\text{wave out of port 1}}{\text{wave into port 1}} \qquad S_{21} = \frac{\text{wave out of port 2}}{\text{wave into port 1}}$$<div class="n">with port 2 terminated in Z₀; S₂₂ and S₁₂ are the same measured from port 2</div></div>
+<p>S₁₁ is exactly the reflection coefficient Γ seen at port 1, and S₂₁ is the transmission: the gain of an amplifier, the loss of a cable. They're complex (magnitude and phase) and depend on frequency. Since power goes as the square of a wave's amplitude, energy conservation gives a useful check for any passive network:</p>
+<div class="eq">$$|S_{11}|^2 + |S_{21}|^2 \le 1$$<div class="n">equal to 1 for a lossless network; the shortfall is power absorbed or radiated</div></div>
+<p>Two more properties make S-parameters easy to sanity-check. A network made of ordinary passive parts is <strong>reciprocal</strong>: S₂₁ = S₁₂. And a symmetrical network has S₁₁ = S₂₂. A VNA measures all four S-parameters directly, which is why it's the central instrument of RF work (Module 5).</p>
+
+<div class="widget wide" id="w-sp">
+  <div class="wh"><span class="tag">Interactive</span><b>S-parameters of simple two-port networks in a 50 Ω system</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label>Network</label><div class="seg" id="sN"><button type="button" data-v="sc" class="on">Series 100 pF (DC block)</button><button type="button" data-v="pc">Shunt 2 pF</button><button type="button" data-v="sl">Series 10 nH</button><button type="button" data-v="att">6 dB attenuator</button><button type="button" data-v="lpf">1 GHz low-pass filter</button></div></div>
+      <div class="ctrl"><label for="sF">Marker frequency <b id="sFv"></b></label><input id="sF" type="range" min="7" max="10" step="0.005" value="8.96"></div>
+    </div>
+    <div>
+      <canvas id="cvSp" style="height:280px" aria-label="Plot of S11 and S21 in decibels against frequency, with a marker"></canvas>
+      <div class="legend"><span style="--c:var(--c1)">S₂₁ (transmission)</span><span style="--c:var(--c2)">S₁₁ (reflection)</span></div>
+      <div class="readout">
+        <div class="stat"><div class="k">S₁₁</div><div class="v" id="sS11"></div></div>
+        <div class="stat"><div class="k">S₂₁</div><div class="v" id="sS21"></div></div>
+        <div class="stat"><div class="k">Reflected</div><div class="v" id="sPr"></div></div>
+        <div class="stat"><div class="k">Passed</div><div class="v" id="sPp"></div></div>
+        <div class="stat"><div class="k">Absorbed</div><div class="v" id="sPa"></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>For the DC block, find where S₂₁ falls 1 dB below 0. Below that frequency, where does the missing power go?</li>
+    <li>Look at the attenuator's power split, and compare it with the low-pass filter above its cut-off. Both have a low S₂₁; why are they so different?</li>
+  </ol></div>
+</div>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">Where does the power go?</span></summary>
+  <div class="eb">
+    <p>A VNA measures a two-port at 1 GHz: S₂₁ = −6 dB and S₁₁ = −30 dB.</p>
+    <div class="choice"><p>Of the power sent into port 1, roughly where does it end up?</p>
+    <ol class="opts">
+      <li>Half is passed and half is reflected.<div class="why">−6 dB is a quarter of the power, and −30 dB is a thousandth.</div></li>
+      <li>About a quarter is passed, almost none is reflected, and about three quarters is absorbed or radiated inside the network.<div class="why">|S₂₁|² = 0.25 and |S₁₁|² = 0.001, so about 75 % is lost in the network.</div></li>
+      <li>About three quarters is reflected, because it isn't passed.<div class="why">S₁₁ tells you directly how much is reflected, and it's very little.</div></li>
+      <li>All of it is passed: S-parameters in dB don't describe power.<div class="why">The square of an S-parameter's magnitude is a power ratio.</div></li>
+    </ol>
+    <div class="solution"><p>Convert to power: −6 dB is 0.25, −30 dB is 0.001. Energy conservation leaves 1 − 0.25 − 0.001 ≈ 0.75 absorbed or radiated. A network that's well matched but passes little is lossy: an attenuator, a long cable, or a filter's resistive loss. A reactive filter in its stop band does the opposite: it passes little because it <em>reflects</em> almost everything. S₁₁ is what tells the two cases apart.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 7 RL / IL ================= -->
+<section class="sec" id="loss" data-short="Return and insertion loss">
+<h2>Return loss and insertion loss <a class="vjump" data-t="39:00"></a></h2>
+<p>Return loss and insertion loss are S₁₁ and S₂₁ expressed as positive numbers of decibels, the way they appear on datasheets:</p>
+<div class="eq">$$\text{RL} = -20\log_{10}|S_{11}| \qquad \text{IL} = -20\log_{10}|S_{21}|$$<div class="n">a good match has a <em>high</em> return loss; a good cable has a <em>low</em> insertion loss</div></div>
+<p>Insertion loss includes everything that stops power getting through: resistive loss, dielectric loss, radiation and reflection. When a component is mismatched, part of its insertion loss is just the reflected power, called the <strong>mismatch loss</strong>, \(-10\log_{10}(1 - |S_{11}|^2)\). For a return loss of 10 dB it's only 0.46 dB, which is why a 10 dB return loss is often good enough.</p>
+<div class="note warn">
+  <span class="ni">!</span>
+  <div><span class="nt">Loss makes a bad match look good</span>Measured through a lossy cable, any load's return loss improves by twice the cable's loss, because the reflection is attenuated on the way to the load and again on the way back. Put a 3 dB cable in front of an open circuit, which reflects everything, and you measure a 6 dB return loss. Always measure a match at the point that matters, with the VNA calibrated there, not at the far end of a cable.</div>
+</div>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">An antenna that measures too well</span></summary>
+  <div class="eb">
+    <p>A ground-station antenna is checked from the shack, through 20 m of cable with 4 dB of loss. The VNA shows a return loss of 18 dB, which looks excellent.</p>
+    <div class="choice"><p>What's the return loss at the antenna itself?</p>
+    <ol class="opts">
+      <li>18 dB: the cable is 50 Ω, so it doesn't change the match.<div class="why">A matched cable doesn't change |Γ| if it's lossless. This one isn't.</div></li>
+      <li>22 dB, since the cable's loss hides 4 dB.<div class="why">The reflection passes through the cable twice.</div></li>
+      <li>About 10 dB: the reflection was attenuated by 4 dB on the way up and 4 dB on the way back.<div class="why">18 − 2 × 4 = 10 dB.</div></li>
+      <li>It can't be worse than what's measured.<div class="why">Cable loss can only make a match look better than it is.</div></li>
+    </ol>
+    <div class="solution"><p>The VNA's signal loses 4 dB reaching the antenna, and whatever reflects loses another 4 dB on the way back, so the measured return loss is 8 dB better than the real one: 18 − 8 = 10 dB at the antenna. That's acceptable, but nowhere near what the measurement suggested. A cable with high enough loss makes even an open circuit look like a decent match.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 8 BANDWIDTH ================= -->
+<section class="sec" id="bandwidth" data-short="Bandwidth">
+<h2>Bandwidth <a class="vjump" data-t="41:00"></a></h2>
+<p>Every match made from reactive parts or line sections is exact at one frequency and degrades away from it. The <strong>bandwidth</strong> of a match is the range of frequencies over which the return loss stays above some limit, often 10 dB (VSWR below about 2:1) or 15 dB for more demanding parts.</p>
+<p>The reason a match has a bandwidth at all is energy storage. A network that transforms a large impedance ratio has to store a lot of energy in its inductors and capacitors relative to the power passing through (a high Q), and stored energy makes the impedance change quickly with frequency. Two consequences follow:</p>
+<ul>
+  <li><strong>Large impedance ratios are inherently narrowband.</strong> There's a theoretical limit, the Bode–Fano limit, on how wide a match any network can achieve for a given load.</li>
+  <li><strong>Matching in steps widens the bandwidth.</strong> Going from 5 Ω to 50 Ω in two steps (5 to 15.8 to 50 Ω) uses two networks each with a lower Q, and the combination is broader than a single high-Q step. The same applies to quarter-wave transformers: two or more sections in cascade are broader than one.</li>
+</ul>
+
+<div class="widget wide" id="w-bw">
+  <div class="wh"><span class="tag">Interactive</span><b>Bandwidth of three ways to match a resistive load</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label for="bR">Load resistance <b id="bRv"></b></label><input id="bR" type="range" min="0.7" max="2.7" step="0.005" value="1"></div>
+      <p class="small">All three networks are designed to match exactly at the design frequency f₀, to a 50 Ω source. The L-network is the low-pass version; the transformers use binomial impedances.</p>
+    </div>
+    <div>
+      <canvas id="cvBw" style="height:280px" aria-label="Plot of return loss against frequency for an L-network, a single quarter-wave transformer and a two-section transformer"></canvas>
+      <div class="legend"><span style="--c:var(--c2)">L-network</span><span style="--c:var(--c1)">one λ/4 section</span><span style="--c:var(--c3)">two λ/4 sections</span></div>
+      <div class="readout">
+        <div class="stat"><div class="k">L-network</div><div class="v" id="bL"></div></div>
+        <div class="stat"><div class="k">One section</div><div class="v" id="b1"></div></div>
+        <div class="stat"><div class="k">Two sections</div><div class="v" id="b2"></div></div>
+      </div>
+      <p class="small" style="margin:.4em 0 0">Readouts: bandwidth with return loss above 10 dB, as a percentage of f₀.</p>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>Start at 10 Ω and move towards 50 Ω. How does the bandwidth of each grow?</li>
+    <li>At 5 Ω, how much does the second quarter-wave section buy compared with the first?</li>
+  </ol></div>
+</div>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">One step or two?</span></summary>
+  <div class="eb">
+    <p>A 10 Ω load can be matched to 50 Ω with one L-network, or with two L-networks in cascade through an intermediate impedance of about 22 Ω.</p>
+    <div class="choice"><p>Which gives the wider bandwidth?</p>
+    <ol class="opts">
+      <li>One L-network, because it has fewer parts to go wrong.<div class="why">Fewer parts is simpler, but think about the Q of each step.</div></li>
+      <li>Two L-networks, because each step covers a smaller ratio (about 2.2:1), so each has a lower Q.<div class="why">Q ≈ √(2.2 − 1) ≈ 1.1 for each step, against Q = 2 for the single step.</div></li>
+      <li>They're identical, since both match perfectly at f₀.<div class="why">Both are perfect at f₀; they differ in how fast the match degrades away from it.</div></li>
+      <li>One L-network, because two networks add their mismatches.<div class="why">At f₀ each step is matched to the next, so nothing adds up there. Away from f₀, the lower Q of each step wins.</div></li>
+    </ol>
+    <div class="solution"><p>The single step has Q = √(50/10 − 1) = 2. Splitting the 5:1 ratio into two steps of √5 ≈ 2.24:1 gives each a Q of about 1.1, and the cascade is noticeably broader. Choosing the intermediate impedance as the geometric mean of the two ends (√(10 × 50) ≈ 22 Ω) shares the ratio equally. The same idea is behind multi-section transformers and tapered lines, and the Bode–Fano limit says how far it can go.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= DESIGN EXERCISES ================= -->
+<section class="sec" id="exercises" data-nonum data-short="Design exercises">
+<h2>Design exercises</h2>
+<p>Problems drawn from real hardware. Each takes a few steps. Enter numbers to check your reasoning as you go, or open the worked solutions and discussion. The figures above are useful for sanity-checking.</p>
+
+<div class="chal">
+  <div class="ch"><span class="cn">Exercise 1</span><span class="cd">Layout · ●●○</span><span class="ctitle">A 50 Ω trace on a four-layer board</span></div>
+  <div class="cbody">
+    <p>A telemetry board uses a standard four-layer stackup. The RF trace from the radio to the antenna connector runs on the top layer over the ground plane on layer 2.</p>
+    <div class="given"><b>Given</b>
+      <span>Dielectric, top layer to layer 2</span><span>0.2 mm FR-4, ε<sub>r</sub> = 4.2</span>
+      <span>Frequency</span><span>915 MHz</span>
+    </div>
+    <div class="check" data-ans="0.40" data-tol="4%" data-unit="mm"><p>(a) What trace width gives 50 Ω?</p>
+      <div class="hint">Use the calculator above, or the microstrip formula: try w/h around 2.</div>
+      <div class="solution"><p>About 0.40 mm (w/h ≈ 2.0), with ε<sub>eff</sub> ≈ 3.2.</p></div></div>
+    <div class="check" data-ans="18.3" data-tol="3%" data-unit="cm"><p>(b) Wavelength on this trace at 915 MHz?</p>
+      <div class="solution"><p>\(\lambda = c/(f\sqrt{\varepsilon_\text{eff}}) = 3\times10^8/(915\times10^6 \times \sqrt{3.2}) \approx 18.3\ \text{cm}\).</p></div></div>
+    <details><summary>Discussion: what changes it?</summary><p>Solder mask over the trace adds a little dielectric above it, lowering Z₀ by a few ohms. Copper thickness does too. Fabricators control impedance to about ±10 % by default, tighter on request. For a 915 MHz trace a few centimetres long, those effects cost very little; at higher frequencies, or for long runs, specify a controlled-impedance build and give the fabricator the target, letting them adjust the width for their exact materials.</p></details>
+  </div>
+</div>
+
+<div class="chal">
+  <div class="ch"><span class="cn">Exercise 2</span><span class="cd">Design · ●●○</span><span class="ctitle">A quarter-wave transformer for a 100 Ω antenna</span></div>
+  <div class="cbody">
+    <p>A folded dipole has a feed impedance of about 100 Ω, and it needs matching to a 50 Ω radio at 915 MHz with a quarter-wave transformer in microstrip.</p>
+    <div class="given"><b>Given</b>
+      <span>Load</span><span>100 Ω, resistive</span>
+      <span>Source</span><span>50 Ω</span>
+      <span>Effective dielectric constant of the transformer line</span><span>3.0</span>
+    </div>
+    <div class="check" data-ans="70.7" data-tol="1%" data-unit="Ω"><p>(a) What impedance must the transformer line have?</p>
+      <div class="solution"><p>\(Z_1 = \sqrt{50 \times 100} = 70.7\ \Omega\).</p></div></div>
+    <div class="check" data-ans="47.3" data-tol="2%" data-unit="mm"><p>(b) How long is it?</p>
+      <div class="miss" data-val="81.9"><p>That's a quarter-wavelength in free space. On the board the wave is slower, so the wavelength is shorter.</p></div>
+      <div class="hint">A quarter of \(c/(f\sqrt{\varepsilon_\text{eff}})\).</div>
+      <div class="solution"><p>\(\lambda/4 = 3\times10^8 / (4 \times 915\times10^6 \times \sqrt{3.0}) \approx 47.3\ \text{mm}\).</p></div></div>
+    <details><summary>Discussion: why ε<sub>eff</sub> changes with impedance</summary><p>A 70.7 Ω microstrip is narrower than a 50 Ω one, so more of its field is in the air and its ε<sub>eff</sub> is a little lower. That's why the problem gives the transformer line's own ε<sub>eff</sub>. A 47 mm line is long for a small board; it can be meandered, or replaced at this frequency by an L-network of two small chip components.</p></details>
+  </div>
+</div>
+
+<div class="chal">
+  <div class="ch"><span class="cn">Exercise 3</span><span class="cd">Design · ●●●</span><span class="ctitle">Matching an amplifier's 10 Ω output</span></div>
+  <div class="cbody">
+    <p>A small power amplifier has an output resistance of 10 Ω at 915 MHz and drives a 50 Ω antenna. Design a low-pass L-network: a series inductor on the 10 Ω side and a shunt capacitor on the 50 Ω side.</p>
+    <div class="check" data-ans="2" data-tol="2%"><p>(a) Loaded Q of the network?</p>
+      <div class="solution"><p>\(Q = \sqrt{50/10 - 1} = 2\).</p></div></div>
+    <div class="check" data-ans="3.48" data-tol="2%" data-unit="nH"><p>(b) Series inductance?</p>
+      <div class="hint">The series reactance is \(Q R_\text{low}\); then \(L = X/2\pi f\).</div>
+      <div class="solution"><p>\(X_s = 2 \times 10 = 20\ \Omega\), so \(L = 20/(2\pi \times 915\times10^6) \approx 3.48\ \text{nH}\).</p></div></div>
+    <div class="check" data-ans="6.96" data-tol="2%" data-unit="pF"><p>(c) Shunt capacitance?</p>
+      <div class="hint">The shunt reactance is \(R_\text{high}/Q\); then \(C = 1/(2\pi f X)\).</div>
+      <div class="solution"><p>\(X_p = 50/2 = 25\ \Omega\), so \(C = 1/(2\pi \times 915\times10^6 \times 25) \approx 6.96\ \text{pF}\).</p></div></div>
+    <details><summary>Discussion: why low-pass?</summary><p>Both L-network solutions match at 915 MHz, but the low-pass one also attenuates the amplifier's harmonics at 1830 and 2745 MHz, which helps meet emission limits (Module 7). In practice you'd use the nearest standard values (3.3 nH and 6.8 pF), tune on the bench with a VNA, and account for the parts' own parasitics and the pads they sit on, which at 915 MHz are no longer negligible (Module 0).</p></details>
+  </div>
+</div>
+</section>
+
+<!-- ================= BENCH ================= -->
+<section class="sec" id="bench" data-nonum data-short="At the bench">
+<h2>At the bench</h2>
+<div class="video" data-video="lab">
+  <div class="plan">
+    <p>Planned lab demo (≈ 20 min, filmed at the bench with a NanoVNA):</p>
+    <ol>
+      <li>Reading loads on the VNA's Smith chart</li>
+      <li>Watching a load rotate as cable is added</li>
+      <li>Matching a resistor with an L-network of chip parts</li>
+      <li>Measuring S₂₁ of an attenuator and a filter</li>
+    </ol>
+  </div>
+</div>
+<div class="lab">
+  <h3>Matching on the Smith chart</h3>
+  <div class="parts"><span>NanoVNA (or any VNA) and its calibration kit</span><span>SMA test boards with pads for chip parts</span><span>10 Ω and 100 Ω resistors</span><span>Assorted chip inductors (1–10 nH) and capacitors (1–10 pF)</span><span>Two SMA cables of different lengths</span><span>A fixed SMA attenuator</span></div>
+  <ol>
+    <li><b>Calibrate and read loads.</b> Calibrate at the end of a cable. Connect the 100 Ω resistor board and find its point on the Smith chart. Compare it with where it should be, and look at how it moves across frequency (the pads and parts aren't ideal).</li>
+    <li><b>Rotation.</b> Add a second cable between the calibration plane and the 100 Ω board. Watch the point rotate around the chart at constant |Γ| as the frequency sweeps.</li>
+    <li><b>L-network.</b> Design a low-pass L-network for the 10 Ω resistor at a frequency of your choice, build it with the nearest standard values, and measure it. Adjust one part at a time and watch which way the point moves.</li>
+    <li><b>S-parameters.</b> Measure S₁₁ and S₂₁ of the attenuator and work out where the power goes.</li>
+  </ol>
+  <div class="record"><b>What you should see:</b> resistive loads on the horizontal axis of the chart, a load that circles the centre as cable is added, an L-network that brings the 10 Ω point close to the centre at the design frequency, and an attenuator with low S₁₁ and an S₂₁ close to its rating.</div>
+</div>
+</section>
+
+<!-- ================= SUMMARY ================= -->
+<section class="sec" id="summary" data-nonum data-short="Summary">
+<h2>Summary &amp; cheat sheet</h2>
+<ol class="takeaways">
+  <li>Two-conductor lines carry TEM (coax, stripline) or quasi-TEM (microstrip) waves. Higher-order modes set the upper frequency limit of cables and connectors.</li>
+  <li>Z₀ = √(L′/C′): anything that adds capacitance per metre lowers Z₀. A 50 Ω stripline is narrower than a 50 Ω microstrip on the same dielectric.</li>
+  <li>The Smith chart maps every passive impedance inside a unit circle. A lossless line rotates a load clockwise at constant |Γ|; half a wavelength is a full turn.</li>
+  <li>An L-network matches with two reactances; its Q is set by the impedance ratio, and its bandwidth falls as Q rises.</li>
+  <li>A λ/4 line inverts impedances (Z₀²/Z<sub>L</sub>); a λ/2 line repeats them. A quarter-wave transformer of √(Z₀R<sub>L</sub>) matches a real load at one frequency.</li>
+  <li>S₁₁ is reflection, S₂₁ is transmission. |S₁₁|² + |S₂₁|² ≤ 1 for passive networks; the shortfall is loss.</li>
+  <li>Cable loss improves measured return loss by twice the loss. Match in several low-Q steps for more bandwidth.</li>
+</ol>
+<div class="cheat">
+  <div><b>Coax mode limit</b>\(f_c \approx c/(\pi(a + b)\sqrt{\varepsilon_r})\)</div>
+  <div><b>Reflection along a line</b>\(\Gamma(\ell) = \Gamma_L e^{-j2\beta\ell}\)<br><span class="small">λ/2 = one full turn on the chart</span></div>
+  <div><b>Input impedance</b>\(Z_\text{in} = Z_0\frac{Z_L + jZ_0\tan\beta\ell}{Z_0 + jZ_L\tan\beta\ell}\)</div>
+  <div><b>Quarter-wave</b>\(Z_\text{in} = Z_0^2/Z_L\) · match: \(Z_1 = \sqrt{Z_0R_L}\)</div>
+  <div><b>L-network</b>\(Q = \sqrt{R_\text{hi}/R_\text{lo} - 1}\)<br><span class="small">\(X_s = QR_\text{lo}\) · \(X_p = R_\text{hi}/Q\)</span></div>
+  <div><b>Losses</b>RL = −20 log|S₁₁| · IL = −20 log|S₂₁|<br><span class="small">mismatch loss = −10 log(1 − |S₁₁|²)</span></div>
+</div>
+<h3>Go deeper</h3>
+<p class="small">The full treatment, with derivations and harder problems, is in the advanced theory pages:</p>
+<div class="deeper">
+  <a data-deep="matching_theory.html#refl">Reflections and standing waves<small>Complex loads, mismatch loss and the full VSWR table</small></a>
+</div>
+<h3>Further reading</h3>
+<ul class="small">
+  <li><em>Microwave Engineering</em> (Pozar), chapter 2: transmission line theory, including the terminated line, input impedance, the Smith chart and the quarter-wave transformer.</li>
+  <li><em>Microwave Engineering</em> (Pozar), chapter 3: transmission lines and waveguides, including TEM, TE and TM modes, coax, stripline and microstrip, with the design formulas used in this module.</li>
+  <li><em>Microwave Engineering</em> (Pozar), chapter 4: microwave network analysis, including S-parameters, reciprocity and lossless networks.</li>
+  <li><em>Microwave Engineering</em> (Pozar), chapter 5: impedance matching and tuning, including L-sections, stub tuning, multisection transformers and the Bode–Fano limit.</li>
+</ul>
 </section>
 
 <nav class="pager"></nav>
 </main>
 </div>
 <footer class="site">Hardware Engineering Fundamentals · RF &amp; High-Speed Design</footer>
+
+<script>
+'use strict';
+const $ = s => document.querySelector(s);
+const {col, si, fmt} = Plot;
+const C0 = 299792458, Z0 = 50, F0 = 915e6;
+function seg(id, cb){
+  const el = $(id);
+  el.addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    el.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
+    cb();
+  });
+  return () => el.querySelector('button.on').dataset.v;
+}
+function setVerdict(el, cls, html){ el.className = 'verdict ' + cls; el.innerHTML = html; }
+// complex numbers as [re, im]
+const cx = {
+  add: (a, b) => [a[0] + b[0], a[1] + b[1]],
+  sub: (a, b) => [a[0] - b[0], a[1] - b[1]],
+  mul: (a, b) => [a[0]*b[0] - a[1]*b[1], a[0]*b[1] + a[1]*b[0]],
+  div: (a, b) => { const d = b[0]*b[0] + b[1]*b[1]; return [(a[0]*b[0] + a[1]*b[1])/d, (a[1]*b[0] - a[0]*b[1])/d]; },
+  inv: a => cx.div([1, 0], a),
+  abs: a => Math.hypot(a[0], a[1]),
+  arg: a => Math.atan2(a[1], a[0]),
+  exp: (r, th) => [r*Math.cos(th), r*Math.sin(th)]
+};
+const gamma = z => cx.div(cx.sub(z, [Z0, 0]), cx.add(z, [Z0, 0]));
+const zFromG = g => cx.mul([Z0, 0], cx.div(cx.add([1, 0], g), cx.sub([1, 0], g)));
+const zStr = z => { const r = Math.abs(z[0]) < 1e-6 ? 0 : z[0], x = Math.abs(z[1]) < 1e-6 ? 0 : z[1]; if (!isFinite(r) || Math.abs(r) > 1e6 || Math.abs(x) > 1e6) return 'open'; return fmt(r, 3) + (x >= 0 ? ' + j' : ' − j') + fmt(Math.abs(x), 3) + ' Ω'; };
+const rlDb = g => -20*Math.log10(Math.max(1e-6, cx.abs(g)));
+const logR = v => Math.pow(10, v);            // sliders store log10(ohms)
+// input impedance of a line: Z0l, load z, electrical length theta (radians)
+function zin(Z0l, zl, th){
+  const t = Math.tan(th);
+  if (!isFinite(zl[0])) return cx.div([Z0l, 0], [0, t]);   // open load
+  return cx.mul([Z0l, 0], cx.div(cx.add(zl, [0, Z0l*t]), cx.add([Z0l, 0], cx.mul([0, t], zl))));
+}
+// L-network design (Pozar 5.1): load zl at f0, returns two solutions
+function lnet(R, X){
+  const sols = [];
+  if (R > Z0){
+    const root = Math.sqrt(R/Z0)*Math.sqrt(R*R + X*X - Z0*R);
+    [1, -1].forEach(sg => {
+      const B = (X + sg*root)/(R*R + X*X), Xs = 1/B + X*Z0/R - Z0/(B*R);
+      sols.push({topo: 'shuntLoad', B, X: Xs});
+    });
+  } else {
+    [1, -1].forEach(sg => {
+      const Xs = sg*Math.sqrt(R*(Z0 - R)) - X, B = sg*Math.sqrt((Z0 - R)/R)/Z0;
+      sols.push({topo: 'seriesLoad', B, X: Xs});
+    });
+  }
+  return sols;
+}
+// element descriptions and impedances at frequency f, designed at f0
+const seriesEl = (X, w0) => X >= 0 ? {kind: 'L', val: X/w0} : {kind: 'C', val: -1/(w0*X)};
+const shuntEl = (B, w0) => B >= 0 ? {kind: 'C', val: B/w0} : {kind: 'L', val: -1/(w0*B)};
+const elZ = (el, w) => el.kind === 'L' ? [0, w*el.val] : [0, -1/(w*el.val)];
+const loadZ = (R, X, f) => { if (X === 0) return [R, 0]; const w0 = 2*Math.PI*F0, w = 2*Math.PI*f; return X > 0 ? [R, X*w/w0] : [R, X*w0/w]; };
+function lnetZin(sol, R, X, f){
+  const w0 = 2*Math.PI*F0, w = 2*Math.PI*f, zl = loadZ(R, X, f);
+  const se = seriesEl(sol.X, w0), sh = shuntEl(sol.B, w0);
+  if (sol.topo === 'shuntLoad') return cx.add(elZ(se, w), cx.inv(cx.add(cx.inv(elZ(sh, w)), cx.inv(zl))));
+  return cx.inv(cx.add(cx.inv(elZ(sh, w)), cx.inv(cx.add(elZ(se, w), zl))));
+}
+const valStr = el => el.kind === 'L' ? si(el.val, 'H') : si(el.val, 'F');
+// bandwidth (RL > 10 dB) around f0 from a function g(f) returning Γ, as a fraction of f0
+function bw10(gf, f0, span){
+  let lo = f0, hi = f0; const step = f0*span/400;
+  if (rlDb(gf(f0)) < 10) return 0;
+  while (lo > f0*(1 - span) && rlDb(gf(lo - step)) >= 10) lo -= step;
+  while (hi < f0*(1 + span) && rlDb(gf(hi + step)) >= 10) hi += step;
+  return (hi - lo)/f0;
+}
+
+/* ============ 1. Trace impedance calculator ============ */
+(() => {
+  const type = seg('#lT', upd), mat = seg('#lE', upd);
+  function ms(w, h, er){
+    const u = w/h, ee = (er + 1)/2 + (er - 1)/2/Math.sqrt(1 + 12/u);
+    const z = u <= 1 ? 60/Math.sqrt(ee)*Math.log(8/u + u/4) : 120*Math.PI/(Math.sqrt(ee)*(u + 1.393 + 0.667*Math.log(u + 1.444)));
+    return [z, ee];
+  }
+  function sl(w, h, er){
+    const b = 2*h, x = w/b, we = x < 0.35 ? x - (0.35 - x)*(0.35 - x) : x;
+    return [30*Math.PI/Math.sqrt(er)/(we + 0.441), er];
+  }
+  function solve(fn, h, er){ let lo = 0.005, hi = 30; for (let i = 0; i < 80; i++){ const m = Math.sqrt(lo*hi); if (fn(m, h, er)[0] > 50) lo = m; else hi = m; } return Math.sqrt(lo*hi); }
+  let s = {};
+  function upd(){
+    const t = type(), er = +mat(), w = +$('#lW').value, h = +$('#lH').value;
+    const fn = t === 'ms' ? ms : sl, [z, ee] = fn(w, h, er), w50 = solve(fn, h, er);
+    s = {t, er, w, h, z};
+    $('#lWv').textContent = fmt(w, 3) + ' mm'; $('#lHv').textContent = fmt(h, 3) + ' mm';
+    $('#lZ').textContent = fmt(z, 3) + ' Ω'; $('#lEe').textContent = fmt(ee, 3);
+    $('#lD').textContent = fmt(Math.sqrt(ee)/C0*1e12/100, 3) + ' ps/cm'; $('#l50').textContent = fmt(w50, 3) + ' mm';
+    $('#lZS').className = 'stat ' + (Math.abs(z - 50) < 2.5 ? '' : 'warn');
+    w0.redraw();
+  }
+  const w0 = Plot.widget($('#cvLine'), (ctx, W, H) => {
+    const {t, w, h, z} = s; if (!t) return;
+    // draw to scale: fit the larger of (6 × width) or (8 × height) across the canvas
+    const span = Math.max(w*4, h*8, 1.2), k = (W - 40)/span, cxm = W/2;
+    const dh = h*k, tw = Math.max(2, w*k), tt = 4, yPlane = t === 'ms' ? H*0.68 : H*0.82;
+    ctx.fillStyle = col.sunk;
+    if (t === 'ms'){
+      ctx.fillRect(20, yPlane - dh, W - 40, dh);
+      ctx.fillStyle = Plot.mix(col.c4, '#ffffff', .2); ctx.fillRect(20, yPlane, W - 40, 6); ctx.fillRect(cxm - tw/2, yPlane - dh - tt, tw, tt);
+      Plot.text(ctx, 'h = ' + fmt(h, 3) + ' mm', 26, yPlane - dh/2, {color: col.ink2});
+    } else {
+      ctx.fillRect(20, yPlane - 2*dh, W - 40, 2*dh);
+      ctx.fillStyle = Plot.mix(col.c4, '#ffffff', .2); ctx.fillRect(20, yPlane, W - 40, 6); ctx.fillRect(20, yPlane - 2*dh - 6, W - 40, 6); ctx.fillRect(cxm - tw/2, yPlane - dh - tt/2, tw, tt);
+      Plot.text(ctx, fmt(h, 3) + ' mm to each plane', 26, yPlane - dh/2, {color: col.ink2});
+    }
+    Plot.text(ctx, 'w = ' + fmt(w, 3) + ' mm', cxm, (t === 'ms' ? yPlane - dh - tt : yPlane - 2*dh - 6) - 14, {align: 'center', color: col.ink2});
+    Plot.text(ctx, 'Z₀ = ' + fmt(z, 3) + ' Ω', W - 24, 16, {align: 'right', bold: true, mono: true});
+    Plot.text(ctx, 'drawn to scale', 24, 16, {color: col.muted});
+  });
+  ['#lW', '#lH'].forEach(id => $(id).addEventListener('input', upd));
+  upd();
+})();
+
+/* ============ Smith chart drawing helper ============ */
+function smithGrid(ctx, cxp, cyp, R){
+  ctx.save();
+  ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(cxp, cyp, R, 0, 2*Math.PI); ctx.fill();
+  ctx.beginPath(); ctx.arc(cxp, cyp, R, 0, 2*Math.PI); ctx.clip();
+  ctx.strokeStyle = col.line; ctx.lineWidth = 1;
+  [0.2, 0.5, 1, 2, 5].forEach(r => { ctx.beginPath(); ctx.arc(cxp + R*r/(1 + r), cyp, R/(1 + r), 0, 2*Math.PI); ctx.stroke(); });
+  [0.2, 0.5, 1, 2, 5].forEach(x => [1, -1].forEach(sg => { ctx.beginPath(); ctx.arc(cxp + R, cyp - sg*R/x, R/x, 0, 2*Math.PI); ctx.stroke(); }));
+  ctx.beginPath(); ctx.moveTo(cxp - R, cyp); ctx.lineTo(cxp + R, cyp); ctx.stroke();
+  ctx.restore();
+  ctx.save(); ctx.strokeStyle = col.ink2; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(cxp, cyp, R, 0, 2*Math.PI); ctx.stroke(); ctx.restore();
+  [0.2, 0.5, 1, 2, 5].forEach(r => Plot.text(ctx, fmt(r*Z0, 3), cxp + R*(r - 1)/(r + 1), cyp + 9, {align: 'center', color: col.muted}));
+  Plot.text(ctx, 'inductive', cxp, cyp - R - 8, {align: 'center', color: col.muted});
+  Plot.text(ctx, 'capacitive', cxp, cyp + R + 10, {align: 'center', color: col.muted});
+  Plot.text(ctx, 'short', cxp - R - 4, cyp - 10, {align: 'right', color: col.muted});
+  Plot.text(ctx, 'open', cxp + R + 4, cyp - 10, {color: col.muted});
+}
+
+/* ============ 2. Smith chart: load and line ============ */
+(() => {
+  const pre = $('#mPre');
+  pre.addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    $('#mR').value = Math.log10(+b.dataset.r); $('#mX').value = b.dataset.x; upd();
+  });
+  let s = {};
+  function upd(){
+    const R = logR(+$('#mR').value), X = +$('#mX').value, len = +$('#mL').value;
+    const gl = gamma([R, X]), gi = cx.mul(gl, cx.exp(1, -4*Math.PI*len)), zi = zFromG(gi), m = cx.abs(gl);
+    s = {gl, gi, len};
+    $('#mRv').textContent = fmt(R, 3) + ' Ω'; $('#mXv').textContent = (X >= 0 ? '+' : '−') + Math.abs(X) + ' Ω'; $('#mLv').textContent = fmt(len, 3) + ' λ';
+    $('#mG').textContent = fmt(m, 3); $('#mS').textContent = m < 0.999 ? fmt((1 + m)/(1 - m), 3) + ' : 1' : '∞';
+    $('#mZl').textContent = zStr([R, X]); $('#mZi').textContent = zStr(zi);
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvSmith'), (ctx, W, H) => {
+    const {gl, gi, len} = s; if (!gl) return;
+    const R = Math.min(W/2 - 50, H/2 - 26), cxp = W/2, cyp = H/2;
+    smithGrid(ctx, cxp, cyp, R);
+    const P = g => [cxp + g[0]*R, cyp - g[1]*R];
+    const m = cx.abs(gl), a0 = cx.arg(gl);
+    if (len > 0 && m > 0.01){
+      const pts = []; for (let i = 0; i <= 80; i++){ const a = a0 - 4*Math.PI*len*i/80; pts.push(P([m*Math.cos(a), m*Math.sin(a)])); }
+      Plot.line(ctx, pts, col.c1, 2);
+    }
+    ctx.save(); ctx.strokeStyle = Plot.rgba(col.c1, .3); ctx.setLineDash([3, 3]); ctx.beginPath(); ctx.arc(cxp, cyp, m*R, 0, 2*Math.PI); ctx.stroke(); ctx.restore();
+    Plot.dot(ctx, ...P(gl), 6, col.c2);
+    Plot.dot(ctx, ...P(gi), 6, col.c1); Plot.dot(ctx, ...P(gi), 2.4, '#fff');
+    Plot.dot(ctx, cxp, cyp, 2.5, col.ink);
+  });
+  ['#mR', '#mX', '#mL'].forEach(id => $(id).addEventListener('input', upd));
+  upd();
+})();
+
+/* ============ 3. L-network designer ============ */
+(() => {
+  const solSel = seg('#nS', upd);
+  let s = {};
+  function upd(){
+    const R = logR(+$('#nR').value), X = +$('#nX').value, sols = lnet(R, X), k = +solSel();
+    const sol = sols[k], w0 = 2*Math.PI*F0;
+    const gf = f => gamma(lnetZin(sol, R, X, f));
+    const g0 = gf(F0), bw = bw10(gf, F0, 0.6);
+    const rh = Math.max(R, Z0), rl = Math.min(R, Z0), Q = Math.sqrt(rh/rl - 1);
+    s = {R, X, sol, se: seriesEl(sol.X, w0), sh: shuntEl(sol.B, w0), gf, bw};
+    $('#nRv').textContent = fmt(R, 3) + ' Ω'; $('#nXv').textContent = (X >= 0 ? '+' : '−') + Math.abs(X) + ' Ω';
+    $('#nQ').textContent = X === 0 ? fmt(Q, 3) : '≈ ' + fmt(Q, 3); $('#nRL').textContent = rlDb(g0) > 60 ? '> 60 dB' : fmt(rlDb(g0), 3) + ' dB';
+    $('#nBW').textContent = bw >= 1.19 ? '> 120 %' : fmt(bw*100, 3) + ' % (' + si(bw*F0, 'Hz') + ')';
+    const lowpass = s.se.kind === 'L' && s.sh.kind === 'C', highpass = s.se.kind === 'C' && s.sh.kind === 'L';
+    setVerdict($('#nVerdict'), 'ok', `<b>Matched at 915 MHz</b> with a series ${s.se.kind === 'L' ? 'inductor' : 'capacitor'} of ${valStr(s.se)} and a shunt ${s.sh.kind === 'L' ? 'inductor' : 'capacitor'} of ${valStr(s.sh)}${lowpass ? ': a low-pass network, which also attenuates harmonics' : highpass ? ': a high-pass network, which also blocks DC' : ''}.`);
+    w.redraw();
+  }
+  function drawEl(ctx, el, x0, y0, x1, y1){
+    if (el.kind === 'L'){
+      // four bumps; they bulge up for a horizontal element and to the right for a vertical one
+      const n = 4, len = Math.hypot(x1 - x0, y1 - y0), ux = (x1 - x0)/len, uy = (y1 - y0)/len, body = Math.min(40, len*0.6), a = (len - body)/2, r = body/(2*n), th = Math.atan2(uy, ux);
+      Plot.wire(ctx, [[x0, y0], [x0 + ux*a, y0 + uy*a]]); Plot.wire(ctx, [[x1 - ux*a, y1 - uy*a], [x1, y1]]);
+      ctx.save(); ctx.strokeStyle = col.ink; ctx.lineWidth = 1.6; ctx.beginPath();
+      for (let i = 0; i < n; i++){ const c = a + r*(2*i + 1); ctx.arc(x0 + ux*c, y0 + uy*c, r, th + Math.PI, th, uy === 0); }
+      ctx.stroke(); ctx.restore();
+    } else {
+      const len = Math.hypot(x1 - x0, y1 - y0), ux = (x1 - x0)/len, uy = (y1 - y0)/len, g = 5, mx = (x0 + x1)/2, my = (y0 + y1)/2;
+      Plot.wire(ctx, [[x0, y0], [mx - ux*g, my - uy*g]]); Plot.wire(ctx, [[mx + ux*g, my + uy*g], [x1, y1]]);
+      const px = -uy*12, py = ux*12;
+      Plot.line(ctx, [[mx - ux*g - px, my - uy*g - py], [mx - ux*g + px, my - uy*g + py]], col.ink, 2.2);
+      Plot.line(ctx, [[mx + ux*g - px, my + uy*g - py], [mx + ux*g + px, my + uy*g + py]], col.ink, 2.2);
+    }
+  }
+  const w = Plot.widget($('#cvLnet'), (ctx, W, H) => {
+    const {R, X, sol, se, sh, gf} = s; if (!sol) return;
+    // schematic: source port on the left, load on the right
+    const yT = 30, yB = 100, xs = 40, xe = W - 110, xa = xs + (xe - xs)*0.38, xb = xs + (xe - xs)*0.7;
+    Plot.text(ctx, '50 Ω source', xs - 4, yT - 16, {color: col.ink2});
+    Plot.dot(ctx, xs, yT, 3.5, col.ink); Plot.dot(ctx, xs, yB, 3.5, col.ink);
+    Plot.wire(ctx, [[xs, yB], [xe, yB]]);
+    if (sol.topo === 'shuntLoad'){
+      drawEl(ctx, se, xs, yT, xb, yT); Plot.wire(ctx, [[xb, yT], [xe, yT]]);
+      drawEl(ctx, sh, xb, yT, xb, yB); Plot.dot(ctx, xb, yT, 3, col.ink); Plot.dot(ctx, xb, yB, 3, col.ink);
+      Plot.text(ctx, valStr(se), (xs + xb)/2, yT - 18, {align: 'center', mono: true, color: col.c3});
+      Plot.text(ctx, valStr(sh), xb + 16, (yT + yB)/2, {mono: true, color: col.c3});
+    } else {
+      Plot.wire(ctx, [[xs, yT], [xa, yT]]); drawEl(ctx, sh, xa, yT, xa, yB); Plot.dot(ctx, xa, yT, 3, col.ink); Plot.dot(ctx, xa, yB, 3, col.ink);
+      drawEl(ctx, se, xa, yT, xe, yT);
+      Plot.text(ctx, valStr(sh), xa + 16, (yT + yB)/2, {mono: true, color: col.c3});
+      Plot.text(ctx, valStr(se), (xa + xe)/2, yT - 18, {align: 'center', mono: true, color: col.c3});
+    }
+    ctx.save(); ctx.fillStyle = '#fff'; ctx.strokeStyle = col.c2; ctx.lineWidth = 1.4; ctx.fillRect(xe - 14, yT + 12, 28, yB - yT - 24); ctx.strokeRect(xe - 14 + .5, yT + 12.5, 28, yB - yT - 25); ctx.restore();
+    Plot.wire(ctx, [[xe, yT], [xe, yT + 12]]); Plot.wire(ctx, [[xe, yB - 12], [xe, yB]]);
+    Plot.text(ctx, 'load', xe + 20, (yT + yB)/2 - 8, {color: col.c2});
+    Plot.text(ctx, zStr([R, X]), xe + 20, (yT + yB)/2 + 8, {mono: true, color: col.c2});
+    // return loss against frequency
+    const P = {l: 52, r: W - 14, t: 140, b: H - 40};
+    const X0 = Plot.lin(0.5*F0, 1.5*F0, P.l, P.r), Y = Plot.lin(40, 0, P.t, P.b);
+    Plot.axes(ctx, P, X0, Y, {xt: [0.5, 0.75, 1, 1.25, 1.5].map(k => k*F0), yt: [0, 10, 20, 30, 40], xl: 'frequency', yl: 'return loss (dB)', xf: t => si(t, 'Hz').replace(' ', ''), xgrid: true});
+    Plot.clip(ctx, P);
+    ctx.fillStyle = Plot.rgba(col.good, .07); ctx.fillRect(P.l, P.t, P.r - P.l, Y(10) - P.t);
+    const pts = []; for (let i = 0; i <= 300; i++){ const f = F0*(0.5 + i/300); pts.push([X0(f), Y(Math.min(40, rlDb(gf(f))))]); }
+    Plot.line(ctx, pts, col.c2, 2.2);
+    ctx.restore();
+    Plot.text(ctx, 'RL > 10 dB', P.l + 6, Y(10) - 9, {color: col.good});
+  });
+  ['#nR', '#nX'].forEach(id => $(id).addEventListener('input', upd));
+  upd();
+})();
+
+/* ============ 4. Input impedance against line length ============ */
+(() => {
+  const ld = seg('#zL', upd);
+  let s = {};
+  function upd(){
+    const [r, x] = ld().split(',').map(Number), zl = r > 1e8 ? [Infinity, 0] : [r, x], len = +$('#zLen').value;
+    const z = zin(Z0, zl, 2*Math.PI*len);
+    s = {zl, len};
+    $('#zLenv').textContent = fmt(len, 3) + ' λ';
+    $('#zZ').textContent = zStr(z);
+    const big = cx.abs(z) > 1e4, ph = cx.arg(z)*180/Math.PI;
+    $('#zB').textContent = big ? 'an open circuit' : cx.abs(z) < 0.5 ? 'a short circuit' : ph > 30 ? 'an inductive load' : ph < -30 ? 'a capacitive load' : 'a resistor';
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvZin'), (ctx, W, H) => {
+    const {zl, len} = s; if (!zl) return;
+    const P = {l: 56, r: W - 14, t: 14, b: H - 40};
+    const X = Plot.lin(0, 0.5, P.l, P.r), Y = Plot.lin(-250, 250, P.b, P.t);
+    Plot.axes(ctx, P, X, Y, {xt: [0, 0.125, 0.25, 0.375, 0.5], yt: [-200, -100, 0, 100, 200], xl: 'line length (wavelengths)', yl: 'ohms', xf: t => t === 0.25 ? 'λ/4' : t === 0.5 ? 'λ/2' : fmt(t, 3), xgrid: true});
+    Plot.clip(ctx, P);
+    Plot.line(ctx, [[P.l, Y(0)], [P.r, Y(0)]], col.line2, 1);
+    const rr = [], xx = [];
+    for (let i = 0; i <= 500; i++){
+      const l = 0.5*i/500, z = zin(Z0, zl, 2*Math.PI*l);
+      rr.push([X(l), Y(Math.max(-400, Math.min(400, z[0])))]); xx.push([X(l), Y(Math.max(-400, Math.min(400, z[1])))]);
+    }
+    // break the reactance trace where it jumps through infinity
+    const pieces = [[]]; xx.forEach((p, i) => { if (i && Math.abs(p[1] - xx[i - 1][1]) > (P.b - P.t)*0.6) pieces.push([]); pieces[pieces.length - 1].push(p); });
+    Plot.line(ctx, rr, col.c1, 2.2); pieces.forEach(p => Plot.line(ctx, p, col.c2, 2.2));
+    ctx.restore();
+    Plot.line(ctx, [[X(len), P.t], [X(len), P.b]], col.ink2, 1, [3, 3]);
+  });
+  $('#zLen').addEventListener('input', upd);
+  upd();
+})();
+
+/* ============ 5. S-parameters of simple networks ============ */
+(() => {
+  const net = seg('#sN', upd);
+  // ABCD matrices
+  const ser = z => [[1, 0], z, [0, 0], [1, 0]], shu = y => [[1, 0], [0, 0], y, [1, 0]];
+  const mm = (a, b) => [cx.add(cx.mul(a[0], b[0]), cx.mul(a[1], b[2])), cx.add(cx.mul(a[0], b[1]), cx.mul(a[1], b[3])), cx.add(cx.mul(a[2], b[0]), cx.mul(a[3], b[2])), cx.add(cx.mul(a[2], b[1]), cx.mul(a[3], b[3]))];
+  const NETS = {
+    sc: w => ser([0, -1/(w*100e-12)]),
+    pc: w => shu([0, w*2e-12]),
+    sl: w => ser([0, w*10e-9]),
+    att: w => mm(mm(shu([1/150.48, 0]), ser([37.35, 0])), shu([1/150.48, 0])),
+    lpf: w => mm(mm(ser([0, w*7.96e-9]), shu([0, w*6.37e-12])), ser([0, w*7.96e-9]))
+  };
+  const sp = (k, f) => {
+    const [A, B, C, D] = NETS[k](2*Math.PI*f);
+    const den = cx.add(cx.add(A, cx.mul(B, [1/Z0, 0])), cx.add(cx.mul(C, [Z0, 0]), D));
+    const s11 = cx.div(cx.sub(cx.add(A, cx.mul(B, [1/Z0, 0])), cx.add(cx.mul(C, [Z0, 0]), D)), den);
+    return [s11, cx.div([2, 0], den)];
+  };
+  const dB = m => 20*Math.log10(Math.max(1e-9, m));
+  let s = {};
+  function upd(){
+    const k = net(), f = Math.pow(10, +$('#sF').value), [s11, s21] = sp(k, f);
+    const p11 = cx.abs(s11)**2, p21 = cx.abs(s21)**2, pl = Math.max(0, 1 - p11 - p21);
+    s = {k, f};
+    $('#sFv').textContent = si(f, 'Hz');
+    $('#sS11').textContent = fmt(dB(cx.abs(s11)), 3) + ' dB'; $('#sS21').textContent = fmt(dB(cx.abs(s21)), 3) + ' dB';
+    const pc = p => (p*100 < 0.1 ? '< 0.1' : fmt(p*100, 3)) + ' %';
+    $('#sPr').textContent = pc(p11); $('#sPp').textContent = pc(p21); $('#sPa').textContent = pc(pl);
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvSp'), (ctx, W, H) => {
+    const {k, f} = s; if (!k) return;
+    const P = {l: 52, r: W - 14, t: 14, b: H - 40};
+    const X = Plot.log(1e7, 1e10, P.l, P.r), Y = Plot.lin(-40, 2, P.b, P.t);
+    Plot.axes(ctx, P, X, Y, {xt: Plot.logTicks(1e7, 1e10), yt: [-40, -30, -20, -10, 0], xl: 'frequency', yl: 'dB', xf: t => si(t, 'Hz').replace(' ', ''), xgrid: true});
+    Plot.clip(ctx, P);
+    const a = [], b = [];
+    for (let i = 0; i <= 300; i++){ const fr = Math.pow(10, 7 + 3*i/300), [s11, s21] = sp(k, fr); a.push([X(fr), Y(dB(cx.abs(s11)))]); b.push([X(fr), Y(dB(cx.abs(s21)))]); }
+    Plot.line(ctx, a, col.c2, 2.2); Plot.line(ctx, b, col.c1, 2.2);
+    ctx.restore();
+    Plot.line(ctx, [[X(f), P.t], [X(f), P.b]], col.ink2, 1, [3, 3]);
+  });
+  $('#sF').addEventListener('input', upd);
+  upd();
+})();
+
+/* ============ 6. Bandwidth of three matching approaches ============ */
+(() => {
+  let s = {};
+  const g1 = (R, f) => { const Z1 = Math.sqrt(Z0*R); return gamma(zin(Z1, [R, 0], Math.PI/2*f/F0)); };
+  const g2 = (R, f) => {
+    const Z1 = Z0*Math.pow(R/Z0, 0.25), Z2 = Z0*Math.pow(R/Z0, 0.75), th = Math.PI/2*f/F0;
+    return gamma(zin(Z1, zin(Z2, [R, 0], th), th));
+  };
+  const gL = (R, f) => { const sols = lnet(R, 0), sol = sols.find(q => seriesEl(q.X, 2*Math.PI*F0).kind === 'L' && shuntEl(q.B, 2*Math.PI*F0).kind === 'C') || sols[0]; return gamma(lnetZin(sol, R, 0, f)); };
+  function upd(){
+    const R = logR(+$('#bR').value);
+    s = {R};
+    $('#bRv').textContent = fmt(R, 3) + ' Ω';
+    const show = b => b >= 0.99 ? '> 99 %' : fmt(b*100, 3) + ' %';
+    if (Math.abs(R - Z0) < 0.5){ ['#bL', '#b1', '#b2'].forEach(id => $(id).textContent = 'no match needed'); }
+    else { $('#bL').textContent = show(bw10(f => gL(R, f), F0, 0.99)); $('#b1').textContent = show(bw10(f => g1(R, f), F0, 0.99)); $('#b2').textContent = show(bw10(f => g2(R, f), F0, 0.99)); }
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvBw'), (ctx, W, H) => {
+    const {R} = s; if (!R) return;
+    const P = {l: 52, r: W - 14, t: 14, b: H - 40};
+    const X = Plot.lin(0.4, 1.6, P.l, P.r), Y = Plot.lin(40, 0, P.t, P.b);
+    Plot.axes(ctx, P, X, Y, {xt: [0.4, 0.6, 0.8, 1, 1.2, 1.4, 1.6], yt: [0, 10, 20, 30, 40], xl: 'frequency ÷ design frequency f₀', yl: 'return loss (dB)', xf: t => fmt(t, 2), xgrid: true});
+    Plot.clip(ctx, P);
+    ctx.fillStyle = Plot.rgba(col.good, .07); ctx.fillRect(P.l, P.t, P.r - P.l, Y(10) - P.t);
+    [[gL, col.c2], [g1, col.c1], [g2, col.c3]].forEach(([g, c]) => {
+      const pts = []; for (let i = 0; i <= 300; i++){ const k = 0.4 + 1.2*i/300; pts.push([X(k), Y(Math.min(40, rlDb(g(R, k*F0))))]); }
+      Plot.line(ctx, pts, c, 2.2);
+    });
+    ctx.restore();
+    Plot.text(ctx, 'RL > 10 dB', P.l + 6, Y(10) - 9, {color: col.good});
+  });
+  $('#bR').addEventListener('input', upd);
+  upd();
+})();
+</script>
 </body>
 </html>
