@@ -4,31 +4,814 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Mindset Shift: Why RF Is Different · RF 0</title>
-<meta name="description" content="RF & High-Speed Design module 0: Lumped vs distributed, return current, and &quot;ground is not ground&quot;. In development.">
+<meta name="description" content="RF module 0: the lumped-to-distributed transition, skin effect and return current, why ground is not ground, energy flowing in the fields, and the RF designer's mental model.">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
 <link rel="stylesheet" href="../../assets/site.css">
 <script src="../../assets/course.js"></script>
 <script src="../../assets/site.js"></script>
+<script src="../../assets/plot.js"></script>
 </head>
 <body>
 <div class="layout">
 <aside class="side" aria-label="Module contents"></aside>
 <main class="content">
 
-<!-- Placeholder: replace this page with the module when it's written (see README.md, "Writing a module"). -->
+<!-- ================= HERO ================= -->
 <header class="hero">
   <div class="eyebrow">RF &amp; High-Speed Design · Module 0</div>
-  <h1>Mindset Shift: Why RF Is Different</h1>
-  <p class="lede">Lumped vs distributed, return current, and &quot;ground is not ground&quot;.</p>
+  <h1>Mindset shift: why RF is different</h1>
+  <p class="lede">Everything in the EE notes still holds at radio frequencies, but several assumptions that were safe at low frequency stop being safe. Wires have delay. Current crowds into the surface of conductors and returns along paths you didn't draw. Ground stops being a single node. And the energy turns out to travel in the space between the conductors, not in the copper. This module rebuilds those assumptions from first principles before the rest of the RF notes rely on them.</p>
+  <p class="meta">Builds on: EE modules 1–4. Bench: oscilloscope, a long coax cable, NanoVNA or any VNA.</p>
+  <div class="resources" data-auto></div>
+  <div class="objectives">
+    <h3>What's covered</h3>
+    <ul>
+      <li>When the lumped-circuit model of the EE notes stops working, and what replaces it.</li>
+      <li>Why every component is a small network of resistance, inductance and capacitance at high frequency.</li>
+      <li>The skin effect: where current flows inside a conductor at high frequency.</li>
+      <li>Return current: why it follows the signal at high frequency, and what a gap in the ground plane does to it.</li>
+      <li>Why "ground" is a conductor with impedance, not a single node at 0 V.</li>
+      <li>Why the energy travels in the fields between conductors, and the questions an RF designer asks of every layout.</li>
+    </ul>
+  </div>
+  <div class="video" data-video="lecture" id="lecture">
+    <div class="plan">
+      <p>Planned walkthrough of this page (≈ 35 min):</p>
+      <ol>
+        <li data-t="0:00">Wavelength and the size of things</li>
+        <li data-t="4:00">The lumped-to-distributed transition</li>
+        <li data-t="10:00">Every component is an RLC network</li>
+        <li data-t="14:00">The skin effect</li>
+        <li data-t="18:00">Return current and the gap in the ground plane</li>
+        <li data-t="24:00">Ground is not ground</li>
+        <li data-t="29:00">Energy flows in the fields</li>
+        <li data-t="32:00">The RF designer's mental model</li>
+      </ol>
+    </div>
+  </div>
 </header>
 
-<section class="sec" id="status" data-nonum data-short="In development">
-<h2>In development</h2>
-<p>This module hasn't been written yet. The other modules are listed in the strip at the top of the page, and the links below go to the neighbouring ones.</p>
+<!-- ================= 1 WAVELENGTH ================= -->
+<section class="sec" id="scale" data-short="Wavelength and size">
+<h2>Wavelength and the size of things <a class="vjump" data-t="0:00"></a></h2>
+<p>The EE notes treated a circuit as a set of nodes joined by ideal wires, with Kirchhoff's laws holding at every instant. That model makes a hidden assumption: <b>a change at one end of a wire appears at the other end instantly.</b> In reality it travels at a finite speed, close to the speed of light in air and slower in a circuit board. Whether that matters depends on how far the signal travels compared with how fast it changes.</p>
+<p>For a sine wave, the natural measure is the <strong>wavelength</strong>: the distance the wave travels during one cycle.</p>
+<div class="eq">$$\lambda = \frac{v}{f} \qquad v = \frac{c}{\sqrt{\varepsilon_\text{eff}}}$$<div class="n">c = 3 × 10⁸ m/s; ε<sub>eff</sub> ≈ 3.3 for a trace on FR-4, so signals travel at about 0.55c, or 6 ns per metre</div></div>
+<p>Compare the wavelengths of common radio bands with the sizes of things on a board or in a vehicle:</p>
+<div class="tablewrap"><table>
+  <tr><th>Frequency</th><th>Typical use</th><th>λ in air</th><th>λ on FR-4</th></tr>
+  <tr><td>50 Hz</td><td>Mains</td><td>6000 km</td><td>3300 km</td></tr>
+  <tr><td>433 MHz</td><td>Telemetry, remote control</td><td>69 cm</td><td>38 cm</td></tr>
+  <tr><td>915 MHz</td><td>Telemetry (ISM band)</td><td>33 cm</td><td>18 cm</td></tr>
+  <tr><td>1575 MHz</td><td>GPS L1</td><td>19 cm</td><td>10.5 cm</td></tr>
+  <tr><td>2.4 GHz</td><td>Wi-Fi, Bluetooth, video links</td><td>12.5 cm</td><td>6.9 cm</td></tr>
+  <tr><td>5.8 GHz</td><td>Video links</td><td>5.2 cm</td><td>2.8 cm</td></tr>
+</table></div>
+<p>At mains frequency, a wire would have to be hundreds of kilometres long before the delay mattered. At 2.4 GHz, a single circuit board is longer than a wavelength. That's the whole reason RF design needs a different way of thinking: the circuit is no longer small compared with the wave travelling through it.</p>
+</section>
+
+<!-- ================= 2 LUMPED TO DISTRIBUTED ================= -->
+<section class="sec" id="distributed" data-short="Lumped to distributed">
+<h2>The lumped-to-distributed transition <a class="vjump" data-t="4:00"></a></h2>
+<p>A circuit is <strong>lumped</strong> when it's small enough that every point on a wire sees the same voltage at the same moment. Then resistance, capacitance and inductance can be treated as if they sit at single points, in the components, and Kirchhoff's laws hold. A circuit is <strong>distributed</strong> when a signal takes a noticeable time to cross it. Then different points on the same wire hold different voltages at the same instant, and the wire itself has to be treated as part of the circuit.</p>
+<p>What decides it isn't the frequency of the signal but how fast it <em>changes</em>. A 1 kHz square wave from a fast logic chip has edges lasting a nanosecond, and during each edge the voltage is changing as fast as a gigahertz sine wave. So there's a time-domain version of the comparison: the time the signal takes to travel the connection against the time its edges take to rise.</p>
+<div class="note rule">
+  <span class="ni">✓</span>
+  <div><span class="nt">Rule of thumb: delay against rise time</span>If the one-way delay along a connection is more than about a sixth of the signal's rise time, treat the connection as distributed: a transmission line. On FR-4, with about 60 ps of delay per centimetre, a 1 ns edge makes any trace longer than about 3 cm a transmission line. Module 1 gives the equivalent rule for sine waves in terms of wavelength.</div>
+</div>
+
+<div class="widget wide" id="w-prop">
+  <div class="wh"><span class="tag">Interactive</span><b>A voltage step travelling along a trace</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label for="pL">Trace length <b id="pLv"></b></label><input id="pL" type="range" min="1" max="100" step="1" value="30"></div>
+      <div class="ctrl"><label>Edge rise time</label><div class="seg" id="pR"><button type="button" data-v="1e-8">10 ns</button><button type="button" data-v="1e-9" class="on">1 ns</button><button type="button" data-v="1e-10">100 ps</button></div></div>
+      <div class="ctrl"><label for="pT">Moment shown <b id="pTv"></b></label><input id="pT" type="range" min="0" max="1" step="0.005" value="0.3"></div>
+      <p class="small">A trace on FR-4 (about 60 ps/cm), driven at the left end and terminated at the right so nothing reflects. Module 1 covers what happens when it isn't terminated.</p>
+    </div>
+    <div>
+      <canvas id="cvProp" style="height:330px" aria-label="Top: voltage along the trace at the chosen moment. Bottom: voltage at the near and far ends against time, with a cursor at the chosen moment."></canvas>
+      <div class="legend"><span style="--c:var(--c1)">near (driven) end</span><span style="--c:var(--c2)">far end</span></div>
+      <div class="readout">
+        <div class="stat"><div class="k">One-way delay</div><div class="v" id="pD"></div></div>
+        <div class="stat"><div class="k">Delay ÷ rise time</div><div class="v" id="pRat"></div></div>
+      </div>
+      <div class="verdict" id="pVerdict"></div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>With a 10 ns edge and a 10 cm trace, scrub through time. Do the two ends ever disagree by much?</li>
+    <li>Keep 10 cm and switch to a 100 ps edge. At the moment the near end has finished rising, what is the far end doing?</li>
+    <li>Find the length at which a 1 ns edge stops looking lumped. Compare it with the rule of thumb above.</li>
+  </ol></div>
+</div>
+
+<h3>Every component is an RLC network</h3>
+<p>The same idea applies inside components. A resistor has leads or end caps and a body, so current through it builds a magnetic field (inductance), and its two ends sit close together with a dielectric between them (capacitance). These <strong>parasitics</strong> are tiny, typically a fraction of a nanohenry and a fraction of a picofarad, so at low frequency they don't matter. Their impedances scale with frequency, though, so at RF they can dominate. You met one case in EE Module 3: a capacitor's ESL makes it behave as an inductor above its self-resonant frequency. Every part does something similar.</p>
+<div class="eq">$$X_L = 2\pi f L \qquad X_C = \frac{1}{2\pi f C}$$<div class="n">0.5 nH is 3 Ω at 1 GHz; 0.05 pF is 3.2 kΩ at 1 GHz</div></div>
+
+<div class="widget wide" id="w-part">
+  <div class="wh"><span class="tag">Interactive</span><b>What a small surface-mount part looks like across frequency</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label>Part</label><div class="seg" id="cP"><button type="button" data-v="r50">50 Ω resistor</button><button type="button" data-v="r1k">1 kΩ resistor</button><button type="button" data-v="r10k" class="on">10 kΩ resistor</button><button type="button" data-v="c100p">100 pF capacitor</button><button type="button" data-v="l10n">10 nH inductor</button><button type="button" data-v="wire">2 cm of wire</button></div></div>
+      <div class="ctrl"><label for="cF">Frequency <b id="cFv"></b></label><input id="cF" type="range" min="6" max="10" step="0.001" value="8.9614"></div>
+      <p class="small">Parasitic values are typical for 0603 and 0402 parts. The dashed line is the ideal part.</p>
+    </div>
+    <div>
+      <canvas id="cvPart" style="height:300px" aria-label="Plot of impedance magnitude against frequency for the real part and the ideal part"></canvas>
+      <div class="legend"><span style="--c:var(--c3)">real part</span><span class="dash" style="--c:var(--muted)">ideal part</span></div>
+      <div class="readout">
+        <div class="stat"><div class="k">Ideal |Z|</div><div class="v" id="cZi"></div></div>
+        <div class="stat"><div class="k">Real |Z|</div><div class="v" id="cZr"></div></div>
+        <div class="stat"><div class="k">Behaves like</div><div class="v" id="cB"></div></div>
+      </div>
+      <div class="verdict" id="cVerdict"></div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>Look at the 10 kΩ resistor at 915 MHz. How much of its resistance is left, and why?</li>
+    <li>Compare the 50 Ω resistor. Why do low-value resistors survive to much higher frequencies than high-value ones?</li>
+    <li>Find the 100 pF capacitor's self-resonant frequency. Above it, what is the "capacitor" really?</li>
+  </ol></div>
+</div>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">Is a slow signal lumped?</span></summary>
+  <div class="eb">
+    <p>A logic chip sends a 1 kHz square wave down a 30 cm ribbon cable. Its edges rise in about 1 ns.</p>
+    <div class="choice"><p>Should the cable be treated as lumped or distributed?</p>
+    <ol class="opts">
+      <li>Lumped: at 1 kHz the wavelength is hundreds of kilometres.<div class="why">The 1 kHz repetition rate isn't what matters. Think about how fast the voltage changes during each edge.</div></li>
+      <li>Distributed: the edges take 1 ns, while the signal takes about 1.5 to 2 ns to cross the cable, so the two ends disagree during every edge.<div class="why">What matters is the rise time against the delay, not the repetition rate.</div></li>
+      <li>Lumped, as long as the cable is shielded.<div class="why">Shielding changes the fields outside the cable, not the delay along it.</div></li>
+      <li>It depends only on the chip's supply voltage.<div class="why">The supply voltage sets the size of the edge, not its speed.</div></li>
+    </ol>
+    <div class="solution"><p>Between edges nothing is changing, so the cable is irrelevant. During each edge, the near end rises in 1 ns while the far end won't start rising until the signal has travelled 30 cm, which takes 1.5 to 2 ns in a ribbon cable. The cable is distributed for the edges, and if it isn't terminated, the edges will ring (Module 1). A slow repetition rate with fast edges is the classic way digital signals become RF problems, and the usual fix is to slow the edges down if the signal doesn't need them fast.</p></div>
+    </div>
+  </div>
+</details>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">A pull-up resistor at 915 MHz</span></summary>
+  <div class="eb">
+    <p>A 10 kΩ pull-up resistor sits on a control pin of a 915 MHz radio chip, next to the RF output, and some RF reaches it.</p>
+    <div class="choice"><p>At 915 MHz, what does the resistor look like?</p>
+    <ol class="opts">
+      <li>10 kΩ: resistors don't depend on frequency.<div class="why">Ideal resistors don't. Real ones have capacitance between their ends.</div></li>
+      <li>Much less than 10 kΩ: its end-to-end capacitance of about 0.05 pF has an impedance of only a few kilohms at 915 MHz, in parallel with the resistance.<div class="why">At high frequency the parasitic capacitance provides a lower-impedance path than the resistor itself.</div></li>
+      <li>Much more than 10 kΩ, because of its inductance.<div class="why">Its inductance adds only a few ohms at 915 MHz, negligible next to 10 kΩ.</div></li>
+      <li>An open circuit.<div class="why">The parasitic capacitance makes it the opposite of an open circuit at high frequency.</div></li>
+    </ol>
+    <div class="solution"><p>0.05 pF at 915 MHz is about 3.5 kΩ of reactance, in parallel with the 10 kΩ, so the part looks like about 3.3 kΩ and is mostly capacitive. High-value resistors are the first to be affected, because their parasitic capacitance only has to compete with a large resistance. It's why RF designs use low-value resistors where RF is present and isolate high-value parts with inductors or ferrite beads. Check it in the figure above.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 3 SKIN EFFECT ================= -->
+<section class="sec" id="skin" data-short="Skin effect">
+<h2>The skin effect <a class="vjump" data-t="14:00"></a></h2>
+<p>At DC, current spreads evenly across a wire's cross-section. At high frequency it crowds into a thin layer at the surface. The reason follows from what you already know about inductance.</p>
+<p>Current in a wire creates a magnetic field, inside the wire as well as around it. Picture the wire as many thin parallel filaments. A filament at the centre is surrounded by the field of all the others, so it links more magnetic flux than a filament at the surface: it has more inductance. At DC that doesn't matter, because inductance only opposes <em>changes</em> in current. At high frequency the centre filaments' larger inductive impedance (\(2\pi f L\)) pushes the current out towards the surface, where the impedance is lowest. The result is that current flows in a layer roughly one <strong>skin depth</strong> thick:</p>
+<div class="eq">$$\delta = \sqrt{\frac{\rho}{\pi f \mu}}$$<div class="n">ρ is the resistivity and μ the permeability; for copper, δ ≈ 66 µm at 1 MHz and about 2 µm at 1 GHz</div></div>
+<p>Since the current only uses a thin outer layer, the effective area shrinks and the resistance rises. For a round wire much thicker than δ, the current uses a ring of area about \(\pi d\,\delta\), so the AC resistance is about \(d/4\delta\) times the DC resistance, and it rises with \(\sqrt{f}\).</p>
+
+<div class="widget wide" id="w-skin">
+  <div class="wh"><span class="tag">Interactive</span><b>Current density in a round copper wire</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label for="sF">Frequency <b id="sFv"></b></label><input id="sF" type="range" min="1" max="10" step="0.01" value="6"></div>
+      <div class="ctrl"><label>Wire diameter</label><div class="seg" id="sD"><button type="button" data-v="0.25e-3">0.25 mm</button><button type="button" data-v="0.5e-3" class="on">0.5 mm</button><button type="button" data-v="1e-3">1 mm</button><button type="button" data-v="2e-3">2 mm</button></div></div>
+      <p class="small">Darker shading means more current. The plot uses a simple model: the current fills a layer one skin depth thick.</p>
+    </div>
+    <div>
+      <canvas id="cvSkin" style="height:280px" aria-label="Left: cross-section of the wire shaded by current density. Right: AC resistance divided by DC resistance against frequency."></canvas>
+      <div class="readout">
+        <div class="stat"><div class="k">Skin depth</div><div class="v" id="sDel"></div></div>
+        <div class="stat"><div class="k">R<sub>AC</sub> ÷ R<sub>DC</sub></div><div class="v" id="sRat"></div></div>
+        <div class="stat"><div class="k">R<sub>AC</sub> per metre</div><div class="v" id="sRm"></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>Start at 10 Hz and sweep up. At what frequency does the 0.5 mm wire start to show the effect?</li>
+    <li>At 915 MHz, how much of the wire's copper is carrying current?</li>
+  </ol></div>
+</div>
+
+<p>Two practical consequences. First, the surface matters more than the bulk: RF cable conductors are often silver-plated, and the roughness of PCB copper adds loss because current has to follow the bumps (Module 1 mentions this). Second, the skin effect is part of why high-frequency signals lose more energy per metre than low-frequency ones.</p>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">Steel inside a copper wire</span></summary>
+  <div class="eb">
+    <p>Some coax cables, including the common RG-316, use a centre conductor of steel with a thin copper or silver plating. The plating is several skin depths thick at the operating frequency, and steel's resistivity is about ten times copper's.</p>
+    <div class="choice"><p>At 1 GHz, how does its resistance compare with a solid copper conductor of the same diameter?</p>
+    <ol class="opts">
+      <li>About ten times higher, because the core is steel.<div class="why">That would be true at DC. Think about where the current flows at 1 GHz.</div></li>
+      <li>Nearly the same, because at 1 GHz the current flows in the outer few micrometres, all of it in the plating.<div class="why">The current never reaches the steel at 1 GHz, so the core's resistivity doesn't matter.</div></li>
+      <li>Lower, because steel is magnetic.<div class="why">Steel's magnetic permeability would make the skin depth even thinner in the steel, but the current isn't in the steel anyway.</div></li>
+      <li>Half, because the plating is a better conductor.<div class="why">The plating is no better than solid copper at the surface.</div></li>
+    </ol>
+    <div class="solution"><p>At 1 GHz the skin depth in copper is about 2 µm, so a plating several micrometres thick carries essentially all the current, and the conductor behaves like solid copper. The steel core adds strength and makes the cable cheaper, with no RF penalty. The catch is at DC and low frequency, where the current uses the whole cross-section and the steel's higher resistivity shows. That matters if the same cable carries DC power to a device, for example an active GPS antenna.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 4 RETURN CURRENT ================= -->
+<section class="sec" id="return" data-short="Return current">
+<h2>Return current <a class="vjump" data-t="18:00"></a></h2>
+<p>Current flows in loops (EE Module 1). Every signal current going out along a trace comes back along some return path, usually through the ground plane. At low frequency, the return current spreads out and takes the path of least <em>resistance</em>, which across a solid plane means a broad sweep roughly along the straight line between the two ends.</p>
+<p>At high frequency the impedance of the loop is dominated by its inductance, \(2\pi f L\), not its resistance. Inductance is set by the area of the loop: the bigger the area enclosed between the outgoing and returning currents, the more magnetic flux they link. So at high frequency the return current takes the path of least <em>inductance</em>, which is the path that keeps the loop area smallest: <b>directly underneath the signal trace</b>, following every turn it makes. On a typical board the switch from one behaviour to the other happens somewhere between about 10 kHz and 1 MHz.</p>
+<p>Underneath a trace at height h above the plane, the return current density falls off with the distance x to either side as \(1/\big(1 + (x/h)^2\big)\), so most of it flows within a few trace heights of the centreline.</p>
+
+<div class="widget wide" id="w-ret">
+  <div class="wh"><span class="tag">Interactive</span><b>Where the return current flows in a ground plane</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label>Frequency</label><div class="seg" id="rF"><button type="button" data-v="1e3">1 kHz</button><button type="button" data-v="1e5">100 kHz</button><button type="button" data-v="1e7" class="on">10 MHz</button></div></div>
+      <div class="ctrl"><label>Ground plane</label><div class="seg" id="rS"><button type="button" data-v="solid" class="on">Solid</button><button type="button" data-v="slot">With a slot</button></div></div>
+      <p class="small">View from above. The signal trace (dark line) runs from the driver to the load; vias connect each end to the ground plane. Shading shows return current density in the plane. Illustrative.</p>
+    </div>
+    <div>
+      <canvas id="cvRet" style="height:300px" aria-label="Top view of a board showing the signal trace and the return current density in the ground plane underneath"></canvas>
+      <div class="verdict" id="rVerdict"></div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>At 1 kHz, does the return current follow the trace? At 10 MHz?</li>
+    <li>At 10 MHz, add the slot. Where does the return current go now, and what has happened to the loop area?</li>
+  </ol></div>
+</div>
+
+<p>A slot, split or gap in the ground plane under a fast trace forces the return current to detour around it. The loop area grows, and with it the inductance. A large loop also radiates and picks up interference, and the detouring current flows under other traces, coupling noise into them. It's one of the most common causes of EMC failures (Module 7), and it's easy to create by accident: a split between "analog" and "digital" ground, a row of closely spaced vias, or a cut-out for a connector.</p>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">A trace across a split</span></summary>
+  <div class="eb">
+    <p>A board's ground plane is split into two halves, joined only at one corner. A fast clock trace runs straight across the split, from one half to the other.</p>
+    <div class="choice"><p>What is the main problem?</p>
+    <ol class="opts">
+      <li>None: the two halves are connected, so the return current has a path.<div class="why">It has a path, but think about where the path goes.</div></li>
+      <li>The return current can't follow under the trace, so it detours through the corner connection, forming a large loop that radiates, picks up noise and couples into other traces.<div class="why">At high frequency the return current wants to be under the trace, and the split forces a long detour.</div></li>
+      <li>The trace's DC resistance increases.<div class="why">The trace itself is unchanged. The problem is in the return path.</div></li>
+      <li>The clock frequency changes.<div class="why">The frequency is set by the clock source. The return path affects how cleanly the edges arrive and how much they radiate.</div></li>
+    </ol>
+    <div class="solution"><p>At high frequency, return current flows directly under its trace. Where the trace crosses the split, the current under it has nowhere to go and must travel along the split to the corner and back, enclosing a large loop. That loop is an inductor in series with the signal (slowing and distorting the edges) and an antenna (radiating, and receiving). The fixes: route fast traces only over solid plane, or if a split is unavoidable, put a stitching capacitor or a bridge in the plane right where the trace crosses.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 5 GROUND IS NOT GROUND ================= -->
+<section class="sec" id="ground" data-short="Ground is not ground">
+<h2>Ground is not ground <a class="vjump" data-t="24:00"></a></h2>
+<p>EE Module 2 treated ground as one node, everywhere at 0 V, and noted that its resistance can shift it when large currents flow. At RF the bigger issue is inductance. Every connection to ground has some: about 0.5 nH for a via through a standard board, and roughly 1 nH per millimetre for a wire. Those numbers are small, but at RF they aren't:</p>
+<div class="eq">$$X = 2\pi f L: \qquad 0.5\ \text{nH at 915 MHz} \approx 2.9\ \Omega \qquad 20\ \text{nH at 915 MHz} \approx 115\ \Omega$$</div>
+<p>A 2 cm wire "to ground" has an impedance of over 100 Ω at 915 MHz, twice the impedance of the 50 Ω circuits it's supposed to be the reference for. It isn't a ground at that frequency; it's a component. This is the same effect as the oscilloscope's long ground lead in EE Module 3, at a larger scale.</p>
+<p>It gets stranger when the connection is a noticeable fraction of a wavelength. A wire shorted to ground at its far end reflects the signal back, and when the wire is a quarter-wavelength long, the reflection arrives back at the near end exactly in phase to cancel the current: the shorted wire looks like an <em>open circuit</em>. So a "ground" connection can be at its worst at exactly the frequency you care about. Module 1 develops the transmission-line theory behind this.</p>
+
+<div class="widget wide" id="w-gnd">
+  <div class="wh"><span class="tag">Interactive</span><b>How good is a ground connection?</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label>Connection to the ground plane</label><div class="seg" id="gC"><button type="button" data-v="via1">1 via</button><button type="button" data-v="via4" class="on">4 vias</button><button type="button" data-v="w1">1 cm wire</button><button type="button" data-v="w5">5 cm wire</button></div></div>
+      <div class="ctrl"><label for="gF">Frequency <b id="gFv"></b></label><input id="gF" type="range" min="6" max="10" step="0.001" value="8.9614"></div>
+      <p class="small">Vias are 0.5 nH each. Wires are modelled as short transmission lines (about 260 Ω, roughly 0.9 nH/mm), shorted to the plane at the far end.</p>
+    </div>
+    <div>
+      <canvas id="cvGnd" style="height:300px" aria-label="Plot of the impedance of each ground connection against frequency, with the selected connection highlighted"></canvas>
+      <div class="readout">
+        <div class="stat" id="gZS"><div class="k">Impedance</div><div class="v" id="gZ"></div></div>
+        <div class="stat"><div class="k">Length ÷ wavelength</div><div class="v" id="gW"></div></div>
+      </div>
+      <div class="verdict" id="gVerdict"></div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>At 915 MHz, compare one via with four. Then with a 1 cm wire.</li>
+    <li>Select the 5 cm wire and sweep the frequency. Where does it stop being a ground altogether?</li>
+  </ol></div>
+</div>
+
+<div class="note rocket">
+  <span class="ni">🚀</span>
+  <div><span class="nt">Where this shows up</span>A shielded cable whose shield is connected to ground through a short wire "pigtail" instead of all the way round the connector. A module mounted on standoffs, grounded through its screws. An RF shield can soldered down at only a few points. Each is a ground connection with enough inductance to be a poor ground at RF, and the fix in each case is the same: many short, wide connections in parallel.</div>
+</div>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">A shield grounded through a pigtail</span></summary>
+  <div class="eb">
+    <p>A cable's braided shield is twisted into a 5 cm pigtail and soldered to a ground pad. The cable carries 900 MHz telemetry nearby.</p>
+    <div class="choice"><p>How well is the shield grounded at 900 MHz?</p>
+    <ol class="opts">
+      <li>Well: copper wire has only milliohms of resistance.<div class="why">Its resistance is milliohms, but its impedance at 900 MHz is dominated by inductance.</div></li>
+      <li>Poorly: the pigtail is several hundred ohms at 900 MHz, so the shield is barely connected to ground there.<div class="why">5 cm of wire is tens of nanohenries, and at 900 MHz it's also a noticeable fraction of a wavelength.</div></li>
+      <li>Well, as long as the solder joint is good.<div class="why">The solder joint is fine. The length of the pigtail is the problem.</div></li>
+      <li>It depends only on the braid coverage.<div class="why">Braid coverage matters for the shield itself, not for how it's connected to ground.</div></li>
+    </ol>
+    <div class="solution"><p>At 900 MHz a 5 cm pigtail is about 0.15 λ, and its impedance is over 300 Ω. Shield current that should flow smoothly to ground instead develops a voltage along the pigtail, and the shield itself starts radiating. That's why RF and EMC-critical cables use connectors that contact the shield all the way around, with no pigtail at all. Try a 5 cm wire in the figure above.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 6 ENERGY IN THE FIELDS ================= -->
+<section class="sec" id="fields" data-short="Energy in the fields">
+<h2>Energy flows in the fields <a class="vjump" data-t="29:00"></a></h2>
+<p>In the EE notes, it was natural to think of energy flowing through the wires, like water through pipes. That picture is wrong, even at DC, and at RF the difference matters.</p>
+<p>The voltage between two conductors means there's an electric field in the space between them. The current in them means there's a magnetic field around them. Electromagnetism says energy flows where both fields are present, in the direction at right angles to both. The rate of flow per unit area is the <strong>Poynting vector</strong>:</p>
+<div class="eq">$$\vec S = \vec E \times \vec H$$<div class="n">in watts per square metre; E in volts per metre, H in amps per metre</div></div>
+<p>Inside a good conductor the electric field is almost zero (the voltage drop along a wire is tiny), so almost no energy flows inside the copper. It flows through the space around and between the conductors, and the wires guide it. Even for a battery and a resistor connected by long wires, the energy travels through the space alongside the wires and enters the resistor from the outside.</p>
+
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>Energy travels in the space between conductors</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 295" role="img" aria-label="Left: a battery connected to a resistor by two long wires; arrows show energy flowing through the space between the wires from the battery towards the resistor. Right: cross-section of a microstrip trace over a ground plane, with electric field lines from the trace to the plane and magnetic field loops around the trace; energy flows into the page, concentrated between the trace and the plane.">
+    <defs>
+      <marker id="arE" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--c2)"/></marker>
+    </defs>
+    <!-- left: battery, wires, resistor -->
+    <g stroke="var(--ink)" stroke-width="2" fill="none">
+      <path d="M40 60v42M40 112v48"/><path d="M28 102h24"/><path d="M34 112h12" stroke-width="4"/>
+      <path d="M40 60h220M40 160h220"/>
+      <path d="M260 60v28l6 3l-12 6l12 6l-12 6l12 6l-12 6l6 3v28"/>
+    </g>
+    <text x="22" y="110" font-size="12" text-anchor="end">+</text>
+    <text x="274" y="114" font-size="12">R</text>
+    <g stroke="var(--c2)" stroke-width="1.6" fill="none" marker-end="url(#arE)">
+      <path d="M70 110h50"/><path d="M130 110h50"/><path d="M190 110h46"/>
+      <path d="M90 84q30 -8 60 0"/><path d="M90 136q30 8 60 0"/>
+      <path d="M180 84q30 -6 62 14"/><path d="M180 136q30 6 62 -14"/>
+    </g>
+    <text x="150" y="196" font-size="12" text-anchor="middle" fill="var(--c2)">energy flows through the space between the wires</text>
+    <text x="150" y="212" font-size="12" text-anchor="middle" fill="var(--c2)">and enters the resistor from the outside</text>
+    <!-- right: microstrip cross-section -->
+    <rect x="360" y="190" width="250" height="10" fill="var(--c4)" opacity=".75"/>
+    <rect x="360" y="150" width="250" height="40" fill="var(--sunk)"/>
+    <rect x="465" y="140" width="40" height="10" fill="var(--c4)"/>
+    <g stroke="var(--c1)" stroke-width="1.4" fill="none">
+      <path d="M475 150v40M485 150v40M495 150v40"/>
+      <path d="M466 150q-20 20 -24 40"/><path d="M504 150q20 20 24 40"/>
+      <path d="M465 146q-50 4 -64 44"/><path d="M505 146q50 4 64 44"/>
+    </g>
+    <g stroke="var(--c3)" stroke-width="1.3" fill="none" stroke-dasharray="4 3">
+      <ellipse cx="485" cy="152" rx="34" ry="22"/><ellipse cx="485" cy="148" rx="60" ry="40"/>
+    </g>
+    <circle cx="485" cy="172" r="7" fill="#fff" stroke="var(--c2)" stroke-width="1.6"/>
+    <path d="M480 167l10 10M490 167l-10 10" stroke="var(--c2)" stroke-width="1.6"/>
+    <text x="485" y="128" font-size="12" text-anchor="middle">trace</text>
+    <text x="615" y="214" font-size="12" text-anchor="end">ground plane</text>
+    <text x="365" y="168" font-size="11" fill="var(--muted)">dielectric</text>
+    <text x="360" y="236" font-size="12" fill="var(--c1)">solid: electric field</text>
+    <text x="360" y="252" font-size="12" fill="var(--c3)">dashed: magnetic field</text>
+    <text x="360" y="272" font-size="12" fill="var(--c2)">⊗ energy flows into the page,</text>
+    <text x="360" y="288" font-size="12" fill="var(--c2)">mostly in the dielectric</text>
+  </svg>
+  </div>
+</div>
+
+<p>On a circuit board, the fields of a trace are concentrated in the dielectric between it and the ground plane, with some spilling into the air above. That's where the signal's energy travels. Three consequences follow, and the rest of the RF notes rely on them:</p>
+<ul>
+  <li><strong>The material between the conductors matters as much as the copper.</strong> Its dielectric constant sets the speed and the impedance, and its loss tangent sets how much energy is turned into heat (Module 1).</li>
+  <li><strong>Anything inside the fields becomes part of the circuit.</strong> A nearby trace, a shield can, a finger, the inside of an enclosure or a carbon-fibre panel near an antenna all change the impedance and can pick up energy.</li>
+  <li><strong>Antennas are just structures that let the fields escape.</strong> Keep the conductors close together and the fields stay confined; open them out and the energy leaves as a radio wave (Module 9).</li>
+</ul>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">The antenna that detunes in your hand</span></summary>
+  <div class="eb">
+    <p>A small telemetry antenna measures perfectly on the bench. When someone holds the board near the antenna, or it's installed inside a carbon-fibre body tube, the match gets much worse.</p>
+    <div class="choice"><p>Why?</p>
+    <ol class="opts">
+      <li>The antenna's copper heats up.<div class="why">Nothing is heating the copper. Think about where the energy actually is.</div></li>
+      <li>The antenna's fields extend into the hand or the carbon fibre, so those materials become part of the circuit and change its impedance.<div class="why">The energy is in the fields around the antenna, and anything in those fields changes how it behaves.</div></li>
+      <li>The ground plane has moved.<div class="why">The board's ground hasn't changed. The surroundings have.</div></li>
+      <li>The radio's output power drops when it's held.<div class="why">The radio is the same. The load it's driving has changed.</div></li>
+    </ol>
+    <div class="solution"><p>An antenna's job is to put energy into the fields around it, so its surroundings are part of its circuit. A hand adds lossy dielectric; carbon fibre is conductive and shields and detunes the antenna. That's why an antenna is always measured in the real installation, as Module 1's exercises point out, and why antennas usually need a non-conductive window in a carbon-fibre airframe.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 7 MENTAL MODEL ================= -->
+<section class="sec" id="model" data-short="The RF mental model">
+<h2>The RF designer's mental model <a class="vjump" data-t="32:00"></a></h2>
+<p>None of this replaces the EE notes. Kirchhoff's laws, Ohm's law and Thévenin all still hold, as long as they're applied to small enough pieces of the circuit and every parasitic is included. What changes is which details are safe to ignore. The table summarises the shift:</p>
+<div class="tablewrap"><table>
+  <tr><th></th><th>Low-frequency habit</th><th>RF habit</th></tr>
+  <tr><td><b>A wire</b></td><td>A connection with no voltage drop and no delay</td><td>A transmission line with delay and an impedance, once it's longer than about a tenth of a wavelength</td></tr>
+  <tr><td><b>A component</b></td><td>Its marked value</td><td>A small RLC network; its behaviour depends on frequency, package and mounting</td></tr>
+  <tr><td><b>Current in a conductor</b></td><td>Spread across the whole cross-section</td><td>In a thin layer at the surface, a few micrometres deep</td></tr>
+  <tr><td><b>Return current</b></td><td>Somewhere in the ground, by the lowest-resistance path</td><td>Directly under the signal path, by the lowest-inductance path</td></tr>
+  <tr><td><b>Ground</b></td><td>One node at 0 V everywhere</td><td>A conductor with inductance; points on it differ in voltage, and long connections to it may not be ground at all</td></tr>
+  <tr><td><b>Where the energy is</b></td><td>In the wires</td><td>In the fields between the conductors, and in anything those fields reach</td></tr>
+  <tr><td><b>A measurement</b></td><td>The probe barely affects the circuit</td><td>The probe, its cable and its ground connection are part of the circuit</td></tr>
+</table></div>
+<p>In practice, an RF designer looks at a schematic or a layout and asks a short set of questions before calculating anything:</p>
+<ul>
+  <li>How long is each connection compared with the wavelength, or with the rise time?</li>
+  <li>Where does the return current flow, and is there a continuous path for it right under the signal?</li>
+  <li>What impedance does each part of the path have, and does it match the next part?</li>
+  <li>What does each component look like at this frequency, including its package and its connection to the board?</li>
+  <li>Where are the fields, and what else is inside them?</li>
+</ul>
+<p>Most RF problems are answered, or at least located, by those questions. The rest of the RF notes give you the tools to answer them quantitatively.</p>
+</section>
+
+<!-- ================= DESIGN EXERCISES ================= -->
+<section class="sec" id="exercises" data-nonum data-short="Design exercises">
+<h2>Design exercises</h2>
+<p>Problems drawn from real hardware. Each takes a few steps. Enter numbers to check your reasoning as you go, or open the worked solutions and discussion. The figures above are useful for sanity-checking.</p>
+
+<div class="chal">
+  <div class="ch"><span class="cn">Exercise 1</span><span class="cd">Analysis · ●●○</span><span class="ctitle">Resistance of a coax centre conductor at 915 MHz</span></div>
+  <div class="cbody">
+    <p>A coax cable carrying 915 MHz telemetry has a solid copper centre conductor 0.5 mm in diameter.</p>
+    <div class="given"><b>Given</b>
+      <span>Copper resistivity</span><span>1.72 × 10⁻⁸ Ω·m</span>
+      <span>Permeability</span><span>μ₀ = 4π × 10⁻⁷ H/m</span>
+      <span>Conductor diameter</span><span>0.5 mm</span>
+      <span>Frequency</span><span>915 MHz</span>
+    </div>
+    <div class="check" data-ans="2.18" data-tol="3%" data-unit="µm"><p>(a) Skin depth?</p>
+      <div class="hint">\(\delta = \sqrt{\rho / (\pi f \mu_0)}\).</div>
+      <div class="solution"><p>\(\delta = \sqrt{1.72\times10^{-8} / (\pi \times 915\times10^6 \times 4\pi\times10^{-7})} \approx 2.18\ \mu\text{m}\).</p></div></div>
+    <div class="check" data-ans="87.6" data-tol="2%" data-unit="mΩ"><p>(b) DC resistance per metre?</p>
+      <div class="solution"><p>\(R = \rho / (\pi r^2) = 1.72\times10^{-8} / (\pi \times (0.25\times10^{-3})^2) = 87.6\ \text{m}\Omega/\text{m}\).</p></div></div>
+    <div class="check" data-ans="5.0" data-tol="4%" data-unit="Ω"><p>(c) Approximate resistance per metre at 915 MHz?</p>
+      <div class="miss" data-val="0.0876"><p>That's the DC value. At 915 MHz only a thin surface layer carries the current.</p></div>
+      <div class="hint">The current flows in a ring about one skin depth thick. Compare its area with the whole cross-section.</div>
+      <div class="solution"><p>The ring has an area of about \(2\pi r\,\delta\), against \(\pi r^2\) for the whole wire, a ratio of \(r / 2\delta \approx 57\). So the resistance is about \(57 \times 87.6\ \text{m}\Omega \approx 5\ \Omega\) per metre, sixty times the DC value.</p></div></div>
+    <details><summary>Discussion: where does that loss show up?</summary><p>5 Ω per metre in a 50 Ω cable is significant, and it's one of the two main loss mechanisms in coax, along with loss in the dielectric. It's why cable loss is quoted in dB per metre at a given frequency, rising roughly with √f at lower frequencies. Thicker cables lose less because the centre conductor's circumference is larger, which is why long runs use thicker coax.</p></details>
+  </div>
+</div>
+
+<div class="chal">
+  <div class="ch"><span class="cn">Exercise 2</span><span class="cd">Analysis · ●○○</span><span class="ctitle">A ground connection for an RF module</span></div>
+  <div class="cbody">
+    <p>A small 915 MHz radio module is grounded to the main board through a 2 cm wire. A redesign replaces it with four vias directly under the module's ground pad.</p>
+    <div class="given"><b>Given</b>
+      <span>2 cm wire</span><span>about 20 nH</span>
+      <span>One via</span><span>about 0.5 nH</span>
+      <span>Frequency</span><span>915 MHz</span>
+    </div>
+    <div class="check" data-ans="115" data-tol="3%" data-unit="Ω"><p>(a) Impedance of the wire at 915 MHz?</p>
+      <div class="solution"><p>\(X = 2\pi \times 915\times10^6 \times 20\times10^{-9} \approx 115\ \Omega\), more than twice the 50 Ω the radio is designed around.</p></div></div>
+    <div class="check" data-ans="0.72" data-tol="3%" data-unit="Ω"><p>(b) Impedance of the four vias in parallel?</p>
+      <div class="hint">Four equal inductors in parallel have a quarter of the inductance.</div>
+      <div class="solution"><p>0.125 nH, so \(X = 2\pi \times 915\times10^6 \times 0.125\times10^{-9} \approx 0.72\ \Omega\), 160 times better than the wire.</p></div></div>
+    <details><summary>Discussion: why four vias and not one?</summary><p>One via is 2.9 Ω at 915 MHz, already acceptable for many purposes, but parallel vias divide the inductance and also share the current, which matters for a module drawing amps when it transmits. In practice the vias aren't quite independent: closely spaced vias share some of their magnetic field, so four vias give a bit less than a fourfold improvement. Spreading them around the pad helps.</p></details>
+  </div>
+</div>
+
+<div class="chal">
+  <div class="ch"><span class="cn">Exercise 3</span><span class="cd">Analysis · ●●○</span><span class="ctitle">A ground wire that becomes an open circuit</span></div>
+  <div class="cbody">
+    <p>An antenna's ground connection is an 8 cm wire to the airframe's metal bulkhead. Treat the wire as a line in air, shorted at the bulkhead end.</p>
+    <div class="check" data-ans="937" data-tol="2%" data-unit="MHz"><p>(a) At what frequency is the wire a quarter-wavelength long?</p>
+      <div class="hint">λ/4 = 8 cm, so λ = 32 cm. Then f = c/λ.</div>
+      <div class="solution"><p>\(f = c / (4 \times 0.08) = 937\ \text{MHz}\), within a few percent of the 915 MHz telemetry band.</p></div></div>
+    <div class="check" data-ans="31.2" data-tol="2%" data-unit="mm"><p>(b) How long would a wire be to be a quarter-wavelength at 2.4 GHz?</p>
+      <div class="solution"><p>\(c / (4 \times 2.4\times10^9) = 31.2\ \text{mm}\).</p></div></div>
+    <details><summary>Discussion: what does it mean for the antenna?</summary><p>At 937 MHz, the shorted 8 cm wire looks like an open circuit at its near end, so the antenna's "ground" is effectively disconnected, close to the frequency it was meant to work at. The antenna's behaviour then depends on whatever else its fields find to use as a return path, typically the outside of the coax shield, which then radiates. A ground connection at RF should be short compared with the wavelength: a few millimetres, made with wide straps or many vias, not centimetres of wire.</p></details>
+  </div>
+</div>
+</section>
+
+<!-- ================= BENCH ================= -->
+<section class="sec" id="bench" data-nonum data-short="At the bench">
+<h2>At the bench</h2>
+<div class="video" data-video="lab">
+  <div class="plan">
+    <p>Planned lab demo (≈ 20 min, filmed at the bench):</p>
+    <ol>
+      <li>Watching an edge arrive at the far end of a long coax cable</li>
+      <li>A resistor and a capacitor swept across frequency on a VNA</li>
+      <li>A wire to ground that stops being ground</li>
+      <li>Holding a hand near an antenna while watching its return loss</li>
+    </ol>
+  </div>
+</div>
+<div class="lab">
+  <h3>Seeing the distributed world</h3>
+  <div class="parts"><span>Two-channel oscilloscope</span><span>Function generator with a fast square-wave output</span><span>10 m of 50 Ω coax, a BNC T and a 50 Ω terminator</span><span>NanoVNA (or any VNA) with its calibration kit</span><span>10 kΩ and 100 pF surface-mount parts on SMA test boards</span><span>A short length of wire</span></div>
+  <ol>
+    <li><b>Delay.</b> Drive one end of the 10 m coax through the T, with channel 1 on the T, and terminate the far end in 50 Ω with channel 2 across the terminator. Trigger on channel 1. The far end arrives about 50 ns later (about 5 ns per metre for polyethylene coax). Compare it with the rise time of the edge.</li>
+    <li><b>Parts across frequency.</b> Calibrate the VNA, then measure the 10 kΩ resistor and the 100 pF capacitor from 1 MHz to 1 GHz and read their impedance. Find where the resistor stops looking like 10 kΩ and where the capacitor self-resonates.</li>
+    <li><b>A ground wire.</b> Measure the impedance of a 5 cm wire shorted to the test board's ground. Find the frequency where it peaks (close to a quarter-wavelength) and compare with \(c/4\ell\).</li>
+    <li><b>Fields in the surroundings.</b> Measure an antenna's return loss, then bring a hand within a few centimetres of it and watch the resonance move.</li>
+  </ol>
+  <div class="record"><b>What you should see:</b> a far-end edge delayed by about 5 ns per metre of cable, a 10 kΩ resistor that's mostly capacitive by a few hundred megahertz, a capacitor that becomes inductive above a few hundred megahertz, a wire whose impedance peaks near its quarter-wave frequency, and an antenna that detunes when anything enters its field.</div>
+</div>
+</section>
+
+<!-- ================= SUMMARY ================= -->
+<section class="sec" id="summary" data-nonum data-short="Summary">
+<h2>Summary &amp; cheat sheet</h2>
+<ol class="takeaways">
+  <li>A circuit is lumped only while a signal crosses it quickly compared with how fast it changes. Compare the delay with the rise time, or the length with the wavelength.</li>
+  <li>Every component is an RLC network at high frequency. High-value resistors and large capacitors are affected first.</li>
+  <li>At high frequency current flows in a thin surface layer, about 2 µm thick in copper at 1 GHz, so resistance rises with √f.</li>
+  <li>High-frequency return current flows directly under its signal trace, along the lowest-inductance path. Gaps in the plane force detours, large loops and radiation.</li>
+  <li>Ground connections have inductance: about 0.5 nH per via and 1 nH per millimetre of wire. A connection a quarter-wavelength long looks like an open circuit.</li>
+  <li>Energy travels in the fields between conductors. The dielectric and anything near the conductors are part of the circuit.</li>
+</ol>
+<div class="cheat">
+  <div><b>Wavelength</b>\(\lambda = c / (f\sqrt{\varepsilon_\text{eff}})\)<br><span class="small">FR-4 trace: about 60 ps/cm</span></div>
+  <div><b>Lumped or distributed</b>distributed if delay &gt; rise time / 6<br><span class="small">or length &gt; λ/10 (Module 1)</span></div>
+  <div><b>Reactance</b>\(X_L = 2\pi f L\), \(X_C = 1/(2\pi f C)\)</div>
+  <div><b>Skin depth</b>\(\delta = \sqrt{\rho / (\pi f \mu)}\)<br><span class="small">copper: 66 µm at 1 MHz · 2.1 µm at 1 GHz</span></div>
+  <div><b>Ground connections</b>via ≈ 0.5 nH · wire ≈ 1 nH/mm<br><span class="small">shorted line λ/4 long: looks open</span></div>
+  <div><b>Energy flow</b>\(\vec S = \vec E \times \vec H\)</div>
+</div>
+<h3>Go deeper</h3>
+<p class="small">The full treatment, with derivations and harder problems, is in the advanced theory pages:</p>
+<div class="deeper">
+  <a data-deep="matching_theory.html#wire">When does a wire become a transmission line?<small>The distributed RLGC model and the telegrapher's equations</small></a>
+</div>
+<h3>Further reading</h3>
+<ul class="small">
+  <li><em>Microwave Engineering</em> (Pozar), chapter 1: electromagnetic theory, including Maxwell's equations, energy flow and Poynting's theorem, and fields in good conductors (skin depth).</li>
+  <li><em>Microwave Engineering</em> (Pozar), chapter 2: transmission line theory, starting from the lumped-element model of a line, which is the lumped-to-distributed transition made precise.</li>
+</ul>
 </section>
 
 <nav class="pager"></nav>
 </main>
 </div>
 <footer class="site">Hardware Engineering Fundamentals · RF &amp; High-Speed Design</footer>
+
+<script>
+'use strict';
+const $ = s => document.querySelector(s);
+const {col, si, fmt} = Plot;
+const C0 = 299792458;
+function seg(id, cb){
+  const el = $(id);
+  el.addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    el.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
+    cb();
+  });
+  return () => el.querySelector('button.on').dataset.v;
+}
+function setVerdict(el, cls, html){ el.className = 'verdict ' + cls; el.innerHTML = html; }
+// small complex-number helpers: [re, im]
+const cx = {
+  add: (a, b) => [a[0] + b[0], a[1] + b[1]],
+  mul: (a, b) => [a[0]*b[0] - a[1]*b[1], a[0]*b[1] + a[1]*b[0]],
+  inv: a => { const d = a[0]*a[0] + a[1]*a[1]; return [a[0]/d, -a[1]/d]; },
+  par: (a, b) => cx.inv(cx.add(cx.inv(a), cx.inv(b))),
+  abs: a => Math.hypot(a[0], a[1]),
+  arg: a => Math.atan2(a[1], a[0])
+};
+const hz = f => si(f, 'Hz');
+
+/* ============ 1. A step travelling along a trace ============ */
+(() => {
+  const rise = seg('#pR', upd);
+  const PS_PER_M = 1/(C0/Math.sqrt(3.3));                  // seconds per metre on FR-4
+  const ramp = (t, tr) => t <= 0 ? 0 : t >= tr ? 1 : t/tr;
+  let s = {};
+  function upd(){
+    const L = +$('#pL').value/100, tr = +rise(), td = L*PS_PER_M;
+    const T = td + 2*tr, t0 = -0.1*T, frac = +$('#pT').value, t = t0 + frac*(T - t0);
+    s = {L, tr, td, T, t0, t};
+    $('#pLv').textContent = Math.round(L*100) + ' cm'; $('#pTv').textContent = si(t, 's');
+    $('#pD').textContent = si(td, 's'); $('#pRat').textContent = fmt(td/tr, 3);
+    const v = $('#pVerdict');
+    if (td < tr/6) setVerdict(v, 'ok', `<b>Lumped.</b> The delay (${si(td, 's')}) is small compared with the rise time (${si(tr, 's')}), so both ends move almost together and the trace behaves like an ordinary wire.`);
+    else if (td < tr) setVerdict(v, 'warn', `<b>Borderline.</b> The delay is ${fmt(td/tr, 2)} of the rise time. The ends visibly disagree during the edge; treat the trace as a transmission line.`);
+    else setVerdict(v, 'bad', `<b>Distributed.</b> The edge is complete at the near end before it reaches the far end. At any moment, different points on the same trace hold different voltages.`);
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvProp'), (ctx, W, H) => {
+    const {L, tr, td, T, t0, t} = s; if (!tr) return;
+    // top: voltage along the trace at time t
+    const A = {l: 56, r: W - 14, t: 26, b: H*0.4};
+    const X = Plot.lin(0, L, A.l, A.r), Y = Plot.lin(-0.1, 1.15, A.b, A.t);
+    Plot.axes(ctx, A, X, Y, {xt: Plot.ticks(0, L, 5), yt: [0, 0.5, 1], xl: 'position along the trace (cm)', yl: 'voltage', xf: x => fmt(x*100, 3), yf: v => v});
+    const pts = []; for (let i = 0; i <= 200; i++){ const x = L*i/200; pts.push([X(x), Y(ramp(t - x*td/L, tr))]); }
+    Plot.line(ctx, pts, col.c3, 2.4);
+    Plot.dot(ctx, X(0), Y(ramp(t, tr)), 5, col.c1); Plot.dot(ctx, X(L), Y(ramp(t - td, tr)), 5, col.c2);
+    Plot.text(ctx, 'driver', A.l, A.t - 14, {color: col.c1});
+    Plot.text(ctx, 'load', A.r, A.t - 14, {align: 'right', color: col.c2});
+    // bottom: both ends against time
+    const B = {l: 56, r: W - 24, t: H*0.54, b: H - 40};
+    const Xt = Plot.lin(t0, T, B.l, B.r), Yt = Plot.lin(-0.1, 1.15, B.b, B.t);
+    Plot.axes(ctx, B, Xt, Yt, {xt: Plot.ticks(t0, T, 5), yt: [0, 0.5, 1], xl: 'time', yl: 'voltage', xf: x => si(x, 's').replace(' ', ' '), yf: v => v});
+    const near = [], far = [];
+    for (let i = 0; i <= 300; i++){ const tt = t0 + (T - t0)*i/300; near.push([Xt(tt), Yt(ramp(tt, tr))]); far.push([Xt(tt), Yt(ramp(tt - td, tr))]); }
+    Plot.line(ctx, near, col.c1, 2.2); Plot.line(ctx, far, col.c2, 2.2);
+    Plot.line(ctx, [[Xt(t), B.t], [Xt(t), B.b]], col.ink2, 1, [3, 3]);
+  });
+  ['#pL', '#pT'].forEach(id => $(id).addEventListener('input', upd));
+  upd();
+})();
+
+/* ============ 2. Small parts across frequency ============ */
+(() => {
+  const part = seg('#cP', upd);
+  // models: impedance at angular frequency w, ideal and real
+  const R = (r, L, Cp) => ({ideal: w => [r, 0], real: w => cx.par(cx.add([r, 0], [0, w*L]), [0, -1/(w*Cp)]), name: si(r, 'Ω') + ' resistor'});
+  const PARTS = {
+    r50: R(50, 0.5e-9, 0.05e-12), r1k: R(1e3, 0.5e-9, 0.05e-12), r10k: R(1e4, 0.5e-9, 0.05e-12),
+    c100p: {ideal: w => [0, -1/(w*100e-12)], real: w => [0.1, w*0.4e-9 - 1/(w*100e-12)], name: '100 pF capacitor'},
+    l10n: {ideal: w => [0, w*10e-9], real: w => cx.par([0.3, w*10e-9], [0, -1/(w*0.12e-12)]), name: '10 nH inductor'},
+    wire: {ideal: w => [0.01, 0], real: w => [0.01, w*20e-9], name: '2 cm wire'}
+  };
+  let s = {};
+  function upd(){
+    const k = part(), p = PARTS[k], f = Math.pow(10, +$('#cF').value), w0 = 2*Math.PI*f;
+    const zi = p.ideal(w0), zr = p.real(w0), ph = cx.arg(zr)*180/Math.PI;
+    s = {k, p, f};
+    $('#cFv').textContent = hz(f);
+    $('#cZi').textContent = si(cx.abs(zi), 'Ω'); $('#cZr').textContent = si(cx.abs(zr), 'Ω');
+    const kind = ph > 45 ? 'an inductor' : ph < -45 ? 'a capacitor' : 'a resistor';
+    $('#cB').textContent = kind.replace('an ', '').replace('a ', '');
+    const ratio = cx.abs(zr)/cx.abs(zi);
+    const v = $('#cVerdict');
+    if (Math.abs(Math.log10(ratio)) < 0.05) setVerdict(v, 'ok', `<b>Close to ideal.</b> At ${hz(f)} the ${p.name} behaves as ${kind}, within about 10 % of its ideal impedance.`);
+    else setVerdict(v, 'warn', `<b>Not what it says.</b> At ${hz(f)} the ${p.name} measures ${si(cx.abs(zr), 'Ω')} instead of ${si(cx.abs(zi), 'Ω')}, and behaves as ${kind}. Its parasitics dominate.`);
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvPart'), (ctx, W, H) => {
+    const {p, f} = s; if (!p) return;
+    const P = {l: 56, r: W - 14, t: 14, b: H - 40};
+    const X = Plot.log(1e6, 1e10, P.l, P.r), Y = Plot.log(0.01, 1e5, P.b, P.t);
+    Plot.axes(ctx, P, X, Y, {xt: Plot.logTicks(1e6, 1e10), yt: Plot.logTicks(0.01, 1e5), xl: 'frequency', yl: '|Z| (Ω)', xf: t => si(t, 'Hz').replace(' ', ''), yf: t => si(t, '').trim(), xgrid: true});
+    Plot.clip(ctx, P);
+    [[915e6, '915 MHz', P.b - 10], [2.4e9, '2.4 GHz', P.t + 10]].forEach(([fb, lab, y]) => { Plot.line(ctx, [[X(fb), P.t], [X(fb), P.b]], col.c5, 1, [2, 3]); Plot.text(ctx, lab, X(fb) + 4, y, {color: col.c5}); });
+    const ideal = [], real = [];
+    for (let i = 0; i <= 240; i++){ const fr = Math.pow(10, 6 + 4*i/240), w0 = 2*Math.PI*fr; ideal.push([X(fr), Y(cx.abs(p.ideal(w0)))]); real.push([X(fr), Y(cx.abs(p.real(w0)))]); }
+    Plot.line(ctx, ideal, col.muted, 1.4, [6, 5]);
+    Plot.line(ctx, real, col.c3, 2.4);
+    ctx.restore();
+    const w0 = 2*Math.PI*f;
+    Plot.line(ctx, [[X(f), P.t], [X(f), P.b]], col.ink2, 1, [3, 3]);
+    Plot.dot(ctx, X(f), Y(Math.max(0.011, cx.abs(p.real(w0)))), 5, col.c3);
+  });
+  $('#cF').addEventListener('input', upd);
+  upd();
+})();
+
+/* ============ 3. Skin effect ============ */
+(() => {
+  const dia = seg('#sD', upd);
+  const RHO = 1.72e-8, MU = 4e-7*Math.PI;
+  const delta = f => Math.sqrt(RHO/(Math.PI*f*MU));
+  const ratio = (f, r) => { const d = delta(f); return d >= r ? 1 : r*r/(r*r - (r - d)*(r - d)); };
+  let s = {};
+  function upd(){
+    const f = Math.pow(10, +$('#sF').value), D = +dia(), r = D/2, d = delta(f), k = ratio(f, r);
+    s = {f, r, d, k};
+    $('#sFv').textContent = hz(f);
+    $('#sDel').textContent = si(d, 'm'); $('#sRat').textContent = fmt(k, 3) + '×';
+    $('#sRm').textContent = si(k*RHO/(Math.PI*r*r), 'Ω');
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvSkin'), (ctx, W, H) => {
+    const {f, r, d, k} = s; if (!f) return;
+    // cross-section: shade by current density, J(rho) ∝ exp(-(r - rho)/delta)
+    const cxp = Math.round(Math.min(110, W*0.22)), cy = Math.round(H/2 - 6), R = Math.floor(Math.min(90, W*0.17, H*0.36));
+    const img = ctx.createImageData(2*R, 2*R), c = col.c2, cr = parseInt(c.slice(1, 3), 16), cg = parseInt(c.slice(3, 5), 16), cb = parseInt(c.slice(5, 7), 16);
+    for (let y = 0; y < 2*R; y++) for (let x = 0; x < 2*R; x++){
+      const rr = Math.hypot(x - R + .5, y - R + .5)/R; if (rr > 1) continue;
+      const j = Math.exp(-(1 - rr)*r/d), a = 0.08 + 0.92*j, o = 4*(y*2*R + x);
+      img.data[o] = 255 + (cr - 255)*a; img.data[o + 1] = 255 + (cg - 255)*a; img.data[o + 2] = 255 + (cb - 255)*a; img.data[o + 3] = 255;
+    }
+    const tmp = document.createElement('canvas'); tmp.width = 2*R; tmp.height = 2*R; tmp.getContext('2d').putImageData(img, 0, 0);
+    ctx.drawImage(tmp, cxp - R, cy - R, 2*R, 2*R);
+    ctx.save(); ctx.strokeStyle = col.ink; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.arc(cxp, cy, R, 0, 2*Math.PI); ctx.stroke(); ctx.restore();
+    if (d < r){ ctx.save(); ctx.strokeStyle = col.ink2; ctx.setLineDash([3, 3]); ctx.beginPath(); ctx.arc(cxp, cy, R*(1 - d/r), 0, 2*Math.PI); ctx.stroke(); ctx.restore(); }
+    Plot.text(ctx, 'cross-section, ' + si(2*r, 'm'), cxp, cy + R + 16, {align: 'center', color: col.ink2});
+    Plot.text(ctx, d < r ? 'dashed: one skin depth in' : 'current uses the whole wire', cxp, cy + R + 32, {align: 'center', color: col.muted});
+    // right: Rac/Rdc against frequency
+    const P = {l: cxp + R + 56, r: W - 14, t: 14, b: H - 40};
+    if (P.r - P.l < 80) return;
+    const X = Plot.log(10, 1e10, P.l, P.r), Y = Plot.log(1, 1000, P.b, P.t);
+    Plot.axes(ctx, P, X, Y, {xt: [10, 1e3, 1e5, 1e7, 1e9], yt: [1, 10, 100, 1000], xl: 'frequency', yl: 'R_AC / R_DC', xf: t => si(t, 'Hz').replace(' ', ''), yf: t => t, xgrid: true});
+    const pts = []; for (let i = 0; i <= 200; i++){ const fr = Math.pow(10, 1 + 9*i/200); pts.push([X(fr), Y(ratio(fr, r))]); }
+    Plot.line(ctx, pts, col.c2, 2.2);
+    Plot.dot(ctx, X(f), Y(k), 5, col.c2); Plot.dot(ctx, X(f), Y(k), 2, '#fff');
+  });
+  $('#sF').addEventListener('input', upd);
+  upd();
+})();
+
+/* ============ 4. Return current in a ground plane ============ */
+(() => {
+  const fSel = seg('#rF', upd), slotSel = seg('#rS', upd);
+  const FC = 1e5;                                  // where inductance starts to dominate (illustrative)
+  let s = {};
+  function upd(){
+    const f = +fSel(), slot = slotSel() === 'slot', wHF = f*f/(f*f + FC*FC);
+    s = {f, slot, wHF};
+    const v = $('#rVerdict');
+    if (wHF < 0.2) setVerdict(v, 'ok', `<b>Low frequency: least resistance.</b> At ${hz(f)} the return current spreads across the plane, roughly along the direct line between the two ground vias, regardless of where the trace runs.${slot ? ' The slot barely matters: the current flows around it.' : ''}`);
+    else if (wHF < 0.8) setVerdict(v, 'warn', `<b>In between.</b> At ${hz(f)} resistance and inductance are comparable, so the return current is partly spread out and partly gathered under the trace.`);
+    else if (!slot) setVerdict(v, 'ok', `<b>High frequency: least inductance.</b> At ${hz(f)} the return current runs directly under the trace, following its corner, so the loop between outgoing and returning current is as small as possible.`);
+    else setVerdict(v, 'bad', `<b>The slot forces a detour.</b> The return current can't follow under the trace where it crosses the slot, so it runs around the end of the slot. The loop area, and with it the inductance and radiation, grows considerably.`);
+    w.redraw();
+  }
+  const segDist = (px, py, ax, ay, bx, by) => {
+    const dx = bx - ax, dy = by - ay, t = Math.max(0, Math.min(1, ((px - ax)*dx + (py - ay)*dy)/(dx*dx + dy*dy)));
+    return Math.hypot(px - ax - t*dx, py - ay - t*dy);
+  };
+  const polyDist = (px, py, pts) => { let m = Infinity; for (let i = 0; i < pts.length - 1; i++) m = Math.min(m, segDist(px, py, ...pts[i], ...pts[i + 1])); return m; };
+  const w = Plot.widget($('#cvRet'), (ctx, W, H) => {
+    const {slot, wHF} = s; if (wHF === undefined) return;
+    const bx = 14, by = 14, bw = W - 28, bh = H - 28;
+    const P = (u, v) => [bx + u*bw, by + v*bh];
+    const S = P(0.1, 0.75), Ld = P(0.88, 0.22), K = P(0.88, 0.75);
+    const trace = [S, K, Ld];
+    const sx0 = bx + 0.5*bw, sx1 = bx + 0.54*bw, sy0 = by + 0.42*bh, sy1 = by + bh;   // slot from the bottom edge up
+    const ret = slot ? [S, [sx0 - 6, S[1]], [sx0 - 6, sy0 - 6], [sx1 + 6, sy0 - 6], [sx1 + 6, S[1]], K, Ld] : trace;
+    const h = Math.max(6, bh*0.03);
+    const inSlot = (x, y) => slot && x > sx0 && x < sx1 && y > sy0;
+    // sample both distributions on a coarse grid
+    const cell = 4, nx = Math.ceil(bw/cell), ny = Math.ceil(bh/cell), lo = new Float32Array(nx*ny), hi = new Float32Array(nx*ny);
+    let mlo = 0, mhi = 0;
+    for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++){
+      const x = bx + (i + .5)*cell, y = by + (j + .5)*cell, k = j*nx + i;
+      if (inSlot(x, y)) continue;
+      const a = [x - Ld[0], y - Ld[1]], b = [x - S[0], y - S[1]], a2 = a[0]*a[0] + a[1]*a[1] + 40, b2 = b[0]*b[0] + b[1]*b[1] + 40;
+      lo[k] = Math.hypot(a[0]/a2 - b[0]/b2, a[1]/a2 - b[1]/b2);
+      const d = polyDist(x, y, ret); hi[k] = 1/(1 + (d/h)*(d/h));
+      mlo = Math.max(mlo, lo[k]); mhi = Math.max(mhi, hi[k]);
+    }
+    ctx.fillStyle = col.sunk; ctx.fillRect(bx, by, bw, bh);
+    for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++){
+      const k = j*nx + i, v = (1 - wHF)*Math.min(1, lo[k]/(mlo*0.35)) + wHF*hi[k]/mhi;
+      if (v < 0.03) continue;
+      ctx.fillStyle = Plot.rgba(col.c2, Math.min(1, v)*0.85);
+      ctx.fillRect(bx + i*cell, by + j*cell, cell, cell);
+    }
+    ctx.strokeStyle = col.line2; ctx.lineWidth = 1; ctx.strokeRect(bx + .5, by + .5, bw, bh);
+    if (slot){ ctx.fillStyle = '#fff'; ctx.fillRect(sx0, sy0, sx1 - sx0, sy1 - sy0); ctx.save(); ctx.setLineDash([3, 3]); ctx.strokeStyle = col.ink2; ctx.strokeRect(sx0 + .5, sy0 + .5, sx1 - sx0, sy1 - sy0 - 1); ctx.restore(); Plot.text(ctx, 'slot', sx1 + 6, sy1 - 14, {color: col.ink2}); }
+    Plot.line(ctx, trace, Plot.rgba(col.ink, 0.75), 3);
+    [S, Ld].forEach(p => { Plot.dot(ctx, p[0], p[1], 5, col.ink); Plot.dot(ctx, p[0], p[1], 2, '#fff'); });
+    Plot.text(ctx, 'driver', S[0], S[1] + 16, {align: 'center', color: col.ink});
+    Plot.text(ctx, 'load', Ld[0] - 10, Ld[1], {align: 'right', color: col.ink});
+    Plot.text(ctx, 'ground plane (seen from above)', bx + 8, by + 12, {color: col.muted});
+  });
+  upd();
+})();
+
+/* ============ 5. Ground connection impedance ============ */
+(() => {
+  const conn = seg('#gC', upd);
+  const Z0 = 260, ALPHA = 0.3;                    // wire over plane: characteristic impedance, small loss to keep the peak finite
+  const lineZ = (f, len) => {
+    // |Z0 tanh((alpha + j beta) len)| for a shorted line
+    const a = ALPHA*len, b = 2*Math.PI*f*len/C0;
+    return Z0*Math.hypot(Math.sinh(2*a), Math.sin(2*b))/(Math.cosh(2*a) + Math.cos(2*b));
+  };
+  const C = {
+    via1: {name: 'one via', z: f => Math.hypot(0.002, 2*Math.PI*f*0.5e-9), len: 1.6e-3},
+    via4: {name: 'four vias', z: f => Math.hypot(0.0005, 2*Math.PI*f*0.125e-9), len: 1.6e-3},
+    w1:   {name: 'a 1 cm wire', z: f => lineZ(f, 0.01), len: 0.01},
+    w5:   {name: 'a 5 cm wire', z: f => lineZ(f, 0.05), len: 0.05}
+  };
+  let s = {};
+  function upd(){
+    const k = conn(), c = C[k], f = Math.pow(10, +$('#gF').value), z = c.z(f), lw = c.len*f/C0;
+    s = {k, f};
+    $('#gFv').textContent = hz(f); $('#gZ').textContent = si(z, 'Ω'); $('#gW').textContent = fmt(lw, 3);
+    $('#gZS').className = 'stat ' + (z > 10 ? 'bad' : z > 1 ? 'warn' : '');
+    const v = $('#gVerdict');
+    if (k.startsWith('w') && Math.abs(lw - 0.25) < 0.05) setVerdict(v, 'bad', `<b>Close to a quarter-wavelength.</b> At ${hz(f)} ${c.name} shorted to the plane looks almost like an open circuit at its other end: ${si(z, 'Ω')}.`);
+    else if (z > 10) setVerdict(v, 'bad', `<b>Not a ground at this frequency.</b> ${c.name[0].toUpperCase() + c.name.slice(1)} is ${si(z, 'Ω')} at ${hz(f)}, comparable to or larger than the 50 Ω circuits it's meant to be the reference for.`);
+    else if (z > 1) setVerdict(v, 'warn', `<b>Usable, with care.</b> ${si(z, 'Ω')} at ${hz(f)}: small next to 50 Ω, but enough for return current to raise a noticeable voltage across it.`);
+    else setVerdict(v, 'ok', `<b>A good ground here.</b> ${si(z, 'Ω')} at ${hz(f)}.`);
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvGnd'), (ctx, W, H) => {
+    const {k, f} = s; if (!k) return;
+    const P = {l: 56, r: W - 14, t: 14, b: H - 40};
+    const X = Plot.log(1e6, 1e10, P.l, P.r), Y = Plot.log(0.01, 1e4, P.b, P.t);
+    Plot.axes(ctx, P, X, Y, {xt: Plot.logTicks(1e6, 1e10), yt: Plot.logTicks(0.01, 1e4), xl: 'frequency', yl: '|Z| (Ω)', xf: t => si(t, 'Hz').replace(' ', ''), yf: t => si(t, '').trim(), xgrid: true});
+    Plot.clip(ctx, P);
+    ctx.fillStyle = Plot.rgba(col.good, .07); ctx.fillRect(P.l, Y(1), P.r - P.l, P.b - Y(1));
+    Plot.line(ctx, [[P.l, Y(50)], [P.r, Y(50)]], col.bad, 1, [5, 4]);
+    Object.entries(C).forEach(([key, c]) => {
+      const pts = []; for (let i = 0; i <= 400; i++){ const fr = Math.pow(10, 6 + 4*i/400); pts.push([X(fr), Y(Math.max(0.011, c.z(fr)))]); }
+      Plot.line(ctx, pts, key === k ? col.c1 : Plot.rgba(col.c1, .22), key === k ? 2.4 : 1.2);
+    });
+    ctx.restore();
+    Plot.text(ctx, 'below 1 Ω: a good ground', P.l + 6, P.b - 10, {color: col.good});
+    Plot.text(ctx, '50 Ω', P.l + 6, Y(50) - 9, {color: col.bad});
+    Plot.line(ctx, [[X(f), P.t], [X(f), P.b]], col.ink2, 1, [3, 3]);
+    Plot.dot(ctx, X(f), Y(Math.max(0.011, Math.min(1e4, C[k].z(f)))), 5, col.c1);
+  });
+  $('#gF').addEventListener('input', upd);
+  upd();
+})();
+</script>
 </body>
 </html>
