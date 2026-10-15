@@ -4,31 +4,846 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Measurements &amp; Lab Tools · RF 5</title>
-<meta name="description" content="RF & High-Speed Design module 5: VNAs, calibration, spectrum analyzers and power meters. In development.">
+<meta name="description" content="RF module 5: vector network analyzers and how they work, VNA calibration (SOLT and TRL), VNA techniques, spectrum analyzers, signal generators, power meters, noise figure measurement and load-pull.">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
 <link rel="stylesheet" href="../../assets/site.css">
 <script src="../../assets/course.js"></script>
 <script src="../../assets/site.js"></script>
+<script src="../../assets/plot.js"></script>
 </head>
 <body>
 <div class="layout">
 <aside class="side" aria-label="Module contents"></aside>
 <main class="content">
 
-<!-- Placeholder: replace this page with the module when it's written (see README.md, "Writing a module"). -->
+<!-- ================= HERO ================= -->
 <header class="hero">
   <div class="eyebrow">RF &amp; High-Speed Design · Module 5</div>
-  <h1>Measurements &amp; Lab Tools</h1>
-  <p class="lede">VNAs, calibration, spectrum analyzers and power meters.</p>
+  <h1>Measurements &amp; lab tools</h1>
+  <p class="lede">RF design isn't finished until it's been measured, and an RF measurement is only as good as the engineer's understanding of what the instrument is actually doing. This module explains how each of the main instruments works inside, what limits its accuracy, and how to use it so that the number on the screen describes the device and not the setup.</p>
+  <p class="meta">Builds on: RF modules 0–3. Bench: a NanoVNA or other VNA with a calibration kit, a spectrum analyzer, a signal generator, and a power meter if available.</p>
+  <div class="resources" data-auto></div>
+  <div class="objectives">
+    <h3>What's covered</h3>
+    <ul>
+      <li>Which instrument answers which question.</li>
+      <li>How a vector network analyzer measures S-parameters, and why it needs calibrating.</li>
+      <li>The error model behind calibration, the SOLT and TRL methods, and practical VNA techniques.</li>
+      <li>How a spectrum analyzer works, and how its settings trade noise floor, resolution and speed.</li>
+      <li>Signal generators and power meters, and the uncertainty that mismatch adds to every power measurement.</li>
+      <li>Measuring noise figure with the Y-factor method, and measuring power amplifiers with load-pull.</li>
+    </ul>
+  </div>
+  <div class="video" data-video="lecture" id="lecture">
+    <div class="plan">
+      <p>Planned walkthrough of this page (≈ 55 min):</p>
+      <ol>
+        <li data-t="0:00">Choosing the instrument</li>
+        <li data-t="3:00">How a vector network analyzer works</li>
+        <li data-t="10:00">Calibration: the error model, SOLT and TRL</li>
+        <li data-t="20:00">VNA techniques</li>
+        <li data-t="26:00">Spectrum analyzers</li>
+        <li data-t="35:00">Signal generators</li>
+        <li data-t="38:00">Power meters and mismatch uncertainty</li>
+        <li data-t="43:00">Noise figure measurement</li>
+        <li data-t="49:00">Load-pull</li>
+      </ol>
+    </div>
+  </div>
 </header>
 
-<section class="sec" id="status" data-nonum data-short="In development">
-<h2>In development</h2>
-<p>This module hasn't been written yet. The other modules are listed in the strip at the top of the page, and the links below go to the neighbouring ones.</p>
+<!-- ================= 0 CHOOSING ================= -->
+<section class="sec" id="choose" data-short="Choosing the instrument">
+<h2>Choosing the instrument <a class="vjump" data-t="0:00"></a></h2>
+<p>Each RF instrument answers a narrow question very well and others badly. Most measurement mistakes start with using the wrong one, or with not knowing which question it's answering.</p>
+<div class="tablewrap"><table>
+  <tr><th>Question</th><th>Instrument</th><th>What it measures</th></tr>
+  <tr><td>Is it matched? What does this filter, cable or amplifier do to a signal?</td><td><b>Vector network analyzer</b></td><td>S-parameters: ratios of waves, magnitude and phase, against frequency, using its own stimulus</td></tr>
+  <tr><td>What frequencies is this circuit emitting, and how strong are they?</td><td><b>Spectrum analyzer</b></td><td>Power against frequency of an external signal: carriers, harmonics, spurs, noise</td></tr>
+  <tr><td>I need a known, clean test signal.</td><td><b>Signal generator</b></td><td>Nothing: it provides a calibrated CW or modulated signal</td></tr>
+  <tr><td>Exactly how much power is this transmitter delivering?</td><td><b>Power meter</b></td><td>Total power, with the best absolute accuracy of any instrument here</td></tr>
+  <tr><td>How much noise does this amplifier or receiver add?</td><td><b>Noise figure analyzer</b> (or a spectrum analyzer with a noise source)</td><td>Noise figure and gain, from the noise power with a calibrated noise source on and off</td></tr>
+  <tr><td>What load gives this PA the most power or efficiency?</td><td><b>Load-pull system</b></td><td>Output power, efficiency and linearity against the load impedance the device sees</td></tr>
+</table></div>
+</section>
+
+<!-- ================= 1 VNA ================= -->
+<section class="sec" id="vna" data-short="Network analyzers">
+<h2>How a vector network analyzer works <a class="vjump" data-t="3:00"></a></h2>
+<p>An S-parameter is a ratio of two waves (Module 2): S₁₁ is the wave reflected from port 1 divided by the wave incident on it, S₂₁ the wave emerging from port 2 divided by the same incident wave. A VNA is a machine for measuring exactly these ratios. It sends a signal it controls into the device, separates the waves travelling in each direction with directional couplers (Module 3), and measures each wave's amplitude and phase with a receiver.</p>
+
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>Inside a two-port VNA, measuring in the forward direction</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 260" role="img" aria-label="A swept source feeds port 1 through a directional coupler. Part of the source signal is tapped to a reference receiver that measures the incident wave a1. The coupler sends the wave reflected from the device to receiver A, which measures b1. The wave transmitted through the device leaves port 2 and goes to receiver B, which measures b2. The instrument divides b1 and b2 by a1 to get S11 and S21.">
+    <defs>
+      <marker id="arV1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--c1)"/></marker>
+      <marker id="arV2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--c2)"/></marker>
+      <marker id="arV3" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--good)"/></marker>
+    </defs>
+    <rect x="10" y="10" width="620" height="200" rx="6" fill="#f4f2ec" stroke="var(--line2)"/>
+    <g fill="#fff" stroke="var(--ink)" stroke-width="1.4">
+      <rect x="22" y="104" width="86" height="40"/>
+      <rect x="120" y="30" width="96" height="40"/><rect x="262" y="30" width="96" height="40"/><rect x="474" y="30" width="96" height="40"/>
+      <rect x="236" y="108" width="86" height="32"/>
+    </g>
+    <rect x="404" y="100" width="70" height="48" fill="#e6efd9" stroke="var(--ink)" stroke-width="1.4"/>
+    <g fill="none" stroke="var(--ink)" stroke-width="1.6">
+      <path d="M108 124H236M322 124H379M389 124H404"/>
+      <path d="M168 124V70"/><path d="M310 108V70"/>
+      <path d="M474 124H491M501 124H522V70"/>
+    </g>
+    <circle cx="168" cy="124" r="3" fill="var(--ink)"/>
+    <g fill="#fff" stroke="var(--ink)" stroke-width="1.6"><circle cx="384" cy="124" r="5"/><circle cx="496" cy="124" r="5"/></g>
+    <path d="M384 90V160M496 90V160" stroke="var(--c5)" stroke-width="1.2" stroke-dasharray="4 3"/>
+    <g fill="none" stroke-width="1.8">
+      <path d="M120 138H220" stroke="var(--c1)" marker-end="url(#arV1)"/>
+      <path d="M380 100H330" stroke="var(--c2)" marker-end="url(#arV2)"/>
+      <path d="M500 140H560" stroke="var(--good)" marker-end="url(#arV3)"/>
+    </g>
+    <g font-size="11.5" text-anchor="middle">
+      <text x="65" y="121">swept</text><text x="65" y="135">source</text>
+      <text x="168" y="47">receiver R</text><text x="168" y="62" fill="var(--c1)">incident a₁</text>
+      <text x="310" y="47">receiver A</text><text x="310" y="62" fill="var(--c2)">reflected b₁</text>
+      <text x="522" y="47">receiver B</text><text x="522" y="62" fill="var(--good)">transmitted b₂</text>
+      <text x="279" y="128">coupler</text>
+      <text x="439" y="128">DUT</text>
+      <text x="384" y="176">port 1</text><text x="496" y="176">port 2</text>
+      <text x="440" y="196" fill="var(--c5)">dashed: calibration (reference) planes</text>
+      <text x="320" y="234">S₁₁ = b₁ / a₁ &#160;·&#160; S₂₁ = b₂ / a₁ &#160;&#160;(magnitude and phase)</text>
+      <text x="320" y="252" fill="var(--muted)">a switch then drives port 2 instead, for S₂₂ and S₁₂</text>
+    </g>
+  </svg>
+  </div>
+</div>
+
+<p>Three properties of this architecture explain most of what a VNA can and can't do:</p>
+<ul>
+  <li><strong>It measures ratios.</strong> Because every reading is a wave divided by the incident wave, the source's power doesn't need to be accurate or flat. That's why a VNA is excellent at relative measurements (S-parameters) and not designed for absolute power.</li>
+  <li><strong>Each receiver is a narrowband tuned receiver</strong>, a superheterodyne like the one in Module 3, following the source as it sweeps. Its <strong>IF bandwidth</strong> sets the noise: a narrower IF bandwidth lowers the noise floor (by 10 dB for every factor of ten), improving the dynamic range for measuring deep filter rejection, at the cost of a slower sweep.</li>
+  <li><strong>The hardware is imperfect</strong>: the couplers leak, the ports aren't perfectly matched, and the cables between the instrument and the device add loss and phase. Those imperfections are systematic, repeatable, and removable by calibration.</li>
+</ul>
+<p>A VNA can also show its data in the time domain. Taking the inverse Fourier transform of S₁₁ over a wide frequency span gives the reflection against time, the same picture as the TDR of Module 1. It's used to locate a discontinuity along a cable or a trace, and to <strong>gate</strong> it: to mathematically remove a reflection, such as a connector's, from the frequency response.</p>
+</section>
+
+<!-- ================= 2 CALIBRATION ================= -->
+<section class="sec" id="cal" data-short="Calibration">
+<h2>Calibration: the error model, SOLT and TRL <a class="vjump" data-t="10:00"></a></h2>
+<p>Calibration starts from a model of what goes wrong. Look at a one-port measurement (S₁₁ only). Everything between the ideal receivers and the device's connector, including the coupler, the internal cables, the port connector and any test cable, is a linear two-port network. Like any two-port, it can be described by S-parameters: three error terms are enough for a reflection measurement.</p>
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>The one-port error model and the SOLT standards</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 250" role="img" aria-label="Top: an ideal VNA is connected to the device through an error box with three terms: directivity e00, source match e11 and reflection tracking e10 e01. Bottom: the four calibration standards: a short, an open, a 50 ohm load and a thru connecting the two ports.">
+    <g fill="#fff" stroke="var(--ink)" stroke-width="1.4">
+      <rect x="30" y="40" width="110" height="60"/><rect x="230" y="30" width="170" height="80" fill="#fbe9e2"/><rect x="490" y="40" width="110" height="60" fill="#e6efd9"/>
+    </g>
+    <g fill="none" stroke="var(--ink)" stroke-width="1.6"><path d="M140 70H230M400 70H490"/></g>
+    <path d="M440 22V118" stroke="var(--c5)" stroke-width="1.2" stroke-dasharray="4 3"/>
+    <g font-size="11.5" text-anchor="middle">
+      <text x="85" y="66">ideal VNA</text><text x="85" y="82" fill="var(--muted)">measures Γ<tspan font-size="9" dy="2">m</tspan></text>
+      <text x="315" y="54" font-weight="600">error box</text>
+      <text x="315" y="72">e₀₀: directivity</text><text x="315" y="88">e₁₁: source match</text><text x="315" y="104">e₁₀e₀₁: tracking</text>
+      <text x="545" y="66">device</text><text x="545" y="82" fill="var(--muted)">true Γ</text>
+      <text x="440" y="134" fill="var(--c5)">reference plane</text>
+    </g>
+    <g fill="none" stroke="var(--ink)" stroke-width="1.6">
+      <circle cx="60" cy="192" r="10"/><path d="M70 192H100V212M90 212h20M93 216h14M96 220h8"/>
+      <circle cx="200" cy="192" r="10"/><path d="M210 192H240"/>
+      <circle cx="340" cy="192" r="10"/><path d="M350 192H376l3-6l6 12l6-12l6 12l6-12l6 12l3-6H420V212M410 212h20M413 216h14M416 220h8"/>
+      <circle cx="500" cy="192" r="10"/><circle cx="580" cy="192" r="10"/><path d="M510 192H570"/>
+    </g>
+    <g font-size="11.5" text-anchor="middle">
+      <text x="80" y="170" font-weight="600">short</text><text x="80" y="242" fill="var(--muted)">Γ = −1</text>
+      <text x="215" y="170" font-weight="600">open</text><text x="215" y="242" fill="var(--muted)">Γ = +1 (plus fringing C)</text>
+      <text x="380" y="170" font-weight="600">load</text><text x="380" y="242" fill="var(--muted)">Γ = 0 (50 Ω)</text>
+      <text x="540" y="170" font-weight="600">thru</text><text x="540" y="242" fill="var(--muted)">ports joined (two-port cal)</text>
+    </g>
+  </svg>
+  </div>
+</div>
+<p>Following a wave through the error box: some of the incident wave leaks straight to the reflected-wave receiver without reaching the device (e₀₀, the coupler's finite directivity). The rest reaches the device, reflects, and travels back with a gain e₁₀e₀₁; on the way, part of it re-reflects from the imperfect port match (e₁₁) and bounces again. Summing the bounces, exactly as for the quarter-wave transformer in Module 2, gives the measured reflection:</p>
+<div class="eq">$$\Gamma_m = e_{00} + \frac{e_{10}e_{01}\,\Gamma}{1 - e_{11}\,\Gamma}$$</div>
+<p>There are three unknown complex terms at each frequency, so three measurements of known standards determine them: a <strong>short</strong> (Γ = −1), an <strong>open</strong> (Γ = +1) and a <strong>load</strong> (Γ = 0). That's an SOL calibration. With the error terms known, the equation is simply inverted for every subsequent measurement to recover the true Γ. A full two-port calibration adds a <strong>thru</strong> to characterise the transmission paths, giving the twelve-term SOLT calibration.</p>
+<p>The calibration is only as good as the standards are known. The kit's definition file describes each standard's small imperfections: the open's fringing capacitance, the short's inductance and the offset length of each. Using a kit with the wrong definition is a common source of error, and so is a worn or dirty standard.</p>
+<p><strong>TRL</strong> (thru, reflect, line) calibration uses standards that are easy to build on a PCB: a direct thru, any highly reflective termination (which doesn't need to be known precisely), and a length of line whose impedance defines the reference. It's the standard way to calibrate at the end of PCB traces, inside a test fixture, so that the measurement describes the component and not the fixture's connectors and traces. Its limitation is bandwidth: the line must differ from the thru by between about 20° and 160° of electrical length, so a single line covers about an 8:1 frequency range.</p>
+
+<div class="widget wide" id="w-cal">
+  <div class="wh"><span class="tag">Interactive</span><b>Measuring an antenna's match through a test cable</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label>Calibration</label><div class="seg" id="cC"><button type="button" data-v="0">None</button><button type="button" data-v="1">Response (short only)</button><button type="button" data-v="2" class="on">Full one-port (SOL)</button></div></div>
+      <div class="ctrl"><label for="cL">Test cable length <b id="cLv"></b></label><input id="cL" type="range" min="0.1" max="3" step="0.05" value="1"></div>
+      <div class="ctrl"><label>Calibrated at</label><div class="seg" id="cP"><button type="button" data-v="0" class="on">End of the cable</button><button type="button" data-v="1">VNA port</button></div></div>
+      <p class="small">The device is an antenna resonant at 915 MHz with a 15 dB return loss. The instrument's own errors: directivity 30 dB, source match 18 dB. The cable has 0.5 dB/m of loss and its own small mismatch.</p>
+    </div>
+    <div>
+      <canvas id="cvCal" style="height:280px" aria-label="Plot of return loss against frequency: the antenna's true response, and what the VNA displays with the chosen calibration"></canvas>
+      <div class="legend"><span class="dash" style="--c:var(--muted)">true antenna</span><span style="--c:var(--c1)">displayed by the VNA</span></div>
+      <div class="readout">
+        <div class="stat"><div class="k">Displayed best match</div><div class="v" id="cB"></div></div>
+        <div class="stat"><div class="k">at</div><div class="v" id="cF"></div></div>
+        <div class="stat" id="cES"><div class="k">Worst error in the band</div><div class="v" id="cE"></div></div>
+      </div>
+      <div class="verdict" id="cVerdict"></div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>Turn calibration off. Is the antenna's resonance where it really is, and is it as good as it really is?</li>
+    <li>Use only a response calibration with a short. What does it fix, and what does it leave?</li>
+    <li>Calibrate at the VNA port, then add the cable. Lengthen the cable: why does the error get worse, and why does the antenna appear better matched than it is?</li>
+  </ol></div>
+</div>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">An antenna that looks too good</span></summary>
+  <div class="eb">
+    <p>A VNA is calibrated at its own port, then a 3 m low-cost coax cable is added to reach an antenna mounted on a vehicle. The antenna shows a return loss of 25 dB across the whole band.</p>
+    <div class="choice"><p>How much should that result be trusted?</p>
+    <ol class="opts">
+      <li>Fully: 25 dB is an excellent match.<div class="why">The cable is outside the calibration, so its loss and mismatch are part of the reading.</div></li>
+      <li data-correct>Very little: the reflected wave crosses the uncalibrated cable twice, so the cable's loss improves the apparent return loss by twice its loss, and its own mismatch adds errors. The calibration should be done at the end of the cable.<div class="why">A lossy cable makes any load look better matched, by twice its loss; a long enough cable makes even an open circuit look like a good match.</div></li>
+      <li>It's accurate, but the frequencies are shifted.<div class="why">The cable shifts phase, but its loss also changes the magnitude reading.</div></li>
+      <li>The cable only affects S₂₁, not S₁₁.<div class="why">The reflected wave travels through the cable both ways.</div></li>
+    </ol>
+    <div class="solution"><p>Return loss measured through an uncalibrated cable is the antenna's return loss plus twice the cable's loss, with ripple from the cable's own mismatch on top. A 3 m cheap cable at 915 MHz might lose 1.5–3 dB, enough to turn a mediocre 20 dB antenna into an apparent 25 dB, or a 10 dB antenna into a 14 dB one. Moving the calibration plane to the end of the cable (calibrating there with the kit) removes the cable entirely.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 3 VNA TECHNIQUES ================= -->
+<section class="sec" id="tech" data-short="VNA techniques">
+<h2>VNA techniques <a class="vjump" data-t="20:00"></a></h2>
+<p>Most poor VNA measurements come from the setup, not the instrument. The practical rules follow from the error model: anything that changes after calibration, or that lies outside the calibration planes, is an error.</p>
+<div class="tablewrap"><table>
+  <tr><th>Practice</th><th>Why</th></tr>
+  <tr><td>Calibrate over the frequency range and with the IF bandwidth and power you'll measure with</td><td>Error terms are measured at specific frequencies; interpolating between calibration points adds error.</td></tr>
+  <tr><td>Don't move or bend the test cables after calibrating; use phase-stable cables</td><td>A flexed cable changes its phase and loss, so the error terms no longer match the hardware.</td></tr>
+  <tr><td>Torque SMA connectors to their specification and keep them clean</td><td>A loose or dirty connector is a different, unrepeatable error term each time.</td></tr>
+  <tr><td>Measure amplifiers at low drive, with an attenuator if needed</td><td>The VNA's default power can compress a high-gain amplifier, or damage the receiver at port 2.</td></tr>
+  <tr><td>Narrow the IF bandwidth or average to see deep filter rejection</td><td>The noise floor limits how much isolation or rejection can be measured.</td></tr>
+  <tr><td>Use port extension or de-embedding for parts on a board</td><td>Moves the reference plane from the connector to the component, removing the trace's phase and loss.</td></tr>
+  <tr><td>Check the calibration by measuring a standard again (the load should read better than about 40 dB return loss)</td><td>A quick check that catches a bad standard or a disturbed cable before it spoils an afternoon of data.</td></tr>
+</table></div>
+
+<div class="example">
+  <span class="xk">Application</span>
+  <p>Measuring an antenna mounted on a vehicle, rather than on the bench, gives the result that matters, because the body around the antenna shifts its resonance. Two details decide whether the measurement is meaningful. The calibration plane should be at the antenna's own connector, at the end of whatever cable reaches it. And the test cable should be routed away from the antenna with ferrite chokes on it, because current on the outside of the cable's shield (Module 3's balun discussion) makes the cable part of the antenna, so the result changes whenever someone moves it.</p>
+</div>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">Measuring a filter's stopband</span></summary>
+  <div class="eb">
+    <p>A filter is specified to reject a frequency by 80 dB, but the VNA shows S₂₁ flattening out at −65 dB, with a noisy trace.</p>
+    <div class="choice"><p>What's the most likely explanation, and what should be tried?</p>
+    <ol class="opts">
+      <li>The filter is out of specification.<div class="why">Possibly, but a noisy, flat floor points to the instrument's noise floor first.</div></li>
+      <li data-correct>The measurement has reached the VNA's noise floor. Reduce the IF bandwidth (each factor of ten lowers the floor by 10 dB) or average, and check that the cables aren't leaking around the filter.<div class="why">A noisy, flat trace at a particular level is the signature of the noise floor or of leakage.</div></li>
+      <li>The calibration is wrong.<div class="why">Calibration errors don't usually produce a flat, noisy floor.</div></li>
+      <li>Increase the frequency span.<div class="why">The span doesn't change the noise floor; the IF bandwidth does.</div></li>
+    </ol>
+    <div class="solution"><p>A measurement can't show more rejection than the instrument's dynamic range: its source power minus its noise floor. The noise floor depends on the IF bandwidth, so narrowing it from 10 kHz to 100 Hz lowers it by 20 dB at the cost of a much slower sweep. If the floor doesn't move, the limit is leakage: signal getting around the filter through the cables, connectors or the fixture's ground.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 4 SPECTRUM ANALYZERS ================= -->
+<section class="sec" id="sa" data-short="Spectrum analyzers">
+<h2>Spectrum analyzers <a class="vjump" data-t="26:00"></a></h2>
+<p>A swept spectrum analyzer is a superheterodyne receiver whose local oscillator sweeps across the band, with a narrow IF filter. At each instant, the only input frequency that lands in the IF filter is the one that's IF away from the LO, so sweeping the LO sweeps a narrow "window" across the spectrum. The power that passes through the window is detected and plotted against frequency.</p>
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>A swept spectrum analyzer</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 190" role="img" aria-label="Block diagram: input, attenuator, low-pass filter, mixer, IF filter whose width is the resolution bandwidth, log amplifier and detector, video filter, and display. A sweeping local oscillator drives the mixer and also sets the horizontal position on the display.">
+    <defs><marker id="arS1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--ink2)"/></marker></defs>
+    <g fill="#fff" stroke="var(--ink)" stroke-width="1.4">
+      <rect x="40" y="50" width="62" height="40"/><rect x="118" y="50" width="62" height="40"/>
+      <circle cx="218" cy="70" r="20"/>
+      <rect x="258" y="50" width="78" height="40"/><rect x="352" y="50" width="78" height="40"/><rect x="446" y="50" width="70" height="40"/><rect x="534" y="40" width="90" height="60"/>
+      <rect x="180" y="124" width="76" height="36"/>
+    </g>
+    <path d="M206 58l24 24M230 58l-24 24" stroke="var(--ink)" stroke-width="1.4"/>
+    <g fill="none" stroke="var(--ink2)" stroke-width="1.4" marker-end="url(#arS1)">
+      <path d="M14 70H38"/><path d="M102 70H116"/><path d="M180 70H196"/><path d="M238 70H256"/><path d="M336 70H350"/><path d="M430 70H444"/><path d="M516 70H532"/><path d="M218 124V92"/>
+      <path d="M256 142H578V102"/>
+    </g>
+    <path d="M540 92L554 60L564 82L574 48L584 86L592 74L600 92L618 92" fill="none" stroke="var(--c1)" stroke-width="1.4"/>
+    <g font-size="11.5" text-anchor="middle">
+      <text x="71" y="67">input</text><text x="71" y="81">atten.</text>
+      <text x="149" y="67">low-pass</text><text x="149" y="81">filter</text>
+      <text x="297" y="67">IF filter</text><text x="297" y="81" font-weight="600">= RBW</text>
+      <text x="391" y="67">log amp,</text><text x="391" y="81">detector</text>
+      <text x="481" y="67">video</text><text x="481" y="81">filter (VBW)</text>
+      <text x="579" y="32" fill="var(--muted)">display</text>
+      <text x="218" y="140">swept LO</text><text x="218" y="153" fill="var(--muted)">ramp</text>
+      <text x="420" y="138" fill="var(--muted)">the same ramp sets the display's frequency axis</text>
+      <text x="320" y="182" fill="var(--muted)">a modern analyzer digitises the IF and does the filtering and detection in software, but the trade-offs are the same</text>
+    </g>
+  </svg>
+  </div>
+</div>
+<p>The width of the IF filter is the <strong>resolution bandwidth</strong> (RBW), and it controls three things at once, all from first principles:</p>
+<ul>
+  <li><strong>Resolution:</strong> two signals closer together than about one RBW pass through the window together and appear as one.</li>
+  <li><strong>Noise floor:</strong> the window collects noise from its whole width, so the displayed noise floor rises 10 dB for every factor of ten wider RBW. A CW signal is entirely inside the window whatever its width, so its displayed level doesn't change.</li>
+  <li><strong>Sweep time:</strong> a filter of bandwidth RBW takes about 1/RBW to respond, and the window has to dwell for that long at each RBW-wide step of the span. Sweep time therefore scales as span/RBW²: a ten times narrower RBW takes a hundred times longer.</li>
+</ul>
+<p>The input attenuator sets the second big trade-off. The analyzer's first mixer compresses and generates its own distortion if the input is too strong, which can show harmonics or intermodulation that don't exist in the signal. More attenuation protects the mixer but raises the displayed noise floor by the same amount. A quick test: if adding 10 dB of input attenuation changes the level of a harmonic (relative to the carrier), the harmonic was being generated inside the analyzer.</p>
+
+<div class="widget wide" id="w-sa">
+  <div class="wh"><span class="tag">Interactive</span><b>Resolution bandwidth: resolving two signals above the noise</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label for="sR">Resolution bandwidth <b id="sRv"></b></label><input id="sR" type="range" min="2" max="6" step="0.05" value="4"></div>
+      <div class="ctrl"><label for="sD">Spacing between the two signals <b id="sDv"></b></label><input id="sD" type="range" min="3" max="6" step="0.05" value="4.3"></div>
+      <div class="ctrl"><label for="sL">Level of the weaker signal <b id="sLv"></b></label><input id="sL" type="range" min="-120" max="-30" step="1" value="-80"></div>
+      <p class="small">A −30 dBm carrier and a weaker signal nearby. The analyzer's noise figure is 24 dB, so its noise floor is −150 dBm/Hz plus 10 log₁₀(RBW). Span is set automatically.</p>
+    </div>
+    <div>
+      <canvas id="cvSa" style="height:280px" aria-label="Simulated spectrum analyzer trace showing two signals and the noise floor"></canvas>
+      <div class="readout">
+        <div class="stat"><div class="k">Displayed noise floor</div><div class="v" id="sN"></div></div>
+        <div class="stat"><div class="k">Sweep time (approx.)</div><div class="v" id="sT"></div></div>
+        <div class="stat" id="sVS"><div class="k">Weaker signal</div><div class="v" id="sV"></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>With the weaker signal at −110 dBm, find an RBW that shows it. What did that cost in sweep time?</li>
+    <li>Move the signals to 2 kHz apart with a 10 kHz RBW. What do you see?</li>
+    <li>Why does the carrier's displayed level stay put when the RBW changes, while the noise floor moves?</li>
+  </ol></div>
+</div>
+
+<div class="example">
+  <span class="xk">Application</span>
+  <p>Checking a transmitter's harmonics before an emissions test is a routine spectrum analyzer job, and the first step is protecting the analyzer: a 2 W (+33 dBm) transmitter connected directly can damage the input, whose maximum is typically +30 dBm. A 30 dB or 40 dB high-power attenuator goes between the transmitter and the analyzer, and its value is entered as a reference level offset so the display reads the true power. The second step is the attenuator test above: harmonics that change relative to the carrier when the analyzer's input attenuation is changed are being generated by the analyzer, not the transmitter.</p>
+</div>
+</section>
+
+<!-- ================= 5 SIGNAL GENERATORS ================= -->
+<section class="sec" id="siggen" data-short="Signal generators">
+<h2>Signal generators <a class="vjump" data-t="35:00"></a></h2>
+<p>A signal generator produces a known signal: a CW tone at a set frequency and level, or a modulated signal that imitates a real transmitter. Inside, a synthesiser (a phase-locked loop, Module 11) generates the frequency and an output stage with a calibrated attenuator sets the level. Its specifications describe how clean and how accurate that signal is:</p>
+<div class="tablewrap"><table>
+  <tr><th>Specification</th><th>What it means in practice</th></tr>
+  <tr><td><b>Level accuracy</b> (typically ±0.5–1 dB)</td><td>The output power is only known to this accuracy; a power meter is needed for better.</td></tr>
+  <tr><td><b>Harmonics</b> (typically −30 dBc)</td><td>When testing a filter's or receiver's harmonic response, the generator's own harmonics may be larger than what's being measured; add a low-pass filter after it.</td></tr>
+  <tr><td><b>Phase noise</b> (dBc/Hz at an offset)</td><td>Sets how clean the tone is close to the carrier. It limits blocking and reciprocal-mixing tests (Module 6).</td></tr>
+  <tr><td><b>Reverse power</b> (often +30 dBm or less)</td><td>The output can be damaged by a transmitter driving back into it, for example when testing a transceiver.</td></tr>
+  <tr><td><b>Minimum level</b> (−110 to −140 dBm)</td><td>Needed for receiver sensitivity tests, where leakage around the cables can easily exceed the intended signal.</td></tr>
+</table></div>
+<p>A common use is measuring a receiver's sensitivity: the generator provides a modulated signal at a known, very low level, and the level is reduced until the receiver's error rate reaches its limit. At −110 dBm and below, signal leaking from the generator's case or cables can be larger than the signal in the cable, so these tests use well-shielded cables, extra attenuators placed at the receiver, and sometimes a shielded box.</p>
+</section>
+
+<!-- ================= 6 POWER METERS ================= -->
+<section class="sec" id="power" data-short="Power meters">
+<h2>Power meters and mismatch uncertainty <a class="vjump" data-t="38:00"></a></h2>
+<p>A power meter measures the total power absorbed by its sensor, with an accuracy of a few percent: better than any analyzer. <strong>Thermal sensors</strong> measure the heat the RF power produces, so they respond to the true average power of any waveform, slowly. <strong>Diode sensors</strong> rectify the signal; they're fast and sensitive, and the peak-power versions can follow a pulse or a burst, but outside their square-law region their reading depends on the waveform.</p>
+<p>Every RF power measurement has one more uncertainty that's easy to overlook. Neither the source nor the sensor is perfectly matched. The wave reflected from the sensor travels back to the source, reflects again, and adds to the incident wave with a phase that depends on the cable length and frequency, so the power delivered to the sensor differs from what a perfectly matched sensor would receive by a factor of up to</p>
+<div class="eq">$$\text{mismatch uncertainty} = 20\log_{10}\big(1 \pm |\Gamma_s|\,|\Gamma_l|\big)\ \text{dB}$$<div class="n">Γs: source reflection coefficient, Γl: sensor (load) reflection coefficient</div></div>
+<p>Because the phase is usually unknown, this is a band of uncertainty, not a correction. It's the reason power sensors are designed with an excellent match, and why a 6 dB attenuator is often fitted at a poorly matched source before measuring it.</p>
+
+<div class="widget wide" id="w-mu">
+  <div class="wh"><span class="tag">Interactive</span><b>Mismatch uncertainty in a power measurement</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label for="uS">Source return loss <b id="uSv"></b></label><input id="uS" type="range" min="3" max="35" step="0.5" value="10"></div>
+      <div class="ctrl"><label for="uL">Sensor return loss <b id="uLv"></b></label><input id="uL" type="range" min="10" max="40" step="0.5" value="20"></div>
+      <div class="ctrl"><label for="uA">Attenuator at the source <b id="uAv"></b></label><input id="uA" type="range" min="0" max="10" step="1" value="0"></div>
+      <p class="small">An attenuator improves the source's apparent return loss by twice its value (Module 2), at the cost of the signal level.</p>
+    </div>
+    <div>
+      <canvas id="cvMu" style="height:260px" aria-label="Plot of the mismatch uncertainty band against sensor return loss, for the chosen source match"></canvas>
+      <div class="readout">
+        <div class="stat"><div class="k">Effective source RL</div><div class="v" id="uE"></div></div>
+        <div class="stat" id="uUS"><div class="k">Uncertainty</div><div class="v" id="uU"></div></div>
+      </div>
+      <div class="verdict" id="uVerdict"></div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>A PA with a poor output match (6 dB return loss) measured with a 20 dB sensor: how large is the uncertainty?</li>
+    <li>Add a 6 dB attenuator at the PA's output. What happens to the uncertainty?</li>
+  </ol></div>
+</div>
+</section>
+
+<!-- ================= 7 NOISE FIGURE ================= -->
+<section class="sec" id="nf" data-short="Noise figure measurement">
+<h2>Noise figure measurement <a class="vjump" data-t="43:00"></a></h2>
+<p>A noise figure can't be measured by looking at the noise at an amplifier's output alone, because the output noise depends on both the amplifier's gain and the noise it adds, and the gain isn't known accurately enough. The <strong>Y-factor method</strong> separates them using a calibrated noise source: a noise diode that can be switched between "off", where it produces the thermal noise of a room-temperature 50 Ω resistor (T₀ = 290 K), and "on", where it produces much more. Its <strong>excess noise ratio</strong> (ENR) states how much more.</p>
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>A Y-factor noise figure measurement</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 160" role="img" aria-label="A noise source, switched on and off by a 28 volt drive from the analyzer, connects to the input of the device under test. The device's output connects to the noise figure analyzer, which measures the output noise power with the source on and off.">
+    <defs><marker id="arY" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--ink2)"/></marker></defs>
+    <g fill="#fff" stroke="var(--ink)" stroke-width="1.4"><rect x="40" y="50" width="110" height="46"/><rect x="250" y="50" width="110" height="46" fill="#e6efd9"/><rect x="460" y="40" width="140" height="66"/></g>
+    <g fill="none" stroke="var(--ink2)" stroke-width="1.6" marker-end="url(#arY)"><path d="M150 73H248"/><path d="M360 73H458"/></g>
+    <path d="M530 106V136H95V98" fill="none" stroke="var(--c2)" stroke-width="1.4" stroke-dasharray="5 3" marker-end="url(#arY)"/>
+    <g font-size="11.5" text-anchor="middle">
+      <text x="95" y="70">noise source</text><text x="95" y="86" fill="var(--muted)">ENR, e.g. 15 dB</text>
+      <text x="305" y="70">DUT</text><text x="305" y="86" fill="var(--muted)">gain G, NF</text>
+      <text x="530" y="66">noise figure</text><text x="530" y="80">analyzer</text><text x="530" y="96" fill="var(--muted)">measures N<tspan font-size="9" dy="2">on</tspan><tspan dy="-2">, N</tspan><tspan font-size="9" dy="2">off</tspan></text>
+      <text x="312" y="152" fill="var(--c2)">28 V drive switches the source on and off</text>
+    </g>
+  </svg>
+  </div>
+</div>
+<p>The derivation is short. Describe the amplifier's added noise as an equivalent input noise temperature T<sub>e</sub> = (F − 1)·T₀. With the source off, the output noise is proportional to G·(T₀ + T<sub>e</sub>); with it on, to G·(T<sub>hot</sub> + T<sub>e</sub>). Their ratio, the Y-factor, doesn't depend on the gain at all:</p>
+<div class="eq">$$Y = \frac{N_\text{on}}{N_\text{off}} = \frac{T_\text{hot} + T_e}{T_0 + T_e} \quad\Rightarrow\quad F = \frac{\text{ENR}}{Y - 1}$$<div class="n">ENR = (T<sub>hot</sub> − T₀)/T₀, as a ratio; F as a ratio, so NF = 10 log₁₀ F</div></div>
+<p>This gives the noise figure of everything after the noise source, including the analyzer's own front end. The analyzer measures its own noise figure during calibration and removes it with the cascade formula (Module 3), which works well only when the device has enough gain to dominate. A low-gain device with a noisy analyzer leaves a small Y-factor, and the result becomes very sensitive to small errors.</p>
+
+<div class="widget wide" id="w-y">
+  <div class="wh"><span class="tag">Interactive</span><b>The Y-factor method</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label for="yN">DUT noise figure <b id="yNv"></b></label><input id="yN" type="range" min="0.3" max="12" step="0.1" value="1.5"></div>
+      <div class="ctrl"><label for="yG">DUT gain <b id="yGv"></b></label><input id="yG" type="range" min="0" max="30" step="0.5" value="20"></div>
+      <div class="ctrl"><label for="yE">Noise source ENR <b id="yEv"></b></label><input id="yE" type="range" min="5" max="16" step="0.5" value="15"></div>
+      <div class="ctrl"><label for="yA">Analyzer noise figure <b id="yAv"></b></label><input id="yA" type="range" min="4" max="25" step="0.5" value="10"></div>
+    </div>
+    <div>
+      <canvas id="cvY" style="height:220px" aria-label="Bars showing the output noise power with the noise source off and on, and the Y-factor between them"></canvas>
+      <div class="readout">
+        <div class="stat"><div class="k">Y-factor</div><div class="v" id="yY"></div></div>
+        <div class="stat"><div class="k">System NF (DUT + analyzer)</div><div class="v" id="yS"></div></div>
+        <div class="stat"><div class="k">DUT NF after correction</div><div class="v" id="yD"></div></div>
+        <div class="stat" id="ySS"><div class="k">Error per 0.1 dB of Y error</div><div class="v" id="yR"></div></div>
+      </div>
+      <div class="verdict" id="yVerdict"></div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>Measure a 1.5 dB LNA with 20 dB of gain. Then set the gain to 3 dB. What happens to the Y-factor and the sensitivity to errors?</li>
+    <li>Measure a 10 dB noise figure mixer with a 5 dB ENR source. Why do high-noise devices need a high-ENR source?</li>
+  </ol></div>
+</div>
+</section>
+
+<!-- ================= 8 LOAD-PULL ================= -->
+<section class="sec" id="loadpull" data-short="Load-pull">
+<h2>Load-pull <a class="vjump" data-t="49:00"></a></h2>
+<p>Module 3 showed that a power amplifier's output isn't matched for maximum small-signal gain but for the load that lets the transistor use its full voltage and current swing. That optimum load can be estimated from the supply voltage and the transistor's maximum current, but the real device has output capacitance, package parasitics and nonlinear behaviour that move it. <strong>Load-pull</strong> finds it experimentally: an adjustable impedance tuner after the device presents a sequence of load impedances while the output power, efficiency and linearity are measured at each.</p>
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>A load-pull setup</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 150" role="img" aria-label="A signal source drives an input tuner, the transistor in its test fixture, an output tuner, and a power meter. The output tuner sets the load impedance the transistor sees.">
+    <defs><marker id="arL" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--ink2)"/></marker></defs>
+    <g fill="#fff" stroke="var(--ink)" stroke-width="1.4"><rect x="20" y="40" width="90" height="44"/><rect x="140" y="40" width="90" height="44"/><rect x="262" y="34" width="116" height="56" fill="#e6efd9"/><rect x="410" y="40" width="90" height="44" fill="#fbe9e2"/><rect x="530" y="40" width="90" height="44"/></g>
+    <g fill="none" stroke="var(--ink2)" stroke-width="1.6" marker-end="url(#arL)"><path d="M110 62H138"/><path d="M230 62H260"/><path d="M378 62H408"/><path d="M500 62H528"/></g>
+    <g font-size="11.5" text-anchor="middle">
+      <text x="65" y="59">signal</text><text x="65" y="73">source</text>
+      <text x="185" y="59">input</text><text x="185" y="73">tuner</text>
+      <text x="320" y="59">PA transistor</text><text x="320" y="73" fill="var(--muted)">in a fixture</text>
+      <text x="455" y="59">output</text><text x="455" y="73">tuner</text>
+      <text x="575" y="59">power</text><text x="575" y="73">meter</text>
+      <text x="455" y="108" fill="var(--c2)">sets the load Γ<tspan font-size="9" dy="2">L</tspan></text>
+      <text x="320" y="136" fill="var(--muted)">the measured power at each load, plotted on a Smith chart, forms contours around the optimum</text>
+    </g>
+  </svg>
+  </div>
+</div>
+<p>The shape of the contours follows from the same two limits used in Module 3's estimate. When the load impedance is low, the transistor reaches its maximum current before its maximum voltage, and the power is ½I<sub>max</sub>²R. When the load is high, the voltage limits first and the power falls as the load rises. The optimum, R<sub>opt</sub> ≈ V<sub>max</sub>/I<sub>max</sub>, is where both limits are reached together. The transistor's output capacitance sits in parallel with the load, so the optimum load at the package terminals is R<sub>opt</sub> with that capacitance tuned out by some inductive reactance.</p>
+
+<div class="widget wide" id="w-lp">
+  <div class="wh"><span class="tag">Interactive</span><b>Load-pull contours of a simple PA model</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label for="pR">Optimum resistance <b id="pRv"></b></label><input id="pR" type="range" min="4" max="50" step="0.5" value="12"></div>
+      <div class="ctrl"><label for="pC">Output capacitance <b id="pCv"></b></label><input id="pC" type="range" min="0" max="12" step="0.25" value="4"></div>
+      <p class="small">915 MHz. The model (Cripps' load-line approach) limits current and voltage swing and ignores everything else. Click or tap the chart to choose a load. Shaded bands: within 1, 2 and 3 dB of maximum power.</p>
+    </div>
+    <div>
+      <canvas id="cvLp" style="height:330px" aria-label="Smith chart of load impedance with contours of constant output power around the optimum load, and the chosen load marked"></canvas>
+      <div class="readout">
+        <div class="stat"><div class="k">Chosen load</div><div class="v" id="pZ"></div></div>
+        <div class="stat" id="pPS"><div class="k">Power vs maximum</div><div class="v" id="pP"></div></div>
+        <div class="stat"><div class="k">Optimum load</div><div class="v" id="pO"></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>Click the centre of the chart (50 Ω). How much power does a 12 Ω-optimum PA lose if it's simply connected to 50 Ω?</li>
+    <li>Increase the output capacitance. Which way does the optimum move, and why?</li>
+    <li>Compare the contours' shape on the low-resistance and high-resistance sides of the optimum.</li>
+  </ol></div>
+</div>
+
+<div class="example">
+  <span class="xk">Application</span>
+  <p>Few small teams own a load-pull system, but PA manufacturers publish load-pull results in their datasheets as tables or contour plots of the optimum load at several frequencies. The output matching network is then designed to transform 50 Ω to that load (the datasheet's "Z<sub>load</sub>"), exactly as in Module 2's matching examples, and a VNA confirms the network's impedance before the PA is fitted. Matching a PA's output to the conjugate of its small-signal S₂₂ instead is a common mistake that gives high gain at low power and disappointing output power.</p>
+</div>
+</section>
+
+<!-- ================= DESIGN EXERCISES ================= -->
+<section class="sec" id="exercises" data-nonum data-short="Design exercises">
+<h2>Design exercises</h2>
+<p>Problems drawn from real hardware. Each takes a few steps. Enter numbers to check your reasoning as you go, or open the worked solutions and discussion. The figures above are useful for sanity-checking.</p>
+
+<div class="chal">
+  <div class="ch"><span class="cn">Exercise 1</span><span class="cd">Analysis · ●○○</span><span class="ctitle">A spectrum analyzer's noise floor</span></div>
+  <div class="cbody">
+    <p>A spectrum analyzer has a noise figure of 24 dB. Thermal noise is −174 dBm/Hz at room temperature (Module 6).</p>
+    <div class="check" data-ans="-110" data-tol="1%" data-unit="dBm"><p>(a) What's the displayed noise floor with a 10 kHz RBW?</p>
+      <div class="hint">Noise floor = −174 dBm/Hz + NF + 10 log₁₀(RBW).</div>
+      <div class="solution"><p>−174 + 24 + 40 = −110 dBm.</p></div></div>
+    <div class="check" data-ans="-125.2" data-tol="1%" data-unit="dBm"><p>(b) With a 300 Hz RBW?</p>
+      <div class="solution"><p>10 log₁₀(300) = 24.8, so −174 + 24 + 24.8 = −125.2 dBm, 14.8 dB lower. The sweep takes about (10 000/300)² ≈ 1100 times longer.</p></div></div>
+    <details><summary>Discussion: other ways to lower the floor</summary><p>Many analyzers have a built-in preamplifier, which lowers their noise figure by 10–20 dB at the cost of strong-signal handling, and reducing the input attenuation to its minimum also helps. For signals near the noise floor, using an RMS (average) detector instead of a peak detector gives a stable reading of the noise and the signal.</p></details>
+  </div>
+</div>
+
+<div class="chal">
+  <div class="ch"><span class="cn">Exercise 2</span><span class="cd">Analysis · ●●○</span><span class="ctitle">Measuring an LNA's noise figure</span></div>
+  <div class="cbody">
+    <p>A noise source with an ENR of 15 dB is connected to an LNA with 20 dB of gain. The analyzer measures a Y-factor of 12 dB. The analyzer's own noise figure is 8 dB.</p>
+    <div class="check" data-ans="3.28" data-tol="2%" data-unit="dB"><p>(a) What's the noise figure of the LNA and analyzer together?</p>
+      <div class="miss" data-val="3"><p>Use the ratios: ENR = 31.6 and Y = 15.85, not the decibel values.</p></div>
+      <div class="hint">F = ENR/(Y − 1), with both as ratios.</div>
+      <div class="solution"><p>F = 31.6/(15.85 − 1) = 2.13, a noise figure of 3.28 dB.</p></div></div>
+    <div class="check" data-ans="3.17" data-tol="2%" data-unit="dB"><p>(b) What's the LNA's own noise figure?</p>
+      <div class="hint">Rearrange the cascade formula: F<sub>LNA</sub> = F<sub>total</sub> − (F<sub>analyzer</sub> − 1)/G.</div>
+      <div class="solution"><p>F<sub>LNA</sub> = 2.13 − (6.31 − 1)/100 = 2.077, a noise figure of 3.17 dB. With 20 dB of gain the correction is only 0.11 dB.</p></div></div>
+    <details><summary>Discussion: when the correction gets large</summary><p>With only 5 dB of LNA gain the correction would be (6.31 − 1)/3.16 = 1.68, larger than the LNA's own contribution, and any error in the analyzer's noise figure or the LNA's gain would dominate the result. For low-gain devices, a low-noise preamplifier in front of the analyzer reduces the second-stage contribution.</p></details>
+  </div>
+</div>
+
+<div class="chal">
+  <div class="ch"><span class="cn">Exercise 3</span><span class="cd">Analysis · ●○○</span><span class="ctitle">How accurate is that power reading?</span></div>
+  <div class="cbody">
+    <p>A transmitter's output has a VSWR of 1.5 and is measured with a power sensor whose VSWR is 1.2.</p>
+    <div class="check" data-ans="0.16" data-tol="5%" data-unit="dB"><p>What's the largest mismatch uncertainty (the larger of the ± values)?</p>
+      <div class="hint">|Γ| = (VSWR − 1)/(VSWR + 1). The uncertainty is 20 log₁₀(1 ± |Γs||Γl|).</div>
+      <div class="solution"><p>|Γs| = 0.2 and |Γl| = 0.091, so |Γs||Γl| = 0.0182. The limits are +0.157 dB and −0.159 dB, about ±0.16 dB.</p></div></div>
+    <details><summary>Discussion: in context</summary><p>±0.16 dB is comparable to the sensor's own calibration uncertainty, so it matters when results are compared against a limit, such as a regulatory maximum output power. With a 3:1 source VSWR (Γ = 0.5) and the same sensor it would be ±0.4 dB.</p></details>
+  </div>
+</div>
+</section>
+
+<!-- ================= BENCH ================= -->
+<section class="sec" id="bench" data-nonum data-short="At the bench">
+<h2>At the bench</h2>
+<div class="video" data-video="lab">
+  <div class="plan">
+    <p>Planned lab demo (≈ 25 min, filmed at the bench):</p>
+    <ol>
+      <li>Calibrating a VNA with a short, open and load, and checking the calibration</li>
+      <li>The same antenna measured with and without the cable in the calibration</li>
+      <li>Spectrum analyzer: RBW, attenuation and a transmitter's harmonics</li>
+      <li>Measuring a transmitter's output power with a power meter</li>
+    </ol>
+  </div>
+</div>
+<div class="lab">
+  <h3>Calibration and the instruments' limits</h3>
+  <div class="parts"><span>NanoVNA (or any VNA) and its calibration kit</span><span>An SMA test cable, 1 m or longer</span><span>An antenna and a filter to measure</span><span>A spectrum analyzer and 30 dB attenuator</span><span>A low-power transmitter or signal generator</span></div>
+  <ol>
+    <li><b>Calibration.</b> Calibrate at the end of the test cable. Measure the load standard again and record its return loss. Then flex the cable and measure it again.</li>
+    <li><b>Reference plane.</b> Measure the antenna with the calibration at the cable's end, then with the calibration at the VNA's port. Compare the apparent resonance and match.</li>
+    <li><b>Dynamic range.</b> Measure the filter's stopband with IF bandwidths of 10 kHz and 100 Hz.</li>
+    <li><b>Spectrum analyzer.</b> Through the attenuator, measure the transmitter's carrier and harmonics. Change the analyzer's input attenuation by 10 dB and check whether the harmonics move relative to the carrier.</li>
+  </ol>
+  <div class="record"><b>What you should see:</b> the load reading better than about 40 dB after calibration and worse after flexing the cable; the antenna looking better matched without the cable in the calibration; the stopband floor dropping by about 20 dB with the narrower IF bandwidth; and harmonics that stay put relative to the carrier when the attenuation changes.</div>
+</div>
+</section>
+
+<!-- ================= SUMMARY ================= -->
+<section class="sec" id="summary" data-nonum data-short="Summary">
+<h2>Summary &amp; cheat sheet</h2>
+<ol class="takeaways">
+  <li>Choose the instrument by the question: VNA for S-parameters, spectrum analyzer for what a circuit emits, power meter for accurate power, noise figure analyzer for added noise, load-pull for PA loads.</li>
+  <li>A VNA measures ratios of waves with tuned receivers; IF bandwidth trades noise floor against speed.</li>
+  <li>Calibration removes the systematic errors of everything up to the reference plane. Anything outside it, or anything that changes after it, is error.</li>
+  <li>A spectrum analyzer's RBW sets resolution, noise floor (10 log RBW) and sweep time (∝ 1/RBW²). Too strong an input creates false distortion; check with the attenuator.</li>
+  <li>Every power measurement carries a mismatch uncertainty of 20 log(1 ± |Γs||Γl|).</li>
+  <li>The Y-factor method measures noise figure independently of gain: F = ENR/(Y − 1), then corrected for the analyzer.</li>
+  <li>Load-pull finds a PA's optimum load, which is set by its voltage and current limits, not by its small-signal match.</li>
+</ol>
+<div class="cheat">
+  <div><b>One-port error model</b>\(\Gamma_m = e_{00} + \frac{e_{10}e_{01}\Gamma}{1 - e_{11}\Gamma}\)<br><span class="small">three standards → three unknowns</span></div>
+  <div><b>Noise floor</b>\(-174 + \text{NF} + 10\log_{10}\text{RBW}\) dBm<br><span class="small">sweep time ∝ span / RBW²</span></div>
+  <div><b>Mismatch uncertainty</b>\(20\log_{10}(1 \pm |\Gamma_s||\Gamma_l|)\)</div>
+  <div><b>Y-factor</b>\(F = \text{ENR}/(Y - 1)\)<br><span class="small">ratios, not dB</span></div>
+  <div><b>Load-line</b>\(R_\text{opt} \approx V_\text{max}/I_\text{max}\)<br><span class="small">\(P_\text{max} = \tfrac12 V_\text{max} I_\text{max}\)</span></div>
+  <div><b>Through a lossy cable</b>apparent RL = true RL + 2 × cable loss</div>
+</div>
+<h3>Further reading</h3>
+<ul class="small">
+  <li><em>Microwave Engineering</em> (Pozar), chapter 4: microwave network analysis, including S-parameters, the network analyzer, and TRL calibration.</li>
+  <li><em>Microwave Engineering</em> (Pozar), chapter 10: noise in microwave circuits, including noise temperature, noise figure and the Y-factor method.</li>
+  <li><em>Microwave Engineering</em> (Pozar), chapter 12: power amplifier design and the load for maximum output power.</li>
+  <li>Instrument manufacturers' application notes on network analyzer calibration, spectrum analysis basics and noise figure measurement are detailed and freely available, and well worth reading alongside the instrument's manual.</li>
+</ul>
 </section>
 
 <nav class="pager"></nav>
 </main>
 </div>
 <footer class="site">Hardware Engineering Fundamentals · RF &amp; High-Speed Design</footer>
+
+<script>
+'use strict';
+const $ = s => document.querySelector(s);
+const {col, si, fmt, lin, log, ticks, axes, line, text, dot, rgba} = Plot;
+const Z0 = 50;
+// minimal complex arithmetic: numbers are [re, im]
+const cx = {
+  add: (a, b) => [a[0] + b[0], a[1] + b[1]], sub: (a, b) => [a[0] - b[0], a[1] - b[1]],
+  mul: (a, b) => [a[0]*b[0] - a[1]*b[1], a[0]*b[1] + a[1]*b[0]],
+  div: (a, b) => { const d = b[0]*b[0] + b[1]*b[1]; return [(a[0]*b[0] + a[1]*b[1])/d, (a[1]*b[0] - a[0]*b[1])/d]; },
+  abs: a => Math.hypot(a[0], a[1]), polar: (m, ph) => [m*Math.cos(ph), m*Math.sin(ph)]
+};
+const rl = g => -20*Math.log10(Math.max(1e-6, cx.abs(g)));
+function smithGrid(ctx, cxp, cyp, R){
+  ctx.save();
+  ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(cxp, cyp, R, 0, 2*Math.PI); ctx.fill();
+  ctx.beginPath(); ctx.arc(cxp, cyp, R, 0, 2*Math.PI); ctx.clip();
+  ctx.strokeStyle = col.line; ctx.lineWidth = 1;
+  [0.2, 0.5, 1, 2, 5].forEach(r => { ctx.beginPath(); ctx.arc(cxp + R*r/(1 + r), cyp, R/(1 + r), 0, 2*Math.PI); ctx.stroke(); });
+  [0.2, 0.5, 1, 2, 5].forEach(x => [1, -1].forEach(sg => { ctx.beginPath(); ctx.arc(cxp + R, cyp - sg*R/x, R/x, 0, 2*Math.PI); ctx.stroke(); }));
+  ctx.beginPath(); ctx.moveTo(cxp - R, cyp); ctx.lineTo(cxp + R, cyp); ctx.stroke();
+  ctx.restore();
+}
+function smithFrame(ctx, cxp, cyp, R){
+  ctx.save(); ctx.strokeStyle = col.ink2; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(cxp, cyp, R, 0, 2*Math.PI); ctx.stroke(); ctx.restore();
+  [0.2, 0.5, 1, 2, 5].forEach(r => text(ctx, fmt(r*Z0, 3), cxp + R*(r - 1)/(r + 1), cyp + 9, {align: 'center', color: col.muted}));
+}
+
+/* ============ 1. Calibration ============ */
+(() => {
+  const calm = Plot.seg('#cC', upd), plane = Plot.seg('#cP', upd);
+  const F0 = 915e6, VF = 0.7, LOSS = 0.5;
+  // antenna: series RLC with R chosen for a 15 dB return loss at resonance
+  const g15 = Math.pow(10, -15/20), Rr = 50*(1 - g15)/(1 + g15), Q = 12, La = Q*Rr/(2*Math.PI*F0), Ca = 1/((2*Math.PI*F0)**2*La);
+  const ant = f => { const w = 2*Math.PI*f, z = [Rr, w*La - 1/(w*Ca)]; return cx.div(cx.sub(z, [50, 0]), cx.add(z, [50, 0])); };
+  // an error box maps the true reflection G to the measured one: e00 + t G / (1 - e11 G)
+  const box = (e, G) => cx.add(e.e00, cx.div(cx.mul(e.t, G), cx.sub([1, 0], cx.mul(e.e11, G))));
+  // the instrument's own errors at its port: directivity 30 dB, source match 18 dB, internal path delay
+  const inst = f => ({e00: cx.polar(Math.pow(10, -30/20), -2*Math.PI*f*0.4e-9 + 1), e11: cx.polar(Math.pow(10, -18/20), -2*Math.PI*f*0.9e-9 + 2), t: cx.polar(1, -2*Math.PI*f*0.6e-9)});
+  // the cable: small mismatches at both ends, round-trip loss and delay
+  const cab = (f, L) => { const ph = -2*Math.PI*f*L/(VF*3e8), a2 = Math.pow(10, -2*LOSS*L/20); return {e00: cx.polar(0.05, 0.7), e11: cx.polar(0.05, 2*ph - 1.1), t: cx.polar(a2, 2*ph)}; };
+  const meas = (f, L, G, withCable) => box(inst(f), withCable ? box(cab(f, L), G) : G);
+  // short-open-load calibration: solve for the three terms from the three measured standards
+  const sol = (ms, mo, ml) => {
+    const ds = cx.sub(ms, ml), dd = cx.sub(mo, ml), e11 = cx.div(cx.add(dd, ds), cx.sub(dd, ds)), t = cx.mul(dd, cx.sub([1, 0], e11));
+    return {e00: ml, e11, t};
+  };
+  const unbox = (e, gm) => { const d = cx.sub(gm, e.e00); return cx.div(d, cx.add(e.t, cx.mul(e.e11, d))); };
+  let s = {};
+  function upd(){
+    const m = calm(), L = +$('#cL').value, atPort = plane() === '1';
+    const fs = [], tru = [], dsp = [];
+    for (let i = 0; i <= 300; i++){
+      const f = 700e6 + 400e6*i/300, G = ant(f), gm = meas(f, L, G, true);
+      // the standards are measured where the calibration is done: at the cable's end, or at the bare port
+      const std = g => meas(f, L, g, !atPort);
+      let gd;
+      if (m === '0') gd = gm;
+      else if (m === '1') gd = cx.div(gm, cx.mul(std([-1, 0]), [-1, 0]));
+      else gd = unbox(sol(std([-1, 0]), std([1, 0]), std([0, 0])), gm);
+      fs.push(f); tru.push(rl(G)); dsp.push(rl(gd));
+    }
+    let bi = 0; dsp.forEach((v, i) => { if (v > dsp[bi]) bi = i; });
+    const err = Math.max(...dsp.map((v, i) => Math.abs(Math.min(v, 40) - Math.min(tru[i], 40))));
+    s = {fs, tru, dsp};
+    $('#cLv').textContent = fmt(L, 2) + ' m';
+    $('#cB').textContent = fmt(dsp[bi], 3) + ' dB'; $('#cF').textContent = si(fs[bi], 'Hz');
+    $('#cE').textContent = (err < 0.005 ? '0.00' : fmt(err, 2)) + ' dB'; $('#cES').className = 'stat ' + (err > 3 ? 'bad' : err > 0.5 ? 'warn' : '');
+    const v = $('#cVerdict');
+    if (err < 0.1) Plot.verdict(v, 'ok', `<b>Calibrated at the device.</b> The display matches the antenna: everything up to the antenna's connector, cable included, has been measured with the standards and removed.`);
+    else if (m === '0') Plot.verdict(v, 'bad', `<b>Uncalibrated.</b> The display includes the coupler's leakage, the port's mismatch and the cable. The ripple comes from these errors adding with a phase that turns with frequency, and the cable's loss makes the antenna look better matched than it is.`);
+    else if (m === '1') Plot.verdict(v, 'warn', `<b>Response calibration only.</b> Normalising to a short removes the loss and delay of the path (the tracking term), but leaves the directivity and source-match errors, visible as ripple and an error of up to ${fmt(err, 2)} dB.`);
+    else Plot.verdict(v, 'bad', `<b>The cable is outside the calibration.</b> The VNA's own errors are removed, but the cable's round-trip loss (${fmt(2*LOSS*L, 2)} dB) and its mismatch are not, so the antenna appears up to ${fmt(err, 2)} dB different from reality.`);
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvCal'), (ctx, W, H) => {
+    const {fs, tru, dsp} = s; if (!fs) return;
+    const P = {l: 52, r: W - 26, t: 14, b: H - 40};
+    const X = lin(700e6, 1100e6, P.l, P.r), Y = lin(40, 0, P.b, P.t);
+    axes(ctx, P, X, Y, {xt: [700e6, 800e6, 900e6, 1000e6, 1100e6], yt: [0, 10, 20, 30, 40], xl: 'frequency', yl: 'return loss (dB)', xf: t => si(t, 'Hz').replace(' ', ''), xgrid: true});
+    Plot.clip(ctx, P);
+    line(ctx, fs.map((f, i) => [X(f), Y(Math.min(40, tru[i]))]), col.muted, 1.6, [6, 4]);
+    line(ctx, fs.map((f, i) => [X(f), Y(Math.min(40, dsp[i]))]), col.c1, 2.4);
+    ctx.restore();
+    text(ctx, 'better match ↓', P.r - 4, P.b - 10, {align: 'right', color: col.muted});
+  });
+  $('#cL').addEventListener('input', upd);
+  upd();
+})();
+
+/* ============ 2. Spectrum analyzer RBW ============ */
+(() => {
+  const NF0 = -174 + 24;
+  // a fixed pseudo-random sequence so the noise looks the same on every redraw
+  const rnd = (() => { const a = []; let x = 12345; for (let i = 0; i < 2000; i++){ x = (x*1103515245 + 12345) % 2147483648; a.push(x/2147483648); } return a; })();
+  let s = {};
+  function upd(){
+    const rbw = Math.pow(10, +$('#sR').value), df = Math.pow(10, +$('#sD').value), lw = +$('#sL').value;
+    const nf = NF0 + 10*Math.log10(rbw), span = Math.max(10*df, 20*rbw), st = Math.max(0.001, 2*span/(rbw*rbw));
+    s = {rbw, df, lw, nf, span};
+    $('#sRv').textContent = si(rbw, 'Hz'); $('#sDv').textContent = si(df, 'Hz'); $('#sLv').textContent = lw + ' dBm';
+    $('#sN').textContent = fmt(nf, 3) + ' dBm'; $('#sT').textContent = st < 1 ? fmt(st*1000, 3) + ' ms' : fmt(st, 3) + ' s';
+    // visible if it rises above the noise and is resolved from the carrier's skirt
+    // resolved if the carrier's filter response at the weaker signal's offset is below it
+    const skirt = -30 - 10*Math.log10(Math.E)*2.77*(df/rbw)**2;
+    const vis = lw > nf + 3 && lw > skirt + 3;
+    $('#sV').textContent = vis ? 'visible' : (lw <= nf + 3 ? 'below the noise' : 'not resolved');
+    $('#sVS').className = 'stat ' + (vis ? '' : 'bad');
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvSa'), (ctx, W, H) => {
+    const {rbw, df, lw, nf, span} = s; if (!rbw) return;
+    const P = {l: 52, r: W - 16, t: 14, b: H - 40};
+    const f0 = -span*0.3, X = lin(f0, f0 + span, P.l, P.r), Y = lin(-160, -20, P.b, P.t);
+    axes(ctx, P, X, Y, {xt: ticks(f0, f0 + span, 5), yt: [-160, -130, -100, -70, -40], xl: 'offset from the carrier', yl: 'dBm', xf: t => si(t, 'Hz').replace(' ', ''), xgrid: true});
+    Plot.clip(ctx, P);
+    const pts = [];
+    for (let i = 0; i <= 600; i++){
+      const f = f0 + span*i/600, g = d => Math.exp(-((d/rbw)**2)*2.77);
+      const p = Math.pow(10, -30/10)*g(f) + Math.pow(10, lw/10)*g(f - df) + Math.pow(10, nf/10)*(0.3 + 1.4*rnd[i % 2000]);
+      pts.push([X(f), Y(10*Math.log10(p))]);
+    }
+    line(ctx, pts, col.c1, 1.4);
+    line(ctx, [[P.l, Y(nf)], [P.r, Y(nf)]], col.muted, 1, [4, 4]);
+    ctx.restore();
+    text(ctx, 'noise floor', P.r - 4, Y(nf) - 10, {align: 'right', color: col.muted});
+    text(ctx, 'RBW ' + si(rbw, 'Hz'), P.l + 6, P.t + 10, {color: col.ink2});
+  });
+  ['#sR', '#sD', '#sL'].forEach(id => $(id).addEventListener('input', upd));
+  upd();
+})();
+
+/* ============ 3. Mismatch uncertainty ============ */
+(() => {
+  const unc = (gs, gl) => [20*Math.log10(1 + gs*gl), 20*Math.log10(1 - gs*gl)];
+  let s = {};
+  function upd(){
+    const rs = +$('#uS').value + 2*(+$('#uA').value), rl_ = +$('#uL').value, gs = Math.pow(10, -rs/20), gl = Math.pow(10, -rl_/20), [up, dn] = unc(gs, gl);
+    s = {gs, rs, rl_};
+    $('#uSv').textContent = fmt(+$('#uS').value, 3) + ' dB'; $('#uLv').textContent = fmt(rl_, 3) + ' dB'; $('#uAv').textContent = $('#uA').value + ' dB';
+    $('#uE').textContent = fmt(rs, 3) + ' dB'; $('#uU').textContent = '+' + fmt(up, 2) + ' / ' + fmt(dn, 2) + ' dB';
+    $('#uUS').className = 'stat ' + (Math.abs(dn) > 0.5 ? 'bad' : Math.abs(dn) > 0.15 ? 'warn' : '');
+    const v = $('#uVerdict');
+    if (Math.abs(dn) <= 0.15) Plot.verdict(v, 'ok', `<b>Small.</b> The mismatch uncertainty is comparable to or smaller than the sensor's own calibration uncertainty.`);
+    else if (Math.abs(dn) <= 0.5) Plot.verdict(v, 'warn', `<b>Noticeable.</b> The reading could be off by up to ${fmt(Math.abs(dn), 2)} dB from mismatch alone, depending on the cable length and frequency.`);
+    else Plot.verdict(v, 'bad', `<b>Large.</b> Up to ${fmt(Math.abs(dn), 2)} dB of uncertainty. An attenuator at the source, or a better-matched sensor, would reduce it.`);
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvMu'), (ctx, W, H) => {
+    const {gs, rl_} = s; if (gs === undefined) return;
+    const P = {l: 52, r: W - 16, t: 14, b: H - 40};
+    const X = lin(10, 40, P.l, P.r), Y = lin(-1.5, 1.5, P.b, P.t);
+    axes(ctx, P, X, Y, {xt: [10, 15, 20, 25, 30, 35, 40], yt: [-1.5, -1, -0.5, 0, 0.5, 1, 1.5], xl: 'sensor return loss (dB)', yl: 'uncertainty (dB)', xgrid: true});
+    Plot.clip(ctx, P);
+    const up = [], dn = [];
+    for (let i = 0; i <= 200; i++){ const r = 10 + 30*i/200, gl = Math.pow(10, -r/20), [a, b] = unc(gs, gl); up.push([X(r), Y(a)]); dn.push([X(r), Y(b)]); }
+    ctx.fillStyle = rgba(col.c1, .15); ctx.beginPath(); up.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); dn.slice().reverse().forEach(([x, y]) => ctx.lineTo(x, y)); ctx.closePath(); ctx.fill();
+    line(ctx, up, col.c1, 2); line(ctx, dn, col.c1, 2);
+    line(ctx, [[X(rl_), P.t], [X(rl_), P.b]], col.c2, 1.2, [4, 4]);
+    ctx.restore();
+  });
+  ['#uS', '#uL', '#uA'].forEach(id => $(id).addEventListener('input', upd));
+  upd();
+})();
+
+/* ============ 4. Y-factor ============ */
+(() => {
+  const T0 = 290, u = d => Math.pow(10, d/10), dB = x => 10*Math.log10(x);
+  let s = {};
+  function upd(){
+    const nf = +$('#yN').value, g = +$('#yG').value, enr = +$('#yE').value, na = +$('#yA').value;
+    const Fs = u(nf) + (u(na) - 1)/u(g), Te = (Fs - 1)*T0, Th = T0*(u(enr) + 1);
+    const Y = (Th + Te)/(T0 + Te), Fm = u(enr)/(Y - 1), Fd = Fm - (u(na) - 1)/u(g);
+    // sensitivity: how far the corrected DUT NF moves for a 0.1 dB error in Y
+    const Y2 = Y*u(0.1), Fd2 = u(enr)/(Y2 - 1) - (u(na) - 1)/u(g), sens = Math.abs(dB(Math.max(Fd2, 1.0001)) - dB(Fd));
+    s = {Y, g, Te};
+    $('#yNv').textContent = fmt(nf, 2) + ' dB'; $('#yGv').textContent = fmt(g, 3) + ' dB'; $('#yEv').textContent = fmt(enr, 3) + ' dB'; $('#yAv').textContent = fmt(na, 3) + ' dB';
+    $('#yY').textContent = fmt(dB(Y), 3) + ' dB'; $('#yS').textContent = fmt(dB(Fm), 3) + ' dB'; $('#yD').textContent = fmt(dB(Fd), 3) + ' dB';
+    $('#yR').textContent = '± ' + fmt(sens, 2) + ' dB'; $('#ySS').className = 'stat ' + (sens > 0.5 ? 'bad' : sens > 0.2 ? 'warn' : '');
+    const v = $('#yVerdict');
+    if (sens <= 0.2) Plot.verdict(v, 'ok', `<b>A solid measurement.</b> The Y-factor of ${fmt(dB(Y), 3)} dB is large, and the analyzer's correction is small, so small measurement errors barely move the result.`);
+    else if (sens <= 0.5) Plot.verdict(v, 'warn', `<b>Usable, with care.</b> A 0.1 dB error in Y moves the result by ${fmt(sens, 2)} dB. Average longer, or improve the setup.`);
+    else Plot.verdict(v, 'bad', `<b>Poorly conditioned.</b> The Y-factor is small or the correction for the analyzer is large, so a 0.1 dB error in Y moves the result by ${fmt(sens, 2)} dB. Use a higher-ENR source, or a low-noise preamplifier before the analyzer.`);
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvY'), (ctx, W, H) => {
+    const {Y} = s; if (!Y) return;
+    const P = {l: 52, r: W - 16, t: 20, b: H - 34};
+    const yd = 10*Math.log10(Y), top = Math.max(20, yd + 4), Yp = lin(0, top, P.b, P.t);
+    axes(ctx, P, lin(0, 1, P.l, P.r), Yp, {xt: [], yt: ticks(0, top, 4), yl: 'output noise (dB, rel. off)'});
+    const bw = Math.min(90, (P.r - P.l)/5), x1 = P.l + (P.r - P.l)*0.3 - bw/2, x2 = P.l + (P.r - P.l)*0.7 - bw/2;
+    ctx.fillStyle = col.c5; ctx.fillRect(x1, Yp(0.4), bw, P.b - Yp(0.4));
+    ctx.fillStyle = col.c2; ctx.fillRect(x2, Yp(yd), bw, P.b - Yp(yd));
+    text(ctx, 'source off', x1 + bw/2, P.b + 14, {align: 'center', color: col.ink2});
+    text(ctx, 'source on', x2 + bw/2, P.b + 14, {align: 'center', color: col.ink2});
+    line(ctx, [[x1 + bw + 8, Yp(0.4)], [x1 + bw + 8, Yp(yd)]], col.ink2, 1.2);
+    text(ctx, 'Y = ' + fmt(yd, 3) + ' dB', P.l + 8, P.t + 6, {color: col.ink2, bold: true, base: 'top'});
+  });
+  ['#yN', '#yG', '#yE', '#yA'].forEach(id => $(id).addEventListener('input', upd));
+  upd();
+})();
+
+/* ============ 5. Load-pull ============ */
+(() => {
+  const F = 915e6;
+  let s = {gl: [0, 0]}, img = null, imgKey = '';
+  const zFromG = g => cx.mul([Z0, 0], cx.div(cx.add([1, 0], g), cx.sub([1, 0], g)));
+  // power relative to maximum for a load Z, with the device's output capacitance in parallel
+  const prel = (z, ropt, c) => {
+    const yc = [0, 2*Math.PI*F*c], zi = c > 0 ? cx.div([1, 0], cx.add(cx.div([1, 0], z), yc)) : z, m = cx.abs(zi);
+    if (zi[0] <= 0) return 0;
+    const i2 = Math.min(1, (ropt/m)**2);
+    return i2*zi[0]/ropt;
+  };
+  // the optimum load is the one that presents R_opt to the current source: Z = 1/(1/R_opt - jwC)
+  const zopt = (ropt, c) => cx.div([1, 0], [1/ropt, -2*Math.PI*F*c]);
+  function upd(){
+    const ropt = +$('#pR').value, c = +$('#pC').value*1e-12;
+    s.ropt = ropt; s.c = c;
+    $('#pRv').textContent = fmt(ropt, 3) + ' Ω'; $('#pCv').textContent = fmt(c*1e12, 3) + ' pF';
+    const z = zFromG(s.gl), p = prel(z, ropt, c), zo = zopt(ropt, c);
+    const zs = z => fmt(z[0], 3) + (z[1] >= 0 ? ' + j' : ' − j') + fmt(Math.abs(z[1]), 3) + ' Ω';
+    $('#pZ').textContent = zs(z); $('#pP').textContent = p > 0 ? fmt(10*Math.log10(p), 3) + ' dB' : '—'; $('#pO').textContent = zs(zo);
+    $('#pPS').className = 'stat ' + (p < 0.5 ? 'bad' : p < 0.8 ? 'warn' : '');
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvLp'), (ctx, W, H) => {
+    if (s.ropt === undefined) return;
+    const R = Math.min(W, H)/2 - 26, cxp = W/2, cyp = H/2 + 4;
+    smithGrid(ctx, cxp, cyp, R);
+    const key = [W, H, s.ropt, s.c].join(',');
+    const dpr = window.devicePixelRatio || 1, n = Math.ceil(2*R);
+    if (key !== imgKey){
+      const id = ctx.createImageData(Math.floor(n*dpr), Math.floor(n*dpr)), N = Math.floor(n*dpr);
+      for (let j = 0; j < N; j++) for (let i = 0; i < N; i++){
+        const gx = (i/N)*2 - 1, gy = 1 - (j/N)*2, k = 4*(j*N + i);
+        if (gx*gx + gy*gy >= 1){ id.data[k + 3] = 0; continue; }
+        const p = prel(zFromG([gx, gy]), s.ropt, s.c), d = p > 0 ? 10*Math.log10(p) : -99;
+        const a = d > -1 ? 0.55 : d > -2 ? 0.38 : d > -3 ? 0.22 : 0;
+        id.data[k] = 210; id.data[k + 1] = 70; id.data[k + 2] = 40; id.data[k + 3] = Math.round(a*255);
+      }
+      img = document.createElement('canvas'); img.width = N; img.height = N; img.getContext('2d').putImageData(id, 0, 0); imgKey = key;
+    }
+    ctx.drawImage(img, cxp - n/2, cyp - n/2, n, n);
+    smithFrame(ctx, cxp, cyp, R);
+    const zo = zopt(s.ropt, s.c), go = cx.div(cx.sub(zo, [Z0, 0]), cx.add(zo, [Z0, 0]));
+    dot(ctx, cxp + R*go[0], cyp - R*go[1], 5, col.ink);
+    text(ctx, 'optimum', cxp + R*go[0] + 8, cyp - R*go[1] - 8, {color: col.ink, bold: true});
+    dot(ctx, cxp + R*s.gl[0], cyp - R*s.gl[1], 6, col.c1); dot(ctx, cxp + R*s.gl[0], cyp - R*s.gl[1], 2.5, '#fff');
+    s.geo = {cxp, cyp, R};
+  });
+  $('#cvLp').addEventListener('click', e => {
+    if (!s.geo) return;
+    const r = e.currentTarget.getBoundingClientRect(), x = (e.clientX - r.left - s.geo.cxp)/s.geo.R, y = -(e.clientY - r.top - s.geo.cyp)/s.geo.R;
+    if (x*x + y*y < 0.98){ s.gl = [x, y]; upd(); }
+  });
+  ['#pR', '#pC'].forEach(id => $(id).addEventListener('input', upd));
+  upd();
+})();
+</script>
 </body>
 </html>

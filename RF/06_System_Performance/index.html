@@ -4,31 +4,828 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>System-Level Performance · RF 6</title>
-<meta name="description" content="RF & High-Speed Design module 6: Noise figure, link budgets, compression and intermodulation. In development.">
+<meta name="description" content="RF module 6: thermal noise, noise figure and sensitivity, the Friis cascade and noise temperature, link budgets and free-space path loss, compression, harmonics, IP3 and intermodulation, phase noise and reciprocal mixing, desense and dynamic range, channel interference, and amplifier stability.">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
 <link rel="stylesheet" href="../../assets/site.css">
 <script src="../../assets/course.js"></script>
 <script src="../../assets/site.js"></script>
+<script src="../../assets/plot.js"></script>
 </head>
 <body>
 <div class="layout">
 <aside class="side" aria-label="Module contents"></aside>
 <main class="content">
 
-<!-- Placeholder: replace this page with the module when it's written (see README.md, "Writing a module"). -->
+<!-- ================= HERO ================= -->
 <header class="hero">
   <div class="eyebrow">RF &amp; High-Speed Design · Module 6</div>
-  <h1>System-Level Performance</h1>
-  <p class="lede">Noise figure, link budgets, compression and intermodulation.</p>
+  <h1>System-level performance</h1>
+  <p class="lede">A radio link works if the wanted signal arrives stronger than everything competing with it: thermal noise, the receiver's own noise, distortion products, and other signals. This module builds the numbers that decide that, from first principles: how much noise there is, how much signal survives the path, how much distortion the electronics add, and how strong interference can get before the link fails.</p>
+  <p class="meta">Builds on: RF modules 1–5, especially the cascades section of Module 3. Bench: a signal generator, a spectrum analyzer, a combiner and an amplifier for a two-tone test.</p>
+  <div class="resources" data-auto></div>
+  <div class="objectives">
+    <h3>What's covered</h3>
+    <ul>
+      <li>Where thermal noise comes from, and how noise figure and bandwidth set a receiver's sensitivity.</li>
+      <li>The Friis cascade in noise temperatures, and why LNAs go at the antenna.</li>
+      <li>Free-space path loss, derived, and link budgets with margin.</li>
+      <li>Nonlinearity: compression, harmonics, intermodulation and the third-order intercept.</li>
+      <li>Phase noise and how it lets a strong neighbouring signal desensitise a receiver.</li>
+      <li>Desense, dynamic range and channel interference.</li>
+      <li>Why amplifiers oscillate, and how to check and ensure stability.</li>
+    </ul>
+  </div>
+  <div class="video" data-video="lecture" id="lecture">
+    <div class="plan">
+      <p>Planned walkthrough of this page (≈ 60 min):</p>
+      <ol>
+        <li data-t="0:00">Thermal noise and sensitivity</li>
+        <li data-t="8:00">Noise temperature and the Friis cascade</li>
+        <li data-t="13:00">Free-space path loss and link budgets</li>
+        <li data-t="22:00">Compression, harmonics and intermodulation</li>
+        <li data-t="32:00">Phase noise and reciprocal mixing</li>
+        <li data-t="40:00">Desense and dynamic range</li>
+        <li data-t="46:00">Channel interference</li>
+        <li data-t="51:00">Amplifier stability</li>
+      </ol>
+    </div>
+  </div>
 </header>
 
-<section class="sec" id="status" data-nonum data-short="In development">
-<h2>In development</h2>
-<p>This module hasn't been written yet. The other modules are listed in the strip at the top of the page, and the links below go to the neighbouring ones.</p>
+<!-- ================= 1 NOISE ================= -->
+<section class="sec" id="noise" data-short="Noise and sensitivity">
+<h2>Thermal noise and sensitivity <a class="vjump" data-t="0:00"></a></h2>
+<p>Every resistor at a temperature above absolute zero generates a random voltage, because its electrons are in constant thermal motion. The mean-square noise voltage across a resistor R, measured in a bandwidth B, is v² = 4kTRB (k is Boltzmann's constant, 1.38 × 10⁻²³ J/K). Connect that resistor to a matched load of the same value, and half the voltage appears across the load, so the noise power delivered is</p>
+<div class="eq">$$P_n = \frac{(v/2)^2}{R} = \frac{4kTRB}{4R} = kTB$$<div class="n">independent of the resistance; at T₀ = 290 K, kT₀ = 4.0 × 10⁻²¹ W/Hz = −174 dBm/Hz</div></div>
+<p>The resistance cancels: any matched source at room temperature, including a 50 Ω antenna looking at warm surroundings, delivers −174 dBm in every hertz of bandwidth. That's the floor every receiver starts from. The receiver then adds its own noise, by its noise figure, and the detector needs the signal to be some amount above the total, the required signal-to-noise ratio, which depends on the modulation and the acceptable error rate (Module 10). Together these give the receiver's <strong>sensitivity</strong>, the weakest signal it can use:</p>
+<div class="eq">$$P_\text{sens} = -174\ \text{dBm/Hz} + 10\log_{10}B + \text{NF} + \text{SNR}_\text{min}$$</div>
+<p>Each term is a design lever. Halving the bandwidth gains 3 dB, which is why slow, narrowband links reach so far. A better noise figure gains decibel for decibel. And spread-spectrum modulations such as LoRa can work with a <em>negative</em> SNR, because the receiver correlates the signal over many chips and recovers it from below the noise.</p>
+
+<div class="widget wide" id="w-sens">
+  <div class="wh"><span class="tag">Interactive</span><b>Building a receiver's sensitivity</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label for="nB">Receiver bandwidth <b id="nBv"></b></label><input id="nB" type="range" min="3" max="7.3" step="0.001" value="5.097"></div>
+      <div class="ctrl"><label for="nF">Noise figure <b id="nFv"></b></label><input id="nF" type="range" min="0.5" max="15" step="0.1" value="6"></div>
+      <div class="ctrl"><label for="nS">Required SNR <b id="nSv"></b></label><input id="nS" type="range" min="-20" max="25" step="0.5" value="10"></div>
+      <div class="ctrl"><label>Examples</label><div class="seg" id="nP"><button type="button" data-v="4.699,6,10">FSK telemetry</button><button type="button" data-v="5.097,6,-20">LoRa SF12</button><button type="button" data-v="6.3,3,12">Wi-Fi 1 Mbit/s</button></div></div>
+    </div>
+    <div>
+      <canvas id="cvSens" style="height:280px" aria-label="Level diagram: thermal noise density, plus bandwidth, plus noise figure, plus required SNR, ending at the sensitivity"></canvas>
+      <div class="readout">
+        <div class="stat"><div class="k">Noise in the bandwidth</div><div class="v" id="nN"></div></div>
+        <div class="stat"><div class="k">Receiver noise floor</div><div class="v" id="nR"></div></div>
+        <div class="stat"><div class="k">Sensitivity</div><div class="v" id="nT"></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>Reduce the bandwidth by a factor of ten. How much sensitivity do you gain, and what does it cost the link?</li>
+    <li>Compare the LoRa and FSK presets. Where does LoRa's advantage come from?</li>
+  </ol></div>
+</div>
+
+<p>The noise that reaches the antenna isn't always at 290 K. An antenna pointing at the sky sees mostly cold space, a few tens of kelvin at gigahertz frequencies, while one pointing at the warm ground sees close to 290 K, and man-made noise at lower frequencies can be far higher. The antenna's <strong>noise temperature</strong> replaces T₀ in the first term, and it's why satellite ground receivers, which look at cold sky, benefit from noise figures well below 1 dB while a terrestrial link barely notices the difference between 1 and 2 dB.</p>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">Faster data, shorter range</span></summary>
+  <div class="eb">
+    <p>A telemetry link is reconfigured from 10 kbit/s to 100 kbit/s, with the receiver bandwidth widened to match. Nothing else changes.</p>
+    <div class="choice"><p>What happens to the sensitivity, and to the range in free space?</p>
+    <ol class="opts">
+      <li>Nothing: the transmit power hasn't changed.<div class="why">The receiver now collects noise over ten times the bandwidth.</div></li>
+      <li data-correct>The noise in the receiver's bandwidth rises by 10 dB, so the sensitivity worsens by 10 dB. In free space, received power falls 6 dB per doubling of distance, so the range falls by a factor of about 3.2.<div class="why">10 log 10 = 10 dB of extra noise; free-space loss changes by 20 dB per decade of distance, so 10 dB is a factor of √10 in range.</div></li>
+      <li>The sensitivity worsens by 20 dB, and the range halves.<div class="why">Bandwidth enters as 10 log B, not 20 log B.</div></li>
+      <li>The sensitivity improves, because the data gets through faster.<div class="why">Faster data needs more bandwidth, which admits more noise.</div></li>
+    </ol>
+    <div class="solution"><p>Ten times the bandwidth admits ten times the noise power: 10 dB. The required SNR is about the same for the same modulation, so the sensitivity is 10 dB worse. Because free-space path loss grows as 20 log₁₀(d), losing 10 dB cuts the range by 10^(10/20) ≈ 3.2. Data rate, bandwidth and range trade directly against one another, which is why long-range links run slowly.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 2 FRIIS ================= -->
+<section class="sec" id="friis" data-short="Noise temperature and Friis">
+<h2>Noise temperature and the Friis cascade <a class="vjump" data-t="8:00"></a></h2>
+<p>Module 3 derived the cascade formula in noise factors. The same result is often written in <strong>noise temperatures</strong>, which are easier to add. A stage's equivalent noise temperature T<sub>e</sub> is the temperature a matched resistor at its input would need to produce the noise the stage adds: T<sub>e</sub> = (F − 1)·T₀. A 1 dB noise figure is 75 K; a 3 dB noise figure is 290 K. In those terms the cascade is</p>
+<div class="eq">$$T_\text{sys} = T_\text{ant} + T_1 + \frac{T_2}{G_1} + \frac{T_3}{G_1G_2} + \cdots$$</div>
+<p>which reads naturally: each stage's noise, referred to the antenna, divided by all the gain in front of it. A passive loss L at physical temperature T₀ has a noise temperature of (L − 1)·T₀, so a 3 dB cable in front of the receiver adds 290 K by itself, and then divides everything after it by 2.</p>
+
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>The LNA at the receiver, or at the antenna</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 200" role="img" aria-label="Top: an antenna connects through a 5 dB cable to an LNA and a receiver; system noise figure about 6.2 dB. Bottom: the LNA is moved to the antenna, before the cable; system noise figure about 1.4 dB.">
+    <defs><marker id="arF" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--ink2)"/></marker></defs>
+    <g stroke="var(--ink)" stroke-width="1.6" fill="none">
+      <path d="M40 70V40M30 26L40 40L50 26Z"/><path d="M40 160V130M30 116L40 130L50 116Z"/>
+    </g>
+    <g fill="#fff" stroke="var(--ink)" stroke-width="1.4">
+      <rect x="300" y="52" width="70" height="36" fill="#e6efd9"/><rect x="400" y="52" width="90" height="36"/>
+      <rect x="80" y="142" width="70" height="36" fill="#e6efd9"/><rect x="400" y="142" width="90" height="36"/>
+    </g>
+    <g fill="none" stroke="var(--ink2)" stroke-width="1.6"><path d="M40 70H300"/><path d="M370 70H398" marker-end="url(#arF)"/><path d="M40 160H78" marker-end="url(#arF)"/><path d="M150 160H398" marker-end="url(#arF)"/></g>
+    <path d="M90 70H270M190 160H360" stroke="#7b7b7b" stroke-width="5" opacity=".45"/>
+    <g font-size="11.5" text-anchor="middle">
+      <text x="180" y="60">5 m cable, 5 dB loss</text><text x="275" y="150">5 m cable, 5 dB loss</text>
+      <text x="335" y="74">LNA</text><text x="445" y="74">receiver</text>
+      <text x="115" y="164">LNA</text><text x="445" y="164">receiver</text>
+      <text x="335" y="104" fill="var(--muted)" font-size="10.5">NF 1 dB, 20 dB</text><text x="445" y="104" fill="var(--muted)" font-size="10.5">NF 6 dB</text>
+      <text x="565" y="66" font-weight="600" fill="var(--bad)">NF ≈ 6.2 dB</text><text x="565" y="82" fill="var(--muted)">cable first</text>
+      <text x="565" y="156" font-weight="600" fill="var(--good)">NF ≈ 1.4 dB</text><text x="565" y="172" fill="var(--muted)">LNA first</text>
+    </g>
+  </svg>
+  </div>
+</div>
+<p>The numbers come straight from the cascade. With the cable first, F = 3.16 (the cable) + (1.26 − 1)·3.16 + (3.98 − 1)·3.16/100 ≈ 4.13, a noise figure of 6.2 dB. With the LNA first, F = 1.26 + (3.16 − 1)/100 + (3.98 − 1)/(100/3.16) ≈ 1.37, or 1.4 dB. Nearly 5 dB of sensitivity, equivalent to 75 % more range, comes purely from where the LNA is placed.</p>
+
+<div class="example">
+  <span class="xk">Application</span>
+  <p>This is why GPS antennas on vehicles are almost always <strong>active antennas</strong>, with an LNA built into the antenna housing and powered through the coax by a bias tee (Module 3). The receiver can then be a metre or more away through thin, lossy cable without losing sensitivity. The same reasoning puts LNAs at the top of ground-station masts, right at the antenna feed.</p>
+</div>
+</section>
+
+<!-- ================= 3 LINK BUDGET ================= -->
+<section class="sec" id="link" data-short="Link budgets">
+<h2>Free-space path loss and link budgets <a class="vjump" data-t="13:00"></a></h2>
+<p>A transmitter radiating a power P<sub>t</sub> equally in all directions spreads it over a sphere, so at a distance d the power density is P<sub>t</sub>/(4πd²). A transmit antenna with gain G<sub>t</sub> concentrates it in the receiver's direction by that factor. The receive antenna collects the power falling on its <strong>effective aperture</strong> A<sub>e</sub>, and a fundamental antenna result (Module 9) relates aperture to gain: A<sub>e</sub> = G<sub>r</sub>λ²/(4π). Multiplying these together gives the Friis transmission equation:</p>
+<div class="eq">$$P_r = P_t\,G_t\,G_r\left(\frac{\lambda}{4\pi d}\right)^2 \qquad \text{FSPL} = 20\log_{10}\frac{4\pi d}{\lambda} = 20\log_{10}d_\text{km} + 20\log_{10}f_\text{MHz} + 32.44\ \text{dB}$$</div>
+<p>Two consequences are worth remembering. Path loss grows by 6 dB every time the distance doubles, so each extra 6 dB in the link doubles the free-space range. And path loss grows with frequency, not because higher frequencies are absorbed by free space, but because an antenna of a given gain has a smaller aperture at a shorter wavelength.</p>
+<p>A <strong>link budget</strong> adds up every gain and loss between the transmitter and the receiver and compares the result with the sensitivity. The difference is the <strong>link margin</strong>, which has to cover everything the free-space model ignores: fading from reflections off the ground, antenna pattern nulls as the vehicle turns, polarization mismatch (Module 1), and manufacturing spread. Margins of 10 to 20 dB are typical for a link that must not fail.</p>
+
+<div class="widget wide" id="w-link">
+  <div class="wh"><span class="tag">Interactive</span><b>A telemetry link budget</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label for="kP">Transmit power <b id="kPv"></b></label><input id="kP" type="range" min="0" max="37" step="0.5" value="30"></div>
+      <div class="ctrl"><label for="kF">Frequency <b id="kFv"></b></label><input id="kF" type="range" min="100" max="6000" step="5" value="915"></div>
+      <div class="ctrl"><label for="kD">Distance <b id="kDv"></b></label><input id="kD" type="range" min="-1" max="2.3" step="0.001" value="1.477"></div>
+      <div class="ctrl"><label for="kGt">Vehicle antenna gain <b id="kGtv"></b></label><input id="kGt" type="range" min="-10" max="6" step="0.5" value="-3"></div>
+      <div class="ctrl"><label for="kGr">Ground antenna gain <b id="kGrv"></b></label><input id="kGr" type="range" min="0" max="25" step="0.5" value="9"></div>
+      <div class="ctrl"><label for="kS">Receiver sensitivity <b id="kSv"></b></label><input id="kS" type="range" min="-140" max="-80" step="1" value="-108"></div>
+      <p class="small">Cable and connector losses: 1 dB at each end. Polarization loss: 3 dB (linear vehicle antenna to a circularly polarised ground antenna, Module 1).</p>
+    </div>
+    <div>
+      <canvas id="cvLink" style="height:300px" aria-label="Waterfall chart of the link budget: transmit power, losses and gains, path loss, received power, compared with the receiver sensitivity"></canvas>
+      <div class="readout">
+        <div class="stat"><div class="k">Path loss</div><div class="v" id="kL"></div></div>
+        <div class="stat"><div class="k">Received power</div><div class="v" id="kR"></div></div>
+        <div class="stat" id="kMS"><div class="k">Link margin</div><div class="v" id="kM"></div></div>
+        <div class="stat"><div class="k">Range at 15 dB margin</div><div class="v" id="kX"></div></div>
+      </div>
+      <div class="verdict" id="kVerdict"></div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>The default is a 1 W, 915 MHz link at 30 km. How much margin is left? How far can it reach with 15 dB of margin?</li>
+    <li>Change the frequency to 2.4 GHz with the same antenna gains. How much range is lost, and why?</li>
+    <li>Which is the cheapest 6 dB: four times the transmit power, or a better ground antenna?</li>
+  </ol></div>
+</div>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">Doubling the range</span></summary>
+  <div class="eb">
+    <p>A link works reliably to 20 km with its required margin, and the next mission needs 40 km.</p>
+    <div class="choice"><p>Which change achieves that on its own?</p>
+    <ol class="opts">
+      <li>Doubling the transmit power.<div class="why">Doubling the power is 3 dB; doubling the distance costs 6 dB.</div></li>
+      <li data-correct>Replacing the ground antenna with one that has 6 dB more gain, such as a small directional antenna that tracks the vehicle.<div class="why">Free-space path loss rises 6 dB per doubling of distance, so the link needs 6 dB more from somewhere.</div></li>
+      <li>Halving the receiver's noise figure from 6 dB to 3 dB.<div class="why">That's 3 dB of sensitivity, half of what's needed.</div></li>
+      <li>Moving from 915 MHz to 2.4 GHz.<div class="why">With the same antenna gains, path loss rises by about 8 dB, making it worse.</div></li>
+    </ol>
+    <div class="solution"><p>Doubling the distance adds 20 log₁₀ 2 = 6 dB of path loss. That 6 dB can come from four times the transmit power, from antenna gain at either end, from 6 dB better sensitivity (a quarter of the bandwidth, for example), or from a combination. Antenna gain at the ground station is usually the cheapest, because the ground station can be large, directional and pointed, while the vehicle's antenna has to work in every direction.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 4 NONLINEARITY ================= -->
+<section class="sec" id="nonlin" data-short="Compression, harmonics, IP3">
+<h2>Compression, harmonics and intermodulation <a class="vjump" data-t="22:00"></a></h2>
+<p>A real amplifier's output isn't exactly proportional to its input. Any smooth nonlinearity can be approximated near its operating point by a power series, and three terms explain almost everything:</p>
+<div class="eq">$$y = a_1 x + a_2 x^2 + a_3 x^3$$<div class="n">a₁ is the gain; a₂ and a₃ describe the curvature, with a₃ negative for an amplifier that compresses</div></div>
+<p>Feed in a single tone, x = A cos ωt, and expand with the identities cos² = ½(1 + cos 2ωt) and cos³ = ¾cos ωt + ¼cos 3ωt:</p>
+<ul>
+  <li>The fundamental's amplitude becomes a₁A + ¾a₃A³. With a₃ negative, the gain falls as A grows: this is <strong>compression</strong>, and P1dB is where it reaches 1 dB (Module 3).</li>
+  <li>A <strong>second harmonic</strong> at 2ω appears with amplitude ½a₂A², and a <strong>third harmonic</strong> at 3ω with ¼a₃A³. In decibels, the 2nd harmonic rises 2 dB for every 1 dB of input, the 3rd harmonic 3 dB per dB.</li>
+</ul>
+<p>Feed in two tones, at ω₁ and ω₂, and the x³ term produces products at every combination of three frequencies. Most fall far away and are easily filtered, but two land right next to the wanted signals, at 2ω₁ − ω₂ and 2ω₂ − ω₁:</p>
+
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>Where the products of a two-tone signal land</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 200" role="img" aria-label="A frequency axis. Two tones f1 and f2 close together. Third-order intermodulation products 2f1 minus f2 and 2f2 minus f1 sit just either side of them, inside the same band. Second-order products at f2 minus f1 near zero and at 2f1, f1 plus f2 and 2f2 near twice the frequency, and third harmonics near three times, are far away and can be filtered.">
+    <path d="M20 160H620" stroke="var(--ink)" stroke-width="1.4"/>
+    <rect x="120" y="40" width="160" height="120" fill="var(--good)" opacity=".1"/>
+    <g stroke-width="4">
+      <path d="M185 160V60M215 160V60" stroke="var(--c1)"/>
+      <path d="M155 160V122M245 160V122" stroke="var(--bad)"/>
+      <path d="M50 160V130" stroke="var(--c3)"/>
+      <path d="M385 160V112M400 160V108M415 160V112" stroke="var(--c3)"/>
+      <path d="M570 160V138M580 160V136M590 160V136M600 160V138" stroke="var(--c5)"/>
+    </g>
+    <g font-size="11.5" text-anchor="middle">
+      <text x="185" y="52" fill="var(--c1)">f₁</text><text x="215" y="52" fill="var(--c1)">f₂</text>
+      <text x="150" y="114" fill="var(--bad)">2f₁−f₂</text><text x="252" y="114" fill="var(--bad)">2f₂−f₁</text>
+      <text x="200" y="32" fill="var(--good)">the receiver's band</text>
+      <text x="50" y="122" fill="var(--c3)">f₂−f₁</text>
+      <text x="400" y="98" fill="var(--c3)">2f₁, f₁+f₂, 2f₂</text>
+      <text x="585" y="126" fill="var(--c5)">3f, 2f₁+f₂…</text>
+      <text x="190" y="182">third-order products: in band, can't be filtered</text>
+      <text x="490" y="182" fill="var(--muted)">second-order and harmonics: far away, filtered</text>
+      <text x="618" y="196" fill="var(--muted)" text-anchor="end">frequency → (not to scale)</text>
+    </g>
+  </svg>
+  </div>
+</div>
+<p>These third-order intermodulation products (IM3) can't be removed by filtering, because they sit among the wanted channels. Each has amplitude ¾a₃A³, so like the third harmonic it grows 3 dB for every 1 dB of input, three times faster than the wanted signal. On a plot of output against input in decibels, the fundamental is a line of slope 1 and IM3 a line of slope 3; extended, they cross at the <strong>third-order intercept point</strong>, IP3. The amplifier never actually reaches it (it compresses first), but it's a single number that predicts the IM3 level at any lower drive:</p>
+<div class="eq">$$P_\text{IM3} = 3P_\text{out} - 2\,\text{OIP3} \qquad\Longleftrightarrow\qquad \text{IM3 (dBc)} = -2(\text{OIP3} - P_\text{out})$$<div class="n">per-tone powers in dBm; OIP3 is the output-referred intercept, IIP3 = OIP3 − gain</div></div>
+<p>For a pure cubic nonlinearity, the same a₃ sets both compression and IP3, and the intercept comes out 9.6 dB above the input P1dB. For real amplifiers, OIP3 ≈ P1dB + 10 dB is a useful rule of thumb when only one is specified.</p>
+
+<div class="widget wide" id="w-ip3">
+  <div class="wh"><span class="tag">Interactive</span><b>A two-tone test: intermodulation and the intercept point</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label for="iP">Input power per tone <b id="iPv"></b></label><input id="iP" type="range" min="-60" max="0" step="0.5" value="-30"></div>
+      <div class="ctrl"><label for="iI">Amplifier IIP3 <b id="iIv"></b></label><input id="iI" type="range" min="-20" max="20" step="0.5" value="0"></div>
+      <p class="small">Amplifier gain 20 dB, noise figure 3 dB, measured in a 100 kHz bandwidth. The left plot is the classic intercept diagram; the right is what a spectrum analyzer would show at the output.</p>
+    </div>
+    <div>
+      <canvas id="cvIp3" style="height:380px" aria-label="Left: output power of the fundamental and of the third-order product against input power, with their extrapolated lines meeting at the intercept point. Right: the output spectrum with the two tones and the two intermodulation products above the noise floor."></canvas>
+      <div class="legend"><span style="--c:var(--c1)">fundamental</span><span style="--c:var(--bad)">IM3 product</span><span class="dash" style="--c:var(--muted)">noise floor</span></div>
+      <div class="readout">
+        <div class="stat"><div class="k">Output per tone</div><div class="v" id="iO"></div></div>
+        <div class="stat" id="iMS"><div class="k">IM3 relative to the tones</div><div class="v" id="iM"></div></div>
+        <div class="stat"><div class="k">Spurious-free dynamic range</div><div class="v" id="iS"></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>Raise the input by 10 dB. How much do the tones rise, and how much do the IM3 products rise?</li>
+    <li>At what input level do the IM3 products just reach the noise floor? That's the top of the spurious-free dynamic range.</li>
+    <li>Improve the IIP3 by 10 dB. How much more input can the amplifier take for the same IM3 level?</li>
+  </ol></div>
+</div>
+<p>Harmonics matter most in transmitters: a PA's 2nd and 3rd harmonics land in other services' bands, and regulations limit them to an absolute level (Module 7), which is why every PA is followed by a harmonic filter (Module 3). Intermodulation matters most in receivers, where two strong signals outside the wanted channel, but inside the front-end filter, can produce an IM3 product exactly on the wanted channel.</p>
+<p>Transmitted signals whose amplitude varies also suffer from intermodulation: the different frequency components of the modulated signal intermodulate with each other, spreading the spectrum into the neighbouring channels (spectral regrowth). The PA has to be run below its P1dB by at least the signal's <strong>peak-to-average power ratio</strong> (PAPR):</p>
+<div class="tablewrap"><table>
+  <tr><th>Modulation</th><th>Typical PAPR</th><th>Consequence</th></tr>
+  <tr><td>FSK, GFSK, LoRa</td><td>0 dB (constant envelope)</td><td>The PA can run in saturation, at its most efficient.</td></tr>
+  <tr><td>Filtered QPSK</td><td>3–4 dB</td><td>Some back-off needed.</td></tr>
+  <tr><td>16-QAM, 64-QAM</td><td>6–8 dB</td><td>Significant back-off; lower efficiency.</td></tr>
+  <tr><td>OFDM (Wi-Fi, LTE)</td><td>10–12 dB</td><td>Large back-off, often with digital predistortion.</td></tr>
+</table></div>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">Two strangers make a third</span></summary>
+  <div class="eb">
+    <p>A receiver tuned to 433.92 MHz picks up interference whenever two other transmitters are active: one at 434.42 MHz and one at 434.92 MHz. Neither is on the receiver's channel, and both are inside its front-end filter.</p>
+    <div class="choice"><p>What's happening?</p>
+    <ol class="opts">
+      <li>One of the transmitters has a harmonic at 433.92 MHz.<div class="why">Harmonics fall at multiples of a transmitter's frequency, far from 433.92 MHz.</div></li>
+      <li data-correct>The two signals produce a third-order intermodulation product in the receiver's front end at 2 × 434.42 − 434.92 = 433.92 MHz, exactly on the wanted channel.<div class="why">Equally spaced signals put their IM3 product one spacing further along: right on the receiver's channel.</div></li>
+      <li>The image frequency of the receiver's mixer.<div class="why">The image is twice the IF away, and only needs one signal.</div></li>
+      <li>Thermal noise from the two transmitters.<div class="why">The interference only appears when both are on together, the signature of intermodulation.</div></li>
+    </ol>
+    <div class="solution"><p>Two signals at f₁ and f₂ generate IM3 at 2f₁ − f₂ and 2f₂ − f₁. Here 2(434.42) − 434.92 = 433.92 MHz. Because the product grows 3 dB for every 1 dB of the interferers, a modest increase in their level makes it much worse. The defences are a higher-IIP3 front end, less gain before the most nonlinear stage, a narrower front-end filter that attenuates the interferers before they meet a nonlinearity, or an attenuator switched in when signals are strong.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 5 PHASE NOISE ================= -->
+<section class="sec" id="phase" data-short="Phase noise">
+<h2>Phase noise and reciprocal mixing <a class="vjump" data-t="32:00"></a></h2>
+<p>An ideal oscillator produces a single, infinitely narrow spectral line. A real one has noise inside its loop that randomly modulates its phase, spreading a little power into "skirts" either side of the carrier. <strong>Phase noise</strong> is the power in a 1 Hz bandwidth at a given offset from the carrier, relative to the carrier: for example, −110 dBc/Hz at 100 kHz offset. It typically falls by about 20 dB per decade of offset, down to a flat floor far from the carrier. In the time domain, the same phase noise appears as <strong>jitter</strong> on the oscillator's edges.</p>
+<p>In a receiver, the LO's phase noise causes a problem that has nothing to do with the wanted signal being weak. The mixer multiplies the whole input spectrum by the whole LO spectrum. A strong unwanted signal at an offset Δf from the wanted channel mixes with the main LO line to an IF Δf away from the wanted IF, where the IF filter rejects it. But it also mixes with the LO's phase-noise skirt at offset Δf, which lands it exactly at the wanted IF. In effect the strong signal is copied into the wanted channel with the LO's phase-noise profile, reduced by the phase noise at that offset. This is <strong>reciprocal mixing</strong>:</p>
+<div class="eq">$$N_\text{RM} = P_\text{blocker} + \mathcal{L}(\Delta f) + 10\log_{10}B$$<div class="n">𝓛(Δf): LO phase noise in dBc/Hz at the blocker's offset; B: channel bandwidth</div></div>
+
+<div class="widget wide" id="w-pn">
+  <div class="wh"><span class="tag">Interactive</span><b>Reciprocal mixing: a strong neighbour raises the noise floor</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label for="pL">LO phase noise at 100 kHz offset <b id="pLv"></b></label><input id="pL" type="range" min="-130" max="-75" step="1" value="-100"></div>
+      <div class="ctrl"><label for="pB">Blocker level <b id="pBv"></b></label><input id="pB" type="range" min="-80" max="-10" step="1" value="-35"></div>
+      <div class="ctrl"><label for="pO">Blocker offset <b id="pOv"></b></label><input id="pO" type="range" min="4.3" max="7" step="0.02" value="5.3"></div>
+      <p class="small">Channel bandwidth 100 kHz; receiver noise figure 6 dB, so its thermal noise floor is −118 dBm. Phase noise falls 20 dB per decade of offset, to a floor of −150 dBc/Hz.</p>
+    </div>
+    <div>
+      <canvas id="cvPn" style="height:280px" aria-label="Spectrum after the mixer: the wanted channel at the centre, the blocker translated by its offset, and its phase-noise skirt spreading into the wanted channel, compared with the receiver's thermal noise floor"></canvas>
+      <div class="readout">
+        <div class="stat"><div class="k">Reciprocal-mixing noise</div><div class="v" id="pN"></div></div>
+        <div class="stat"><div class="k">Thermal noise floor</div><div class="v" id="pT"></div></div>
+        <div class="stat" id="pDS"><div class="k">Desensitisation</div><div class="v" id="pD"></div></div>
+      </div>
+      <div class="verdict" id="pVerdict"></div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>Put a −35 dBm blocker at 200 kHz offset. How much sensitivity is lost? Then move it to 2 MHz.</li>
+    <li>How much better does the LO's phase noise need to be to make a −35 dBm blocker at 200 kHz harmless?</li>
+  </ol></div>
+</div>
+<p>Phase noise also matters in the transmitter, where the transmitted signal carries the oscillator's skirts with it and spreads noise into neighbouring channels, and for phase-modulated signals, where random phase errors blur the constellation (Module 10).</p>
+</section>
+
+<!-- ================= 6 DESENSE ================= -->
+<section class="sec" id="desense" data-short="Desense and dynamic range">
+<h2>Desense and dynamic range <a class="vjump" data-t="40:00"></a></h2>
+<p>A receiver is <strong>desensitised</strong> when something other than thermal noise raises its effective noise floor, so its sensitivity gets worse even though nothing is wrong with the wanted signal. The causes all appear earlier in this module:</p>
+<ul>
+  <li><strong>Blocking:</strong> a strong signal compresses the front end, reducing gain for everything including the wanted signal.</li>
+  <li><strong>Reciprocal mixing:</strong> a strong nearby signal is copied into the channel by the LO's phase noise.</li>
+  <li><strong>Intermodulation:</strong> two strong signals produce a product on the channel.</li>
+  <li><strong>Transmitter noise:</strong> a nearby transmitter's own wideband noise and spurious output falls in the receive band directly, and no receiver filter can remove it, because it's at the receive frequency.</li>
+</ul>
+<p>The range of signal levels a receiver handles, from the weakest it can detect to the strongest before distortion appears, is its <strong>dynamic range</strong>. The most useful single measure is the <strong>spurious-free dynamic range</strong>: from the noise floor up to the input level at which IM3 products just reach the noise floor. Because IM3 rises at three times the slope of the signal, it works out to two-thirds of the distance from the noise floor to the IIP3:</p>
+<div class="eq">$$\text{SFDR} = \tfrac{2}{3}\big(\text{IIP3} - N_\text{floor}\big)$$<div class="n">N<sub>floor</sub> = −174 + 10 log B + NF, referred to the input</div></div>
+
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>A receiver's dynamic range, referred to its input</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 230" role="img" aria-label="A vertical scale of input power. From the bottom: thermal noise floor, the minimum detectable signal at the required SNR above it, the input level where third-order products reach the noise floor, the input 1 dB compression point, and the input third-order intercept at the top. Brackets mark the spurious-free dynamic range and the range up to compression.">
+    <path d="M200 20V210" stroke="var(--ink)" stroke-width="1.4"/>
+    <g stroke-width="2.4">
+      <path d="M190 196H330" stroke="var(--muted)"/><path d="M190 176H330" stroke="var(--c1)"/><path d="M190 96H330" stroke="var(--bad)"/><path d="M190 60H330" stroke="var(--c2)"/><path d="M190 28H330" stroke="var(--c5)" stroke-dasharray="6 4"/>
+    </g>
+    <g fill="none" stroke="var(--ink2)" stroke-width="1.2"><path d="M360 196H368V96H360"/><path d="M480 196H488V60H480"/></g>
+    <g font-size="11.5">
+      <text x="184" y="200" text-anchor="end" fill="var(--muted)">noise floor, −118 dBm</text>
+      <text x="184" y="180" text-anchor="end" fill="var(--c1)">sensitivity (+ required SNR)</text>
+      <text x="184" y="100" text-anchor="end" fill="var(--bad)">IM3 reaches the noise floor</text>
+      <text x="184" y="64" text-anchor="end" fill="var(--c2)">input P1dB</text>
+      <text x="184" y="32" text-anchor="end" fill="var(--c5)">IIP3 (extrapolated)</text>
+      <text x="374" y="150">spurious-free</text><text x="374" y="165">dynamic range</text>
+      <text x="494" y="120">range up to</text><text x="494" y="135">compression</text>
+      <text x="200" y="224" fill="var(--muted)" text-anchor="middle">input power ↑</text>
+    </g>
+  </svg>
+  </div>
+</div>
+
+<div class="example">
+  <span class="xk">Worked example</span>
+  <p>A vehicle carries a 1 W, 915 MHz telemetry transmitter and a GPS receiver at 1575 MHz, with antennas a short distance apart and 20 dB of isolation between them. The GPS receiver's noise floor density is about −172 dBm/Hz (a 2 dB noise figure). A typical PA's own broadband noise output, far from its carrier, might be −135 dBm/Hz.</p>
+  <p>At 1575 MHz, that noise reaches the GPS input at −135 − 20 = −155 dBm/Hz, 17 dB above the GPS receiver's own floor, so its sensitivity falls by about 17 dB, enough to lose satellite lock. The GPS receiver's filters can't help, because the noise is in the GPS band. The fix is at the transmitter: a filter after the PA that attenuates 1575 MHz by at least 30 dB, which brings the noise below the GPS floor. This is the general rule for co-located radios: a transmitter's noise in a neighbour's receive band must be filtered at the transmitter.</p>
+</div>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">More gain, less range?</span></summary>
+  <div class="eb">
+    <p>A receiver's range is worse than expected near a busy site with several strong transmitters. A colleague suggests adding a second 20 dB LNA to improve sensitivity.</p>
+    <div class="choice"><p>What's the likely effect?</p>
+    <ol class="opts">
+      <li>A large improvement: more gain always helps a weak signal.<div class="why">The first LNA already sets the noise figure; more gain mainly raises the signal levels at later stages.</div></li>
+      <li data-correct>Little improvement in noise figure, and probably worse performance: the strong signals are amplified by another 20 dB, so the later stages compress and generate intermodulation sooner, raising the effective noise floor.<div class="why">The cascade shows diminishing returns on noise figure, while the input-referred IIP3 falls by the added gain.</div></li>
+      <li>No change at all.<div class="why">The added gain changes the strong-signal behaviour considerably.</div></li>
+      <li>It improves only the receiver's selectivity.<div class="why">An LNA isn't selective; it amplifies the interferers too.</div></li>
+    </ol>
+    <div class="solution"><p>Near strong transmitters, the limit is dynamic range, not thermal noise. Adding gain in front of the existing chain lowers the whole receiver's input-referred IIP3 and P1dB by up to 20 dB, so desense from intermodulation and blocking gets worse. The useful changes are the opposite: better filtering in front of the LNA (accepting a little noise figure), a higher-IIP3 LNA, or less gain.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 7 CHANNEL INTERFERENCE ================= -->
+<section class="sec" id="channels" data-short="Channel interference">
+<h2>Channel interference <a class="vjump" data-t="46:00"></a></h2>
+<p>Radios share spectrum in channels, and interference between channels comes from both ends of the link. A receiver's <strong>selectivity</strong> is its ability to reject a signal in a neighbouring channel; a transmitter's <strong>adjacent channel leakage</strong> is how much of its power spills into the neighbouring channel. Either can limit two systems operating near each other.</p>
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>A strong adjacent-channel signal next to a weak wanted signal</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 220" role="img" aria-label="A spectrum with three channels. A weak wanted signal in the centre channel. A strong interferer in the next channel, with a skirt of spectral regrowth from its transmitter spilling into the wanted channel. The receiver's channel filter shape is drawn over the wanted channel; its finite rejection lets some of the interferer through.">
+    <path d="M20 190H620" stroke="var(--ink)" stroke-width="1.4"/>
+    <g stroke="var(--line2)" stroke-dasharray="3 4"><path d="M120 30V190M280 30V190M440 30V190M600 30V190"/></g>
+    <path d="M160 190C165 120 175 110 200 110C225 110 235 120 240 190" fill="var(--c1)" opacity=".7"/>
+    <path d="M300 190C310 60 330 40 360 40C390 40 410 60 420 190" fill="var(--c2)" opacity=".7"/>
+    <path d="M300 190C280 175 250 168 200 162C170 160 140 165 120 172" fill="none" stroke="var(--c2)" stroke-width="1.6" stroke-dasharray="5 3"/>
+    <path d="M130 190C138 60 150 52 200 52C250 52 262 60 270 150C278 178 300 172 320 176C360 182 420 184 440 186" fill="none" stroke="var(--good)" stroke-width="2"/>
+    <g font-size="11.5" text-anchor="middle">
+      <text x="200" y="208">wanted channel</text><text x="360" y="208">adjacent channel</text><text x="520" y="208">next channel</text>
+      <text x="200" y="100" fill="var(--c1)">weak wanted signal</text>
+      <text x="360" y="32" fill="var(--c2)">strong interferer</text>
+      <text x="22" y="166" fill="var(--c2)" text-anchor="start">regrowth →</text>
+      <text x="230" y="44" fill="var(--good)">receiver filter</text>
+      <text x="520" y="150" fill="var(--muted)">filter's finite rejection</text><text x="520" y="165" fill="var(--muted)">lets some through</text>
+    </g>
+  </svg>
+  </div>
+</div>
+<div class="tablewrap"><table>
+  <tr><th>Interference</th><th>Mechanism</th><th>Defence</th></tr>
+  <tr><td><b>Co-channel</b></td><td>Another transmitter on the same channel</td><td>Frequency planning, directional antennas; the required carrier-to-interference ratio (C/I) is similar to the required SNR</td></tr>
+  <tr><td><b>Adjacent channel, at the receiver</b></td><td>Finite selectivity of the channel filter; reciprocal mixing</td><td>Sharper IF filtering, a cleaner LO</td></tr>
+  <tr><td><b>Adjacent channel, from the transmitter</b></td><td>Spectral regrowth from PA nonlinearity; transmitter phase noise</td><td>PA back-off, linearisation, a cleaner synthesiser; specified as ACLR (Module 10)</td></tr>
+  <tr><td><b>Image</b></td><td>A signal at the image frequency (Module 3)</td><td>RF filtering before the mixer; image-reject mixers</td></tr>
+  <tr><td><b>Intermodulation</b></td><td>Two strong signals produce a product on the channel</td><td>Front-end linearity and filtering</td></tr>
+  <tr><td><b>Spurious responses</b></td><td>Mixer products with LO harmonics (m·f<sub>LO</sub> ± n·f<sub>RF</sub>)</td><td>Frequency planning, filtering, balanced mixers</td></tr>
+</table></div>
+<p>Frequency planning is the cheapest defence. Before choosing channels, IFs and clock frequencies for a system, list every oscillator and transmitter on the vehicle and check where their harmonics, intermodulation products and mixer spurs land relative to every receiver. A spreadsheet that does this takes an afternoon; finding the problem in a flight test takes much longer.</p>
+</section>
+
+<!-- ================= 8 STABILITY ================= -->
+<section class="sec" id="stability" data-short="Amplifier stability">
+<h2>Amplifier stability <a class="vjump" data-t="51:00"></a></h2>
+<p>An amplifier is a transistor with feedback, whether or not anyone designed it in: the device's internal capacitance between output and input couples some of the output back (S₁₂ ≠ 0). Combine that with reflections from the source and load, and a loop forms. If the loop's gain reaches one with the right phase, the amplifier oscillates.</p>
+<p>The condition can be stated in the terms of Module 2. With a load Γ<sub>L</sub> on the output, the input reflection coefficient is</p>
+<div class="eq">$$\Gamma_\text{in} = S_{11} + \frac{S_{12}S_{21}\,\Gamma_L}{1 - S_{22}\,\Gamma_L}$$</div>
+<p>If |Γ<sub>in</sub>| > 1 for some passive load, the input reflects more power than arrives: it behaves as a negative resistance, a source of power. Connect a source impedance that completes the loop, and the circuit generates its own signal. An amplifier is <strong>unconditionally stable</strong> if no passive source or load can do this. The Rollett test checks it from the S-parameters alone:</p>
+<div class="eq">$$K = \frac{1 - |S_{11}|^2 - |S_{22}|^2 + |\Delta|^2}{2\,|S_{12}S_{21}|} > 1 \quad\text{and}\quad |\Delta| = |S_{11}S_{22} - S_{12}S_{21}| < 1$$</div>
+<p>A transistor with K < 1 is only <strong>conditionally stable</strong>: stable for some loads and unstable for others. The loads that cause trouble form a region on the Smith chart bounded by a <strong>stability circle</strong>, which the figure computes directly.</p>
+
+<div class="widget wide" id="w-stab">
+  <div class="wh"><span class="tag">Interactive</span><b>Which loads make a transistor oscillate?</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label>Frequency</label><div class="seg" id="tF"><button type="button" data-v="0">500 MHz</button><button type="button" data-v="1" class="on">1 GHz</button><button type="button" data-v="2">2 GHz</button></div></div>
+      <div class="ctrl"><label for="tR">Series resistor at the output <b id="tRv"></b></label><input id="tR" type="range" min="0" max="60" step="1" value="0"></div>
+      <p class="small">S-parameters typical of a small high-gain FET. The shaded region is every load for which |Γ<sub>in</sub>| > 1. A resistor in series with the output adds loss that the loop has to overcome; it costs some gain and output power.</p>
+    </div>
+    <div>
+      <canvas id="cvStab" style="height:320px" aria-label="Smith chart of load impedance with the region of loads that make the transistor's input reflection exceed one shaded"></canvas>
+      <div class="readout">
+        <div class="stat" id="tKS"><div class="k">Rollett K (transistor)</div><div class="v" id="tK"></div></div>
+        <div class="stat"><div class="k">|Δ|</div><div class="v" id="tD"></div></div>
+        <div class="stat" id="tUS"><div class="k">Unstable loads on the chart</div><div class="v" id="tU"></div></div>
+      </div>
+      <div class="verdict" id="tVerdict"></div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>At 1 GHz, which kinds of load are dangerous: low or high resistance, inductive or capacitive?</li>
+    <li>Switch to 500 MHz, far below the band the amplifier might be designed for. Is it more or less stable? Why does this matter for an amplifier only meant to work at 2 GHz?</li>
+    <li>Find the smallest series resistor that removes the unstable region at all three frequencies.</li>
+  </ol></div>
+</div>
+<p>The figure's second lesson is that stability has to hold at every frequency where the transistor has gain, not just in the operating band. Transistors have the most gain at low frequencies, which is where they're usually least stable, and an amplifier designed for 2 GHz can happily oscillate at 300 MHz through its bias network. Practical design follows from that:</p>
+<ul>
+  <li>Check K and |Δ| from near DC to well above the band, using the device's full S-parameter file.</li>
+  <li>Add loss where it costs least: a small series resistor at the gate or base, a resistor across the bias choke, or a ferrite bead on the bias line, all of which reduce low-frequency gain without much effect in band.</li>
+  <li>Decouple bias lines at both low and high frequencies (EE Module 3), so the supply can't close a loop.</li>
+  <li>Keep source and emitter connections short with several ground vias (Module 4): a little inductance there is series feedback that can make a stable transistor unstable.</li>
+</ul>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">An LNA that oscillates with no antenna</span></summary>
+  <div class="eb">
+    <p>An LNA works perfectly with its antenna connected, but on the bench with its input connector left open, the current draw rises and a spectrum analyzer on its output shows a strong signal at an unrelated frequency.</p>
+    <div class="choice"><p>Why does disconnecting the antenna make it oscillate?</p>
+    <ol class="opts">
+      <li>The open input lets noise in.<div class="why">An open input lets in less noise, if anything. The current rise and the strong tone point to oscillation.</div></li>
+      <li data-correct>An open circuit has |Γ| = 1. Somewhere in frequency, with the phase of the open seen through the input network, the source reflection falls in the amplifier's unstable region and closes the loop; the antenna's 50 Ω kept it out of that region.<div class="why">A conditionally stable amplifier is stable only for some source and load impedances; an open or a short is the most extreme.</div></li>
+      <li>The DC bias depends on the antenna.<div class="why">The antenna doesn't usually set the DC bias.</div></li>
+      <li>The open connector radiates the LNA's output back into its input.<div class="why">Possible in principle, but the main mechanism is the input impedance itself.</div></li>
+    </ol>
+    <div class="solution"><p>A conditionally stable amplifier is stable only for source and load impedances outside its stability circles. A well-matched antenna sits near the centre of the Smith chart, usually safely away from them. An open or shorted connector puts |Γ| = 1, on the edge of the chart, and the transmission line between the connector and the transistor rotates it through every phase as frequency changes, so at some frequency it lands in the unstable region. Designing for unconditional stability, or at least for stability with any passive termination, avoids this; it's also why amplifiers should be tested with their ports open and shorted as well as matched.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= DESIGN EXERCISES ================= -->
+<section class="sec" id="exercises" data-nonum data-short="Design exercises">
+<h2>Design exercises</h2>
+<p>Problems drawn from real hardware. Each takes a few steps. Enter numbers to check your reasoning as you go, or open the worked solutions and discussion. The figures above are useful for sanity-checking.</p>
+
+<div class="chal">
+  <div class="ch"><span class="cn">Exercise 1</span><span class="cd">Analysis · ●●○</span><span class="ctitle">A telemetry link budget</span></div>
+  <div class="cbody">
+    <p>A vehicle transmits 1 W (30 dBm) at 915 MHz from a 0 dBi antenna. The ground station is 30 km away, with a 6 dBi antenna. Cable and connector losses total 2 dB. The receiver's sensitivity is −110 dBm.</p>
+    <div class="check" data-ans="121.2" data-tol="1%" data-unit="dB"><p>(a) What's the free-space path loss?</p>
+      <div class="hint">FSPL = 20 log₁₀(d<sub>km</sub>) + 20 log₁₀(f<sub>MHz</sub>) + 32.44.</div>
+      <div class="solution"><p>20 log₁₀ 30 = 29.5, 20 log₁₀ 915 = 59.2, so FSPL = 29.5 + 59.2 + 32.44 = 121.2 dB.</p></div></div>
+    <div class="check" data-ans="22.8" data-tol="2%" data-unit="dB"><p>(b) What's the link margin?</p>
+      <div class="solution"><p>Received power = 30 + 0 + 6 − 2 − 121.2 = −87.2 dBm. Margin = −87.2 − (−110) = 22.8 dB.</p></div></div>
+    <details><summary>Discussion: what eats the margin</summary><p>22.8 dB looks generous, but a linear vehicle antenna to a circular ground antenna costs 3 dB, the vehicle antenna's pattern may have nulls 10 dB or more deep at some attitudes, and ground reflections can cause fades of 10 dB or more at long range. The margin is what lets the link survive those combined.</p></details>
+  </div>
+</div>
+
+<div class="chal">
+  <div class="ch"><span class="cn">Exercise 2</span><span class="cd">Analysis · ●○○</span><span class="ctitle">Receiver sensitivity</span></div>
+  <div class="cbody">
+    <p>A receiver has a 50 kHz channel bandwidth, a 6 dB noise figure, and its demodulator needs 10 dB of SNR.</p>
+    <div class="check" data-ans="-111" data-tol="1%" data-unit="dBm"><p>What's its sensitivity?</p>
+      <div class="hint">−174 + 10 log₁₀ B + NF + SNR.</div>
+      <div class="solution"><p>10 log₁₀(50 000) = 47.0, so −174 + 47 + 6 + 10 = −111 dBm.</p></div></div>
+    <details><summary>Discussion: datasheet sensitivity</summary><p>Radio datasheets quote sensitivity at a specific data rate, bandwidth and error rate, measured on their evaluation board. Comparing two radios means comparing at the same conditions, and in a real product the antenna's noise temperature and any loss in front of the radio chip subtract from the datasheet figure.</p></details>
+  </div>
+</div>
+
+<div class="chal">
+  <div class="ch"><span class="cn">Exercise 3</span><span class="cd">Analysis · ●○○</span><span class="ctitle">Intermodulation from the intercept</span></div>
+  <div class="cbody">
+    <p>An amplifier has an OIP3 of +30 dBm. In a two-tone test, each tone at its output is 0 dBm.</p>
+    <div class="check" data-ans="-60" data-tol="1%" data-unit="dBm"><p>(a) What's the level of each IM3 product?</p>
+      <div class="hint">P<sub>IM3</sub> = 3P<sub>out</sub> − 2·OIP3.</div>
+      <div class="solution"><p>3 × 0 − 2 × 30 = −60 dBm, 60 dB below the tones.</p></div></div>
+    <div class="check" data-ans="-30" data-tol="1%" data-unit="dBm"><p>(b) If both tones rise to +10 dBm, where is the IM3 product?</p>
+      <div class="solution"><p>3 × 10 − 60 = −30 dBm: the tones rose 10 dB, the products 30 dB, so they're now only 40 dB below the tones.</p></div></div>
+    <details><summary>Discussion: when the rule stops holding</summary><p>The 3:1 slope holds well below compression. Near P1dB, higher-order terms start to matter and the products grow less predictably, so IP3 should be measured at levels where the slope is verified to be 3.</p></details>
+  </div>
+</div>
+
+<div class="chal">
+  <div class="ch"><span class="cn">Exercise 4</span><span class="cd">Analysis · ●●○</span><span class="ctitle">A blocker and reciprocal mixing</span></div>
+  <div class="cbody">
+    <p>A receiver with a 100 kHz channel and a 6 dB noise figure has an LO with −120 dBc/Hz of phase noise at 1 MHz offset. A −30 dBm signal appears 1 MHz from the wanted channel.</p>
+    <div class="check" data-ans="-100" data-tol="1%" data-unit="dBm"><p>(a) How much noise does reciprocal mixing put in the channel?</p>
+      <div class="solution"><p>−30 − 120 + 10 log₁₀(100 000) = −30 − 120 + 50 = −100 dBm.</p></div></div>
+    <div class="check" data-ans="18.1" data-tol="3%" data-unit="dB"><p>(b) By how much does that desensitise the receiver?</p>
+      <div class="hint">Thermal floor = −174 + 50 + 6 = −118 dBm. Add the two noise powers in milliwatts, then compare with the thermal floor.</div>
+      <div class="solution"><p>−100 dBm and −118 dBm add to −99.9 dBm, 18.1 dB above the thermal floor. The receiver loses 18 dB of sensitivity, most of its link margin, to a signal in a different channel.</p></div></div>
+    <details><summary>Discussion: which to fix</summary><p>The phase noise would need to be about 28 dB better at 1 MHz to make this blocker negligible. Alternatively, an RF filter that attenuates the blocker before the mixer helps if the blocker is far enough away for a filter to separate; at 1 MHz from a 900 MHz signal, it usually isn't.</p></details>
+  </div>
+</div>
+</section>
+
+<!-- ================= BENCH ================= -->
+<section class="sec" id="bench" data-nonum data-short="At the bench">
+<h2>At the bench</h2>
+<div class="video" data-video="lab">
+  <div class="plan">
+    <p>Planned lab demo (≈ 25 min, filmed at the bench):</p>
+    <ol>
+      <li>A two-tone test: finding an amplifier's IP3</li>
+      <li>Measuring a radio's sensitivity with a signal generator and attenuators</li>
+      <li>Blocking: adding a strong signal near the wanted one</li>
+      <li>A link budget checked against a range test</li>
+    </ol>
+  </div>
+</div>
+<div class="lab">
+  <h3>System measurements</h3>
+  <div class="parts"><span>Two signal generators and a 2-way combiner</span><span>A spectrum analyzer</span><span>A small amplifier on an evaluation board</span><span>A radio module pair</span><span>Step attenuators</span></div>
+  <ol>
+    <li><b>Two-tone test.</b> Combine two tones 1 MHz apart and drive the amplifier. Measure the tones and IM3 products at the output at several input levels; confirm the 3:1 slope and extrapolate to OIP3. Check that the IM3 doesn't come from the analyzer (change its attenuation).</li>
+    <li><b>Sensitivity.</b> Connect one radio's transmitter to the other's receiver through enough attenuation to reach the noise floor. Increase the attenuation until packets start to fail and record the received level.</li>
+    <li><b>Blocking.</b> At 3 dB above sensitivity, add a second generator's signal at a nearby frequency through the combiner and raise it until the link fails. Repeat at several offsets.</li>
+  </ol>
+  <div class="record"><b>What you should see:</b> IM3 products rising 3 dB per dB with an intercept roughly 10 dB above P1dB; a measured sensitivity close to the datasheet value; and a blocking level that improves rapidly with offset, following the IF filter's shape and the LO's phase noise.</div>
+</div>
+</section>
+
+<!-- ================= SUMMARY ================= -->
+<section class="sec" id="summary" data-nonum data-short="Summary">
+<h2>Summary &amp; cheat sheet</h2>
+<ol class="takeaways">
+  <li>Any matched source at room temperature delivers kTB of noise: −174 dBm/Hz. Sensitivity adds bandwidth, noise figure and required SNR to that.</li>
+  <li>In the Friis cascade each stage's noise is divided by the gain before it; loss in front of the LNA counts in full. Put the LNA at the antenna.</li>
+  <li>Free-space path loss rises 6 dB per doubling of distance; a link budget compares received power with sensitivity, and the margin covers what the model ignores.</li>
+  <li>Third-order products grow 3 dB per dB and land in band; IP3 predicts them. Harmonics are filtered; IM3 can't be.</li>
+  <li>LO phase noise copies strong nearby signals into the channel (reciprocal mixing).</li>
+  <li>Desense comes from blocking, reciprocal mixing, intermodulation and other transmitters' noise; SFDR = ⅔(IIP3 − noise floor).</li>
+  <li>An amplifier is stable for all passive terminations only if K > 1 and |Δ| < 1, at every frequency where it has gain.</li>
+</ol>
+<div class="cheat">
+  <div><b>Sensitivity</b>\(-174 + 10\log B + \text{NF} + \text{SNR}\) dBm</div>
+  <div><b>Noise temperature</b>\(T_e = (F - 1)\,290\ \text{K}\)<br><span class="small">\(T = T_1 + T_2/G_1 + \cdots\)</span></div>
+  <div><b>Path loss</b>\(20\log d_\text{km} + 20\log f_\text{MHz} + 32.44\)<br><span class="small">6 dB per doubling of distance</span></div>
+  <div><b>Intermodulation</b>\(P_\text{IM3} = 3P_\text{out} - 2\,\text{OIP3}\)<br><span class="small">OIP3 ≈ P1dB + 10 dB</span></div>
+  <div><b>Reciprocal mixing</b>\(P_\text{blk} + \mathcal{L}(\Delta f) + 10\log B\)</div>
+  <div><b>Dynamic range</b>\(\text{SFDR} = \tfrac23(\text{IIP3} - N_\text{floor})\)</div>
+  <div><b>Stability</b>\(K > 1\) and \(|\Delta| < 1\), at all frequencies</div>
+</div>
+<h3>Further reading</h3>
+<ul class="small">
+  <li><em>Microwave Engineering</em> (Pozar), chapter 10: noise and nonlinear distortion, including noise temperature, the cascade, intermodulation, intercept points and dynamic range.</li>
+  <li><em>Microwave Engineering</em> (Pozar), chapter 12: microwave amplifier design, including stability circles and the K–Δ test.</li>
+  <li><em>Microwave Engineering</em> (Pozar), chapter 13: oscillators and mixers, including oscillator phase noise.</li>
+  <li><em>Microwave Engineering</em> (Pozar), chapter 14: introduction to microwave systems, including the Friis formula, link budgets, antenna noise temperature and receiver design.</li>
+</ul>
 </section>
 
 <nav class="pager"></nav>
 </main>
 </div>
 <footer class="site">Hardware Engineering Fundamentals · RF &amp; High-Speed Design</footer>
+
+<script>
+'use strict';
+const $ = s => document.querySelector(s);
+const {col, si, fmt, lin, log, ticks, axes, line, text, dot, rgba} = Plot;
+const u = d => Math.pow(10, d/10), dB = x => 10*Math.log10(x);
+const cx = {
+  add: (a, b) => [a[0] + b[0], a[1] + b[1]], sub: (a, b) => [a[0] - b[0], a[1] - b[1]],
+  mul: (a, b) => [a[0]*b[0] - a[1]*b[1], a[0]*b[1] + a[1]*b[0]],
+  div: (a, b) => { const d = b[0]*b[0] + b[1]*b[1]; return [(a[0]*b[0] + a[1]*b[1])/d, (a[1]*b[0] - a[0]*b[1])/d]; },
+  abs: a => Math.hypot(a[0], a[1]), polar: (m, deg) => [m*Math.cos(deg*Math.PI/180), m*Math.sin(deg*Math.PI/180)]
+};
+
+/* ============ 1. Sensitivity ============ */
+(() => {
+  Plot.seg('#nP', v => { const [b, nf, snr] = v.split(',').map(Number); $('#nB').value = b; $('#nF').value = nf; $('#nS').value = snr; upd(); });
+  let s = {};
+  function upd(){
+    const B = Math.pow(10, +$('#nB').value), nf = +$('#nF').value, snr = +$('#nS').value;
+    s = {B, nf, snr};
+    $('#nBv').textContent = si(B, 'Hz'); $('#nFv').textContent = fmt(nf, 2) + ' dB'; $('#nSv').textContent = fmt(snr, 3) + ' dB';
+    $('#nN').textContent = fmt(-174 + dB(B), 3) + ' dBm'; $('#nR').textContent = fmt(-174 + dB(B) + nf, 3) + ' dBm'; $('#nT').textContent = fmt(-174 + dB(B) + nf + snr, 3) + ' dBm';
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvSens'), (ctx, W, H) => {
+    const {B, nf, snr} = s; if (!B) return;
+    const P = {l: 52, r: W - 14, t: 26, b: H - 30};
+    const Y = lin(-180, -60, P.b, P.t);
+    axes(ctx, P, lin(0, 1, P.l, P.r), Y, {xt: [], yt: [-180, -150, -120, -90, -60], yl: 'dBm'});
+    const n = 5, bw = (P.r - P.l)/n;
+    const bar = (i, a, b, c, lab, val) => { const x = P.l + i*bw + bw*0.15, wd = bw*0.7; ctx.fillStyle = c; ctx.fillRect(x, Math.min(Y(a), Y(b)), wd, Math.max(1.5, Math.abs(Y(b) - Y(a)))); text(ctx, lab, x + wd/2, P.b + 12, {align: 'center', color: col.ink2}); text(ctx, val, x + wd/2, Math.min(Y(a), Y(b)) - 9, {align: 'center', color: col.ink2}); };
+    bar(0, -180, -174, col.muted, 'kT₀ (1 Hz)', '−174');
+    bar(1, -174, -174 + dB(B), col.c3, '+10 log B', '+' + fmt(dB(B), 3));
+    bar(2, -174 + dB(B), -174 + dB(B) + nf, col.c2, '+ NF', '+' + fmt(nf, 2));
+    bar(3, -174 + dB(B) + nf, -174 + dB(B) + nf + snr, snr >= 0 ? col.c1 : col.good, snr >= 0 ? '+ SNR' : '− SNR', (snr >= 0 ? '+' : '') + fmt(snr, 3));
+    const sens = -174 + dB(B) + nf + snr;
+    bar(4, -180, sens, col.ink2, 'sensitivity', fmt(sens, 4));
+    for (let i = 0; i < 4; i++){ const lv = [-174, -174 + dB(B), -174 + dB(B) + nf, sens][i]; line(ctx, [[P.l + i*bw + bw*0.85, Y(lv)], [P.l + (i + 1)*bw + bw*0.15, Y(lv)]], col.line2, 1, [3, 3]); }
+  });
+  ['#nB', '#nF', '#nS'].forEach(id => $(id).addEventListener('input', upd));
+  upd();
+})();
+
+/* ============ 2. Link budget ============ */
+(() => {
+  const LT = 1, LR = 1, POL = 3;
+  const fspl = (dkm, fm) => 20*Math.log10(dkm) + 20*Math.log10(fm) + 32.44;
+  let s = {};
+  function upd(){
+    const pt = +$('#kP').value, fm = +$('#kF').value, d = Math.pow(10, +$('#kD').value), gt = +$('#kGt').value, gr = +$('#kGr').value, sens = +$('#kS').value;
+    const L = fspl(d, fm), pr = pt - LT + gt - L - POL + gr - LR, m = pr - sens;
+    // range at 15 dB margin: solve for the distance where the margin equals 15 dB
+    const rng = Math.pow(10, (pt - LT + gt - POL + gr - LR - sens - 15 - 20*Math.log10(fm) - 32.44)/20);
+    s = {pt, gt, gr, L, pr, sens};
+    $('#kPv').textContent = fmt(pt, 3) + ' dBm (' + si(u(pt)/1000, 'W') + ')'; $('#kFv').textContent = si(fm*1e6, 'Hz'); $('#kDv').textContent = si(d*1000, 'm');
+    $('#kGtv').textContent = fmt(gt, 2) + ' dBi'; $('#kGrv').textContent = fmt(gr, 3) + ' dBi'; $('#kSv').textContent = sens + ' dBm';
+    $('#kL').textContent = fmt(L, 4) + ' dB'; $('#kR').textContent = fmt(pr, 4) + ' dBm'; $('#kM').textContent = fmt(m, 3) + ' dB'; $('#kX').textContent = si(rng*1000, 'm');
+    $('#kMS').className = 'stat ' + (m < 0 ? 'bad' : m < 10 ? 'warn' : '');
+    const v = $('#kVerdict');
+    if (m < 0) Plot.verdict(v, 'bad', `<b>No link.</b> The received signal is ${fmt(-m, 3)} dB below the sensitivity.`);
+    else if (m < 10) Plot.verdict(v, 'warn', `<b>Thin margin.</b> ${fmt(m, 3)} dB works in free space on paper, but a fade or an antenna null would break it.`);
+    else Plot.verdict(v, 'ok', `<b>Healthy margin.</b> ${fmt(m, 3)} dB above sensitivity, enough to ride out typical fades and pattern nulls.`);
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvLink'), (ctx, W, H) => {
+    const {pt, gt, gr, L, pr, sens} = s; if (pt === undefined) return;
+    const P = {l: 52, r: W - 14, t: 22, b: H - 32};
+    const lo = Math.min(sens, pr) - 15, Y = lin(lo, Math.max(pt, 0) + 12, P.b, P.t);
+    axes(ctx, P, lin(0, 1, P.l, P.r), Y, {xt: [], yt: ticks(lo, Math.max(pt, 0) + 12, 5), yl: 'dBm'});
+    const nm = W < 520 ? ['TX', 'loss', 'Gt', 'path', 'pol.', 'Gr', 'loss', 'RX'] : ['TX', 'cable', 'TX ant.', 'path', 'polar.', 'RX ant.', 'cable', 'RX'];
+    const steps = [[nm[0], pt, col.c1], [nm[1], -LT, col.bad], [nm[2], gt, gt >= 0 ? col.good : col.bad], [nm[3], -L, col.bad], [nm[4], -POL, col.bad], [nm[5], gr, col.good], [nm[6], -LR, col.bad], [nm[7], pr, col.c1]];
+    const n = steps.length, bw = (P.r - P.l)/n; let lvl = 0;
+    steps.forEach(([lab, d, c], i) => {
+      const x = P.l + i*bw + bw*0.12, wd = bw*0.76;
+      let a, b, val;
+      if (i === 0){ a = lo; b = d; lvl = d; val = fmt(d, 3); }
+      else if (i === n - 1){ a = lo; b = d; val = fmt(d, 3); }
+      else { a = lvl; b = lvl + d; lvl = b; val = (d >= 0 ? '+' : '') + fmt(d, 3); }
+      ctx.fillStyle = c; ctx.fillRect(x, Math.min(Y(a), Y(b)), wd, Math.max(1.5, Math.abs(Y(b) - Y(a))));
+      text(ctx, lab, x + wd/2, P.b + 12, {align: 'center', color: col.ink2});
+      text(ctx, val, x + wd/2, Math.min(Y(a), Y(b)) - 9, {align: 'center', color: col.ink2});
+    });
+    line(ctx, [[P.l, Y(sens)], [P.r, Y(sens)]], col.bad, 1.4, [5, 4]);
+    text(ctx, 'sensitivity', P.l + 1.5*(P.r - P.l)/8, Y(sens) - 9, {align: 'center', color: col.bad});
+  });
+  ['#kP', '#kF', '#kD', '#kGt', '#kGr', '#kS'].forEach(id => $(id).addEventListener('input', upd));
+  upd();
+})();
+
+/* ============ 3. Two-tone IP3 ============ */
+(() => {
+  const G = 20, NF = 3, B = 1e5, NFL = -174 + 10*Math.log10(B) + NF;
+  let s = {};
+  function upd(){
+    const pin = +$('#iP').value, iip3 = +$('#iI').value, oip3 = iip3 + G, pout = pin + G, im = 3*pout - 2*oip3;
+    const sfdr = 2/3*(iip3 - NFL);
+    s = {pin, iip3, oip3, pout, im};
+    $('#iPv').textContent = pin + ' dBm'; $('#iIv').textContent = fmt(iip3, 3) + ' dBm';
+    $('#iO').textContent = fmt(pout, 3) + ' dBm'; $('#iM').textContent = fmt(im - pout, 3) + ' dBc';
+    $('#iMS').className = 'stat ' + (im > NFL + G ? 'warn' : '');
+    $('#iS').textContent = fmt(sfdr, 3) + ' dB';
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvIp3'), (ctx, W, H) => {
+    const {pin, iip3, oip3, pout, im} = s; if (pin === undefined) return;
+    const half = W < 560 ? 0 : 1;
+    const A = half ? {l: 52, r: W*0.5 - 16, t: 14, b: H - 40} : {l: 52, r: W - 14, t: 14, b: H*0.5 - 26};
+    const B2 = half ? {l: W*0.5 + 30, r: W - 14, t: 14, b: H - 40} : {l: 52, r: W - 14, t: H*0.5 + 14, b: H - 38};
+    const X = lin(-70, 30, A.l, A.r), Y = lin(-130, 60, A.b, A.t);
+    axes(ctx, A, X, Y, {xt: [-60, -30, 0, 30], yt: [-120, -60, 0, 60], xl: 'input per tone (dBm)', yl: 'output (dBm)', xgrid: true});
+    Plot.clip(ctx, A);
+    const nOut = NFL + G;
+    line(ctx, [[A.l, Y(nOut)], [A.r, Y(nOut)]], col.muted, 1, [4, 4]);
+    line(ctx, [[X(-70), Y(-70 + G)], [X(30), Y(30 + G)]], col.c1, 2);
+    line(ctx, [[X(-70), Y(3*(-70 + G) - 2*oip3)], [X(30), Y(3*(30 + G) - 2*oip3)]], col.bad, 2);
+    dot(ctx, X(iip3), Y(oip3), 5, col.ink);
+    line(ctx, [[X(pin), A.t], [X(pin), A.b]], col.ink2, 1, [3, 3]);
+    dot(ctx, X(pin), Y(pout), 4, col.c1); dot(ctx, X(pin), Y(im), 4, col.bad);
+    ctx.restore();
+    text(ctx, 'IP3', X(iip3) - 6, Y(oip3) - 10, {align: 'right', color: col.ink, bold: true});
+    // output spectrum: two tones 1 MHz apart, IM3 at ±1 MHz beyond
+    const Xs = lin(-3, 3, B2.l, B2.r), Ys = lin(-130, 30, B2.b, B2.t);
+    axes(ctx, B2, Xs, Ys, {xt: [-3, -1.5, 0, 1.5, 3], yt: [-120, -80, -40, 0], xl: 'offset (MHz)', yl: 'dBm', xf: v => (v > 0 ? '+' : '') + v});
+    line(ctx, [[B2.l, Ys(nOut)], [B2.r, Ys(nOut)]], col.muted, 1, [4, 4]);
+    [[-0.5, pout, col.c1], [0.5, pout, col.c1], [-1.5, im, col.bad], [1.5, im, col.bad]].forEach(([f, p, c]) => { const top = Math.max(p, nOut); if (p > nOut) line(ctx, [[Xs(f), Ys(nOut)], [Xs(f), Ys(Math.min(top, 30))]], c, 3); });
+  });
+  ['#iP', '#iI'].forEach(id => $(id).addEventListener('input', upd));
+  upd();
+})();
+
+/* ============ 4. Reciprocal mixing ============ */
+(() => {
+  const B = 1e5, NF = 6, TH = -174 + 50 + NF;
+  const L = (l100, df) => Math.max(-150, l100 - 20*Math.log10(Math.max(df, 1e3)/1e5));
+  let s = {};
+  function upd(){
+    const l100 = +$('#pL').value, pb = +$('#pB').value, off = Math.pow(10, +$('#pO').value);
+    const nrm = pb + L(l100, off) + 50, tot = 10*Math.log10(u(nrm) + u(TH)), des = tot - TH;
+    s = {l100, pb, off, nrm};
+    $('#pLv').textContent = l100 + ' dBc/Hz'; $('#pBv').textContent = pb + ' dBm'; $('#pOv').textContent = si(off, 'Hz');
+    $('#pN').textContent = fmt(nrm, 4) + ' dBm'; $('#pT').textContent = TH + ' dBm'; $('#pD').textContent = fmt(des, 3) + ' dB';
+    $('#pDS').className = 'stat ' + (des > 6 ? 'bad' : des > 1 ? 'warn' : '');
+    const v = $('#pVerdict');
+    if (des <= 1) Plot.verdict(v, 'ok', `<b>Harmless.</b> The blocker's phase-noise copy is below the thermal floor; sensitivity is almost unaffected.`);
+    else if (des <= 6) Plot.verdict(v, 'warn', `<b>Some desense.</b> The receiver loses ${fmt(des, 2)} dB of sensitivity while the blocker is present.`);
+    else Plot.verdict(v, 'bad', `<b>Badly desensitised.</b> The blocker's phase-noise skirt puts ${fmt(nrm, 4)} dBm into the channel, ${fmt(des, 2)} dB above the thermal floor, though the blocker itself is ${si(off, 'Hz')} away.`);
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvPn'), (ctx, W, H) => {
+    const {l100, pb, off} = s; if (l100 === undefined) return;
+    const P = {l: 52, r: W - 26, t: 14, b: H - 40}, span = Math.max(3*off, 6e5);
+    const X = lin(-span*0.35, span, P.l, P.r), Y = lin(-140, -10, P.b, P.t);
+    axes(ctx, P, X, Y, {xt: ticks(-span*0.35, span, 5), yt: [-130, -100, -70, -40, -10], xl: 'offset from the wanted channel', yl: 'dBm in 100 kHz', xf: v => si(v, 'Hz').replace(' ', ''), xgrid: true});
+    Plot.clip(ctx, P);
+    ctx.fillStyle = rgba(col.good, .14); ctx.fillRect(X(-B/2), P.t, X(B/2) - X(-B/2), P.b - P.t);
+    line(ctx, [[P.l, Y(TH)], [P.r, Y(TH)]], col.muted, 1.2, [4, 4]);
+    const pts = []; for (let i = 0; i <= 500; i++){ const f = -span*0.35 + 1.35*span*i/500, d = Math.abs(f - off); pts.push([X(f), Y(d < B/2 ? pb : pb + L(l100, d) + 50)]); }
+    line(ctx, pts, col.c2, 2);
+    ctx.restore();
+    text(ctx, 'wanted channel', X(0), P.t + 10, {align: 'center', color: col.good});
+    text(ctx, 'blocker', X(off), Math.max(P.t + 10, Y(pb) - 10), {align: 'center', color: col.c2});
+    text(ctx, 'thermal floor', P.r - 4, Y(TH) + 10, {align: 'right', color: col.muted});
+  });
+  ['#pL', '#pB', '#pO'].forEach(id => $(id).addEventListener('input', upd));
+  upd();
+})();
+
+/* ============ 5. Stability region ============ */
+(() => {
+  const SP = [
+    {s11: cx.polar(0.95, -25), s21: cx.polar(8, 155), s12: cx.polar(0.03, 70), s22: cx.polar(0.65, -15)},
+    {s11: cx.polar(0.9, -50), s21: cx.polar(7, 135), s12: cx.polar(0.05, 55), s22: cx.polar(0.6, -30)},
+    {s11: cx.polar(0.8, -95), s21: cx.polar(5, 105), s12: cx.polar(0.07, 35), s22: cx.polar(0.5, -55)}
+  ];
+  const fsel = Plot.seg('#tF', upd);
+  let s = {}, img = null, key = '';
+  const gin = (sp, gl) => cx.add(sp.s11, cx.div(cx.mul(cx.mul(sp.s12, sp.s21), gl), cx.sub([1, 0], cx.mul(sp.s22, gl))));
+  const zg = g => cx.mul([50, 0], cx.div(cx.add([1, 0], g), cx.sub([1, 0], g)));
+  const gz = z => cx.div(cx.sub(z, [50, 0]), cx.add(z, [50, 0]));
+  const unstable = (sp, g, r) => cx.abs(gin(sp, r > 0 ? gz(cx.add(zg(g), [r, 0])) : g)) > 1;
+  function scan(sp, r){ let n = 0, t = 0; for (let j = -40; j <= 40; j++) for (let i = -40; i <= 40; i++){ const g = [i/40, j/40]; if (i*i + j*j >= 1600) continue; t++; if (unstable(sp, g, r)) n++; } return n/t; }
+  function upd(){
+    const sp = SP[+fsel()], r = +$('#tR').value;
+    const d = cx.sub(cx.mul(sp.s11, sp.s22), cx.mul(sp.s12, sp.s21)), md = cx.abs(d);
+    const K = (1 - cx.abs(sp.s11)**2 - cx.abs(sp.s22)**2 + md*md)/(2*cx.abs(cx.mul(sp.s12, sp.s21)));
+    const fr = scan(sp, r), all = [0, 1, 2].map(i => scan(SP[i], r));
+    s = {sp, r};
+    $('#tRv').textContent = r + ' Ω';
+    $('#tK').textContent = fmt(K, 3); $('#tD').textContent = fmt(md, 3); $('#tU').textContent = fr > 0 ? fmt(fr*100, 2) + ' % of the chart' : 'none';
+    $('#tKS').className = 'stat ' + (K < 1 ? 'warn' : ''); $('#tUS').className = 'stat ' + (fr > 0 ? 'bad' : '');
+    const v = $('#tVerdict');
+    if (fr > 0) Plot.verdict(v, 'bad', `<b>Potentially unstable.</b> Any load in the shaded region makes |Γ<sub>in</sub>| exceed 1, and the amplifier can oscillate if the source completes the loop.`);
+    else if (all.some(x => x > 0)) Plot.verdict(v, 'warn', `<b>Stable at this frequency only.</b> No passive load causes trouble here, but the amplifier is still unstable at ${['500 MHz', '1 GHz', '2 GHz'].filter((_, i) => all[i] > 0).join(' and ')}.`);
+    else Plot.verdict(v, 'ok', `<b>Stable for every passive load</b> at all three frequencies, with ${r} Ω in series with the output, at the cost of some gain and output power.`);
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvStab'), (ctx, W, H) => {
+    const {sp, r} = s; if (!sp) return;
+    const R = Math.min(W, H)/2 - 24, cxp = W/2, cyp = H/2 + 4;
+    ctx.save(); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(cxp, cyp, R, 0, 2*Math.PI); ctx.fill(); ctx.restore();
+    const k = [W, H, fsel(), r].join(','), dpr = window.devicePixelRatio || 1, n = Math.ceil(2*R), N = Math.floor(n*dpr);
+    if (k !== key){
+      const id = ctx.createImageData(N, N);
+      for (let j = 0; j < N; j++) for (let i = 0; i < N; i++){
+        const gx = i/N*2 - 1, gy = 1 - j/N*2, p = 4*(j*N + i);
+        if (gx*gx + gy*gy >= 1) continue;
+        if (unstable(sp, [gx, gy], r)){ id.data[p] = 205; id.data[p + 1] = 50; id.data[p + 2] = 40; id.data[p + 3] = 120; }
+      }
+      img = document.createElement('canvas'); img.width = N; img.height = N; img.getContext('2d').putImageData(id, 0, 0); key = k;
+    }
+    ctx.drawImage(img, cxp - n/2, cyp - n/2, n, n);
+    ctx.save(); ctx.beginPath(); ctx.arc(cxp, cyp, R, 0, 2*Math.PI); ctx.clip();
+    ctx.strokeStyle = col.line; ctx.lineWidth = 1;
+    [0.2, 0.5, 1, 2, 5].forEach(rr => { ctx.beginPath(); ctx.arc(cxp + R*rr/(1 + rr), cyp, R/(1 + rr), 0, 2*Math.PI); ctx.stroke(); });
+    [0.2, 0.5, 1, 2, 5].forEach(x => [1, -1].forEach(sg => { ctx.beginPath(); ctx.arc(cxp + R, cyp - sg*R/x, R/x, 0, 2*Math.PI); ctx.stroke(); }));
+    ctx.beginPath(); ctx.moveTo(cxp - R, cyp); ctx.lineTo(cxp + R, cyp); ctx.stroke();
+    ctx.restore();
+    ctx.save(); ctx.strokeStyle = col.ink2; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(cxp, cyp, R, 0, 2*Math.PI); ctx.stroke(); ctx.restore();
+    [0.2, 0.5, 1, 2, 5].forEach(rr => text(ctx, fmt(rr*50, 3), cxp + R*(rr - 1)/(rr + 1), cyp + 9, {align: 'center', color: col.muted}));
+    text(ctx, 'inductive loads', cxp, cyp - R - 9, {align: 'center', color: col.muted});
+    text(ctx, 'capacitive loads', cxp, cyp + R + 11, {align: 'center', color: col.muted});
+    dot(ctx, cxp, cyp, 4, col.ink); text(ctx, '50 Ω', cxp + 6, cyp - 9, {color: col.ink});
+  });
+  $('#tR').addEventListener('input', upd);
+  upd();
+})();
+</script>
 </body>
 </html>

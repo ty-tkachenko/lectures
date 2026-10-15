@@ -39,8 +39,8 @@ window.COURSE = {
         {id:'rf02', n:2, status:'ready',   path:'RF/02_Lines_and_Matching/',       title:'Transmission Lines & Matching', blurb:'Microstrip, the Smith chart, matching networks and S-parameters.'},
         {id:'rf03', n:3, status:'ready',   path:'RF/03_Components/',               title:'RF Components & Circuit Blocks', blurb:'LNAs, PAs, filters, mixers, switches and couplers.'},
         {id:'rf04', n:4, status:'ready',   path:'RF/04_PCB_Layout/',               title:'PCB Design & Layout Essentials', blurb:'Stackups, controlled impedance, vias and return paths.'},
-        {id:'rf05', n:5, status:'planned', path:'RF/05_Measurements/',             title:'Measurements & Lab Tools', blurb:'VNAs, calibration, spectrum analyzers and power meters.'},
-        {id:'rf06', n:6, status:'planned', path:'RF/06_System_Performance/',       title:'System-Level Performance', blurb:'Noise figure, link budgets, compression and intermodulation.'},
+        {id:'rf05', n:5, status:'ready',   path:'RF/05_Measurements/',             title:'Measurements & Lab Tools', blurb:'VNAs, calibration, spectrum analyzers and power meters.'},
+        {id:'rf06', n:6, status:'ready',   path:'RF/06_System_Performance/',       title:'System-Level Performance', blurb:'Noise figure, link budgets, compression and intermodulation.'},
         {id:'rf07', n:7, status:'planned', path:'RF/07_EMC_and_Regulatory/',       title:'EMI/EMC, Integrity & Regulations', blurb:'Crosstalk, shielding, power integrity and regulatory limits.'},
         {id:'rf08', n:8, status:'planned', path:'RF/08_Simulation_and_Verification/', title:'Simulation & Verification', blurb:'EM simulation, simulation vs measurement and layout review.'},
         {id:'rf09', n:9, status:'planned', path:'RF/09_Antennas/',                 title:'Antennas', blurb:'Patterns, gain, polarization, and antennas on a rocket.'},
@@ -63,5 +63,7 @@ window.COURSE.videos = {
   rf01: {lecture: '', lab: ''},
   rf02: {lecture: '', lab: ''},
   rf03: {lecture: '', lab: ''},
-  rf04: {lecture: '', lab: ''}
+  rf04: {lecture: '', lab: ''},
+  rf05: {lecture: '', lab: ''},
+  rf06: {lecture: '', lab: ''}
 };
