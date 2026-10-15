@@ -77,31 +77,31 @@
 <div class="widget">
   <div class="wh"><span class="tag">Diagram</span><b>Inside a two-port VNA, measuring in the forward direction</b></div>
   <div class="wb">
-  <svg viewBox="0 0 640 260" role="img" aria-label="A swept source feeds port 1 through a directional coupler. Part of the source signal is tapped to a reference receiver that measures the incident wave a1. The coupler sends the wave reflected from the device to receiver A, which measures b1. The wave transmitted through the device leaves port 2 and goes to receiver B, which measures b2. The instrument divides b1 and b2 by a1 to get S11 and S21.">
+  <svg viewBox="0 0 640 290" role="img" aria-label="Inside the VNA, a swept source feeds port 1 through a directional coupler. Part of the source signal is tapped to a reference receiver that measures the incident wave a1. The coupler sends the wave reflected from the device to receiver A, which measures b1. The device sits outside the instrument between port 1 and port 2; the wave transmitted through it enters port 2 and goes to receiver B, which measures b2. The instrument divides b1 and b2 by a1 to get S11 and S21.">
     <defs>
       <marker id="arV1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--c1)"/></marker>
       <marker id="arV2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--c2)"/></marker>
       <marker id="arV3" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--good)"/></marker>
     </defs>
-    <rect x="10" y="10" width="620" height="200" rx="6" fill="#f4f2ec" stroke="var(--line2)"/>
+    <rect x="10" y="10" width="620" height="168" rx="6" fill="#f4f2ec" stroke="var(--ink2)" stroke-width="1.2"/>
     <g fill="#fff" stroke="var(--ink)" stroke-width="1.4">
       <rect x="22" y="104" width="86" height="40"/>
       <rect x="120" y="30" width="96" height="40"/><rect x="262" y="30" width="96" height="40"/><rect x="474" y="30" width="96" height="40"/>
       <rect x="236" y="108" width="86" height="32"/>
     </g>
-    <rect x="404" y="100" width="70" height="48" fill="#e6efd9" stroke="var(--ink)" stroke-width="1.4"/>
+    <rect x="400" y="206" width="80" height="44" fill="#e6efd9" stroke="var(--ink)" stroke-width="1.4"/>
     <g fill="none" stroke="var(--ink)" stroke-width="1.6">
-      <path d="M108 124H236M322 124H379M389 124H404"/>
+      <path d="M108 124H236M322 124H384V172"/>
       <path d="M168 124V70"/><path d="M310 108V70"/>
-      <path d="M474 124H491M501 124H522V70"/>
+      <path d="M496 172V124H522V70"/>
+      <path d="M384 184V228H400M480 228H496V184"/>
     </g>
     <circle cx="168" cy="124" r="3" fill="var(--ink)"/>
-    <g fill="#fff" stroke="var(--ink)" stroke-width="1.6"><circle cx="384" cy="124" r="5"/><circle cx="496" cy="124" r="5"/></g>
-    <path d="M384 90V160M496 90V160" stroke="var(--c5)" stroke-width="1.2" stroke-dasharray="4 3"/>
+    <g fill="#fff" stroke="var(--c5)" stroke-width="2"><circle cx="384" cy="178" r="6"/><circle cx="496" cy="178" r="6"/></g>
     <g fill="none" stroke-width="1.8">
       <path d="M120 138H220" stroke="var(--c1)" marker-end="url(#arV1)"/>
-      <path d="M380 100H330" stroke="var(--c2)" marker-end="url(#arV2)"/>
-      <path d="M500 140H560" stroke="var(--good)" marker-end="url(#arV3)"/>
+      <path d="M370 112H334" stroke="var(--c2)" marker-end="url(#arV2)"/>
+      <path d="M510 164V134" stroke="var(--good)" marker-end="url(#arV3)"/>
     </g>
     <g font-size="11.5" text-anchor="middle">
       <text x="65" y="121">swept</text><text x="65" y="135">source</text>
@@ -109,11 +109,12 @@
       <text x="310" y="47">receiver A</text><text x="310" y="62" fill="var(--c2)">reflected b₁</text>
       <text x="522" y="47">receiver B</text><text x="522" y="62" fill="var(--good)">transmitted b₂</text>
       <text x="279" y="128">coupler</text>
-      <text x="439" y="128">DUT</text>
-      <text x="384" y="176">port 1</text><text x="496" y="176">port 2</text>
-      <text x="440" y="196" fill="var(--c5)">dashed: calibration (reference) planes</text>
-      <text x="320" y="234">S₁₁ = b₁ / a₁ &#160;·&#160; S₂₁ = b₂ / a₁ &#160;&#160;(magnitude and phase)</text>
-      <text x="320" y="252" fill="var(--muted)">a switch then drives port 2 instead, for S₂₂ and S₁₂</text>
+      <text x="440" y="232">DUT</text>
+      <text x="372" y="198" text-anchor="end" fill="var(--c5)">port 1</text><text x="508" y="198" text-anchor="start" fill="var(--c5)">port 2</text>
+      <text x="580" y="165" fill="var(--muted)" font-size="10.5">VNA front panel</text>
+      <text x="200" y="210" fill="var(--c5)">the ports are the calibration</text><text x="200" y="225" fill="var(--c5)">(reference) planes, until a</text><text x="200" y="240" fill="var(--c5)">calibration moves them</text>
+      <text x="320" y="268">S₁₁ = b₁ / a₁ &#160;·&#160; S₂₁ = b₂ / a₁ &#160;&#160;(magnitude and phase)</text>
+      <text x="320" y="285" fill="var(--muted)">a switch then drives port 2 instead, for S₂₂ and S₁₂</text>
     </g>
   </svg>
   </div>
