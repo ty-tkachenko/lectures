@@ -34,11 +34,12 @@
       <li>Ground planes, stitching vias and via fences.</li>
       <li>Component parasitics and self-resonance in layout, and routing differential RF pairs.</li>
       <li>The thermal path from a PA's junction to ambient, and how to design it.</li>
+      <li>Reviewing a complete RF layout, and tracing bench symptoms back to layout causes.</li>
     </ul>
   </div>
   <div class="video" data-video="lecture" id="lecture">
     <div class="plan">
-      <p>Planned walkthrough of this page (≈ 45 min):</p>
+      <p>Planned walkthrough of this page (≈ 55 min):</p>
       <ol>
         <li data-t="0:00">Stackup selection</li>
         <li data-t="6:00">Board materials</li>
@@ -50,6 +51,7 @@
         <li data-t="32:00">Parasitics and self-resonance</li>
         <li data-t="36:00">Differential RF pairs</li>
         <li data-t="39:00">PA thermal design</li>
+        <li data-t="44:00">Reviewing an RF layout</li>
       </ol>
     </div>
   </div>
@@ -100,6 +102,80 @@
 <p>The stackup in the figure is the common starting point. Layer 2 is a solid, unbroken ground plane that every top-layer RF trace references. Power and low-speed signals go on the inner and bottom layers, where they can't interfere with the RF routing. The thin prepreg (the bonding layer between copper layers) under layer 1 keeps RF traces narrow; the fab can usually offer several prepreg thicknesses, and the exact value goes into the impedance calculation.</p>
 <p>Two practical points. First, keep the stackup symmetric about the centre: copper and dielectric thicknesses mirrored top to bottom, so the board doesn't warp in reflow. Second, ask the fab for its standard controlled-impedance stackup before designing, rather than inventing one: their dielectric thicknesses and εr values are the ones the boards will actually have.</p>
 
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>The same 50 Ω microstrip on two stackups, drawn to scale</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 230" role="img" aria-label="Left: a 50 ohm microstrip on a 1.6 millimetre two-layer board is about 3.2 millimetres wide, with fields spreading far to either side. Right: on a 0.2 millimetre dielectric to the layer 2 ground, the same impedance needs a trace about 0.4 millimetres wide, and the field is confined to a narrow region under the trace.">
+    <rect x="20" y="70" width="280" height="96" fill="#e6efd9"/>
+    <rect x="20" y="166" width="280" height="5" fill="#c8893a"/>
+    <rect x="64" y="64" width="192" height="6" fill="#c8893a"/>
+    <g fill="none" stroke="var(--c1)" stroke-width="1.1">
+      <path d="M100 70V166M130 70V166M160 70V166M190 70V166M220 70V166"/>
+      <path d="M72 67C48 72 34 116 30 166M248 67C272 72 286 116 290 166"/>
+      <path d="M78 70C66 98 60 136 58 166M242 70C254 98 260 136 262 166"/>
+      <path d="M70 64C40 52 24 70 22 92M250 64C280 52 296 70 298 92"/>
+    </g>
+    <rect x="340" y="70" width="280" height="12" fill="#e6efd9"/>
+    <rect x="340" y="82" width="280" height="5" fill="#c8893a"/>
+    <rect x="340" y="87" width="280" height="79" fill="#dde8cc"/>
+    <rect x="340" y="166" width="280" height="5" fill="#c8893a" opacity=".5"/>
+    <rect x="469" y="64" width="23" height="6" fill="#c8893a"/>
+    <g fill="none" stroke="var(--c1)" stroke-width="1.1">
+      <path d="M474 70V82M480 70V82M486 70V82"/>
+      <path d="M470 68C462 70 459 76 458 82M491 68C499 70 502 76 503 82"/>
+    </g>
+    <g fill="#9aa3ad"><rect x="146" y="40" width="30" height="14"/><rect x="466" y="40" width="30" height="14"/></g>
+    <g font-size="11" text-anchor="middle" fill="var(--muted)"><text x="161" y="34">0402 pad</text><text x="481" y="34">0402 pad</text></g>
+    <g font-size="11.5" text-anchor="middle">
+      <text x="160" y="16" font-weight="600">2-layer, 1.6 mm to ground</text>
+      <text x="160" y="194">w ≈ 3.2 mm, fields spread over ±5 mm</text>
+      <text x="480" y="16" font-weight="600">4-layer, 0.2 mm to ground (L2)</text>
+      <text x="480" y="194">w ≈ 0.40 mm, fields within about ±0.6 mm</text>
+      <text x="480" y="130" fill="var(--muted)">rest of the board: core, L3, prepreg, L4</text>
+      <text x="320" y="218" fill="var(--muted)">FR-4, εr = 4.2; horizontal and vertical scales equal (60 px per mm)</text>
+    </g>
+  </svg>
+  </div>
+</div>
+
+<div class="widget wide" id="w-ms">
+  <div class="wh"><span class="tag">Interactive</span><b>Dielectric height, trace width and crosstalk</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label for="mH">Height to the reference plane <b id="mHv"></b></label><input id="mH" type="range" min="0.08" max="1.6" step="0.01" value="0.2"></div>
+      <div class="ctrl"><label for="mS">Edge-to-edge gap to a neighbouring trace <b id="mSv"></b></label><input id="mS" type="range" min="0.1" max="3" step="0.05" value="0.5"></div>
+      <div class="ctrl"><label for="mE">Dielectric constant εr <b id="mEv"></b></label><input id="mE" type="range" min="2.2" max="4.6" step="0.05" value="4.2"></div>
+      <p class="small">Both traces are 50 Ω microstrip (Pozar's synthesis formulas). Crosstalk uses the common estimate that coupling falls as 1/(1 + (D/h)²), where D is the centre-to-centre distance. It gives the trend, not an exact value.</p>
+    </div>
+    <div>
+      <canvas id="cvMs" style="height:220px" aria-label="Cross-section, to scale, of two 50 ohm microstrip traces over a ground plane, with the region where most of each trace's field lies shaded"></canvas>
+      <div class="readout">
+        <div class="stat"><div class="k">Width for 50 Ω</div><div class="v" id="mW"></div></div>
+        <div class="stat" id="mXS"><div class="k">Coupling to neighbour</div><div class="v" id="mX"></div></div>
+        <div class="stat"><div class="k">Width vs 0402 pad</div><div class="v" id="mP"></div></div>
+      </div>
+      <div class="verdict" id="mVerdict"></div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>Compare h = 1.6 mm and h = 0.2 mm with the same 0.5 mm gap. How much does the coupling change?</li>
+    <li>On the 1.6 mm board, how wide does the gap need to be to match the coupling of the 0.2 mm board?</li>
+    <li>Change εr from 4.2 to 3.5 at h = 0.2 mm. Which way does the width move, and why?</li>
+  </ol></div>
+</div>
+
+<div class="tablewrap"><table>
+  <tr><th>Board</th><th>Typical layer use</th><th>When it fits</th></tr>
+  <tr><td><b>2 layers</b></td><td>L1: parts, signals and RF as grounded coplanar waveguide. L2: ground, kept as unbroken as possible.</td><td>Simple, low-cost RF boards. RF is routed as GCPW so its impedance is set by the coplanar gap, not the 1.6 mm to L2.</td></tr>
+  <tr><td><b>4 layers</b></td><td>L1: RF and parts. L2: solid ground. L3: power. L4: low-speed signals.</td><td>The default for boards with a radio.</td></tr>
+  <tr><td><b>6 layers</b></td><td>L1: RF. L2: ground. L3: signals. L4: power. L5: ground. L6: signals.</td><td>Dense mixed-signal boards: every routing layer sits next to a ground plane.</td></tr>
+</table></div>
+
+<div class="example">
+  <span class="xk">Application</span>
+  <p>Radio-chip vendors publish evaluation boards with full stackup and layout files, and almost all use four layers with a thin dielectric under the top layer. Copying that stackup, not just the schematic, is the easiest way to make the published matching-network values work on your own board, because those values include the effect of the pads and traces on that particular dielectric.</p>
+</div>
+
 <details class="exercise">
   <summary><span class="ek">Design exercise</span><span class="et">Two layers or four?</span></summary>
   <div class="eb">
@@ -128,9 +204,64 @@
   <tr><td><b>Hydrocarbon ceramic</b> (e.g. Rogers RO4350B)</td><td>3.48 ± 0.05</td><td>0.0037</td><td>RF and microwave boards; processes like FR-4</td></tr>
   <tr><td><b>PTFE (Teflon) based</b> (e.g. RT/duroid 5880)</td><td>2.2</td><td>0.0009</td><td>Millimetre-wave, low-loss antennas; harder to fabricate</td></tr>
 </table></div>
-<p>The loss figures matter in proportion to how many wavelengths the signal travels. A 2 cm trace at 915 MHz on FR-4 loses a few hundredths of a decibel: irrelevant. A 10 cm trace at 10 GHz on the same material loses several decibels. Material tolerance matters for anything that relies on a precise electrical length: filters, couplers and antennas printed on the board shift in frequency if εr is off.</p>
+<p>The loss figures matter in proportion to how many wavelengths the signal travels. A 2 cm trace at 915 MHz on FR-4 loses about a tenth of a decibel: irrelevant. A 10 cm trace at 10 GHz on the same material loses several decibels. Material tolerance matters for anything that relies on a precise electrical length: filters, couplers and antennas printed on the board shift in frequency if εr is off.</p>
 <p>A common compromise is a <strong>hybrid stackup</strong>: a low-loss RF laminate for the top dielectric only, where the RF traces are, bonded to ordinary FR-4 for the rest of the board. It costs less than an all-RF-laminate board but needs a fab experienced with mixed materials.</p>
 <p>FR-4 is a woven glass fabric in epoxy resin, and glass (εr ≈ 6) and resin (εr ≈ 3) have very different dielectric constants. A narrow trace that happens to lie along a glass bundle sees a higher εr than one lying over resin. For RF lines this is a small impedance variation; for the two lines of a fast differential pair it can cause skew between them, which is why high-speed boards specify spread glass styles or route at a small angle to the weave.</p>
+
+<div class="widget wide" id="w-loss">
+  <div class="wh"><span class="tag">Interactive</span><b>Loss of a 50 Ω microstrip on four materials</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label for="lL">Trace length <b id="lLv"></b></label><input id="lL" type="range" min="10" max="300" step="5" value="100"></div>
+      <div class="ctrl"><label for="lF">Frequency <b id="lFv"></b></label><input id="lF" type="range" min="0.1" max="10" step="0.05" value="2.4"></div>
+      <p class="small">Each line is a 50 Ω microstrip on a 0.25 mm dielectric, width chosen for that material. Conductor loss includes a roughness factor of 1.5. Dielectric loss uses each material's datasheet loss tangent.</p>
+    </div>
+    <div>
+      <canvas id="cvLoss" style="height:280px" aria-label="Plot of insertion loss in decibels against frequency for FR-4, low-loss FR-4, a hydrocarbon ceramic laminate and PTFE"></canvas>
+      <div class="legend"><span style="--c:var(--c2)">FR-4</span><span style="--c:var(--c3)">low-loss FR-4</span><span style="--c:var(--c1)">RO4350B</span><span style="--c:var(--c5)">PTFE</span></div>
+      <div class="readout" id="lR"></div>
+      <div class="verdict" id="lVerdict"></div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>Set 20 mm at 915 MHz, a typical radio-to-connector run. Does the material matter?</li>
+    <li>Set 100 mm at 10 GHz. How much does an RF laminate save?</li>
+    <li>On RO4350B, which part of the loss dominates: the copper or the dielectric? (Compare with PTFE, whose dielectric loss is almost zero.)</li>
+  </ol></div>
+</div>
+
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>Glass weave under a differential pair, top view</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 206" role="img" aria-label="Left: two traces of a differential pair run parallel to the glass bundles of the FR-4 weave; one lies over a glass bundle, the other over a resin-rich gap, so they see different dielectric constants. Right: the same pair routed at a small angle to the weave, so both traces cross glass and resin equally.">
+    <defs>
+      <pattern id="weave" width="28" height="28" patternUnits="userSpaceOnUse">
+        <rect width="28" height="28" fill="#f7f0dc"/>
+        <rect y="2" width="28" height="16" fill="#a9bbd0"/>
+        <rect x="2" width="16" height="28" fill="#a9bbd0" opacity=".45"/>
+      </pattern>
+      <clipPath id="clipW"><rect x="340" y="30" width="280" height="140"/></clipPath>
+    </defs>
+    <rect x="20" y="30" width="280" height="140" fill="url(#weave)"/>
+    <rect x="340" y="30" width="280" height="140" fill="url(#weave)"/>
+    <g fill="#c8893a">
+      <rect x="20" y="94" width="280" height="6"/><rect x="20" y="108" width="280" height="6"/>
+    </g>
+    <g clip-path="url(#clipW)"><g fill="#c8893a" transform="rotate(-10 480 100)"><rect x="330" y="94" width="300" height="6"/><rect x="330" y="108" width="300" height="6"/></g></g>
+    <g font-size="11.5">
+      <text x="160" y="20" text-anchor="middle" font-weight="600">pair parallel to the weave</text>
+      <text x="480" y="20" text-anchor="middle" font-weight="600">pair at an angle to the weave</text>
+      <text x="160" y="184" text-anchor="middle" fill="var(--muted)">one trace over glass (εr ≈ 6),</text><text x="160" y="198" text-anchor="middle" fill="var(--muted)">one over resin (εr ≈ 3): skew</text>
+      <text x="480" y="184" text-anchor="middle" fill="var(--muted)">both traces average</text><text x="480" y="198" text-anchor="middle" fill="var(--muted)">over glass and resin</text>
+    </g>
+  </svg>
+  </div>
+</div>
+
+<div class="example">
+  <span class="xk">Application</span>
+  <p>A printed inverted-F antenna, a common 2.4 GHz antenna made from a shaped copper trace at the edge of the board, resonates at a frequency set by its length and the dielectric around it. FR-4's εr can differ by 0.2 to 0.4 between fabs and laminate batches. Because part of the antenna's field is in air, the resonance moves by less than the full √εr ratio, but still by tens of megahertz, a large fraction of the 83 MHz-wide 2.4 GHz band. Production designs either include a tuning component, use a laminate with a tighter specification, or are re-tuned when the fab or material changes.</p>
+</div>
 
 <details class="exercise">
   <summary><span class="ek">Design exercise</span><span class="et">When is a Rogers laminate worth it?</span></summary>
@@ -143,7 +274,7 @@
       <li>Neither: FR-4's loss is the same as an RF laminate's.<div class="why">FR-4's loss tangent is four to five times higher than RO4350B's.</div></li>
       <li data-correct>The 10 GHz board: the feed line is many wavelengths long, so FR-4's loss is significant, and the printed filter needs a well-controlled εr to land on frequency. The 915 MHz board's short trace barely notices.<div class="why">Both the loss and the tolerance argument point the same way.</div></li>
     </ol>
-    <div class="solution"><p>Dielectric loss scales with frequency and with length in wavelengths. At 915 MHz, 15 mm is under a tenth of a wavelength in FR-4 and loses almost nothing. At 10 GHz, 60 mm is about four wavelengths and loses roughly a decibel or more, and a printed filter's centre frequency moves directly with the material's εr, so FR-4's wide tolerance would shift it. The 10 GHz board is a good candidate for an RF laminate, at least for its top dielectric layer.</p></div>
+    <div class="solution"><p>Dielectric loss scales with frequency and with length in wavelengths. At 915 MHz, 15 mm is under a tenth of a wavelength in FR-4 and loses almost nothing. At 10 GHz, 60 mm is about four wavelengths and loses two to three decibels, and a printed filter's centre frequency moves directly with the material's εr, so FR-4's wide tolerance would shift it. The 10 GHz board is a good candidate for an RF laminate, at least for its top dielectric layer.</p></div>
     </div>
   </div>
 </details>
@@ -160,6 +291,61 @@
   <li><strong>Keep ground pours away from the trace</strong> by at least two or three trace widths, or the pour becomes part of the line and lowers its impedance. If you want ground alongside the trace, design it as a <strong>grounded coplanar waveguide</strong> (GCPW) with a specified gap and include it in the impedance calculation. GCPW is popular for RF because it confines the fields and isolates neighbouring traces well.</li>
   <li><strong>Pads wider than the trace add capacitance.</strong> On thin dielectrics this is small. Where pads are much wider than the 50 Ω trace (a connector's centre pin, a large capacitor), some designs cut out the ground under the pad on layer 2 to remove the excess capacitance.</li>
 </ul>
+
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>Layout details along an RF trace, top view</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 320" role="img" aria-label="Four panels. Corners: a square corner adds extra copper; a chamfered corner removes it. Wide pads: a connector pad much wider than the trace, with the ground plane cut away underneath it. Pour clearance: a ground pour 0.15 millimetres from the trace lowers its impedance; a pour several widths away, or a designed coplanar waveguide with via rows, does not. Components: a series part placed inline with pads the width of the trace, and a shunt part with its own ground via.">
+    <g fill="#c8893a">
+      <polygon points="30,44 116,44 116,120 104,120 104,56 30,56"/>
+      <polygon points="170,44 236,44 256,64 256,120 244,120 244,56 170,56"/>
+    </g>
+    <polygon points="104,44 116,44 116,56" fill="var(--bad)" opacity=".6"/>
+    <g fill="#e7c89b"><rect x="350" y="40" width="250" height="20"/><rect x="350" y="90" width="250" height="20"/></g>
+    <g fill="#c8893a"><rect x="350" y="69" width="110" height="12"/><rect x="460" y="59" width="56" height="32"/></g>
+    <rect x="452" y="52" width="72" height="46" fill="none" stroke="var(--c1)" stroke-width="1.4" stroke-dasharray="4 3"/>
+    <rect x="516" y="65" width="84" height="20" fill="#9aa3ad"/>
+    <g fill="#e7c89b"><rect x="20" y="196" width="130" height="18"/><rect x="20" y="226" width="130" height="18"/></g>
+    <rect x="20" y="215" width="130" height="10" fill="#c8893a"/>
+    <g fill="#e7c89b"><rect x="170" y="180" width="140" height="18"/><rect x="170" y="242" width="140" height="18"/></g>
+    <rect x="170" y="215" width="140" height="10" fill="#c8893a"/>
+    <g fill="#fff" stroke="#8a5a20" stroke-width="1.2"><circle cx="186" cy="192" r="4"/><circle cx="216" cy="192" r="4"/><circle cx="246" cy="192" r="4"/><circle cx="276" cy="192" r="4"/><circle cx="186" cy="248" r="4"/><circle cx="216" cy="248" r="4"/><circle cx="246" cy="248" r="4"/><circle cx="276" cy="248" r="4"/></g>
+    <g fill="#c8893a">
+      <rect x="350" y="215" width="70" height="10"/><rect x="420" y="213" width="14" height="14"/><rect x="452" y="213" width="14" height="14"/><rect x="466" y="215" width="154" height="10"/>
+      <rect x="528" y="227" width="14" height="14"/><rect x="528" y="257" width="14" height="14"/><rect x="532" y="225" width="6" height="4"/>
+    </g>
+    <rect x="428" y="211" width="30" height="18" fill="none" stroke="var(--ink)" stroke-width="1.2"/>
+    <rect x="524" y="235" width="22" height="30" fill="none" stroke="var(--ink)" stroke-width="1.2"/>
+    <rect x="532" y="271" width="6" height="6" fill="#c8893a"/>
+    <circle cx="535" cy="283" r="6" fill="#fff" stroke="#8a5a20" stroke-width="1.6"/>
+    <rect x="532" y="275" width="6" height="4" fill="#c8893a"/>
+    <g font-size="11.5" text-anchor="middle">
+      <text x="160" y="22" font-weight="600">Corners</text>
+      <text x="74" y="142">square: extra copper</text><text x="74" y="157" fill="var(--muted)">(shaded) adds capacitance</text>
+      <text x="212" y="142">chamfered</text><text x="212" y="157" fill="var(--muted)">removes the excess</text>
+      <text x="480" y="22" font-weight="600">Wide pads</text>
+      <text x="400" y="130" text-anchor="middle">trace</text><text x="488" y="130">wide pad</text><text x="560" y="130">connector pin</text>
+      <text x="480" y="150" fill="var(--c1)">dashed: L2 ground cut away under the pad</text>
+      <text x="160" y="172" font-weight="600">Pour clearance</text>
+      <text x="85" y="268">pour 0.15 mm away:</text><text x="85" y="283" fill="var(--muted)">Z₀ drops several ohms</text>
+      <text x="240" y="276">designed GCPW,</text><text x="240" y="291" fill="var(--muted)">via rows along both sides</text>
+      <text x="480" y="172" font-weight="600">Components on the line</text>
+      <text x="443" y="203">series 0402</text>
+      <text x="590" y="250">shunt part,</text><text x="590" y="265" fill="var(--muted)">own via</text>
+      <text x="420" y="300" fill="var(--muted)">pads about the trace width</text>
+    </g>
+  </svg>
+  </div>
+</div>
+
+<p>Once the layout is done, the impedance requirements go to the fab as part of the fabrication drawing. A typical controlled-impedance table looks like this; the fab replies with the widths it will actually etch for its own materials, and those go back into the layout before release:</p>
+<div class="tablewrap"><table>
+  <tr><th>Layer</th><th>Structure</th><th>Target</th><th>Reference planes</th><th>Design width / gap</th></tr>
+  <tr><td>L1</td><td>Microstrip, solder mask over</td><td>50 Ω ± 10 %</td><td>L2</td><td>0.36 mm</td></tr>
+  <tr><td>L1</td><td>Grounded coplanar waveguide</td><td>50 Ω ± 10 %</td><td>L2 and coplanar ground</td><td>0.40 mm / 0.20 mm gap</td></tr>
+  <tr><td>L1</td><td>Edge-coupled differential pair</td><td>100 Ω ± 10 %</td><td>L2</td><td>0.18 mm / 0.20 mm spacing</td></tr>
+</table></div>
+<p>The note that goes with it usually reads "adjust trace width to meet impedance; do not change dielectric thicknesses", so the fab tunes the copper and leaves the stackup alone.</p>
 
 <details class="exercise">
   <summary><span class="ek">Design exercise</span><span class="et">A ground pour that creeps up to the trace</span></summary>
@@ -190,6 +376,63 @@
   <li><strong>HASL</strong> (hot-air solder levelling): cheap and robust but uneven, poor for fine-pitch parts and precise pads.</li>
 </ul>
 <p>The copper's own roughness matters in the same way: the rough side of the foil, bonded to the dielectric for adhesion, carries the current, and teeth a few micrometres high lengthen the current's path at frequencies where the skin depth is comparable. Low-profile copper is specified for low-loss boards above a few gigahertz.</p>
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>Solder mask on a microstrip, and the layers of an ENIG pad</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 230" role="img" aria-label="Left: cross-section of a microstrip with solder mask coating the trace and the board surface; some field lines from the top and edges of the trace pass through the mask. Right: a magnified cross-section of the edge of an ENIG pad: copper, a few micrometres of nickel, and a very thin gold layer. The current flows within a skin depth of the surface, which at gigahertz frequencies is within the nickel.">
+    <rect x="20" y="110" width="280" height="70" fill="#e6efd9"/>
+    <rect x="20" y="180" width="280" height="6" fill="#c8893a"/>
+    <path d="M20 110H126V96Q126 90 132 90H188Q194 90 194 96V110H300V102H200Q202 82 188 82H132Q118 82 120 102H20Z" fill="#4f8a5b" opacity=".75"/>
+    <rect x="126" y="96" width="68" height="14" fill="#c8893a"/>
+    <g fill="none" stroke="var(--c1)" stroke-width="1.1">
+      <path d="M140 110V180M160 110V180M180 110V180"/>
+      <path d="M126 104C104 106 92 140 88 180M194 104C216 106 228 140 232 180"/>
+      <path d="M130 96C110 80 74 92 62 120M190 96C210 80 246 92 258 120"/>
+    </g>
+    <rect x="360" y="48" width="250" height="4" fill="#e3b341"/>
+    <rect x="360" y="52" width="250" height="50" fill="#9b9b8f"/>
+    <rect x="360" y="102" width="250" height="70" fill="#c8893a"/>
+        <path d="M360 73H610" fill="none" stroke="#fff" stroke-width="1.4" stroke-dasharray="4 3"/>
+    <g font-size="11.5">
+      <text x="160" y="24" text-anchor="middle" font-weight="600">mask over a microstrip</text>
+      <text x="230" y="70">solder mask</text>
+      <text x="160" y="206" text-anchor="middle" fill="var(--muted)">part of the field runs in the mask: Z₀ drops 1–3 Ω</text>
+      <text x="485" y="24" text-anchor="middle" font-weight="600">ENIG pad surface, magnified</text>
+      <text x="370" y="42" fill="var(--muted)">air</text><text x="606" y="42" text-anchor="end">gold, 0.05–0.1 µm</text>
+      <text x="370" y="66" fill="#fff">nickel, 5 µm</text>
+      <text x="370" y="142" fill="#fff">copper</text>
+      <text x="606" y="90" text-anchor="end" fill="#fff">dashed: 2.1 µm, copper's skin depth at 1 GHz</text>
+      <text x="485" y="194" text-anchor="middle" fill="var(--muted)">the current flows in the top micrometre or two: nickel</text>
+      <text x="485" y="210" text-anchor="middle" fill="var(--muted)">nickel's skin depth is under 1 µm; gold exaggerated</text>
+    </g>
+  </svg>
+  </div>
+</div>
+<p>On an exposed pad the current flows along the outer surface, which in an ENIG finish means through the gold and then the nickel. The gold is too thin to carry much of it, and nickel has about four times the resistivity of copper and is magnetic, which shrinks its skin depth further. At a few gigahertz this adds noticeable loss on long unmasked runs. A common practice is to keep solder mask over RF traces, so only the pads carry the finish, or to choose immersion silver or ENEPIG (which adds a palladium layer and allows a thinner nickel) for microwave boards.</p>
+
+<div class="widget wide" id="w-rough">
+  <div class="wh"><span class="tag">Interactive</span><b>Copper roughness and conductor loss</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label for="rR">RMS roughness of the copper <b id="rRv"></b></label><input id="rR" type="range" min="0.2" max="4" step="0.05" value="1"></div>
+      <div class="ctrl"><label for="rF">Frequency <b id="rFv"></b></label><input id="rF" type="range" min="0.1" max="30" step="0.1" value="5"></div>
+      <p class="small">Hammerstad's model: conductor loss is multiplied by 1 + (2/π)·arctan(1.4 (Δ/δ)²), where Δ is the RMS roughness and δ the skin depth. Standard foil is around 2 µm RMS on its rough side; "very low profile" foils are 0.3–0.6 µm.</p>
+    </div>
+    <div>
+      <canvas id="cvRough" style="height:260px" aria-label="Plot of the conductor-loss multiplier from roughness against frequency on a logarithmic axis, for the chosen roughness and for standard and low-profile copper"></canvas>
+      <div class="legend"><span style="--c:var(--c1)">chosen roughness</span><span style="--c:var(--c2)">standard foil, 2 µm</span><span style="--c:var(--c5)">low profile, 0.4 µm</span></div>
+      <div class="readout">
+        <div class="stat"><div class="k">Skin depth</div><div class="v" id="rD"></div></div>
+        <div class="stat"><div class="k">Conductor loss multiplier</div><div class="v" id="rK"></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>With standard foil, at what frequency has the conductor loss risen by half?</li>
+    <li>Why does the curve stop rising at about 2? Think about how far the current's path can be lengthened by following the teeth.</li>
+  </ol></div>
+</div>
+
 </section>
 
 <!-- ================= 5 VIAS ================= -->
@@ -245,6 +488,36 @@
 <div class="eq">$$f_\text{notch} = \frac{c}{4L\sqrt{\varepsilon_r}}$$<div class="n">L is the stub length; for a 1.4 mm stub in FR-4, this is about 26 GHz</div></div>
 <p>Below the notch, the stub still adds capacitance and a growing loss. For most RF work below 6 GHz in a 1.6 mm board, stubs are harmless. For multi-gigabit serial links, whose spectrum reaches well beyond 10 GHz, they're a primary concern. The fixes are to transition between layers that leave no stub (top to bottom), to <strong>back-drill</strong> the unused barrel out after plating, or to use blind and buried vias.</p>
 
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>Four kinds of via, in a four-layer board</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 230" role="img" aria-label="Four cross-sections. A through via from layer 1 to layer 3 leaves a stub to the bottom. A back-drilled via has the unused barrel drilled out with a larger drill. A blind microvia connects layer 1 to layer 2 only. A buried via connects layers 2 and 3 inside the board.">
+    <g fill="#e6efd9"><rect x="20" y="52" width="600" height="34"/><rect x="20" y="92" width="600" height="56"/><rect x="20" y="154" width="600" height="34"/></g>
+    <g fill="#c8893a" opacity=".35"><rect x="20" y="86" width="600" height="6"/><rect x="20" y="148" width="600" height="6"/><rect x="20" y="188" width="600" height="6"/></g>
+    <g fill="#c8893a">
+      <rect x="30" y="46" width="64" height="6"/><rect x="86" y="46" width="14" height="108"/><rect x="92" y="148" width="58" height="6"/>
+      <rect x="86" y="154" width="14" height="40" fill="var(--bad)"/>
+      <rect x="180" y="46" width="64" height="6"/><rect x="236" y="46" width="14" height="108"/><rect x="242" y="148" width="58" height="6"/>
+      <polygon points="390,46 410,46 404,86 396,86"/><rect x="330" y="46" width="66" height="6"/><rect x="394" y="86" width="56" height="6"/>
+      <rect x="546" y="86" width="14" height="68"/><rect x="480" y="86" width="72" height="6"/><rect x="554" y="148" width="56" height="6"/>
+    </g>
+    <rect x="232" y="158" width="22" height="36" fill="#fff" stroke="var(--line2)"/>
+    <g font-size="11.5" text-anchor="middle">
+      <text x="93" y="30" font-weight="600">through via</text>
+      <text x="243" y="30" font-weight="600">back-drilled</text>
+      <text x="400" y="30" font-weight="600">blind microvia</text>
+      <text x="553" y="30" font-weight="600">buried via</text>
+      <text x="93" y="214" fill="var(--bad)">stub below L3</text>
+      <text x="243" y="214" fill="var(--muted)">stub drilled out</text>
+      <text x="400" y="214" fill="var(--muted)">laser-drilled, L1 to L2</text>
+      <text x="553" y="214" fill="var(--muted)">inside, L2 to L3</text>
+    </g>
+    <g font-size="10.5" fill="var(--muted)"><text x="626" y="52" text-anchor="end" dy="-8">L1</text><text x="626" y="92" text-anchor="end" dy="-8">L2</text><text x="626" y="154" text-anchor="end" dy="-8">L3</text><text x="626" y="194" text-anchor="end" dy="-8">L4</text></g>
+  </svg>
+  </div>
+</div>
+<p>Back-drilling is a standard fab option that removes most of the stub for a modest cost. Blind and buried vias need extra lamination and drilling steps and raise the board's price considerably; they appear in phones and dense high-speed boards, rarely in simple RF designs, where the usual answer is to keep RF on the top layer and avoid layer changes altogether.</p>
+
 <div class="widget wide" id="w-stub">
   <div class="wh"><span class="tag">Interactive</span><b>Transmission through a via with a stub</b></div>
   <div class="wb wcols">
@@ -267,6 +540,53 @@
     <li>A thicker 3 mm backplane leaves a 3 mm stub. Where does the notch move? What about a 25 Gb/s link, whose spectrum reaches about 12.5 GHz?</li>
     <li>Shorten the stub to 0.15 mm, as back-drilling would. What's left of the problem?</li>
   </ol></div>
+</div>
+
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>A via with a ground cage, and an edge-launch SMA footprint, top view</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 250" role="img" aria-label="Left: a signal via in the middle of a clearance hole, surrounded by a ring of ground vias that keep the return current close. Right: an edge-launch SMA connector at the board edge. The centre pin sits on a pad at the end of a coplanar waveguide trace; the connector's ground legs solder to pads either side, with rows of ground vias right up to the board edge, and the layer 2 ground is cut back under the centre pin pad.">
+    <rect x="20" y="20" width="250" height="210" fill="#e7c89b"/>
+    <circle cx="145" cy="125" r="34" fill="#f6efe2" stroke="var(--line2)" stroke-dasharray="3 3"/>
+    <rect x="20" y="120" width="110" height="10" fill="#c8893a"/>
+    <circle cx="145" cy="125" r="12" fill="#c8893a"/><circle cx="145" cy="125" r="5" fill="#fff" stroke="#8a5a20"/>
+    <g fill="#fff" stroke="#8a5a20" stroke-width="1.4">
+      <circle cx="145" cy="72" r="5"/><circle cx="182" cy="88" r="5"/><circle cx="198" cy="125" r="5"/><circle cx="182" cy="162" r="5"/><circle cx="145" cy="178" r="5"/><circle cx="108" cy="162" r="5"/><circle cx="108" cy="88" r="5"/>
+    </g>
+    <g font-size="11.5">
+      <text x="145" y="14" text-anchor="middle" font-weight="600">signal via with a ground cage</text>
+      <text x="40" y="112">trace on L1</text>
+      <text x="196" y="210" text-anchor="middle" fill="var(--muted)">dashed: clearance (antipad)</text>
+      <text x="145" y="245" text-anchor="middle" fill="var(--muted)">continues on an inner layer</text>
+    </g>
+    <rect x="320" y="20" width="250" height="210" fill="#e7c89b"/>
+    <rect x="320" y="114" width="246" height="22" fill="#f6efe2"/>
+    <rect x="320" y="120" width="200" height="10" fill="#c8893a"/>
+    <rect x="520" y="116" width="50" height="18" fill="#c8893a"/>
+    <rect x="512" y="104" width="62" height="42" fill="none" stroke="var(--c1)" stroke-width="1.4" stroke-dasharray="4 3"/>
+    <g fill="#bfc3c8" stroke="var(--ink)" stroke-width="1"><rect x="526" y="62" width="44" height="30"/><rect x="526" y="158" width="44" height="30"/><rect x="570" y="52" width="56" height="146"/><rect x="590" y="100" width="40" height="50"/></g>
+    <rect x="566" y="20" width="4" height="210" fill="var(--ink)"/>
+    <g fill="#fff" stroke="#8a5a20" stroke-width="1.4">
+      <circle cx="340" cy="104" r="4"/><circle cx="370" cy="104" r="4"/><circle cx="400" cy="104" r="4"/><circle cx="430" cy="104" r="4"/><circle cx="460" cy="104" r="4"/><circle cx="490" cy="104" r="4"/>
+      <circle cx="340" cy="146" r="4"/><circle cx="370" cy="146" r="4"/><circle cx="400" cy="146" r="4"/><circle cx="430" cy="146" r="4"/><circle cx="460" cy="146" r="4"/><circle cx="490" cy="146" r="4"/>
+      <circle cx="510" cy="88" r="4"/><circle cx="510" cy="162" r="4"/><circle cx="548" cy="200" r="4"/><circle cx="548" cy="50" r="4"/>
+    </g>
+    <g font-size="11.5">
+      <text x="445" y="14" text-anchor="middle" font-weight="600">edge-launch SMA</text>
+      <text x="420" y="88" text-anchor="middle">GCPW trace</text>
+      <text x="568" y="245" text-anchor="middle" fill="var(--muted)">board edge</text>
+      <text x="520" y="62" text-anchor="end" font-size="10.5">ground legs</text>
+      <text x="420" y="178" text-anchor="middle" fill="var(--c1)">dashed: L2 cut back</text>
+      <text x="420" y="193" text-anchor="middle" fill="var(--c1)">under the pin pad</text>
+      <text x="420" y="222" text-anchor="middle" fill="var(--muted)">ground vias right up to the launch</text>
+    </g>
+  </svg>
+  </div>
+</div>
+
+<div class="example">
+  <span class="xk">Application</span>
+  <p>The connector launch is where many boards lose most of their performance above a few gigahertz. The SMA's centre pin is wider than a 0.4 mm trace and sits on a large pad, which adds capacitance; its ground legs are some distance from the trace's coplanar ground. Connector manufacturers publish a recommended footprint for each stackup, including the size of the ground cut-out under the pin and the positions of the ground vias, and following it closely is usually the difference between a launch that is invisible on a VNA and one that shows a clear dip in return loss.</p>
 </div>
 
 <details class="exercise">
@@ -297,6 +617,83 @@
   <li><strong>Ground component pads directly.</strong> A shunt capacitor or a chip's ground pad should reach the plane through its own via, as close to the pad as possible, not through a thin trace. Module 0 showed that a few millimetres of connection is several ohms at a gigahertz.</li>
 </ul>
 <p>Older advice suggests splitting a board into separate analog and digital grounds joined at one point. For RF and mixed-signal boards, a single continuous ground plane with careful component <em>placement</em> (keeping noisy digital circuits and their return currents physically away from sensitive RF) almost always works better, because a split forces return currents to detour and creates exactly the large loops it was meant to prevent.</p>
+
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>The return current under a trace, with and without a slot in the plane</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 220" role="img" aria-label="Left: a trace runs over a continuous ground plane and its return current flows directly underneath it. Right: the same trace crosses a slot in the plane; the return current has to detour around the end of the slot, enclosing a large loop.">
+    <defs><marker id="arG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--good)"/></marker></defs>
+    <rect x="20" y="30" width="280" height="160" fill="#e7d3b3"/>
+    <rect x="340" y="30" width="280" height="160" fill="#e7d3b3"/>
+    <rect x="474" y="30" width="14" height="128" fill="#f6efe2" stroke="var(--line2)"/>
+    <path d="M490 92L474 92L474 172Q474 176 478 176H484Q488 176 488 172V92" fill="none" stroke="none"/>
+    <path d="M354 96C410 96 452 98 466 120C470 140 470 168 481 168C492 168 492 140 496 120C510 98 552 96 606 96" fill="rgba(200,40,40,.12)" stroke="none"/>
+    <rect x="20" y="92" width="280" height="8" fill="#c8893a"/><rect x="340" y="92" width="280" height="8" fill="#c8893a"/>
+    <g fill="none" stroke="var(--good)" stroke-width="1.8" stroke-dasharray="5 4">
+      <path d="M290 110H34" marker-end="url(#arG)"/>
+      <path d="M606 110C560 110 520 110 500 122C494 136 494 168 481 170C468 168 468 136 462 122C442 110 400 110 356 110" marker-end="url(#arG)"/>
+    </g>
+    <g font-size="11.5" text-anchor="middle">
+      <text x="160" y="20" font-weight="600">continuous plane</text>
+      <text x="480" y="20" font-weight="600">trace crossing a slot</text>
+      <text x="160" y="84">signal (L1)</text><text x="400" y="84">signal (L1)</text>
+      <text x="160" y="132" fill="var(--good)">return current on L2, directly underneath</text>
+      <text x="400" y="150" fill="var(--bad)">loop: inductance,</text><text x="400" y="165" fill="var(--bad)">radiation, coupling</text>
+      <text x="560" y="150" fill="var(--muted)">slot in L2</text>
+      <text x="320" y="210" fill="var(--muted)">the slot can be a deliberate split, a routed trace on L2, or a row of via clearances</text>
+    </g>
+  </svg>
+  </div>
+</div>
+
+<p>Grounding decisions are mostly made at the floorplan stage, before any routing. The figure shows a typical placement for a small board with a radio, a microcontroller and a switching regulator:</p>
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>Floorplan of a small radio board</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 280" role="img" aria-label="A board outline. The power input and switching regulator are in the top left corner, the microcontroller and digital interfaces in the bottom left, the radio chip with its crystal in the middle, and the RF chain of matching network, filter and connector runs in a short straight line to the right-hand board edge. Numbered notes mark the placement rules.">
+    <rect x="20" y="20" width="600" height="230" rx="8" fill="#f2efe6" stroke="var(--ink)" stroke-width="1.4"/>
+    <g stroke="var(--ink)" stroke-width="1.2">
+      <rect x="40" y="40" width="150" height="80" fill="#f4dfd7"/>
+      <rect x="40" y="150" width="190" height="80" fill="#dfe7f3"/>
+      <rect x="290" y="100" width="90" height="80" fill="#e6efd9"/>
+      <rect x="300" y="50" width="34" height="22" fill="#fff"/>
+      <rect x="420" y="126" width="40" height="28" fill="#fff"/><rect x="480" y="126" width="40" height="28" fill="#fff"/>
+      <rect x="586" y="122" width="44" height="36" fill="#bfc3c8"/>
+    </g>
+    <path d="M380 140H420M460 140H480M520 140H586" stroke="#c8893a" stroke-width="5"/>
+    <path d="M230 170C260 170 270 160 290 160" stroke="var(--c1)" stroke-width="1.6" fill="none"/>
+    <path d="M190 80C240 80 250 110 290 115" stroke="var(--c2)" stroke-width="1.6" fill="none"/>
+    <path d="M317 72V100" stroke="var(--ink)" stroke-width="1.2"/>
+    <g font-size="11.5" text-anchor="middle">
+      <text x="115" y="70">power input,</text><text x="115" y="85">switching regulator</text>
+      <text x="135" y="185">microcontroller,</text><text x="135" y="200">digital interfaces</text>
+      <text x="335" y="145">radio chip</text>
+      <text x="317" y="44" font-size="10.5">crystal</text>
+      <text x="440" y="118" font-size="10.5">match</text><text x="500" y="118" font-size="10.5">filter</text>
+      <text x="608" y="174" font-size="10.5">SMA</text>
+    </g>
+    <g font-size="11" font-weight="600" fill="#fff">
+      <circle cx="198" cy="40" r="9" fill="var(--ink)"/><text x="198" y="44" text-anchor="middle">1</text>
+      <circle cx="238" cy="150" r="9" fill="var(--ink)"/><text x="238" y="154" text-anchor="middle">2</text>
+      <circle cx="346" cy="58" r="9" fill="var(--ink)"/><text x="346" y="62" text-anchor="middle">3</text>
+      <circle cx="500" cy="170" r="9" fill="var(--ink)"/><text x="500" y="174" text-anchor="middle">4</text>
+      <circle cx="600" cy="38" r="9" fill="var(--ink)"/><text x="600" y="42" text-anchor="middle">5</text>
+    </g>
+  </svg>
+  </div>
+</div>
+<ol class="small">
+  <li><b>Switching regulator</b> in a corner, as far from the RF chain as the board allows, with its high-current switching loop kept small (EE Module 3's decoupling rules). Its harmonics reach hundreds of megahertz.</li>
+  <li><b>Digital section</b> on the opposite side from the RF chain. Its return currents stay under its own traces, in its own part of the shared ground plane, so they don't flow under the RF circuitry.</li>
+  <li><b>Crystal</b> right next to the radio chip, on short traces, with no other signals routed under or beside it.</li>
+  <li><b>RF chain</b> in a short, straight line from the chip to the connector, all on the top layer over unbroken ground.</li>
+  <li><b>One continuous ground plane</b> on layer 2 under everything. Separation comes from placement, not from cutting the plane.</li>
+</ol>
+
+<div class="example">
+  <span class="xk">Application</span>
+  <p>A common symptom on a first prototype is a receiver that hears narrow spurious signals spaced at a regular interval, for example every 1.2 MHz across the band. The spacing gives away the source: a switching regulator running at 1.2 MHz, whose sharp switching edges contain harmonics far up in frequency. The fix is almost always layout: a smaller switching loop, more distance from the RF section, and making sure none of the regulator's return current flows under the receiver's input. Moving the regulator's frequency doesn't remove the spurs; it only moves them.</p>
+</div>
 
 <details class="exercise">
   <summary><span class="ek">Design exercise</span><span class="et">Routing across a split plane</span></summary>
@@ -349,6 +746,59 @@
 </div>
 <p>Placed in a row along each side of an RF trace, close to the gap, stitching vias form a <strong>via fence</strong>. The fence ties the coplanar grounds firmly to the plane below so they can't support unwanted modes between the layers, and it acts as a wall that blocks coupling from the RF line to neighbouring circuits. The same idea, along the edge of the whole board, stops the space between the planes from radiating out of the board edge; for the strongest effect, fabs can plate the board edge itself.</p>
 
+<p>The reason for the λ/20 rule can be seen by asking where an island of pour resonates. Copper over a plane is a short transmission line. Connected to the plane at one end only, it's a shorted stub that resonates when it's a quarter-wavelength long; stitched at both ends, the stretch between two vias resonates when it's half a wavelength long. Adding vias shortens the longest unconnected stretch and pushes its resonance up, out of the band of anything on the board.</p>
+<div class="widget wide" id="w-pour">
+  <div class="wh"><span class="tag">Interactive</span><b>Where a ground-pour island resonates</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label for="pL">Island length <b id="pLv"></b></label><input id="pL" type="range" min="5" max="60" step="1" value="30"></div>
+      <div class="ctrl"><label for="pN">Stitching vias along it <b id="pNv"></b></label><input id="pN" type="range" min="1" max="25" step="1" value="1"></div>
+      <div class="ctrl"><label>Radio on the board</label><div class="seg" id="pB"><button type="button" data-v="915e6">915 MHz</button><button type="button" data-v="2.44e9" class="on">2.4 GHz</button><button type="button" data-v="5.8e9">5.8 GHz</button></div></div>
+      <p class="small">FR-4, εr = 4.2. One via sits at the end of the island; more vias are spaced evenly along it. This is a simple model of the longest resonant stretch, enough to show the trend.</p>
+    </div>
+    <div>
+      <canvas id="cvPour" style="height:200px" aria-label="Logarithmic frequency axis from 100 megahertz to 30 gigahertz, with the island's resonances marked and the radio's frequency and its harmonics marked"></canvas>
+      <div class="readout">
+        <div class="stat"><div class="k">Longest unstitched stretch</div><div class="v" id="pS"></div></div>
+        <div class="stat" id="pFS"><div class="k">Lowest resonance</div><div class="v" id="pF"></div></div>
+      </div>
+      <div class="verdict" id="pVerdict"></div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>Start with a 30 mm island and one via, and a 2.4 GHz radio. Where are the resonances?</li>
+    <li>How many vias does it take to push the lowest resonance above the radio's third harmonic?</li>
+    <li>Switch to 5.8 GHz. Does the same via count still work?</li>
+  </ol></div>
+</div>
+
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>A shield can footprint around an RF section, top view</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 230" role="img" aria-label="Top view of a ground ring forming a rectangle around a radio chip and its matching parts. A double row of vias stitches the ring to the ground plane. A stamped metal can solders onto the ring. The RF output leaves the shielded area through a small gap in the ring, and other signals leave on an inner layer under the ring.">
+    <rect x="20" y="20" width="600" height="190" fill="#f2efe6"/>
+    <rect x="120" y="40" width="300" height="150" fill="none" stroke="#c8893a" stroke-width="14"/>
+    <rect x="410" y="104" width="20" height="22" fill="#f2efe6"/>
+    <g fill="#fff" stroke="#8a5a20" stroke-width="1"><circle cx="116" cy="37" r="2.6"/><circle cx="127" cy="37" r="2.6"/><circle cx="138" cy="37" r="2.6"/><circle cx="149" cy="37" r="2.6"/><circle cx="160" cy="37" r="2.6"/><circle cx="171" cy="37" r="2.6"/><circle cx="182" cy="37" r="2.6"/><circle cx="193" cy="37" r="2.6"/><circle cx="204" cy="37" r="2.6"/><circle cx="215" cy="37" r="2.6"/><circle cx="226" cy="37" r="2.6"/><circle cx="237" cy="37" r="2.6"/><circle cx="248" cy="37" r="2.6"/><circle cx="259" cy="37" r="2.6"/><circle cx="270" cy="37" r="2.6"/><circle cx="281" cy="37" r="2.6"/><circle cx="292" cy="37" r="2.6"/><circle cx="303" cy="37" r="2.6"/><circle cx="314" cy="37" r="2.6"/><circle cx="325" cy="37" r="2.6"/><circle cx="336" cy="37" r="2.6"/><circle cx="347" cy="37" r="2.6"/><circle cx="358" cy="37" r="2.6"/><circle cx="369" cy="37" r="2.6"/><circle cx="380" cy="37" r="2.6"/><circle cx="391" cy="37" r="2.6"/><circle cx="402" cy="37" r="2.6"/><circle cx="413" cy="37" r="2.6"/><circle cx="424" cy="37" r="2.6"/><circle cx="116" cy="43" r="2.6"/><circle cx="127" cy="43" r="2.6"/><circle cx="138" cy="43" r="2.6"/><circle cx="149" cy="43" r="2.6"/><circle cx="160" cy="43" r="2.6"/><circle cx="171" cy="43" r="2.6"/><circle cx="182" cy="43" r="2.6"/><circle cx="193" cy="43" r="2.6"/><circle cx="204" cy="43" r="2.6"/><circle cx="215" cy="43" r="2.6"/><circle cx="226" cy="43" r="2.6"/><circle cx="237" cy="43" r="2.6"/><circle cx="248" cy="43" r="2.6"/><circle cx="259" cy="43" r="2.6"/><circle cx="270" cy="43" r="2.6"/><circle cx="281" cy="43" r="2.6"/><circle cx="292" cy="43" r="2.6"/><circle cx="303" cy="43" r="2.6"/><circle cx="314" cy="43" r="2.6"/><circle cx="325" cy="43" r="2.6"/><circle cx="336" cy="43" r="2.6"/><circle cx="347" cy="43" r="2.6"/><circle cx="358" cy="43" r="2.6"/><circle cx="369" cy="43" r="2.6"/><circle cx="380" cy="43" r="2.6"/><circle cx="391" cy="43" r="2.6"/><circle cx="402" cy="43" r="2.6"/><circle cx="413" cy="43" r="2.6"/><circle cx="424" cy="43" r="2.6"/><circle cx="116" cy="187" r="2.6"/><circle cx="127" cy="187" r="2.6"/><circle cx="138" cy="187" r="2.6"/><circle cx="149" cy="187" r="2.6"/><circle cx="160" cy="187" r="2.6"/><circle cx="171" cy="187" r="2.6"/><circle cx="182" cy="187" r="2.6"/><circle cx="193" cy="187" r="2.6"/><circle cx="204" cy="187" r="2.6"/><circle cx="215" cy="187" r="2.6"/><circle cx="226" cy="187" r="2.6"/><circle cx="237" cy="187" r="2.6"/><circle cx="248" cy="187" r="2.6"/><circle cx="259" cy="187" r="2.6"/><circle cx="270" cy="187" r="2.6"/><circle cx="281" cy="187" r="2.6"/><circle cx="292" cy="187" r="2.6"/><circle cx="303" cy="187" r="2.6"/><circle cx="314" cy="187" r="2.6"/><circle cx="325" cy="187" r="2.6"/><circle cx="336" cy="187" r="2.6"/><circle cx="347" cy="187" r="2.6"/><circle cx="358" cy="187" r="2.6"/><circle cx="369" cy="187" r="2.6"/><circle cx="380" cy="187" r="2.6"/><circle cx="391" cy="187" r="2.6"/><circle cx="402" cy="187" r="2.6"/><circle cx="413" cy="187" r="2.6"/><circle cx="424" cy="187" r="2.6"/><circle cx="116" cy="193" r="2.6"/><circle cx="127" cy="193" r="2.6"/><circle cx="138" cy="193" r="2.6"/><circle cx="149" cy="193" r="2.6"/><circle cx="160" cy="193" r="2.6"/><circle cx="171" cy="193" r="2.6"/><circle cx="182" cy="193" r="2.6"/><circle cx="193" cy="193" r="2.6"/><circle cx="204" cy="193" r="2.6"/><circle cx="215" cy="193" r="2.6"/><circle cx="226" cy="193" r="2.6"/><circle cx="237" cy="193" r="2.6"/><circle cx="248" cy="193" r="2.6"/><circle cx="259" cy="193" r="2.6"/><circle cx="270" cy="193" r="2.6"/><circle cx="281" cy="193" r="2.6"/><circle cx="292" cy="193" r="2.6"/><circle cx="303" cy="193" r="2.6"/><circle cx="314" cy="193" r="2.6"/><circle cx="325" cy="193" r="2.6"/><circle cx="336" cy="193" r="2.6"/><circle cx="347" cy="193" r="2.6"/><circle cx="358" cy="193" r="2.6"/><circle cx="369" cy="193" r="2.6"/><circle cx="380" cy="193" r="2.6"/><circle cx="391" cy="193" r="2.6"/><circle cx="402" cy="193" r="2.6"/><circle cx="413" cy="193" r="2.6"/><circle cx="424" cy="193" r="2.6"/><circle cx="117" cy="52" r="2.6"/><circle cx="117" cy="63" r="2.6"/><circle cx="117" cy="74" r="2.6"/><circle cx="117" cy="85" r="2.6"/><circle cx="117" cy="96" r="2.6"/><circle cx="117" cy="107" r="2.6"/><circle cx="117" cy="118" r="2.6"/><circle cx="117" cy="129" r="2.6"/><circle cx="117" cy="140" r="2.6"/><circle cx="117" cy="151" r="2.6"/><circle cx="117" cy="162" r="2.6"/><circle cx="117" cy="173" r="2.6"/><circle cx="123" cy="52" r="2.6"/><circle cx="123" cy="63" r="2.6"/><circle cx="123" cy="74" r="2.6"/><circle cx="123" cy="85" r="2.6"/><circle cx="123" cy="96" r="2.6"/><circle cx="123" cy="107" r="2.6"/><circle cx="123" cy="118" r="2.6"/><circle cx="123" cy="129" r="2.6"/><circle cx="123" cy="140" r="2.6"/><circle cx="123" cy="151" r="2.6"/><circle cx="123" cy="162" r="2.6"/><circle cx="123" cy="173" r="2.6"/><circle cx="417" cy="52" r="2.6"/><circle cx="417" cy="63" r="2.6"/><circle cx="417" cy="74" r="2.6"/><circle cx="417" cy="85" r="2.6"/><circle cx="417" cy="96" r="2.6"/><circle cx="417" cy="140" r="2.6"/><circle cx="417" cy="151" r="2.6"/><circle cx="417" cy="162" r="2.6"/><circle cx="417" cy="173" r="2.6"/><circle cx="423" cy="52" r="2.6"/><circle cx="423" cy="63" r="2.6"/><circle cx="423" cy="74" r="2.6"/><circle cx="423" cy="85" r="2.6"/><circle cx="423" cy="96" r="2.6"/><circle cx="423" cy="140" r="2.6"/><circle cx="423" cy="151" r="2.6"/><circle cx="423" cy="162" r="2.6"/><circle cx="423" cy="173" r="2.6"/></g>
+    <rect x="200" y="85" width="70" height="70" fill="#555"/>
+    <g fill="#c8893a"><rect x="270" y="112" width="160" height="8"/><rect x="430" y="112" width="140" height="8"/></g>
+    <g fill="#9aa3ad"><rect x="300" y="104" width="12" height="24"/><rect x="340" y="104" width="12" height="24"/></g>
+    <path d="M200 120H100" stroke="#7b9bd1" stroke-width="5" stroke-dasharray="7 4"/>
+    <g font-size="11.5">
+      <text x="235" y="124" text-anchor="middle" fill="#fff">radio</text>
+      <text x="270" y="13" text-anchor="middle">ground ring with a double row of stitching vias; the can solders here</text>
+      <text x="500" y="104" text-anchor="middle">RF out through</text><text x="500" y="140" text-anchor="middle">a gap in the ring</text>
+      <text x="60" y="86" text-anchor="middle" fill="#4767a8">control lines</text><text x="60" y="100" text-anchor="middle" fill="#4767a8">on an inner</text><text x="60" y="142" text-anchor="middle" fill="#4767a8">layer, under</text><text x="60" y="156" text-anchor="middle" fill="#4767a8">the ring</text>
+      <text x="320" y="222" text-anchor="middle" fill="var(--muted)">gaps in the ring must be small compared with λ/2 at the highest frequency of concern</text>
+    </g>
+  </svg>
+  </div>
+</div>
+<div class="example">
+  <span class="xk">Application</span>
+  <p>Nearly every certified radio module, such as the small Wi-Fi, Bluetooth and sub-gigahertz modules sold for embedding in products, is covered by a stamped metal can soldered to a stitched ground ring. The can and the ring form a closed box that keeps the radio's signals in and the host board's noise out. The ring needs vias as densely spaced as a via fence, because a ring stitched only at its corners leaves long stretches that resonate and leak just like an unstitched pour.</p>
+</div>
+
 <details class="exercise">
   <summary><span class="ek">Design exercise</span><span class="et">A pour connected by one via</span></summary>
   <div class="eb">
@@ -379,6 +829,95 @@
 </ul>
 <p>Because of all this, the matching network values that work on a vendor's evaluation board only work if the layout around them is copied too: same stackup, same pad sizes, same via placement. That's why radio chip datasheets come with a reference layout, and why departing from it usually means re-tuning the match on a VNA.</p>
 
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>What a shunt capacitor really is, once it's on the board</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 230" role="img" aria-label="Left: side view of an 0402 capacitor on two pads, one pad on the signal trace and the other connected through a via to the layer 2 ground. Right: its equivalent circuit: from the signal node, the pad capacitance to ground in parallel with a series chain of the capacitor's body inductance, its series resistance, its capacitance and the via inductance.">
+    <rect x="20" y="120" width="280" height="30" fill="#e6efd9"/>
+    <rect x="20" y="150" width="280" height="6" fill="#c8893a"/>
+    <rect x="20" y="114" width="90" height="6" fill="#c8893a"/>
+    <rect x="96" y="112" width="30" height="8" fill="#c8893a"/><rect x="176" y="112" width="30" height="8" fill="#c8893a"/>
+    <rect x="102" y="88" width="98" height="24" fill="#d8cfc0" stroke="var(--ink)"/>
+    <rect x="102" y="88" width="16" height="24" fill="#b9b9b9" stroke="var(--ink)"/><rect x="184" y="88" width="16" height="24" fill="#b9b9b9" stroke="var(--ink)"/>
+    <rect x="206" y="114" width="20" height="6" fill="#c8893a"/>
+    <rect x="218" y="114" width="10" height="42" fill="#c8893a"/>
+    <path d="M120 100Q151 70 182 100" fill="none" stroke="var(--c2)" stroke-width="1.6" stroke-dasharray="4 3"/>
+    <path d="M222 120V150" stroke="var(--c2)" stroke-width="1.6" stroke-dasharray="4 3"/>
+    <g font-size="11.5">
+      <text x="160" y="30" text-anchor="middle" font-weight="600">0402 capacitor, side view</text>
+      <text x="60" y="108" text-anchor="middle">trace</text>
+      <text x="151" y="66" text-anchor="middle" fill="var(--c2)">current loop through the body</text>
+      <text x="236" y="140" fill="var(--c2)">via</text>
+      <text x="160" y="178" text-anchor="middle" fill="var(--muted)">L2 ground</text>
+    </g>
+    <g fill="none" stroke="var(--ink)" stroke-width="1.6">
+      <path d="M350 60H470"/>
+      <path d="M380 60V112M370 112h20M370 119h20M380 119V190"/>
+      <path d="M470 60V70a5 5 0 0 1 0 10a5 5 0 0 1 0 10a5 5 0 0 1 0 10V104l5 2l-10 4l10 4l-10 4l5 2V132M460 132h20M460 139h20M470 139V146a5 5 0 0 1 0 10a5 5 0 0 1 0 10V190"/>
+      <path d="M350 190H520M425 190v6M415 196h20M418 200h14M421 204h8"/>
+    </g>
+    <circle cx="346" cy="60" r="4" fill="#fff" stroke="var(--ink)" stroke-width="1.4"/>
+    <g font-size="11.5">
+      <text x="340" y="48">signal node</text>
+      <text x="374" y="98" text-anchor="end">pad C</text><text x="374" y="140" text-anchor="end" fill="var(--muted)">≈ 0.1–0.3 pF</text>
+      <text x="486" y="88">ESL ≈ 0.4 nH (body)</text>
+      <text x="486" y="116">ESR ≈ 0.1–0.3 Ω</text>
+      <text x="486" y="140">C (nominal)</text>
+      <text x="486" y="164">via ≈ 0.3–0.5 nH</text>
+      <text x="470" y="30" text-anchor="middle" font-weight="600">equivalent circuit</text>
+    </g>
+  </svg>
+  </div>
+</div>
+
+<div class="widget wide" id="w-cz">
+  <div class="wh"><span class="tag">Interactive</span><b>Choosing a coupling capacitor: impedance against frequency</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label for="zF">Operating frequency <b id="zFv"></b></label><input id="zF" type="range" min="100" max="6000" step="5" value="915"></div>
+      <div class="ctrl"><label>Mounting</label><div class="seg" id="zM"><button type="button" data-v="0" class="on">Series (in the trace)</button><button type="button" data-v="1">Shunt (to a via)</button></div></div>
+      <p class="small">0402 parts: body inductance 0.4 nH, ESR 0.2 Ω. A shunt part also has its 0.4 nH ground via in series. Values shown: 10 nF, 1 nF, 100 pF, 47 pF, 10 pF.</p>
+    </div>
+    <div>
+      <canvas id="cvCz" style="height:290px" aria-label="Log-log plot of impedance magnitude against frequency for five capacitor values, each falling to a minimum at its self-resonance and then rising"></canvas>
+      <div class="legend" id="zLeg"></div>
+      <div class="readout">
+        <div class="stat"><div class="k">Lowest impedance here</div><div class="v" id="zB"></div></div>
+        <div class="stat"><div class="k">Its |Z|</div><div class="v" id="zZ"></div></div>
+        <div class="stat"><div class="k">10 nF here</div><div class="v" id="zT"></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>At 915 MHz, which value has the lowest impedance? Is it the largest one?</li>
+    <li>Move to 2.4 GHz. Which value should a DC block be now?</li>
+    <li>Switch to shunt mounting. What happens to every curve above a few hundred megahertz, and why?</li>
+  </ol></div>
+</div>
+
+<p>The radio chip's datasheet usually shows exactly these parts in a reference RF path from the chip's pin to the antenna connector. The values only hold with the layout they were tuned on:</p>
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>A typical reference RF path from a radio chip, top view</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 200" role="img" aria-label="Top view. The radio chip's RF pin connects to a short trace with a series inductor and two shunt capacitors forming a matching network, then a low-pass harmonic filter of series inductors and shunt capacitors, then a DC-blocking capacitor and an SMA connector at the board edge. Each shunt part has its own ground via right at its pad.">
+    <rect x="10" y="20" width="620" height="160" fill="#e7c89b"/>
+    <rect x="40" y="60" width="90" height="90" fill="#555"/>
+    <rect x="130" y="96" width="460" height="18" fill="#f6efe2"/>
+    <rect x="130" y="101" width="470" height="8" fill="#c8893a"/>
+    <rect x="590" y="88" width="40" height="34" fill="#bfc3c8" stroke="var(--ink)"/>
+    <g><rect x="160" y="114" width="10" height="10" fill="#c8893a"/><rect x="159" y="124" width="12" height="16" fill="#9aa3ad"/><rect x="160" y="140" width="10" height="10" fill="#c8893a"/><circle cx="165" cy="160" r="5" fill="#fff" stroke="#8a5a20" stroke-width="1.4"/><rect x="163" y="150" width="4" height="6" fill="#c8893a"/><rect x="190" y="98" width="10" height="14" fill="#c8893a"/><rect x="206" y="98" width="10" height="14" fill="#c8893a"/><rect x="196" y="99" width="14" height="12" fill="#9aa3ad"/><rect x="200" y="96" width="6" height="18" fill="#f6efe2"/><rect x="199" y="99" width="8" height="12" fill="#9aa3ad"/><rect x="240" y="114" width="10" height="10" fill="#c8893a"/><rect x="239" y="124" width="12" height="16" fill="#9aa3ad"/><rect x="240" y="140" width="10" height="10" fill="#c8893a"/><circle cx="245" cy="160" r="5" fill="#fff" stroke="#8a5a20" stroke-width="1.4"/><rect x="243" y="150" width="4" height="6" fill="#c8893a"/><rect x="320" y="114" width="10" height="10" fill="#c8893a"/><rect x="319" y="124" width="12" height="16" fill="#9aa3ad"/><rect x="320" y="140" width="10" height="10" fill="#c8893a"/><circle cx="325" cy="160" r="5" fill="#fff" stroke="#8a5a20" stroke-width="1.4"/><rect x="323" y="150" width="4" height="6" fill="#c8893a"/><rect x="350" y="98" width="10" height="14" fill="#c8893a"/><rect x="366" y="98" width="10" height="14" fill="#c8893a"/><rect x="356" y="99" width="14" height="12" fill="#9aa3ad"/><rect x="360" y="96" width="6" height="18" fill="#f6efe2"/><rect x="359" y="99" width="8" height="12" fill="#9aa3ad"/><rect x="400" y="114" width="10" height="10" fill="#c8893a"/><rect x="399" y="124" width="12" height="16" fill="#9aa3ad"/><rect x="400" y="140" width="10" height="10" fill="#c8893a"/><circle cx="405" cy="160" r="5" fill="#fff" stroke="#8a5a20" stroke-width="1.4"/><rect x="403" y="150" width="4" height="6" fill="#c8893a"/><rect x="430" y="98" width="10" height="14" fill="#c8893a"/><rect x="446" y="98" width="10" height="14" fill="#c8893a"/><rect x="436" y="99" width="14" height="12" fill="#9aa3ad"/><rect x="440" y="96" width="6" height="18" fill="#f6efe2"/><rect x="439" y="99" width="8" height="12" fill="#9aa3ad"/><rect x="480" y="114" width="10" height="10" fill="#c8893a"/><rect x="479" y="124" width="12" height="16" fill="#9aa3ad"/><rect x="480" y="140" width="10" height="10" fill="#c8893a"/><circle cx="485" cy="160" r="5" fill="#fff" stroke="#8a5a20" stroke-width="1.4"/><rect x="483" y="150" width="4" height="6" fill="#c8893a"/><rect x="530" y="98" width="10" height="14" fill="#c8893a"/><rect x="546" y="98" width="10" height="14" fill="#c8893a"/><rect x="536" y="99" width="14" height="12" fill="#9aa3ad"/><rect x="540" y="96" width="6" height="18" fill="#f6efe2"/><rect x="539" y="99" width="8" height="12" fill="#9aa3ad"/></g>
+    <g font-size="11.5" text-anchor="middle">
+      <text x="85" y="110" fill="#fff">radio</text>
+      <text x="215" y="44">matching network</text>
+      <text x="395" y="44">harmonic filter</text>
+      <text x="540" y="44">DC block</text>
+      <text x="610" y="140" font-size="10.5">SMA</text>
+      <text x="320" y="196" fill="var(--muted)">copy the reference layout's part sizes, spacing and via positions, not only the values</text>
+    </g>
+  </svg>
+  </div>
+</div>
+
 <details class="exercise">
   <summary><span class="ek">Design exercise</span><span class="et">A DC block for a 915 MHz line</span></summary>
   <div class="eb">
@@ -407,6 +946,62 @@
   <li>Keep the reference plane continuous under both lines; an obstacle under only one of them breaks the symmetry.</li>
 </ul>
 <p>Most differential RF ports connect to a single-ended 50 Ω antenna through a balun (Module 3), often an integrated chip balun or a small lumped LC network placed right next to the chip. Keep the differential section between the chip and the balun short and symmetric, and everything after the balun is ordinary single-ended routing.</p>
+
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>An edge-coupled differential pair: cross-section and routing</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 240" role="img" aria-label="Left: cross-section of two traces over a ground plane carrying equal and opposite voltages; most field lines run from one trace to the other, some to the plane. Right, top: a symmetric pair from a chip to a balun. Right, bottom: a pair whose two traces fan out from the chip pins differently, with a small serpentine on the shorter trace placed right at the fan-out to restore equal lengths.">
+    <rect x="20" y="110" width="270" height="50" fill="#e6efd9"/><rect x="20" y="160" width="270" height="6" fill="#c8893a"/>
+    <rect x="96" y="104" width="40" height="6" fill="#c8893a"/><rect x="164" y="104" width="40" height="6" fill="#c8893a"/>
+    <g fill="none" stroke="var(--c1)" stroke-width="1.1">
+      <path d="M136 106H164M136 104C140 92 160 92 164 104M126 104C132 74 168 74 174 104"/>
+      <path d="M110 110V160M190 110V160"/>
+    </g>
+    <g font-size="12" font-weight="600"><text x="116" y="96" text-anchor="middle">+</text><text x="184" y="96" text-anchor="middle">−</text></g>
+    <g font-size="11" fill="var(--muted)" text-anchor="middle"><text x="116" y="128">w</text><text x="150" y="128">s</text><text x="232" y="140">h</text></g>
+    <g font-size="11.5" text-anchor="middle">
+      <text x="155" y="40" font-weight="600">cross-section</text>
+      <text x="155" y="190" fill="var(--muted)">field mostly between the two traces:</text>
+      <text x="155" y="205" fill="var(--muted)">differential impedance set by w, s and h</text>
+    </g>
+    <rect x="330" y="40" width="50" height="60" fill="#555"/><rect x="560" y="45" width="50" height="50" fill="#9aa3ad"/>
+    <path d="M380 62H560M380 78H560" stroke="#c8893a" stroke-width="5"/>
+    <rect x="330" y="140" width="50" height="60" fill="#555"/><rect x="560" y="150" width="50" height="50" fill="#9aa3ad"/>
+    <path d="M380 156H400L410 166H560M380 186H404L408 182H428V190H436V182H444V190H452V182H560" stroke="#c8893a" stroke-width="5" fill="none" stroke-linejoin="round"/>
+    <g font-size="11.5" text-anchor="middle">
+      <text x="355" y="74" fill="#fff">chip</text><text x="585" y="74">balun</text>
+      <text x="355" y="174" fill="#fff">chip</text><text x="585" y="179">balun</text>
+      <text x="470" y="30" font-weight="600">symmetric pair</text>
+      <text x="470" y="128" font-weight="600">pins at different spacing: match length at the source</text>
+      <text x="458" y="210" fill="var(--muted)">serpentine on the shorter trace, right at the fan-out</text>
+    </g>
+  </svg>
+  </div>
+</div>
+
+<div class="widget wide" id="w-dp">
+  <div class="wh"><span class="tag">Interactive</span><b>Length mismatch in a differential pair</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label for="dL">Length difference <b id="dLv"></b></label><input id="dL" type="range" min="0" max="15" step="0.1" value="3"></div>
+      <div class="ctrl"><label for="dF">Frequency <b id="dFv"></b></label><input id="dF" type="range" min="0.1" max="6" step="0.05" value="2.4"></div>
+      <p class="small">Microstrip on FR-4, effective εr = 3.3. A length difference delays one signal relative to the other, so they're no longer exactly opposite. The part that's left over is common-mode.</p>
+    </div>
+    <div>
+      <canvas id="cvDp" style="height:270px" aria-label="Top: the two signals of the pair, showing the phase shift between them, and their sum, the common-mode signal. Bottom: common-mode level relative to the differential signal against length difference."></canvas>
+      <div class="legend"><span style="--c:var(--c1)">trace +</span><span style="--c:var(--c2)">trace − (inverted for comparison)</span><span style="--c:var(--bad)">common-mode</span></div>
+      <div class="readout">
+        <div class="stat"><div class="k">Phase error</div><div class="v" id="dP"></div></div>
+        <div class="stat" id="dCS"><div class="k">Common-mode, relative</div><div class="v" id="dC"></div></div>
+        <div class="stat"><div class="k">Differential loss</div><div class="v" id="dD"></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>At 2.4 GHz, how much length difference keeps the common-mode 30 dB below the signal?</li>
+    <li>The same 3 mm mismatch at 433 MHz and at 5.8 GHz: which matters?</li>
+  </ol></div>
+</div>
 
 <details class="exercise">
   <summary><span class="ek">Design exercise</span><span class="et">An asymmetric pair</span></summary>
@@ -441,6 +1036,49 @@
   <li>Design for the worst-case ambient, including the inside of a closed enclosure in the sun, and keep the junction well below the device's maximum (125 °C is a common design limit for long life).</li>
 </ul>
 
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>The heat path from a PA's junction to the air</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 260" role="img" aria-label="Left: cross-section of a QFN power amplifier soldered to a four-layer board. Heat flows from the die through the exposed pad and solder into an array of thermal vias, spreads into the inner and bottom copper planes, and leaves through a thermal pad into the metal enclosure. Right: the equivalent series chain of thermal resistances from junction to ambient.">
+    <defs><marker id="arH" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--bad)"/></marker></defs>
+    <rect x="110" y="40" width="160" height="34" fill="#444"/>
+    <rect x="166" y="46" width="48" height="10" fill="#9aa3ad"/>
+    <rect x="140" y="74" width="100" height="6" fill="#bfbfbf"/>
+    <rect x="30" y="80" width="320" height="104" fill="#e6efd9"/>
+    <g fill="#c8893a"><rect x="30" y="80" width="320" height="5"/><rect x="30" y="112" width="320" height="5"/><rect x="30" y="148" width="320" height="5"/><rect x="30" y="179" width="320" height="5"/></g>
+    <g fill="#c8893a"><rect x="148" y="80" width="6" height="104"/><rect x="168" y="80" width="6" height="104"/><rect x="188" y="80" width="6" height="104"/><rect x="208" y="80" width="6" height="104"/><rect x="228" y="80" width="6" height="104"/></g>
+    <rect x="30" y="184" width="320" height="10" fill="#c9c2b3"/>
+    <rect x="20" y="194" width="340" height="22" fill="#8c9096"/>
+    <g fill="none" stroke="var(--bad)" stroke-width="1.6" marker-end="url(#arH)">
+      <path d="M190 54V100"/><path d="M190 120V174"/><path d="M150 150H70"/><path d="M230 150H310"/><path d="M190 194V214"/>
+    </g>
+    <g font-size="11.5">
+      <text x="190" y="30" text-anchor="middle">PA package (QFN)</text>
+      <text x="280" y="54">die: junction</text>
+      <text x="104" y="76" font-size="10.5" text-anchor="end">exposed pad + solder</text>
+      <text x="360" y="104" font-size="10.5" fill="var(--muted)">thermal vias</text>
+      <text x="360" y="190" font-size="10.5" fill="var(--muted)">thermal pad</text>
+      <text x="370" y="210" font-size="10.5" fill="var(--muted)">enclosure / heatsink</text>
+      <text x="190" y="240" text-anchor="middle" fill="var(--muted)">heat spreads in the planes, then leaves through the enclosure</text>
+    </g>
+    <g fill="none" stroke="var(--ink)" stroke-width="1.6">
+      <path d="M520 34V54l6 3l-12 6l12 6l-12 6l12 6l-6 3V100l6 3l-12 6l12 6l-12 6l12 6l-6 3V146l6 3l-12 6l12 6l-12 6l12 6l-6 3V200"/>
+    </g>
+    <g fill="var(--ink)"><circle cx="520" cy="34" r="3.5"/><circle cx="520" cy="96" r="3.5"/><circle cx="520" cy="142" r="3.5"/><circle cx="520" cy="204" r="3.5"/></g>
+    <g font-size="11.5">
+      <text x="530" y="38">T<tspan font-size="9" dy="2">j</tspan></text>
+      <text x="534" y="70">θ<tspan font-size="9" dy="2">JC</tspan></text>
+      <text x="530" y="100">T<tspan font-size="9" dy="2">case</tspan></text>
+      <text x="534" y="124">θ<tspan font-size="9" dy="2">vias</tspan></text>
+      <text x="530" y="146">T<tspan font-size="9" dy="2">board</tspan></text>
+      <text x="534" y="176">θ<tspan font-size="9" dy="2">BA</tspan></text>
+      <text x="530" y="208">T<tspan font-size="9" dy="2">a</tspan></text>
+      <text x="520" y="236" text-anchor="middle" fill="var(--muted)">heat flow P<tspan font-size="9" dy="2">diss</tspan><tspan dy="-2"> through each</tspan></text>
+    </g>
+  </svg>
+  </div>
+</div>
+
 <div class="widget wide" id="w-th">
   <div class="wh"><span class="tag">Interactive</span><b>Junction temperature of a PA</b></div>
   <div class="wb wcols">
@@ -468,6 +1106,12 @@
   </ol></div>
 </div>
 
+<div class="example">
+  <span class="xk">Application</span>
+  <p>Telemetry transmitters often send in bursts, not continuously, and the duty cycle changes the thermal problem. A PA dissipating 1.5 W while transmitting, on for 20 % of the time, dissipates 0.3 W on average, which sets the board's and enclosure's steady temperature. The junction itself responds within milliseconds, though, so during each burst it still rises by roughly P<sub>diss</sub>·θ<sub>JC</sub> plus whatever the copper immediately under the pad can absorb. Long bursts behave like continuous operation; datasheets give transient thermal impedance curves for the cases in between.</p>
+  <p>A second common case is the sealed enclosure in sunlight: the air inside can be 20–30 °C above the outside temperature before the electronics add anything, and that higher figure is the ambient to design for.</p>
+</div>
+
 <details class="exercise">
   <summary><span class="ek">Design exercise</span><span class="et">Where to spend effort on cooling</span></summary>
   <div class="eb">
@@ -484,6 +1128,85 @@
   </div>
 </details>
 </section>
+
+<!-- ================= 11 PUTTING IT TOGETHER ================= -->
+<section class="sec" id="review" data-short="Reviewing an RF layout">
+<h2>Putting it together: reviewing an RF layout <a class="vjump" data-t="44:00"></a></h2>
+<p>The figure is a compact RF section of the kind found on most radio boards, with each of this module's rules marked where it applies. Reading a layout this way, point by point, is how RF layouts are reviewed before release.</p>
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>An annotated RF section, top view</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 330" role="img" aria-label="Top view of an RF section. A radio chip with an exposed pad and a grid of ground vias sits on the left, with decoupling capacitors at its supply pins and a crystal above it. Its RF pin feeds a matching network, a harmonic filter and a DC-blocking capacitor along a straight coplanar waveguide lined with via fences, ending at an edge-launch SMA connector on the right board edge. The ground pour is stitched with a regular grid of vias. Numbered markers point to each design rule.">
+    <rect x="10" y="10" width="610" height="290" fill="#e7c89b"/>
+    <g fill="#fff" stroke="#8a5a20" stroke-width="1"><circle cx="25" cy="22" r="2.6"/><circle cx="25" cy="44" r="2.6"/><circle cx="25" cy="66" r="2.6"/><circle cx="25" cy="88" r="2.6"/><circle cx="25" cy="110" r="2.6"/><circle cx="25" cy="132" r="2.6"/><circle cx="25" cy="154" r="2.6"/><circle cx="25" cy="176" r="2.6"/><circle cx="25" cy="198" r="2.6"/><circle cx="25" cy="220" r="2.6"/><circle cx="25" cy="242" r="2.6"/><circle cx="25" cy="264" r="2.6"/><circle cx="25" cy="286" r="2.6"/><circle cx="47" cy="22" r="2.6"/><circle cx="47" cy="44" r="2.6"/><circle cx="47" cy="66" r="2.6"/><circle cx="47" cy="88" r="2.6"/><circle cx="47" cy="110" r="2.6"/><circle cx="47" cy="132" r="2.6"/><circle cx="47" cy="154" r="2.6"/><circle cx="47" cy="176" r="2.6"/><circle cx="47" cy="198" r="2.6"/><circle cx="47" cy="220" r="2.6"/><circle cx="47" cy="242" r="2.6"/><circle cx="47" cy="264" r="2.6"/><circle cx="47" cy="286" r="2.6"/><circle cx="69" cy="22" r="2.6"/><circle cx="69" cy="44" r="2.6"/><circle cx="69" cy="66" r="2.6"/><circle cx="69" cy="88" r="2.6"/><circle cx="69" cy="242" r="2.6"/><circle cx="69" cy="264" r="2.6"/><circle cx="69" cy="286" r="2.6"/><circle cx="91" cy="22" r="2.6"/><circle cx="91" cy="242" r="2.6"/><circle cx="91" cy="264" r="2.6"/><circle cx="91" cy="286" r="2.6"/><circle cx="113" cy="22" r="2.6"/><circle cx="113" cy="242" r="2.6"/><circle cx="113" cy="264" r="2.6"/><circle cx="113" cy="286" r="2.6"/><circle cx="135" cy="22" r="2.6"/><circle cx="135" cy="242" r="2.6"/><circle cx="135" cy="264" r="2.6"/><circle cx="135" cy="286" r="2.6"/><circle cx="157" cy="22" r="2.6"/><circle cx="157" cy="242" r="2.6"/><circle cx="157" cy="264" r="2.6"/><circle cx="157" cy="286" r="2.6"/><circle cx="179" cy="22" r="2.6"/><circle cx="179" cy="44" r="2.6"/><circle cx="179" cy="66" r="2.6"/><circle cx="179" cy="88" r="2.6"/><circle cx="179" cy="242" r="2.6"/><circle cx="179" cy="264" r="2.6"/><circle cx="179" cy="286" r="2.6"/><circle cx="201" cy="22" r="2.6"/><circle cx="201" cy="44" r="2.6"/><circle cx="201" cy="66" r="2.6"/><circle cx="201" cy="88" r="2.6"/><circle cx="201" cy="110" r="2.6"/><circle cx="201" cy="132" r="2.6"/><circle cx="201" cy="220" r="2.6"/><circle cx="201" cy="242" r="2.6"/><circle cx="201" cy="264" r="2.6"/><circle cx="201" cy="286" r="2.6"/><circle cx="223" cy="22" r="2.6"/><circle cx="223" cy="44" r="2.6"/><circle cx="223" cy="66" r="2.6"/><circle cx="223" cy="88" r="2.6"/><circle cx="223" cy="110" r="2.6"/><circle cx="223" cy="132" r="2.6"/><circle cx="223" cy="220" r="2.6"/><circle cx="223" cy="242" r="2.6"/><circle cx="223" cy="264" r="2.6"/><circle cx="223" cy="286" r="2.6"/><circle cx="245" cy="22" r="2.6"/><circle cx="245" cy="44" r="2.6"/><circle cx="245" cy="66" r="2.6"/><circle cx="245" cy="88" r="2.6"/><circle cx="245" cy="110" r="2.6"/><circle cx="245" cy="132" r="2.6"/><circle cx="245" cy="220" r="2.6"/><circle cx="245" cy="242" r="2.6"/><circle cx="245" cy="264" r="2.6"/><circle cx="245" cy="286" r="2.6"/><circle cx="267" cy="22" r="2.6"/><circle cx="267" cy="44" r="2.6"/><circle cx="267" cy="66" r="2.6"/><circle cx="267" cy="88" r="2.6"/><circle cx="267" cy="110" r="2.6"/><circle cx="267" cy="132" r="2.6"/><circle cx="267" cy="220" r="2.6"/><circle cx="267" cy="242" r="2.6"/><circle cx="267" cy="264" r="2.6"/><circle cx="267" cy="286" r="2.6"/><circle cx="289" cy="22" r="2.6"/><circle cx="289" cy="44" r="2.6"/><circle cx="289" cy="66" r="2.6"/><circle cx="289" cy="88" r="2.6"/><circle cx="289" cy="110" r="2.6"/><circle cx="289" cy="132" r="2.6"/><circle cx="289" cy="220" r="2.6"/><circle cx="289" cy="242" r="2.6"/><circle cx="289" cy="264" r="2.6"/><circle cx="289" cy="286" r="2.6"/><circle cx="311" cy="22" r="2.6"/><circle cx="311" cy="44" r="2.6"/><circle cx="311" cy="66" r="2.6"/><circle cx="311" cy="88" r="2.6"/><circle cx="311" cy="110" r="2.6"/><circle cx="311" cy="132" r="2.6"/><circle cx="311" cy="220" r="2.6"/><circle cx="311" cy="242" r="2.6"/><circle cx="311" cy="264" r="2.6"/><circle cx="311" cy="286" r="2.6"/><circle cx="333" cy="22" r="2.6"/><circle cx="333" cy="44" r="2.6"/><circle cx="333" cy="66" r="2.6"/><circle cx="333" cy="88" r="2.6"/><circle cx="333" cy="110" r="2.6"/><circle cx="333" cy="132" r="2.6"/><circle cx="333" cy="220" r="2.6"/><circle cx="333" cy="242" r="2.6"/><circle cx="333" cy="264" r="2.6"/><circle cx="333" cy="286" r="2.6"/><circle cx="355" cy="22" r="2.6"/><circle cx="355" cy="44" r="2.6"/><circle cx="355" cy="66" r="2.6"/><circle cx="355" cy="88" r="2.6"/><circle cx="355" cy="110" r="2.6"/><circle cx="355" cy="132" r="2.6"/><circle cx="355" cy="220" r="2.6"/><circle cx="355" cy="242" r="2.6"/><circle cx="355" cy="264" r="2.6"/><circle cx="355" cy="286" r="2.6"/><circle cx="377" cy="22" r="2.6"/><circle cx="377" cy="44" r="2.6"/><circle cx="377" cy="66" r="2.6"/><circle cx="377" cy="88" r="2.6"/><circle cx="377" cy="110" r="2.6"/><circle cx="377" cy="132" r="2.6"/><circle cx="377" cy="220" r="2.6"/><circle cx="377" cy="242" r="2.6"/><circle cx="377" cy="264" r="2.6"/><circle cx="377" cy="286" r="2.6"/><circle cx="399" cy="22" r="2.6"/><circle cx="399" cy="44" r="2.6"/><circle cx="399" cy="66" r="2.6"/><circle cx="399" cy="88" r="2.6"/><circle cx="399" cy="110" r="2.6"/><circle cx="399" cy="132" r="2.6"/><circle cx="399" cy="220" r="2.6"/><circle cx="399" cy="242" r="2.6"/><circle cx="399" cy="264" r="2.6"/><circle cx="399" cy="286" r="2.6"/><circle cx="421" cy="22" r="2.6"/><circle cx="421" cy="44" r="2.6"/><circle cx="421" cy="66" r="2.6"/><circle cx="421" cy="88" r="2.6"/><circle cx="421" cy="110" r="2.6"/><circle cx="421" cy="132" r="2.6"/><circle cx="421" cy="220" r="2.6"/><circle cx="421" cy="242" r="2.6"/><circle cx="421" cy="264" r="2.6"/><circle cx="421" cy="286" r="2.6"/><circle cx="443" cy="22" r="2.6"/><circle cx="443" cy="44" r="2.6"/><circle cx="443" cy="66" r="2.6"/><circle cx="443" cy="88" r="2.6"/><circle cx="443" cy="110" r="2.6"/><circle cx="443" cy="132" r="2.6"/><circle cx="443" cy="220" r="2.6"/><circle cx="443" cy="242" r="2.6"/><circle cx="443" cy="264" r="2.6"/><circle cx="443" cy="286" r="2.6"/><circle cx="465" cy="22" r="2.6"/><circle cx="465" cy="44" r="2.6"/><circle cx="465" cy="66" r="2.6"/><circle cx="465" cy="88" r="2.6"/><circle cx="465" cy="110" r="2.6"/><circle cx="465" cy="132" r="2.6"/><circle cx="465" cy="220" r="2.6"/><circle cx="465" cy="242" r="2.6"/><circle cx="465" cy="264" r="2.6"/><circle cx="465" cy="286" r="2.6"/><circle cx="487" cy="22" r="2.6"/><circle cx="487" cy="44" r="2.6"/><circle cx="487" cy="66" r="2.6"/><circle cx="487" cy="88" r="2.6"/><circle cx="487" cy="110" r="2.6"/><circle cx="487" cy="132" r="2.6"/><circle cx="487" cy="220" r="2.6"/><circle cx="487" cy="242" r="2.6"/><circle cx="487" cy="264" r="2.6"/><circle cx="487" cy="286" r="2.6"/><circle cx="509" cy="22" r="2.6"/><circle cx="509" cy="44" r="2.6"/><circle cx="509" cy="66" r="2.6"/><circle cx="509" cy="88" r="2.6"/><circle cx="509" cy="110" r="2.6"/><circle cx="509" cy="132" r="2.6"/><circle cx="509" cy="220" r="2.6"/><circle cx="509" cy="242" r="2.6"/><circle cx="509" cy="264" r="2.6"/><circle cx="509" cy="286" r="2.6"/><circle cx="531" cy="22" r="2.6"/><circle cx="531" cy="44" r="2.6"/><circle cx="531" cy="66" r="2.6"/><circle cx="531" cy="88" r="2.6"/><circle cx="531" cy="110" r="2.6"/><circle cx="531" cy="132" r="2.6"/><circle cx="531" cy="220" r="2.6"/><circle cx="531" cy="242" r="2.6"/><circle cx="531" cy="264" r="2.6"/><circle cx="531" cy="286" r="2.6"/><circle cx="553" cy="22" r="2.6"/><circle cx="553" cy="44" r="2.6"/><circle cx="553" cy="66" r="2.6"/><circle cx="553" cy="88" r="2.6"/><circle cx="553" cy="110" r="2.6"/><circle cx="553" cy="132" r="2.6"/><circle cx="553" cy="220" r="2.6"/><circle cx="553" cy="242" r="2.6"/><circle cx="553" cy="264" r="2.6"/><circle cx="553" cy="286" r="2.6"/><circle cx="575" cy="22" r="2.6"/><circle cx="575" cy="44" r="2.6"/><circle cx="575" cy="66" r="2.6"/><circle cx="575" cy="88" r="2.6"/><circle cx="575" cy="110" r="2.6"/><circle cx="575" cy="132" r="2.6"/><circle cx="575" cy="220" r="2.6"/><circle cx="575" cy="242" r="2.6"/><circle cx="575" cy="264" r="2.6"/><circle cx="575" cy="286" r="2.6"/><circle cx="597" cy="22" r="2.6"/><circle cx="597" cy="44" r="2.6"/><circle cx="597" cy="66" r="2.6"/><circle cx="597" cy="88" r="2.6"/><circle cx="597" cy="110" r="2.6"/><circle cx="597" cy="132" r="2.6"/><circle cx="597" cy="220" r="2.6"/><circle cx="597" cy="242" r="2.6"/><circle cx="597" cy="264" r="2.6"/><circle cx="597" cy="286" r="2.6"/></g>
+    <rect x="60" y="120" width="110" height="110" fill="#444"/>
+    <rect x="85" y="145" width="60" height="60" fill="#6b6b6b"/>
+    <g fill="#fff" stroke="#333" stroke-width="1"><circle cx="97" cy="157" r="3.5"/><circle cx="97" cy="175" r="3.5"/><circle cx="97" cy="193" r="3.5"/><circle cx="115" cy="157" r="3.5"/><circle cx="115" cy="175" r="3.5"/><circle cx="115" cy="193" r="3.5"/><circle cx="133" cy="157" r="3.5"/><circle cx="133" cy="175" r="3.5"/><circle cx="133" cy="193" r="3.5"/></g>
+    <rect x="170" y="166" width="420" height="22" fill="#f6efe2"/>
+    <rect x="170" y="172" width="440" height="10" fill="#c8893a"/>
+    <g fill="#fff" stroke="#8a5a20" stroke-width="1.2"><circle cx="180" cy="160" r="3"/><circle cx="180" cy="194" r="3"/><circle cx="196" cy="160" r="3"/><circle cx="212" cy="160" r="3"/><circle cx="228" cy="160" r="3"/><circle cx="228" cy="194" r="3"/><circle cx="244" cy="160" r="3"/><circle cx="244" cy="194" r="3"/><circle cx="260" cy="160" r="3"/><circle cx="276" cy="160" r="3"/><circle cx="292" cy="160" r="3"/><circle cx="292" cy="194" r="3"/><circle cx="308" cy="160" r="3"/><circle cx="308" cy="194" r="3"/><circle cx="324" cy="160" r="3"/><circle cx="324" cy="194" r="3"/><circle cx="340" cy="160" r="3"/><circle cx="340" cy="194" r="3"/><circle cx="356" cy="160" r="3"/><circle cx="356" cy="194" r="3"/><circle cx="372" cy="160" r="3"/><circle cx="388" cy="160" r="3"/><circle cx="388" cy="194" r="3"/><circle cx="404" cy="160" r="3"/><circle cx="404" cy="194" r="3"/><circle cx="420" cy="160" r="3"/><circle cx="420" cy="194" r="3"/><circle cx="436" cy="160" r="3"/><circle cx="452" cy="160" r="3"/><circle cx="468" cy="160" r="3"/><circle cx="468" cy="194" r="3"/><circle cx="484" cy="160" r="3"/><circle cx="484" cy="194" r="3"/><circle cx="500" cy="160" r="3"/><circle cx="516" cy="160" r="3"/><circle cx="532" cy="160" r="3"/><circle cx="532" cy="194" r="3"/><circle cx="548" cy="160" r="3"/><circle cx="548" cy="194" r="3"/><circle cx="564" cy="160" r="3"/><circle cx="564" cy="194" r="3"/><circle cx="580" cy="160" r="3"/><circle cx="580" cy="194" r="3"/><circle cx="596" cy="160" r="3"/><circle cx="596" cy="194" r="3"/></g>
+    <g><rect x="200" y="182" width="10" height="4" fill="#c8893a"/><rect x="199" y="186" width="12" height="18" fill="#9aa3ad" stroke="#555" stroke-width=".6"/><circle cx="205" cy="212" r="5" fill="#fff" stroke="#8a5a20" stroke-width="1.4"/><rect x="203" y="204" width="4" height="4" fill="#c8893a"/><rect x="222" y="170" width="10" height="14" fill="#c8893a"/><rect x="238" y="170" width="10" height="14" fill="#c8893a"/><rect x="232" y="168" width="6" height="18" fill="#f6efe2"/><rect x="228" y="171" width="14" height="12" fill="#9aa3ad" stroke="#555" stroke-width=".6"/><rect x="262" y="182" width="10" height="4" fill="#c8893a"/><rect x="261" y="186" width="12" height="18" fill="#9aa3ad" stroke="#555" stroke-width=".6"/><circle cx="267" cy="212" r="5" fill="#fff" stroke="#8a5a20" stroke-width="1.4"/><rect x="265" y="204" width="4" height="4" fill="#c8893a"/><rect x="370" y="182" width="10" height="4" fill="#c8893a"/><rect x="369" y="186" width="12" height="18" fill="#9aa3ad" stroke="#555" stroke-width=".6"/><circle cx="375" cy="212" r="5" fill="#fff" stroke="#8a5a20" stroke-width="1.4"/><rect x="373" y="204" width="4" height="4" fill="#c8893a"/><rect x="395" y="170" width="10" height="14" fill="#c8893a"/><rect x="411" y="170" width="10" height="14" fill="#c8893a"/><rect x="405" y="168" width="6" height="18" fill="#f6efe2"/><rect x="401" y="171" width="14" height="12" fill="#9aa3ad" stroke="#555" stroke-width=".6"/><rect x="435" y="182" width="10" height="4" fill="#c8893a"/><rect x="434" y="186" width="12" height="18" fill="#9aa3ad" stroke="#555" stroke-width=".6"/><circle cx="440" cy="212" r="5" fill="#fff" stroke="#8a5a20" stroke-width="1.4"/><rect x="438" y="204" width="4" height="4" fill="#c8893a"/><rect x="460" y="170" width="10" height="14" fill="#c8893a"/><rect x="476" y="170" width="10" height="14" fill="#c8893a"/><rect x="470" y="168" width="6" height="18" fill="#f6efe2"/><rect x="466" y="171" width="14" height="12" fill="#9aa3ad" stroke="#555" stroke-width=".6"/><rect x="500" y="182" width="10" height="4" fill="#c8893a"/><rect x="499" y="186" width="12" height="18" fill="#9aa3ad" stroke="#555" stroke-width=".6"/><circle cx="505" cy="212" r="5" fill="#fff" stroke="#8a5a20" stroke-width="1.4"/><rect x="503" y="204" width="4" height="4" fill="#c8893a"/><rect x="545" y="170" width="10" height="14" fill="#c8893a"/><rect x="561" y="170" width="10" height="14" fill="#c8893a"/><rect x="555" y="168" width="6" height="18" fill="#f6efe2"/><rect x="551" y="171" width="14" height="12" fill="#9aa3ad" stroke="#555" stroke-width=".6"/></g>
+    <rect x="606" y="160" width="14" height="34" fill="#bfc3c8" stroke="var(--ink)"/>
+    <rect x="80" y="40" width="70" height="40" fill="#f6efe2"/>
+    <rect x="94" y="50" width="42" height="20" fill="#9aa3ad" stroke="var(--ink)"/>
+    <g><rect x="60" y="104" width="14" height="10" fill="#9aa3ad" stroke="#555" stroke-width=".6"/><circle cx="67" cy="98" r="3.5" fill="#fff" stroke="#8a5a20" stroke-width="1.2"/><rect x="100" y="104" width="14" height="10" fill="#9aa3ad" stroke="#555" stroke-width=".6"/><circle cx="107" cy="98" r="3.5" fill="#fff" stroke="#8a5a20" stroke-width="1.2"/><rect x="176" y="130" width="14" height="10" fill="#9aa3ad" stroke="#555" stroke-width=".6"/><circle cx="183" cy="146" r="3.5" fill="#fff" stroke="#8a5a20" stroke-width="1.2"/><rect x="176" y="210" width="14" height="10" fill="#9aa3ad" stroke="#555" stroke-width=".6"/><circle cx="183" cy="226" r="3.5" fill="#fff" stroke="#8a5a20" stroke-width="1.2"/></g>
+    <g font-size="11.5" text-anchor="middle">
+      <text x="115" y="136" fill="#fff" font-weight="600">radio</text>
+      <text x="115" y="36" font-size="10.5">crystal, clear area</text>
+    </g>
+    <g font-size="11" font-weight="600" fill="#fff" text-anchor="middle">
+      <circle cx="115" cy="175" r="10" fill="var(--c1)"/><text x="115" y="179">1</text>
+      <circle cx="40" cy="110" r="10" fill="var(--c1)"/><text x="40" y="114">2</text>
+      <circle cx="165" cy="60" r="10" fill="var(--c1)"/><text x="165" y="64">3</text>
+      <circle cx="235" cy="135" r="10" fill="var(--c1)"/><text x="235" y="139">4</text>
+      <circle cx="205" cy="242" r="10" fill="var(--c1)"/><text x="205" y="246">5</text>
+      <circle cx="330" cy="135" r="10" fill="var(--c1)"/><text x="330" y="139">6</text>
+      <circle cx="450" cy="242" r="10" fill="var(--c1)"/><text x="450" y="246">7</text>
+      <circle cx="585" cy="135" r="10" fill="var(--c1)"/><text x="585" y="139">8</text>
+      <circle cx="470" cy="60" r="10" fill="var(--c1)"/><text x="470" y="64">9</text>
+    </g>
+    <text x="320" y="320" font-size="11" fill="var(--muted)" text-anchor="middle">L2 is solid ground under the whole area; vertical scale and part sizes approximate</text>
+  </svg>
+  </div>
+</div>
+<ol class="small">
+  <li><b>Exposed pad</b> soldered down with a grid of ground vias: the chip's RF ground and its heat path.</li>
+  <li><b>Decoupling</b> at every supply pin, smallest value closest to the pin, each with its own ground via (EE Module 3).</li>
+  <li><b>Crystal</b> next to the chip on short traces, nothing routed under it.</li>
+  <li><b>Matching network</b> copied from the reference design: same part sizes, same spacing, same via positions.</li>
+  <li><b>Shunt parts</b> grounded through their own via right at the pad, not through a shared trace.</li>
+  <li><b>RF trace</b> as GCPW: constant width, short and straight, via fences on both sides.</li>
+  <li><b>Harmonic filter</b> laid out in a line, input and output well apart so harmonics can't couple around it.</li>
+  <li><b>Connector launch</b> from the manufacturer's footprint, with ground vias up to the board edge.</li>
+  <li><b>Ground pour</b> stitched on a regular grid at λ/20 or finer, with no isolated islands.</li>
+</ol>
+
+<h3>A review checklist</h3>
+<div class="tablewrap"><table>
+  <tr><th>Area</th><th>Check</th></tr>
+  <tr><td><b>Stackup</b></td><td>Fab's controlled-impedance stackup used; thin dielectric under the RF layer; impedance table on the fab drawing.</td></tr>
+  <tr><td><b>Routing</b></td><td>RF traces at the specified width; no unplanned width changes; pours at the specified gap or well away.</td></tr>
+  <tr><td><b>Return paths</b></td><td>Unbroken reference plane under every RF trace; no slots, splits or via-clearance rows under them.</td></tr>
+  <tr><td><b>Vias</b></td><td>Every reference-plane change has a ground via beside it; stubs acceptable at the highest frequency, or back-drilled.</td></tr>
+  <tr><td><b>Grounding</b></td><td>Pours stitched at λ/20 at the highest relevant frequency (including harmonics near the PA); no floating copper.</td></tr>
+  <tr><td><b>Components</b></td><td>Part sizes and values match the reference design; parts used below their SRF; DC blocks and chokes chosen by SRF.</td></tr>
+  <tr><td><b>Placement</b></td><td>Switching regulators and digital circuits away from the RF chain; crystal next to the chip.</td></tr>
+  <tr><td><b>Thermal</b></td><td>Thermal via pattern under every exposed pad; vias filled or small enough not to wick solder; worst-case junction temperature calculated.</td></tr>
+  <tr><td><b>Test access</b></td><td>A way to measure the RF path on the bench: a connector, or footprints for a test cable or a 0 Ω link to break the path.</td></tr>
+</table></div>
+
+<h3>Symptoms and their usual layout causes</h3>
+<div class="tablewrap"><table>
+  <tr><th>Symptom on the bench</th><th>Usual layout causes</th></tr>
+  <tr><td>Output power a few dB low, and range shorter than expected</td><td>Matching network tuned for a different layout or stackup; lossy or long RF trace; poor connector launch.</td></tr>
+  <tr><td>Harmonics fail the emissions limit</td><td>Harmonic filter coupled around by layout (input near output, shared ground trace); unstitched pour radiating; filter parts used above their SRF.</td></tr>
+  <tr><td>Receiver less sensitive than the datasheet</td><td>Noise from a switching regulator or digital lines coupling into the receive path; loss before the LNA.</td></tr>
+  <tr><td>Narrow spurs at regular frequency spacing</td><td>Switching regulator harmonics; a clock coupling into the RF path or the crystal.</td></tr>
+  <tr><td>Performance changes when touching the board or moving the cable</td><td>Missing balun or common-mode current on the cable; poor grounding at the connector; a resonant pour.</td></tr>
+  <tr><td>PA hot, output drops over a few minutes</td><td>Too few thermal vias, solder voids under the exposed pad, no path from the board to the enclosure.</td></tr>
+</table></div>
+</section>
+
 
 <!-- ================= DESIGN EXERCISES ================= -->
 <section class="sec" id="exercises" data-nonum data-short="Design exercises">
@@ -684,6 +1407,225 @@ function setVerdict(el, cls, html){ el.className = 'verdict ' + cls; el.innerHTM
     else Plot.text(ctx, 'Tj', X(tj) + 6, y0 + h/2, {color: col.ink, bold: true});
   });
   ['#tP', '#tE', '#tN', '#tA'].forEach(id => $(id).addEventListener('input', upd));
+  upd();
+})();
+function seg(id, cb){
+  const el = $(id);
+  el.addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    el.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
+    cb();
+  });
+  return () => el.querySelector('button.on').dataset.v;
+}
+// Pozar's microstrip synthesis (eq. 3.197): w/h for a target Z0
+function msWh(z0, er){
+  const A = z0/60*Math.sqrt((er + 1)/2) + (er - 1)/(er + 1)*(0.23 + 0.11/er);
+  const r1 = 8*Math.exp(A)/(Math.exp(2*A) - 2);
+  if (r1 < 2) return r1;
+  const B = 377*Math.PI/(2*z0*Math.sqrt(er));
+  return 2/Math.PI*(B - 1 - Math.log(2*B - 1) + (er - 1)/(2*er)*(Math.log(B - 1) + 0.39 - 0.61/er));
+}
+const msEeff = (er, wh) => (er + 1)/2 + (er - 1)/2/Math.sqrt(1 + 12/wh);
+
+/* ============ 3. Height, width and crosstalk ============ */
+(() => {
+  let s = {};
+  function upd(){
+    const h = +$('#mH').value, g = +$('#mS').value, er = +$('#mE').value, w = msWh(50, er)*h, D = w + g, k = 20*Math.log10(1/(1 + (D/h)**2));
+    s = {h, g, er, w};
+    $('#mHv').textContent = fmt(h, 3) + ' mm'; $('#mSv').textContent = fmt(g, 3) + ' mm'; $('#mEv').textContent = fmt(er, 3);
+    $('#mW').textContent = fmt(w, 3) + ' mm'; $('#mX').textContent = fmt(k, 3) + ' dB'; $('#mP').textContent = fmt(w/0.5, 2) + '×';
+    $('#mXS').className = 'stat ' + (k > -20 ? 'bad' : k > -30 ? 'warn' : '');
+    const v = $('#mVerdict');
+    if (k <= -30) setVerdict(v, 'ok', `<b>Well isolated.</b> The neighbour is ${fmt(D/h, 2)} dielectric heights away, centre to centre, so very little of the field reaches it.`);
+    else if (k <= -20) setVerdict(v, 'warn', `<b>Some coupling.</b> The neighbour sits ${fmt(D/h, 2)} heights away. Fine for most signals, but too close to a sensitive receiver input or a strong transmitter output.`);
+    else setVerdict(v, 'bad', `<b>Strongly coupled.</b> The neighbour is only ${fmt(D/h, 2)} heights away, inside the trace's field. Either increase the gap or reduce the height to the plane.`);
+    w_.redraw();
+  }
+  const w_ = Plot.widget($('#cvMs'), (ctx, W, H) => {
+    const {h, g, w} = s; if (!w) return;
+    const ext = 2*w + g + 8*h, sc = Math.min((W - 40)/ext, 110/h, 400);
+    const yT = 70, yP = yT + h*sc, cx = W/2, x1 = cx - g/2*sc - w*sc, x2 = cx + g/2*sc;
+    ctx.fillStyle = '#e6efd9'; ctx.fillRect(10, yT, W - 20, yP - yT);
+    ctx.fillStyle = '#c8893a'; ctx.fillRect(10, yP, W - 20, 5);
+    ctx.fillStyle = Plot.rgba(col.c1, .14);
+    [x1, x2].forEach(x => ctx.fillRect(Math.max(10, x - 3*h*sc), yT - 10, Math.min(W - 10, x + w*sc + 3*h*sc) - Math.max(10, x - 3*h*sc), yP - yT + 10));
+    ctx.fillStyle = '#c8893a'; ctx.fillRect(x1, yT - 5, w*sc, 5); ctx.fillStyle = '#a5743a'; ctx.fillRect(x2, yT - 5, w*sc, 5);
+    ctx.fillStyle = '#9aa3ad'; ctx.fillRect(x1 + w*sc/2 - 0.25*sc, yT - 32, 0.5*sc, 10);
+    Plot.text(ctx, '0402 pad width', x1 + w*sc/2, yT - 44, {align: 'center', color: col.muted});
+    Plot.text(ctx, '50 Ω trace', x1 + w*sc/2, yP + 18, {align: 'center', color: col.ink2});
+    Plot.text(ctx, 'neighbour', x2 + w*sc/2, yP + 18, {align: 'center', color: col.ink2});
+    Plot.text(ctx, 'shaded: within 3h of each trace, where most of its field lies', 12, H - 12, {color: col.muted});
+    Plot.text(ctx, 'scale: ' + fmt(sc, 2) + ' px per mm', W - 12, 14, {align: 'right', color: col.muted});
+  });
+  ['#mH', '#mS', '#mE'].forEach(id => $(id).addEventListener('input', upd));
+  upd();
+})();
+
+/* ============ 4. Material loss ============ */
+(() => {
+  const MATS = [{n: 'FR-4', er: 4.3, t: 0.02, c: col.c2}, {n: 'low-loss FR-4', er: 3.8, t: 0.010, c: col.c3}, {n: 'RO4350B', er: 3.66, t: 0.0037, c: col.c1}, {n: 'PTFE', er: 2.2, t: 0.0009, c: col.c5}];
+  const H = 0.25e-3, SIG = 5.8e7, MU = 4e-7*Math.PI, ROUGH = 1.5;
+  MATS.forEach(m => { m.wh = msWh(50, m.er); m.w = m.wh*H; m.ee = msEeff(m.er, m.wh); });
+  const loss = (m, f, L) => {
+    const k0 = 2*Math.PI*f/3e8, ad = k0*m.er*(m.ee - 1)*m.t/(2*Math.sqrt(m.ee)*(m.er - 1)), rs = Math.sqrt(Math.PI*f*MU/SIG), ac = ROUGH*rs/(50*m.w);
+    return {t: 8.686*(ad + ac)*L, d: 8.686*ad*L, c: 8.686*ac*L};
+  };
+  $('#lR').innerHTML = MATS.map((m, i) => `<div class="stat"><div class="k">${m.n}</div><div class="v" id="lR${i}"></div></div>`).join('');
+  let s = {};
+  function upd(){
+    const L = +$('#lL').value/1000, f = +$('#lF').value*1e9;
+    s = {L, f};
+    $('#lLv').textContent = Math.round(L*1000) + ' mm'; $('#lFv').textContent = si(f, 'Hz');
+    const r = MATS.map(m => loss(m, f, L));
+    r.forEach((x, i) => $('#lR' + i).textContent = fmt(x.t, 2) + ' dB');
+    const v = $('#lVerdict'), diff = r[0].t - r[2].t;
+    if (r[0].t < 0.3) setVerdict(v, 'ok', `<b>Material barely matters here.</b> Even on FR-4 the line loses only ${fmt(r[0].t, 2)} dB. Choose the cheapest material that holds its εr well enough.`);
+    else if (diff < 1) setVerdict(v, 'warn', `<b>A modest difference.</b> An RF laminate saves ${fmt(diff, 2)} dB over FR-4. On RO4350B, ${Math.round(100*r[2].c/r[2].t)} % of the remaining loss is in the copper.`);
+    else setVerdict(v, 'bad', `<b>The material matters.</b> FR-4 loses ${fmt(r[0].t, 3)} dB, RO4350B ${fmt(r[2].t, 3)} dB: ${fmt(diff, 2)} dB that a receiver's sensitivity or a transmitter's output would lose on FR-4.`);
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvLoss'), (ctx, W, H2) => {
+    const {L, f} = s; if (!L) return;
+    const P = {l: 52, r: W - 24, t: 14, b: H2 - 40};
+    const top = Math.max(0.5, loss(MATS[0], 10e9, L).t*1.05);
+    const X = Plot.lin(0, 10e9, P.l, P.r), Y = Plot.lin(0, top, P.b, P.t);
+    Plot.axes(ctx, P, X, Y, {xt: [0, 2e9, 4e9, 6e9, 8e9, 10e9], yt: Plot.ticks(0, top, 5), xl: 'frequency', yl: 'loss (dB)', xf: t => si(t, 'Hz').replace(' ', ''), xgrid: true});
+    Plot.clip(ctx, P);
+    MATS.forEach(m => { const pts = []; for (let i = 0; i <= 200; i++){ const ff = 10e9*i/200 + 1e6; pts.push([X(ff), Y(loss(m, ff, L).t)]); } Plot.line(ctx, pts, m.c, 2.2); });
+    Plot.line(ctx, [[X(f), P.t], [X(f), P.b]], col.ink2, 1, [3, 3]);
+    MATS.forEach(m => Plot.dot(ctx, X(f), Y(loss(m, f, L).t), 4, m.c));
+    ctx.restore();
+  });
+  ['#lL', '#lF'].forEach(id => $(id).addEventListener('input', upd));
+  upd();
+})();
+
+/* ============ 5. Roughness ============ */
+(() => {
+  const SIG = 5.8e7, MU = 4e-7*Math.PI;
+  const delta = f => 1/Math.sqrt(Math.PI*f*MU*SIG);
+  const K = (r, f) => 1 + 2/Math.PI*Math.atan(1.4*(r/delta(f))**2);
+  let s = {};
+  function upd(){
+    const r = +$('#rR').value*1e-6, f = +$('#rF').value*1e9;
+    s = {r, f};
+    $('#rRv').textContent = fmt(r*1e6, 2) + ' µm'; $('#rFv').textContent = si(f, 'Hz');
+    $('#rD').textContent = fmt(delta(f)*1e6, 3) + ' µm'; $('#rK').textContent = '× ' + fmt(K(r, f), 3);
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvRough'), (ctx, W, H) => {
+    const {r, f} = s; if (!r) return;
+    const P = {l: 52, r: W - 24, t: 14, b: H - 40};
+    const X = Plot.log(1e8, 3e10, P.l, P.r), Y = Plot.lin(1, 2.05, P.b, P.t);
+    Plot.axes(ctx, P, X, Y, {xt: [1e8, 3e8, 1e9, 3e9, 1e10, 3e10], yt: [1, 1.25, 1.5, 1.75, 2], xl: 'frequency', yl: 'loss multiplier', xf: t => si(t, 'Hz').replace(' ', ''), xgrid: true});
+    Plot.clip(ctx, P);
+    const curve = (rr, c, wd) => { const pts = []; for (let i = 0; i <= 200; i++){ const ff = 1e8*Math.pow(300, i/200); pts.push([X(ff), Y(K(rr, ff))]); } Plot.line(ctx, pts, c, wd); };
+    curve(2e-6, Plot.rgba(col.c2, .55), 1.6); curve(0.4e-6, Plot.rgba(col.c5, .55), 1.6); curve(r, col.c1, 2.6);
+    Plot.line(ctx, [[X(f), P.t], [X(f), P.b]], col.ink2, 1, [3, 3]); Plot.dot(ctx, X(f), Y(K(r, f)), 5, col.c1);
+    ctx.restore();
+  });
+  ['#rR', '#rF'].forEach(id => $(id).addEventListener('input', upd));
+  upd();
+})();
+
+/* ============ 6. Pour island resonance ============ */
+(() => {
+  const band = seg('#pB', upd), ER = 4.2;
+  let s = {};
+  function upd(){
+    const L = +$('#pL').value, n = +$('#pN').value, fr = +band();
+    const sp = n === 1 ? L : L/(n - 1), f1 = n === 1 ? 3e8/(4*sp*1e-3*Math.sqrt(ER)) : 3e8/(2*sp*1e-3*Math.sqrt(ER));
+    const res = []; for (let k = 1; k < 60; k++){ const f = n === 1 ? f1*(2*k - 1) : f1*k; if (f > 3e10) break; res.push(f); }
+    s = {L, n, fr, f1, res, sp};
+    $('#pLv').textContent = L + ' mm'; $('#pNv').textContent = n;
+    $('#pS').textContent = fmt(sp, 3) + ' mm'; $('#pF').textContent = si(f1, 'Hz');
+    const near = res.some(f => [1, 2, 3].some(h => Math.abs(f/(h*fr) - 1) < 0.12)), v = $('#pVerdict');
+    $('#pFS').className = 'stat ' + (near ? 'bad' : f1 < 3*fr ? 'warn' : '');
+    if (near) setVerdict(v, 'bad', `<b>Resonates in use.</b> One of the island's resonances falls on the radio's frequency or one of its first harmonics. It will pick up and re-radiate energy there.`);
+    else if (f1 < 3*fr) setVerdict(v, 'warn', `<b>Too close for comfort.</b> No resonance lands on the radio or its harmonics yet, but they're in the same range, and a small change in εr or a nearby part could move one onto them.`);
+    else setVerdict(v, 'ok', `<b>Stitched well enough.</b> The lowest resonance, ${si(f1, 'Hz')}, is above the radio's third harmonic (${si(3*fr, 'Hz')}).`);
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvPour'), (ctx, W, H) => {
+    const {fr, res} = s; if (!res) return;
+    const P = {l: 34, r: W - 24, t: 30, b: H - 40};
+    const X = Plot.log(1e8, 3e10, P.l, P.r);
+    Plot.axes(ctx, P, X, Plot.lin(0, 1, P.b, P.t), {xt: [1e8, 3e8, 1e9, 3e9, 1e10, 3e10], yt: [], xl: 'frequency', xf: t => si(t, 'Hz').replace(' ', ''), xgrid: true});
+    [1, 2, 3].forEach(h => { const x = X(h*fr); Plot.line(ctx, [[x, P.b], [x, P.t + 30]], col.c1, 3); Plot.text(ctx, h === 1 ? 'radio' : h + 'f', x, P.t + 22, {align: 'center', color: col.c1}); });
+    res.forEach((f, i) => { const x = X(f); Plot.line(ctx, [[x, P.b], [x, P.b - 40]], col.bad, 2.4); if (i < 1) Plot.text(ctx, 'island resonances', x + 6, P.b - 52, {color: col.bad}); });
+  });
+  ['#pL', '#pN'].forEach(id => $(id).addEventListener('input', upd));
+  upd();
+})();
+
+/* ============ 7. Coupling capacitor impedance ============ */
+(() => {
+  const mount = seg('#zM', upd);
+  const CS = [[10e-9, '10 nF', col.c1], [1e-9, '1 nF', col.c2], [100e-12, '100 pF', col.c3], [47e-12, '47 pF', col.c4], [10e-12, '10 pF', col.c5]];
+  const R = 0.2, LB = 0.4e-9, LV = 0.4e-9;
+  const zc = (c, f, sh) => { const w = 2*Math.PI*f, x = w*(LB + (sh ? LV : 0)) - 1/(w*c); return {m: Math.hypot(R, x), x}; };
+  $('#zLeg').innerHTML = CS.map(([, n, c]) => `<span style="--c:${c}">${n}</span>`).join('');
+  let s = {};
+  function upd(){
+    const f = +$('#zF').value*1e6, sh = mount() === '1';
+    s = {f, sh};
+    const zs = CS.map(([c]) => zc(c, f, sh)), bi = zs.reduce((b, z, i) => z.m < zs[b].m ? i : b, 0), t = zs[0];
+    $('#zFv').textContent = si(f, 'Hz');
+    $('#zB').textContent = CS[bi][1]; $('#zZ').textContent = fmt(zs[bi].m, 2) + ' Ω';
+    $('#zT').textContent = fmt(t.m, 2) + ' Ω, ' + (t.x > 0 ? 'inductive' : 'capacitive');
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvCz'), (ctx, W, H) => {
+    const {f, sh} = s; if (!f) return;
+    const P = {l: 52, r: W - 24, t: 14, b: H - 40};
+    const X = Plot.log(1e7, 1e10, P.l, P.r), Y = Plot.log(0.1, 1000, P.b, P.t);
+    Plot.axes(ctx, P, X, Y, {xt: [1e7, 1e8, 1e9, 1e10], yt: [0.1, 1, 10, 100, 1000], xl: 'frequency', yl: '|Z| (Ω)', xf: t => si(t, 'Hz').replace(' ', ''), yf: t => t < 1 ? '0.1' : String(t), xgrid: true});
+    Plot.clip(ctx, P);
+    CS.forEach(([c, , cl]) => { const pts = []; for (let i = 0; i <= 300; i++){ const ff = 1e7*Math.pow(1000, i/300); pts.push([X(ff), Y(Math.max(0.1, zc(c, ff, sh).m))]); } Plot.line(ctx, pts, cl, 2); });
+    Plot.line(ctx, [[X(f), P.t], [X(f), P.b]], col.ink2, 1, [3, 3]);
+    CS.forEach(([c, , cl]) => Plot.dot(ctx, X(f), Y(Math.max(0.1, zc(c, f, sh).m)), 4, cl));
+    ctx.restore();
+    Plot.text(ctx, 'inductive above each minimum', P.r - 4, P.t + 10, {align: 'right', color: col.muted});
+  });
+  $('#zF').addEventListener('input', upd);
+  upd();
+})();
+
+/* ============ 8. Differential pair mismatch ============ */
+(() => {
+  const EE = 3.3;
+  const th = (dl, f) => 2*Math.PI*dl*1e-3*f*Math.sqrt(EE)/3e8;
+  const cm = t => 20*Math.log10(Math.abs(Math.tan(t/2)) + 1e-9);
+  let s = {};
+  function upd(){
+    const dl = +$('#dL').value, f = +$('#dF').value*1e9, t = th(dl, f);
+    s = {dl, f, t};
+    $('#dLv').textContent = fmt(dl, 2) + ' mm'; $('#dFv').textContent = si(f, 'Hz');
+    $('#dP').textContent = fmt(t*180/Math.PI, 3) + '°';
+    const c = cm(t); $('#dC').textContent = dl === 0 ? '−∞ dB' : fmt(c, 3) + ' dB';
+    $('#dCS').className = 'stat ' + (c > -20 ? 'bad' : c > -30 ? 'warn' : '');
+    $('#dD').textContent = fmt(-20*Math.log10(Math.abs(Math.cos(t/2))), 2) + ' dB';
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvDp'), (ctx, W, H) => {
+    const {dl, f, t} = s; if (f === undefined) return;
+    const A = {l: 44, r: W - 14, t: 10, b: H*0.42}, B = {l: 44, r: W - 14, t: H*0.56, b: H - 34};
+    const X = Plot.lin(0, 2, A.l, A.r), Y = Plot.lin(-1.15, 1.15, A.b, A.t);
+    Plot.axes(ctx, A, X, Y, {xt: [], yt: [-1, 0, 1]});
+    const p1 = [], p2 = [], p3 = [];
+    for (let i = 0; i <= 300; i++){ const u = 2*i/300, a = Math.sin(2*Math.PI*u), b = Math.sin(2*Math.PI*u - t); p1.push([X(u), Y(a)]); p2.push([X(u), Y(b)]); p3.push([X(u), Y((a - b)/2)]); }
+    Plot.line(ctx, p1, col.c1, 2); Plot.line(ctx, p2, col.c2, 2, [5, 3]); Plot.line(ctx, p3, col.bad, 2.4);
+    const Xb = Plot.lin(0, 15, B.l, B.r), Yb = Plot.lin(-50, 0, B.b, B.t);
+    Plot.axes(ctx, B, Xb, Yb, {xt: [0, 5, 10, 15], yt: [-50, -40, -30, -20, -10, 0], xl: 'length difference (mm)', yl: 'CM (dB)', xgrid: true});
+    Plot.clip(ctx, B);
+    const pts = []; for (let i = 1; i <= 300; i++){ const d = 15*i/300; pts.push([Xb(d), Yb(Math.max(-50, cm(th(d, f))))]); }
+    Plot.line(ctx, pts, col.bad, 2.2);
+    if (dl > 0) Plot.dot(ctx, Xb(dl), Yb(Math.max(-50, cm(t))), 5, col.bad);
+    ctx.restore();
+  });
+  ['#dL', '#dF'].forEach(id => $(id).addEventListener('input', upd));
   upd();
 })();
 </script>
