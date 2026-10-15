@@ -32,11 +32,12 @@
       <li>Characteristic impedance: what 50 Ω actually means, and why it's 50.</li>
       <li>Reflections, VSWR and return loss, and how to read them in time (TDR) and in frequency.</li>
       <li>How the board material (Dk and Df) slows signals down and eats them, and why polarization matters for a rocket.</li>
+      <li>Phase delay and group delay, and why a filter with a flat magnitude response can still distort data.</li>
     </ul>
   </div>
   <div class="video" data-video="lecture" id="lecture">
     <div class="plan">
-      <p>Planned walkthrough of this page (≈ 35 min):</p>
+      <p>Planned walkthrough of this page (≈ 40 min):</p>
       <ol>
         <li data-t="0:00">Why RF needs its own vocabulary</li>
         <li data-t="2:00">Decibels and the transmit chain</li>
@@ -47,6 +48,7 @@
         <li data-t="26:00">Ripple: the same reflections in frequency</li>
         <li data-t="29:00">Dk, Df and board loss</li>
         <li data-t="32:00">Polarization and the rolling rocket</li>
+        <li data-t="35:00">Phase delay and group delay</li>
       </ol>
     </div>
   </div>
@@ -170,7 +172,7 @@
 <h3>Phase is just time delay, measured in cycles</h3>
 <p>The <strong>electrical length</strong> of a line is its delay expressed as a fraction of one cycle, in degrees:</p>
 <div class="eq">$$\theta = 360^\circ \cdot \frac{\ell}{\lambda} = 360^\circ \cdot f \cdot t_\text{delay}$$</div>
-<p>A line that delays the signal by a quarter of a period has an electrical length of 90°, whatever its physical length. That's why the same 2 cm trace is "electrically short" for a 10 MHz clock and a substantial 40° at 2.4 GHz. Matching networks, power splitters and antenna feeds are all built from lines of precise electrical length, and Module 2 relies on this idea throughout. (A related idea, <em>group delay</em>, describes how long the information in a modulated signal takes to get through, and comes back with filters in Module 3.)</p>
+<p>A line that delays the signal by a quarter of a period has an electrical length of 90°, whatever its physical length. That's why the same 2 cm trace is "electrically short" for a 10 MHz clock and a substantial 40° at 2.4 GHz. Matching networks, power splitters and antenna feeds are all built from lines of precise electrical length, and Module 2 relies on this idea throughout. (A related idea, <em>group delay</em>, describes how long the information in a modulated signal takes to get through; it has its own section at the end of this page.)</p>
 <div class="note">
   <span class="ni">↯</span>
   <div><span class="nt">It isn't only radios: fast digital edges count too</span>A digital edge with rise time \(t_r\) contains significant energy up to roughly \(0.35/t_r\). A 1 ns edge on an SPI or Ethernet line behaves like a 350 MHz signal, so a long trace or ribbon cable starts acting like a transmission line, ringing and all. This is where RF and high-speed digital design meet.</div>
@@ -473,6 +475,72 @@
 </details>
 </section>
 
+<!-- ================= 9 PHASE AND GROUP DELAY ================= -->
+<section class="sec" id="delay" data-short="Phase and group delay">
+<h2>Phase delay and group delay <a class="vjump" data-t="35:00"></a></h2>
+<p>Earlier on this page, the delay of a line was described as a phase: a line of electrical length θ shifts a sine wave by θ degrees. For a single, steady sine wave that's the whole story. A real signal carries information, though, and information means something changes: an amplitude, a frequency, a phase. A changing signal isn't one frequency but a group of them, and the question becomes whether the whole group arrives together.</p>
+
+<h3>Two kinds of delay</h3>
+<p>Start with the simplest signal that carries a change: two tones close together, at ω<sub>1</sub> and ω<sub>2</sub>. Their sum is a carrier at the average frequency ω<sub>0</sub> whose amplitude rises and falls, a beat, at the difference frequency:</p>
+<div class="eq">$$\cos\omega_1 t + \cos\omega_2 t = 2\cos\!\Big(\frac{\omega_2-\omega_1}{2}\,t\Big)\cos\omega_0 t$$</div>
+<p>Pass this through any component, and each tone comes out shifted by the component's phase at its frequency, φ<sub>1</sub> and φ<sub>2</sub>. Substituting the shifted tones back in, the carrier inside is delayed by the <strong>phase delay</strong>, and the envelope (the beat) is delayed by the <strong>group delay</strong>:</p>
+<div class="eq">$$\tau_p = -\frac{\varphi(\omega_0)}{\omega_0} \qquad\qquad \tau_g = -\frac{\varphi_2 - \varphi_1}{\omega_2 - \omega_1} \;\to\; -\frac{d\varphi}{d\omega}$$<div class="n">phase delay: how late the carrier is · group delay: how late the envelope, and so the information, is</div></div>
+<p>Group delay is the slope of the phase against frequency. If the phase falls in a straight line with frequency, the slope is the same everywhere: every part of the signal's spectrum is delayed by the same amount, and the signal comes out late but undistorted. A uniform transmission line in a non-dispersive dielectric behaves exactly like this, with φ = −ωℓ/v, so τ<sub>p</sub> = τ<sub>g</sub> = ℓ/v.</p>
+
+<h3>Why group delay variation distorts signals</h3>
+<p>Filters are different. Close to a filter's band edge, its phase changes quickly with frequency, so the group delay rises to a peak. A modulated signal whose spectrum spans part of that region has some of its frequency components delayed more than others, and they no longer recombine into the original waveform. For digital data the result is <strong>intersymbol interference</strong>: each bit's energy smears into its neighbours, even though the filter's magnitude response may be almost perfectly flat across the signal.</p>
+<p>The absolute delay rarely matters; its <strong>variation</strong> across the signal's bandwidth does. Datasheets for filters intended for data links specify "group delay variation" or "group delay ripple" in nanoseconds across the passband, and the number to compare it with is the symbol period. The figure below shows the trade-off between the steepness of a filter and the flatness of its group delay, using the same Butterworth and Chebyshev families from Module 3, plus the Bessel family, which is designed for the flattest possible group delay instead of the sharpest cut-off.</p>
+
+<div class="widget wide" id="w-gd">
+  <div class="wh"><span class="tag">Interactive</span><b>A data signal through three filters with the same cut-off</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label>Filter family (5th order, low-pass)</label><div class="seg" id="gF"><button type="button" data-v="bw" class="on">Butterworth</button><button type="button" data-v="ch">Chebyshev 0.5 dB</button><button type="button" data-v="be">Bessel</button></div></div>
+      <div class="ctrl"><label for="gR">Cut-off frequency / bit rate <b id="gRv"></b></label><input id="gR" type="range" min="0.4" max="2" step="0.05" value="0.75"></div>
+      <p class="small">A random-looking pattern of bits (NRZ, ±1) passes through the filter. All three filters have their −3 dB point at the same frequency. The output waveform includes the filter's delay. The group delay curve is drawn to its own scale, from zero at the bottom.</p>
+    </div>
+    <div>
+      <canvas id="cvGd" style="height:360px" aria-label="Top: the filter's magnitude response and group delay against frequency. Bottom: the input bit pattern and the filtered output waveform."></canvas>
+      <div class="legend"><span style="--c:var(--c1)">|H| (dB)</span><span style="--c:var(--c2)">group delay</span><span class="dash" style="--c:var(--muted)">input bits</span><span style="--c:var(--c3)">filter output</span></div>
+      <div class="readout">
+        <div class="stat"><div class="k">Delay at low frequency</div><div class="v" id="gD"></div></div>
+        <div class="stat" id="gVS"><div class="k">Delay variation to cut-off</div><div class="v" id="gV"></div></div>
+        <div class="stat"><div class="k">Overshoot (of the step)</div><div class="v" id="gO"></div></div>
+      </div>
+      <div class="verdict" id="gVerdict"></div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>Compare the three families at a cut-off of 0.75 × the bit rate. Which has the steepest magnitude response, and which gives the cleanest bits?</li>
+    <li>Look at the group delay curve of the Chebyshev filter. Where does it peak, and which part of the output waveform does that affect?</li>
+    <li>Lower the cut-off to 0.5 × the bit rate. Which family still gives recognisable bits?</li>
+  </ol></div>
+</div>
+
+<p>Group delay also turns up outside filters. Microstrip is slightly dispersive, because the fraction of the field in the dielectric changes with frequency, so very wideband signals spread out a little over long traces. Waveguide is strongly dispersive near its cutoff (Module 3). And any system that measures timing, such as GPS or radar ranging, cares about absolute group delay too: a 10 ns error in an unaccounted-for cable or filter delay is a 3 m range error.</p>
+
+<div class="example">
+  <span class="xk">Application</span>
+  <p>The IF filter in a narrowband data receiver is often a SAW or ceramic filter chosen for steep skirts that reject the adjacent channel. Steep skirts come with large group delay variation near the band edges. A filter with 200 ns of group delay variation across its passband is harmless for a 10 kbit/s link (a 100 µs bit period) but consumes 20 % of the bit period at 1 Mbit/s. That's why receivers designed for higher data rates specify group delay variation alongside bandwidth and rejection, and why a "better", steeper filter can raise the bit error rate.</p>
+</div>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">A steeper filter that made things worse</span></summary>
+  <div class="eb">
+    <p>To reject an interferer, the IF filter of a data link is replaced with a steeper one of the same bandwidth. The new filter's magnitude response is flat within 0.5 dB across the signal's bandwidth, yet the bit error rate rises.</p>
+    <div class="choice"><p>What's the most likely cause?</p>
+    <ol class="opts">
+      <li>The 0.5 dB of ripple reduces the signal-to-noise ratio enough to cause errors.<div class="why">Half a decibel of ripple costs at most about half a decibel of signal, too little to explain a clear rise in errors on its own.</div></li>
+      <li data-correct>The steeper filter's phase is far less linear near its band edges, so its group delay varies across the signal's spectrum; the frequency components of each bit arrive at different times and smear into the neighbouring bits.<div class="why">Steep magnitude responses come with large group delay variation near the edges, which distorts the waveform even when the magnitude is flat.</div></li>
+      <li>The new filter's absolute delay is longer, so the bits arrive late.<div class="why">A constant extra delay just shifts everything; the receiver's timing recovery follows it.</div></li>
+      <li>A steeper filter adds more thermal noise.<div class="why">A passive filter's noise depends on its loss, which hasn't changed much.</div></li>
+    </ol>
+    <div class="solution"><p>Magnitude flatness isn't enough for data: the phase must also be close to linear across the signal's bandwidth, which means the group delay must be close to constant. Steep filters (Chebyshev, elliptic, sharp SAW filters) have group delay peaks near their band edges. Either choose a filter specified for group delay variation, widen it slightly so the signal stays out of the edges, or add a group-delay equaliser. Many digital receivers can also equalise the distortion in software, if they know to.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
 <!-- ================= DESIGN EXERCISES ================= -->
 <section class="sec" id="exercises" data-nonum data-short="Design exercises">
 <h2>Design exercises</h2>
@@ -577,6 +645,7 @@
   <li>A mismatch reflects \(|\Gamma|^2\) of the power. VSWR, return loss and Γ all describe the same thing.</li>
   <li>TDR shows reflections in time; a VNA shows them as ripple in frequency. They're two views of the same physics.</li>
   <li>Dielectric loss grows with f·Df and dominates on FR-4 at GHz frequencies. Polarization mismatch can cost more than any cable.</li>
+  <li>Group delay, −dφ/dω, is the delay of the information. Its variation across a signal's bandwidth distorts the signal, even when the magnitude response is flat; steep filters have the most.</li>
 </ol>
 <div class="cheat">
   <div><b>Decibels</b>\(10\log_{10}(P_2/P_1)\) · voltage \(20\log_{10}\)<br><span class="small">3 dB = ×2 · 10 dB = ×10 · 0 dBm = 1 mW · 30 dBm = 1 W</span></div>
@@ -585,6 +654,7 @@
   <div><b>Reflection</b>\(\Gamma = \tfrac{Z_L - Z_0}{Z_L + Z_0}\)<br><span class="small">VSWR = (1+|Γ|)/(1−|Γ|) · RL = −20 log|Γ|</span></div>
   <div><b>TDR &amp; ripple</b>\(x = vt/2\) · \(\Delta f = 1/(2\tau)\)</div>
   <div><b>Polarization</b>\(-20\log_{10}|\cos\theta|\)<br><span class="small">linear → circular: 3 dB</span></div>
+  <div><b>Delay</b>phase \(\tau_p = -\varphi/\omega\) · group \(\tau_g = -d\varphi/d\omega\)<br><span class="small">compare group delay variation with the symbol period</span></div>
 </div>
 <h3>Go deeper</h3>
 <p class="small">The full treatment, with derivations and harder problems, is in the advanced theory pages:</p>
@@ -600,6 +670,7 @@
   <li><em>Microwave Engineering</em> (Pozar), chapter 2: transmission line theory, covering the lumped-element model, terminated lines, reflection coefficient, VSWR, return loss and mismatched loads.</li>
   <li><em>Microwave Engineering</em> (Pozar), chapter 3: transmission lines and waveguides, including coax and microstrip, their characteristic impedance and their losses.</li>
   <li><em>Microwave Engineering</em> (Pozar), chapter 1: electromagnetic theory, including plane waves, polarization and the skin effect.</li>
+  <li><em>Microwave Engineering</em> (Pozar), chapter 2 (dispersion and group velocity on lines) and chapter 8 (filter phase response and linear-phase filters).</li>
 </ul>
 </section>
 
@@ -1036,6 +1107,71 @@ const C0 = 299792458;
     text(ctx, '→', W/2, cy, {align:'center', color: col.muted, bold:true});
   });
   $('#oA').addEventListener('input', upd);
+  upd();
+})();
+/* ============ 9. Group delay and a data signal ============ */
+(() => {
+  const fam = Plot.seg('#gF', upd);
+  const N5 = 5, E2 = Math.pow(10, 0.05) - 1;
+  // poles of a 5th-order prototype with its -3 dB point at 1 rad/s
+  function poles(f){
+    const p = [];
+    if (f === 'bw') for (let k = 1; k <= N5; k++){ const a = Math.PI*(2*k + N5 - 1)/(2*N5); p.push([Math.cos(a), Math.sin(a)]); }
+    else if (f === 'ch'){
+      const a = Math.asinh(1/Math.sqrt(E2))/N5;
+      for (let k = 1; k <= N5; k++){ const t = (2*k - 1)*Math.PI/(2*N5); p.push([-Math.sinh(a)*Math.sin(t), Math.cosh(a)*Math.cos(t)]); }
+    } else {
+      // 5th-order Bessel poles for unit delay, scaled so the -3 dB point is at 1 rad/s
+      [[-3.6467, 0], [-3.3520, 1.7427], [-3.3520, -1.7427], [-2.3247, 3.5710], [-2.3247, -3.5710]].forEach(([r, i]) => p.push([r/2.4274, i/2.4274]));
+    }
+    // move the -3 dB point to 1 rad/s exactly (the Chebyshev's ripple-bandwidth edge is not its -3 dB point)
+    const mag = w => p.reduce((m, [r, i]) => m*Math.hypot(r, i)/Math.hypot(r, w - i), 1);
+    let lo = 0.5, hi = 2; for (let k = 0; k < 50; k++){ const m = (lo + hi)/2; if (mag(m) > Math.SQRT1_2) lo = m; else hi = m; }
+    const sc = (lo + hi)/2;
+    return p.map(([r, i]) => [r/sc, i/sc]);
+  }
+  const H = (p, w) => { let re = 1, im = 0; p.forEach(([pr, pi]) => { const dr = -pr, di = w - pi, d = dr*dr + di*di, nr = Math.hypot(pr, pi); const a = (re*dr + im*di)/d*nr, b = (im*dr - re*di)/d*nr; re = a; im = b; }); return [re, im]; };
+  const tg = (p, w) => p.reduce((t, [pr, pi]) => t + (-pr)/((w - pi)**2 + pr*pr), 0);
+  const BITS = [1,0,1,1,0,1,0,0,0,1,1,1,0,0,1,0], SPB = 32, N = BITS.length*SPB;
+  const x = []; for (let n = 0; n < N; n++) x.push(BITS[Math.floor(n/SPB)] ? 1 : -1);
+  // DFT of the input, computed once; bin m is at m cycles per pattern, i.e. m/16 cycles per bit
+  const X = []; for (let m = 0; m <= N/2; m++){ let re = 0, im = 0; for (let n = 0; n < N; n++){ const a = 2*Math.PI*m*n/N; re += x[n]*Math.cos(a); im -= x[n]*Math.sin(a); } X.push([re, im]); }
+  let s = {};
+  function upd(){
+    const f = fam(), r = +$('#gR').value, p = poles(f), wc = 2*Math.PI*r;  // time unit: one bit period
+    const Y = X.map(([re, im], m) => { const [hr, hi] = H(p, 2*Math.PI*(m/BITS.length)/wc); return [re*hr - im*hi, re*hi + im*hr]; });
+    const y = []; for (let n = 0; n < N; n++){ let v = Y[0][0]; for (let m = 1; m < N/2; m++){ const a = 2*Math.PI*m*n/N; v += 2*(Y[m][0]*Math.cos(a) - Y[m][1]*Math.sin(a)); } v += Y[N/2][0]*Math.cos(Math.PI*n); y.push(v/N); }
+    const d0 = tg(p, 0)/wc, dv = Math.max(...Array.from({length: 51}, (_, i) => tg(p, i/50))) - Math.min(...Array.from({length: 51}, (_, i) => tg(p, i/50)));
+    const os = (Math.max(...y.map(Math.abs)) - 1)/2*100;  // as a fraction of the 2-unit swing between levels
+    s = {f, r, p, y};
+    $('#gRv').textContent = fmt(r, 2) + ' ×';
+    $('#gD').textContent = fmt(d0, 2) + ' bits'; $('#gV').textContent = fmt(dv/wc*100, 2) + ' % of a bit'; $('#gO').textContent = fmt(Math.max(0, os), 2) + ' %';
+    $('#gVS').className = 'stat ' + (dv/wc > 0.3 ? 'bad' : dv/wc > 0.12 ? 'warn' : '');
+    const v = $('#gVerdict');
+    if (f === 'be') Plot.verdict(v, 'ok', `<b>Nearly constant group delay.</b> The Bessel filter's gentle roll-off buys a flat delay: every frequency component arrives together, so the bits are rounded but don't ring or smear into each other.`);
+    else if (dv/wc > 0.3) Plot.verdict(v, 'bad', `<b>Smeared bits.</b> The group delay changes by ${fmt(dv/wc*100, 2)} % of a bit period across the passband. The parts of each bit's spectrum arrive at different times, causing ringing and intersymbol interference.`);
+    else Plot.verdict(v, 'warn', `<b>Some ringing.</b> The group delay varies by ${fmt(dv/wc*100, 2)} % of a bit across the passband. The edges overshoot and ring; at lower cut-offs this turns into intersymbol interference.`);
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvGd'), (ctx, W, Ht) => {
+    const {p, y, r} = s; if (!p) return;
+    const A = {l: 44, r: W - 14, t: 14, b: Ht*0.42}, B = {l: 44, r: W - 14, t: Ht*0.56, b: Ht - 38};
+    const X1 = lin(0, 2.5, A.l, A.r), Ym = lin(-40, 3, A.b, A.t);
+    const tmax = Math.max(...Array.from({length: 101}, (_, i) => tg(p, 2.5*i/100)));
+    const Yd = lin(0, tmax*1.15, A.b, A.t);
+    axes(ctx, A, X1, Ym, {xt: [0, 0.5, 1, 1.5, 2, 2.5], yt: [-40, -20, 0], xl: 'frequency / cut-off', yl: '|H| (dB)', xgrid: true});
+    Plot.clip(ctx, A);
+    const pm = [], pd = []; for (let i = 0; i <= 250; i++){ const ww = 2.5*i/250, [hr, hi] = H(p, ww); pm.push([X1(ww), Ym(Math.max(-40, 10*Math.log10(hr*hr + hi*hi)))]); pd.push([X1(ww), Yd(tg(p, ww))]); }
+    line(ctx, pm, col.c1, 2.2); line(ctx, pd, col.c2, 2.2);
+    ctx.restore();
+    const N = y.length, X2 = lin(0, 16, B.l, B.r), Y2 = lin(-1.6, 1.6, B.b, B.t);
+    axes(ctx, B, X2, Y2, {xt: [0, 4, 8, 12, 16], yt: [-1, 0, 1], xl: 'time (bit periods)', xgrid: true});
+    Plot.clip(ctx, B);
+    const pin = [], po = []; for (let n = 0; n < N; n++){ const t = 16*n/N; pin.push([X2(t), Y2(BITS[Math.floor(n/32)] ? 1 : -1)]); po.push([X2(t), Y2(y[n])]); }
+    line(ctx, pin, col.muted, 1.3, [5, 4]); line(ctx, po, col.c3, 2.2);
+    ctx.restore();
+  });
+  $('#gR').addEventListener('input', upd);
   upd();
 })();
 </script>
