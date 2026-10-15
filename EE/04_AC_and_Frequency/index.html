@@ -4,31 +4,812 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>AC Signals &amp; Frequency Response · EE 4</title>
-<meta name="description" content="EE Fundamentals module 4: Impedance, RC filters, Bode plots and decibels. In development.">
+<meta name="description" content="EE module 4: sinusoids, amplitude, frequency and phase, building signals from sine waves, RMS, impedance of resistors, capacitors and inductors, RC low-pass and high-pass filters, Bode plots and decibels, and resonance.">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
 <link rel="stylesheet" href="../../assets/site.css">
 <script src="../../assets/course.js"></script>
 <script src="../../assets/site.js"></script>
+<script src="../../assets/plot.js"></script>
 </head>
 <body>
 <div class="layout">
 <aside class="side" aria-label="Module contents"></aside>
 <main class="content">
 
-<!-- Placeholder: replace this page with the module when it's written (see README.md, "Writing a module"). -->
+<!-- ================= HERO ================= -->
 <header class="hero">
   <div class="eyebrow">EE Fundamentals · Module 4</div>
-  <h1>AC Signals &amp; Frequency Response</h1>
-  <p class="lede">Impedance, RC filters, Bode plots and decibels.</p>
+  <h1>AC signals &amp; frequency response</h1>
+  <p class="lede">Most signals change with time: a sensor output with vibration on it, a supply rail with switching noise, a radio carrier. This module introduces the tools for describing them: sine waves, phase, RMS, and impedance, which extends Ohm's law to capacitors and inductors. With those, you can predict what a circuit does to each frequency in a signal, design a filter, and recognise the resonance that makes some circuits ring.</p>
+  <p class="meta">Builds on: EE modules 1–3. Bench: function generator, oscilloscope, resistors, capacitors and an inductor.</p>
+  <div class="resources" data-auto></div>
+  <div class="objectives">
+    <h3>What's covered</h3>
+    <ul>
+      <li>Sine waves: amplitude, frequency, period and phase, and why any signal can be built from them.</li>
+      <li>RMS: what it means, and why meters disagree on non-sinusoidal waveforms.</li>
+      <li>Impedance: Ohm's law for capacitors and inductors, with phase.</li>
+      <li>RC low-pass and high-pass filters, and how to choose their values.</li>
+      <li>Bode plots and decibels: reading and sketching frequency response.</li>
+      <li>Resonance in LC circuits: where it's useful and where it causes trouble.</li>
+    </ul>
+  </div>
+  <div class="video" data-video="lecture" id="lecture">
+    <div class="plan">
+      <p>Planned walkthrough of this page (≈ 40 min):</p>
+      <ol>
+        <li data-t="0:00">Sine waves: amplitude, frequency and phase</li>
+        <li data-t="5:00">Every signal is a sum of sines</li>
+        <li data-t="9:00">RMS</li>
+        <li data-t="13:00">Impedance of R, L and C</li>
+        <li data-t="20:00">RC low-pass and high-pass filters</li>
+        <li data-t="28:00">Bode plots and decibels</li>
+        <li data-t="32:00">Resonance</li>
+        <li data-t="38:00">The bridge to the RF notes</li>
+      </ol>
+    </div>
+  </div>
 </header>
 
-<section class="sec" id="status" data-nonum data-short="In development">
-<h2>In development</h2>
-<p>This module hasn't been written yet. The other modules are listed in the strip at the top of the page, and the links below go to the neighbouring ones.</p>
+<!-- ================= 1 SINUSOIDS ================= -->
+<section class="sec" id="sine" data-short="Sine waves">
+<h2>Sine waves: amplitude, frequency and phase <a class="vjump" data-t="0:00"></a></h2>
+<p>Modules 1 to 3 dealt mostly with steady (DC) voltages and single switching events. An <strong>AC</strong> (alternating) signal changes continuously, and the reference shape is the sine wave:</p>
+<div class="eq">$$v(t) = A\sin(2\pi f t + \varphi)$$<div class="n">A: amplitude (peak value) · f: frequency in hertz (cycles per second) · φ: phase</div></div>
+<p>The <strong>period</strong> T = 1/f is the time for one cycle: 20 ms for 50 Hz mains, 1 ms for a 1 kHz tone, about 1 ns for a 915 MHz radio carrier. The quantity 2πf appears so often that it gets its own name, the <strong>angular frequency</strong> ω = 2πf, in radians per second.</p>
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>The parts of a sine wave</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 220" role="img" aria-label="One and a half cycles of a sine wave on a time axis, with the amplitude marked from zero to the peak, the peak-to-peak value from the trough to the peak, the period marked between two successive peaks, and a dashed line at the RMS level, 0.707 times the amplitude.">
+    <path d="M40 110H620" stroke="var(--ink)" stroke-width="1.2"/>
+    <path id="sw" fill="none" stroke="var(--c1)" stroke-width="2.4"/>
+    <path d="M40 46H620" stroke="var(--line2)" stroke-dasharray="3 4"/><path d="M40 174H620" stroke="var(--line2)" stroke-dasharray="3 4"/>
+    <path d="M40 64.7H620" stroke="var(--good)" stroke-dasharray="6 4" stroke-width="1.4"/>
+    <g stroke="var(--ink)" stroke-width="1.2" fill="none">
+      <path d="M118 110V50M112 56l6-8l6 8"/>
+      <path d="M582 50V170M576 56l6-8l6 8M576 164l6 8l6-8"/>
+      <path d="M118 30H350M118 24v12M350 24v12"/>
+    </g>
+    <g font-size="11.5">
+      <text x="126" y="86">amplitude A</text>
+      <text x="574" y="196" text-anchor="end">peak-to-peak 2A</text>
+      <text x="234" y="22" text-anchor="middle">period T = 1/f</text>
+      <text x="190" y="58" fill="var(--good)">RMS = A/√2 ≈ 0.707 A</text>
+      <text x="618" y="212" text-anchor="end" fill="var(--muted)">time →</text>
+    </g>
+  </svg>
+  </div>
+</div>
+<p><strong>Phase</strong> describes where in its cycle a wave is at a given moment, as an angle: a full cycle is 360°. Phase only becomes meaningful when two waves of the same frequency are compared. If one is delayed by a time Δt relative to the other, it lags by a phase of</p>
+<div class="eq">$$\Delta\varphi = 360^\circ \times f\,\Delta t$$</div>
+<p>The same 1 ms delay is a small 18° at 50 Hz, a full cycle (360°) at 1 kHz, and many cycles at higher frequencies. Phase is therefore delay measured in fractions of a cycle, which is why it matters more and more as frequency rises.</p>
+
+<div class="widget wide" id="w-ph">
+  <div class="wh"><span class="tag">Interactive</span><b>Phase is time delay measured in cycles</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label for="hF">Frequency <b id="hFv"></b></label><input id="hF" type="range" min="0" max="3" step="0.01" value="2"></div>
+      <div class="ctrl"><label for="hD">Delay of the second wave <b id="hDv"></b></label><input id="hD" type="range" min="0" max="2" step="0.01" value="0.25"></div>
+      <p class="small">The plot always shows two cycles, whatever the frequency.</p>
+    </div>
+    <div>
+      <canvas id="cvPh" style="height:220px" aria-label="Two sine waves of the same frequency, the second delayed, with the delay marked"></canvas>
+      <div class="legend"><span style="--c:var(--c1)">reference</span><span style="--c:var(--c2)">delayed</span></div>
+      <div class="readout">
+        <div class="stat"><div class="k">Period</div><div class="v" id="hT"></div></div>
+        <div class="stat"><div class="k">Phase lag</div><div class="v" id="hP"></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>Keep the delay at 0.25 ms and change the frequency from 10 Hz to 1 kHz. What happens to the phase?</li>
+    <li>Find a delay that makes the two waves look identical again. What phase is that?</li>
+  </ol></div>
+</div>
+</section>
+
+<!-- ================= 2 FOURIER ================= -->
+<section class="sec" id="fourier" data-short="Signals as sums of sines">
+<h2>Every signal is a sum of sines <a class="vjump" data-t="5:00"></a></h2>
+<p>The reason sine waves get so much attention is a result due to Fourier: any repeating signal, however sharp-edged, can be built by adding sine waves at the fundamental frequency and its integer multiples, the <strong>harmonics</strong>, each with the right amplitude and phase. A square wave, for example, is</p>
+<div class="eq">$$v(t) = \frac{4A}{\pi}\left(\sin\omega t + \tfrac13\sin 3\omega t + \tfrac15\sin 5\omega t + \cdots\right)$$<div class="n">odd harmonics only, each weaker in proportion to its harmonic number</div></div>
+<p>This is what makes the rest of the module work. If a circuit's effect on a single sine wave is known at every frequency, its effect on any signal follows: split the signal into sines, let the circuit treat each one, and add them back up. The circuit's response to each frequency is its <strong>frequency response</strong>.</p>
+
+<div class="widget wide" id="w-fs">
+  <div class="wh"><span class="tag">Interactive</span><b>Building a square wave from sine waves</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label for="fN">Highest harmonic included <b id="fNv"></b></label><input id="fN" type="range" min="1" max="49" step="2" value="5"></div>
+      <p class="small">Each odd harmonic k has amplitude 1/k of the fundamental's. The bars show the spectrum: how much of each frequency the signal contains.</p>
+    </div>
+    <div>
+      <canvas id="cvFs" style="height:300px" aria-label="Top: the sum of the harmonics compared with an ideal square wave. Bottom: the amplitude of each harmonic as a bar."></canvas>
+      <div class="legend"><span class="dash" style="--c:var(--muted)">ideal square wave</span><span style="--c:var(--c1)">sum of harmonics</span></div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>Start with just the fundamental, then add harmonics. Which part of the square wave needs the high harmonics?</li>
+    <li>What would a circuit that removes everything above the 5th harmonic do to a square wave's edges?</li>
+  </ol></div>
+</div>
+<p>The figure shows why sharp edges and high frequencies go together: the steep edges are made by the high harmonics. Remove them, as any circuit with limited bandwidth does, and the edges slow down. Conversely, a signal with fast edges, such as a microcontroller's clock or a switching regulator's switch node, contains energy at frequencies many times its repetition rate, which is how a 1 MHz switching regulator can interfere with a 100 MHz radio.</p>
+</section>
+
+<!-- ================= 3 RMS ================= -->
+<section class="sec" id="rms" data-short="RMS">
+<h2>RMS <a class="vjump" data-t="9:00"></a></h2>
+<p>An AC voltage's average is zero, so averaging isn't a useful way to say how "big" it is. The question that matters is how much power it delivers. A resistor dissipates v²/R at each instant, so the average power depends on the average of v². The <strong>RMS</strong> (root mean square) value is the steady DC voltage that would deliver the same average power:</p>
+<div class="eq">$$V_\text{RMS} = \sqrt{\overline{v(t)^2}} \qquad P = \frac{V_\text{RMS}^2}{R}$$<div class="n">for a sine wave, V<sub>RMS</sub> = A/√2 ≈ 0.707 A</div></div>
+<p>Mains voltages are quoted as RMS: 230 V mains has a peak of 325 V, and 120 V mains a peak of 170 V. Components connected to them have to withstand the peak, not the RMS value.</p>
+<p>The √2 only applies to sine waves. Many inexpensive multimeters measure the average of the rectified waveform and multiply by 1.11, the ratio that's correct for a sine; on any other waveform they read wrongly. A <strong>true-RMS</strong> meter computes the actual RMS value and reads correctly for any shape within its bandwidth.</p>
+
+<div class="widget wide" id="w-rms">
+  <div class="wh"><span class="tag">Interactive</span><b>RMS of different waveforms, and what a meter reads</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label>Waveform</label><div class="seg" id="rW"><button type="button" data-v="sin" class="on">Sine</button><button type="button" data-v="sq">Square</button><button type="button" data-v="tri">Triangle</button><button type="button" data-v="pwm">PWM (0 V to peak)</button></div></div>
+      <div class="ctrl"><label for="rD">PWM duty cycle <b id="rDv"></b></label><input id="rD" type="range" min="0.05" max="0.95" step="0.01" value="0.25"></div>
+      <p class="small">Peak 10 V. The shaded curve is v², whose average sets the power; the RMS value is its square root.</p>
+    </div>
+    <div>
+      <canvas id="cvRms" style="height:260px" aria-label="The waveform, its square, and lines for the RMS value and for what an average-responding meter would read"></canvas>
+      <div class="legend"><span style="--c:var(--c1)">v(t)</span><span style="--c:var(--c5)">v² (scaled)</span><span class="dash" style="--c:var(--good)">true RMS</span><span class="dash" style="--c:var(--bad)">average-responding meter</span></div>
+      <div class="readout">
+        <div class="stat"><div class="k">True RMS</div><div class="v" id="rR"></div></div>
+        <div class="stat"><div class="k">Average-responding meter</div><div class="v" id="rM"></div></div>
+        <div class="stat" id="rES"><div class="k">Meter error</div><div class="v" id="rE"></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>Compare the sine and the square wave. Which delivers more power into a resistor for the same peak?</li>
+    <li>Set PWM at 25 % duty. How far off is the average-responding meter?</li>
+  </ol></div>
+</div>
+
+<div class="example">
+  <span class="xk">Application</span>
+  <p>Heaters, motors and solenoid valves are often driven with PWM (pulse-width modulation): switched fully on and off at a fixed frequency, with the fraction of time on setting the average. For a resistive heater, the power follows the RMS value: at 25 % duty from a 12 V supply, V<sub>RMS</sub> = 12√0.25 = 6 V, so the heater receives a quarter of its full power. A multimeter on its DC range reads the average, 3 V, which would wrongly suggest a sixteenth of full power if used in V²/R.</p>
+</div>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">Rating a capacitor for mains</span></summary>
+  <div class="eb">
+    <p>A capacitor is to be connected directly across 230 V RMS mains.</p>
+    <div class="choice"><p>What voltage must it withstand, at minimum, in normal operation?</p>
+    <ol class="opts">
+      <li>230 V, the mains voltage.<div class="why">230 V is the RMS value; the voltage swings higher than that every cycle.</div></li>
+      <li data-correct>About 325 V, the peak of the sine wave, plus margin for mains transients.<div class="why">The peak is √2 × 230 V. Capacitors for mains use are also specifically rated (X and Y classes) to survive surges.</div></li>
+      <li>460 V, twice the RMS value.<div class="why">The peak is √2 times the RMS value, not twice.</div></li>
+      <li>163 V, the RMS value divided by √2.<div class="why">That divides where it should multiply.</div></li>
+    </ol>
+    <div class="solution"><p>RMS describes heating power; the insulation sees the instantaneous voltage, which peaks at √2 × 230 ≈ 325 V every cycle. Mains also carries transients of a kilovolt or more, which is why capacitors connected to mains must be safety-rated types, not ordinary capacitors rated at 400 V.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 4 IMPEDANCE ================= -->
+<section class="sec" id="impedance" data-short="Impedance">
+<h2>Impedance of R, L and C <a class="vjump" data-t="13:00"></a></h2>
+<p>Module 3 described capacitors and inductors with rules about change: i = C dv/dt and v = L di/dt. With a sine-wave voltage, those rules give a neat result, and it's the key to analysing any AC circuit.</p>
+<p>Apply v = A sin ωt to a capacitor. Its current is C dv/dt = ωCA cos ωt. Two things have happened. The current's amplitude is ωC times the voltage's, so the capacitor behaves like a resistance of 1/(ωC), which falls as frequency rises. And the current is a cosine where the voltage is a sine: it reaches its peak a quarter-cycle earlier. The current <strong>leads</strong> the voltage by 90°. For an inductor the same steps give an effective resistance of ωL, rising with frequency, with the current <strong>lagging</strong> by 90°.</p>
+<p><strong>Impedance</strong>, Z, combines the size and the phase shift into a single quantity, using complex numbers: the "j" (engineers use j, since i is current) marks a 90° phase shift.</p>
+<div class="eq">$$Z_R = R \qquad Z_C = \frac{1}{j\omega C} \qquad Z_L = j\omega L$$<div class="n">|Z| is the ratio of voltage amplitude to current amplitude, in ohms; the angle of Z is the phase of the voltage relative to the current</div></div>
+<p>The power of this is that Ohm's law and everything in Module 2, including Kirchhoff's laws, series and parallel combinations and the voltage divider, work unchanged with impedances in place of resistances. The arithmetic is complex, but the circuit analysis is the same.</p>
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>A sine wave as a rotating arrow (a phasor)</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 220" role="img" aria-label="Left: an arrow rotating anticlockwise around a circle. Its vertical projection traces out a sine wave on the right. A second arrow 90 degrees ahead traces a wave that peaks a quarter-cycle earlier: the capacitor current leading the voltage.">
+    <circle cx="120" cy="110" r="70" fill="none" stroke="var(--line2)"/>
+    <path d="M40 110H200M120 30V190" stroke="var(--line2)"/>
+    <path d="M120 110L169.5 60.5" stroke="var(--c1)" stroke-width="2.6"/><circle cx="169.5" cy="60.5" r="4" fill="var(--c1)"/>
+    <path d="M120 110L70.5 60.5" stroke="var(--c2)" stroke-width="2.6"/><circle cx="70.5" cy="60.5" r="4" fill="var(--c2)"/>
+    <path d="M150 110A30 30 0 0 0 141.2 88.8" fill="none" stroke="var(--ink2)"/>
+    <path d="M169.5 60.5H260M70.5 60.5" stroke="var(--c1)" stroke-dasharray="3 3"/>
+    <path d="M260 110H620" stroke="var(--ink)" stroke-width="1.2"/>
+    <path id="phV" fill="none" stroke="var(--c1)" stroke-width="2.2"/>
+    <path id="phI" fill="none" stroke="var(--c2)" stroke-width="2.2"/>
+    <path d="M200 30A90 90 0 0 0 175 18" fill="none"/>
+    <g font-size="11.5">
+      <text x="176" y="54" fill="var(--c1)">voltage</text>
+      <text x="40" y="54" fill="var(--c2)">current</text>
+      <text x="156" y="102" font-size="10.5" fill="var(--ink2)">ωt</text>
+      <text x="120" y="208" text-anchor="middle" fill="var(--muted)">rotates once per cycle</text>
+      <text x="440" y="208" text-anchor="middle" fill="var(--muted)">the vertical projection traces the waveform</text>
+      <text x="96" y="22" fill="var(--c2)" text-anchor="middle" font-size="10.5">90° ahead: capacitor current leads</text>
+    </g>
+  </svg>
+  </div>
+</div>
+
+<div class="widget wide" id="w-z">
+  <div class="wh"><span class="tag">Interactive</span><b>Voltage and current in a resistor, capacitor and inductor</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label>Component</label><div class="seg" id="zK"><button type="button" data-v="R">100 Ω resistor</button><button type="button" data-v="C" class="on">10 µF capacitor</button><button type="button" data-v="L">10 mH inductor</button></div></div>
+      <div class="ctrl"><label for="zF">Frequency <b id="zFv"></b></label><input id="zF" type="range" min="1" max="5" step="0.01" value="2.2"></div>
+      <p class="small">A 1 V-amplitude sine wave is applied across the component. At about 160 Hz, all three have an impedance of 100 Ω.</p>
+    </div>
+    <div>
+      <canvas id="cvZ" style="height:330px" aria-label="Top: the applied voltage and the resulting current over two cycles. Bottom: impedance magnitude against frequency for all three components, with the chosen one highlighted."></canvas>
+      <div class="legend"><span style="--c:var(--c1)">voltage</span><span style="--c:var(--c2)">current</span></div>
+      <div class="readout">
+        <div class="stat"><div class="k">|Z|</div><div class="v" id="zM"></div></div>
+        <div class="stat"><div class="k">Current amplitude</div><div class="v" id="zI"></div></div>
+        <div class="stat"><div class="k">Current relative to voltage</div><div class="v" id="zP"></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>Sweep the capacitor from 10 Hz to 100 kHz. What does it look like at each end: an open circuit or a short?</li>
+    <li>Do the same for the inductor. How does this relate to Module 3's "a capacitor is open at DC, an inductor is a wire"?</li>
+  </ol></div>
+</div>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">A capacitor that passes the noise but blocks the DC</span></summary>
+  <div class="eb">
+    <p>A sensor's output is a 2.5 V DC level with a small 10 kHz ripple on top. A 1 µF capacitor is connected in series with the signal, before an input whose resistance to ground is 10 kΩ.</p>
+    <div class="choice"><p>What reaches the input?</p>
+    <ol class="opts">
+      <li>Both the DC level and the ripple, unchanged.<div class="why">A capacitor has infinite impedance at DC.</div></li>
+      <li data-correct>The ripple, almost unchanged, but not the 2.5 V DC level: at 10 kHz the capacitor's impedance is about 16 Ω, tiny next to 10 kΩ, while at DC it's an open circuit.<div class="why">1/(2π × 10 kHz × 1 µF) ≈ 16 Ω. This is AC coupling, a high-pass filter.</div></li>
+      <li>The DC level only; the capacitor shorts the ripple.<div class="why">A capacitor in series passes high frequencies; one to ground would short them.</div></li>
+      <li>Nothing: capacitors block all current.<div class="why">No charge crosses the dielectric, but alternating current flows in the circuit, as Module 3 described.</div></li>
+    </ol>
+    <div class="solution"><p>The capacitor and the 10 kΩ form a divider whose ratio depends on frequency. At 10 kHz, Z<sub>C</sub> ≈ 16 Ω, so virtually all of the ripple appears across the 10 kΩ. At DC, Z<sub>C</sub> is infinite, so none of the 2.5 V gets through. This is how an oscilloscope's "AC coupling" setting works, and it's the high-pass filter of the next section.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 5 RC FILTERS ================= -->
+<section class="sec" id="filters" data-short="RC filters">
+<h2>RC low-pass and high-pass filters <a class="vjump" data-t="20:00"></a></h2>
+<p>A resistor and a capacitor make a voltage divider (Module 2) whose ratio depends on frequency. With the capacitor to ground, it's a <strong>low-pass filter</strong>: at low frequencies the capacitor's impedance is large and the output follows the input; at high frequencies the capacitor's impedance is small and shorts the output to ground. Swap the two parts and it becomes a <strong>high-pass filter</strong>.</p>
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>RC low-pass and high-pass filters, and what they look like at the extremes</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 230" role="img" aria-label="Left: a low-pass filter, a series resistor with a capacitor from the output to ground. At low frequency the capacitor is open and the output equals the input; at high frequency it's a short and the output is zero. Right: a high-pass filter, a series capacitor with a resistor to ground; at low frequency the capacitor is open and the output is zero, at high frequency it's a short and the output equals the input.">
+    <g fill="none" stroke="var(--ink)" stroke-width="1.6">
+      <path d="M30 60H70l4-8l8 16l8-16l8 16l8-16l8 16l4-8H190"/><path d="M150 60V92M136 92h28M136 100h28M150 100V140M30 140H190"/>
+      <path d="M350 60H420M428 60H500M420 46v28M428 46v28"/><path d="M460 60V78l7 3l-14 6l14 6l-14 6l14 6l-7 3V140M350 140H510"/>
+    </g>
+    <g fill="#fff" stroke="var(--ink)" stroke-width="1.4"><circle cx="26" cy="60" r="4"/><circle cx="26" cy="140" r="4"/><circle cx="194" cy="60" r="4"/><circle cx="194" cy="140" r="4"/><circle cx="346" cy="60" r="4"/><circle cx="346" cy="140" r="4"/><circle cx="514" cy="60" r="4"/><circle cx="514" cy="140" r="4"/></g>
+    <g fill="var(--ink)"><circle cx="150" cy="60" r="3"/><circle cx="150" cy="140" r="3"/><circle cx="460" cy="60" r="3"/><circle cx="460" cy="140" r="3"/></g>
+    <g font-size="11.5">
+      <text x="110" y="24" text-anchor="middle" font-weight="600">low-pass</text>
+      <text x="430" y="24" text-anchor="middle" font-weight="600">high-pass</text>
+      <text x="94" y="44" text-anchor="middle">R</text><text x="172" y="100">C</text>
+      <text x="424" y="40" text-anchor="middle">C</text><text x="480" y="100">R</text>
+      <text x="14" y="104" text-anchor="middle">in</text><text x="206" y="104" text-anchor="middle">out</text>
+      <text x="334" y="104" text-anchor="middle">in</text><text x="526" y="104" text-anchor="middle">out</text>
+      <text x="110" y="170" text-anchor="middle" fill="var(--muted)">low f: C is open, out = in</text>
+      <text x="110" y="186" text-anchor="middle" fill="var(--muted)">high f: C is a short, out → 0</text>
+      <text x="430" y="170" text-anchor="middle" fill="var(--muted)">low f: C is open, out → 0</text>
+      <text x="430" y="186" text-anchor="middle" fill="var(--muted)">high f: C is a short, out = in</text>
+      <text x="320" y="216" text-anchor="middle">both change over at the cut-off frequency, f<tspan font-size="9" dy="2">c</tspan><tspan dy="-2"> = 1/(2πRC)</tspan></text>
+    </g>
+  </svg>
+  </div>
+</div>
+<p>Writing the low-pass filter as a divider with impedances gives its response directly:</p>
+<div class="eq">$$H = \frac{v_\text{out}}{v_\text{in}} = \frac{Z_C}{R + Z_C} = \frac{1}{1 + j\omega RC} \qquad |H| = \frac{1}{\sqrt{1 + (f/f_c)^2}} \qquad f_c = \frac{1}{2\pi RC}$$</div>
+<p>At the <strong>cut-off frequency</strong> f<sub>c</sub>, the capacitor's impedance equals R, the output is 1/√2 (70.7 %) of the input, so half the power gets through, and the output lags the input by 45°. Well below f<sub>c</sub> the signal passes; well above it, the output falls in proportion to frequency: ten times the frequency, a tenth of the amplitude. The high-pass filter is the mirror image.</p>
+
+<div class="widget wide" id="w-rc">
+  <div class="wh"><span class="tag">Interactive</span><b>An RC filter: frequency response and a real signal</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label>Filter</label><div class="seg" id="fT"><button type="button" data-v="lp" class="on">Low-pass</button><button type="button" data-v="hp">High-pass</button></div></div>
+      <div class="ctrl"><label for="fR">R <b id="fRv"></b></label><input id="fR" type="range" min="2" max="5" step="0.01" value="4"></div>
+      <div class="ctrl"><label for="fC">C <b id="fCv"></b></label><input id="fC" type="range" min="-9" max="-5" step="0.01" value="-6.5"></div>
+      <div class="ctrl"><label>Input signal</label><div class="seg" id="fS"><button type="button" data-v="real" class="on">Sensor example</button><button type="button" data-v="sine">Single sine</button></div></div>
+      <div class="ctrl" id="fFc"><label for="fF">Sine frequency <b id="fFv"></b></label><input id="fF" type="range" min="0" max="5" step="0.01" value="2"></div>
+      <p class="small" id="fNote"></p>
+    </div>
+    <div>
+      <canvas id="cvRc" style="height:430px" aria-label="Top: the filter's gain in decibels against frequency. Middle: its phase shift. Bottom: the input and output waveforms."></canvas>
+      <div class="legend"><span class="dash" style="--c:var(--muted)">input</span><span style="--c:var(--c1)">output</span></div>
+      <div class="readout">
+        <div class="stat"><div class="k">Cut-off frequency</div><div class="v" id="fK"></div></div>
+        <div class="stat" id="fGS"><div class="k" id="fGk">Gain at the sine's frequency</div><div class="v" id="fG"></div></div>
+        <div class="stat"><div class="k" id="fPk">Phase there</div><div class="v" id="fP"></div></div>
+      </div>
+      <div class="verdict" id="fVerdict"></div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>In the sensor example, choose R and C to remove the 500 Hz interference while keeping the 5 Hz signal. How far below the interference does f<sub>c</sub> need to be for a 20 dB reduction?</li>
+    <li>Now make f<sub>c</sub> very low, say 1 Hz. The interference is gone; what has happened to the signal?</li>
+    <li>Switch to high-pass with the sensor example. What happens to the DC offset?</li>
+  </ol></div>
+</div>
+
+<div class="example">
+  <span class="xk">Application</span>
+  <p>One common use of an RC low-pass filter is in front of an ADC (Module 11), where it removes high-frequency noise picked up by the sensor wiring before the signal is sampled. For a pressure transducer whose readings change over tens of milliseconds, a filter with f<sub>c</sub> around 100 Hz keeps the measurement responsive while strongly reducing noise at kilohertz and above, for example from a pump motor or a switching regulator. Choosing f<sub>c</sub> is always a trade between removing noise and slowing the response: a filter with time constant τ = RC takes about 5τ to settle after a step (Module 3).</p>
+</div>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">A filter that changes when it's connected</span></summary>
+  <div class="eb">
+    <p>An RC low-pass filter with R = 10 kΩ and C = 100 nF (f<sub>c</sub> ≈ 160 Hz) works as designed on the bench into an oscilloscope. Connected to the next circuit, whose input resistance is 10 kΩ, its output is half the expected size at low frequencies, and its cut-off has moved.</p>
+    <div class="choice"><p>Why?</p>
+    <ol class="opts">
+      <li>The capacitor is faulty.<div class="why">It worked on the bench; what changed is the load.</div></li>
+      <li data-correct>The 10 kΩ load is in parallel with the capacitor. At low frequencies it forms a 10 kΩ/10 kΩ divider with R, halving the output, and the resistance the capacitor sees drops to 5 kΩ, doubling f<sub>c</sub>.<div class="why">This is Module 2's loading problem, with a capacitor added.</div></li>
+      <li>The oscilloscope was adding gain.<div class="why">The scope's 1 MΩ or 10 MΩ input barely loads the filter.</div></li>
+      <li>Filters only work with a sine-wave input.<div class="why">Filters work on any signal, frequency by frequency.</div></li>
+    </ol>
+    <div class="solution"><p>The formula f<sub>c</sub> = 1/(2πRC) assumes nothing loads the output. The 10 kΩ load turns the circuit into a divider at DC (output halved) and, by Thévenin's theorem, the capacitor now sees R ∥ R<sub>load</sub> = 5 kΩ, so f<sub>c</sub> doubles to about 320 Hz. Either make the filter's resistance much smaller than the load's (ten times or more), or buffer the filter's output with an op-amp (Module 10).</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 6 BODE AND DB ================= -->
+<section class="sec" id="bode" data-short="Bode plots and decibels">
+<h2>Bode plots and decibels <a class="vjump" data-t="28:00"></a></h2>
+<p>Frequency responses span huge ranges, from hertz to megahertz in frequency and from 1 to 0.0001 in gain, so they're plotted on logarithmic scales. A <strong>Bode plot</strong> shows gain in decibels and phase in degrees against frequency on a logarithmic axis. Gain in decibels, for voltages, is</p>
+<div class="eq">$$G_\text{dB} = 20\log_{10}\frac{V_\text{out}}{V_\text{in}}$$<div class="n">×2 in voltage ≈ +6 dB · ×10 = +20 dB · ×0.707 = −3 dB · ×0.1 = −20 dB</div></div>
+<p>(The factor is 20 for voltage ratios and 10 for power ratios, because power goes as voltage squared; the RF notes use decibels throughout.) Decibels have two advantages beyond compressing the scale. Gains of stages in a chain multiply, so in decibels they add. And on a log-log plot, the RC filter's response becomes two straight lines, which makes it quick to sketch:</p>
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>Sketching a low-pass filter's Bode plot from straight lines</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 250" role="img" aria-label="A Bode magnitude plot. The first-order low-pass response is flat at 0 dB up to the cut-off frequency, where the real curve is 3 dB down, then falls along a straight line at 20 dB per decade. A second-order response, two stages in a row, falls at 40 dB per decade. Below, the phase goes from 0 to minus 90 degrees, passing minus 45 degrees at the cut-off.">
+    <path d="M60 30V160H610" stroke="var(--ink)" stroke-width="1.2" fill="none"/>
+    <g stroke="var(--line)"><path d="M60 50H610M60 90H610M60 130H610"/><path d="M170 30V160M280 30V160M390 30V160M500 30V160"/></g>
+    <path d="M60 50H280L500 130" stroke="var(--muted)" stroke-width="1.4" stroke-dasharray="6 4" fill="none"/>
+    <path id="bd1" fill="none" stroke="var(--c1)" stroke-width="2.4"/>
+    <path id="bd2" fill="none" stroke="var(--c2)" stroke-width="2"/>
+    <circle cx="280" cy="56" r="4" fill="var(--c1)"/>
+    <path d="M60 200H610" stroke="var(--ink)" stroke-width="1"/>
+    <path id="bdp" fill="none" stroke="var(--c1)" stroke-width="2.2"/>
+    <g font-size="11.5">
+      <text x="54" y="54" text-anchor="end">0 dB</text><text x="54" y="94" text-anchor="end">−20</text><text x="54" y="134" text-anchor="end">−40</text>
+      <text x="170" y="176" text-anchor="middle">f<tspan font-size="9" dy="2">c</tspan><tspan dy="-2">/10</tspan></text><text x="280" y="176" text-anchor="middle">f<tspan font-size="9" dy="2">c</tspan></text><text x="390" y="176" text-anchor="middle">10 f<tspan font-size="9" dy="2">c</tspan></text><text x="500" y="176" text-anchor="middle">100 f<tspan font-size="9" dy="2">c</tspan></text>
+      <text x="290" y="46" fill="var(--c1)">−3 dB at f<tspan font-size="9" dy="2">c</tspan></text>
+      <text x="420" y="88" fill="var(--c1)">−20 dB per decade</text>
+      <text x="80" y="150" fill="var(--c2)">two RC stages: −40 dB/decade</text>
+      <text x="54" y="204" text-anchor="end">0°</text><text x="54" y="240" text-anchor="end">−90°</text>
+      <text x="200" y="232" fill="var(--c1)">−45° at f<tspan font-size="9" dy="2">c</tspan></text>
+    </g>
+  </svg>
+  </div>
+</div>
+<p>Each RC stage adds a further −20 dB per decade above its cut-off, so two stages in a row (buffered from each other, or with the second stage's impedance much higher than the first's) roll off at −40 dB per decade. That's the main reason to use more than one stage: for the same cut-off, interference ten times above it is reduced by 40 dB instead of 20 dB.</p>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">One stage or two?</span></summary>
+  <div class="eb">
+    <p>A signal at 10 Hz must pass with little loss, and interference at 1 kHz must be reduced by at least 30 dB.</p>
+    <div class="choice"><p>Can a single RC low-pass stage do it?</p>
+    <ol class="opts">
+      <li>Yes: put f<sub>c</sub> at 100 Hz, and the 1 kHz interference is reduced by 30 dB.<div class="why">One decade above f<sub>c</sub>, a single stage gives only about 20 dB.</div></li>
+      <li data-correct>Only by putting f<sub>c</sub> near 30 Hz, close enough to the 10 Hz signal to start reducing it and delaying it noticeably; two stages at 100 Hz give about 40 dB at 1 kHz while leaving 10 Hz almost untouched.<div class="why">−20 dB per decade per stage: 30 dB needs 1.5 decades from one stage, or less than one decade from two.</div></li>
+      <li>No filter can separate signals a factor of 100 apart.<div class="why">Two decades is plenty for a simple filter.</div></li>
+      <li>Use a high-pass filter instead.<div class="why">A high-pass filter would remove the wanted 10 Hz signal.</div></li>
+    </ol>
+    <div class="solution"><p>A single stage falls at 20 dB per decade, so 30 dB at 1 kHz needs f<sub>c</sub> about 1.5 decades lower, near 32 Hz. The 10 Hz signal would then be reduced by about 0.4 dB and phase-shifted by 17°, which may be acceptable. Two stages at 100 Hz give about 40 dB at 1 kHz with only 0.1 dB loss at 10 Hz. More stages buy a steeper roll-off; Module 3 of the RF notes takes this further with higher-order filters.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 7 RESONANCE ================= -->
+<section class="sec" id="resonance" data-short="Resonance">
+<h2>Resonance <a class="vjump" data-t="32:00"></a></h2>
+<p>An inductor's impedance rises with frequency and a capacitor's falls, and they have opposite phases (+90° and −90°). Put them in series, and at one frequency their impedances are equal in size and cancel exactly, leaving only the circuit's resistance. That's the <strong>resonant frequency</strong>:</p>
+<div class="eq">$$\omega_0 L = \frac{1}{\omega_0 C} \quad\Rightarrow\quad f_0 = \frac{1}{2\pi\sqrt{LC}}$$</div>
+<p>Physically, energy sloshes back and forth between the capacitor's electric field and the inductor's magnetic field, like a pendulum swinging between height and speed. The resistance in the circuit is friction: it removes a little energy every cycle. The <strong>quality factor</strong> Q measures how little: for a series circuit, Q = (1/R)√(L/C). A high-Q circuit responds strongly over a narrow band of frequencies around f<sub>0</sub> (its bandwidth is f<sub>0</sub>/Q), and when kicked by a sudden change, it rings for many cycles before settling.</p>
+
+<div class="widget wide" id="w-res">
+  <div class="wh"><span class="tag">Interactive</span><b>A series RLC circuit: frequency response and ringing</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label for="lL">Inductance <b id="lLv"></b></label><input id="lL" type="range" min="-6" max="-2" step="0.01" value="-5"></div>
+      <div class="ctrl"><label for="lC">Capacitance <b id="lCv"></b></label><input id="lC" type="range" min="-9" max="-4" step="0.01" value="-5"></div>
+      <div class="ctrl"><label for="lR">Resistance <b id="lRv"></b></label><input id="lR" type="range" min="-2" max="2" step="0.01" value="-0.7"></div>
+      <p class="small">The bottom plot is the capacitor's voltage when a 1 V step is applied, such as a supply being connected to an LC filter.</p>
+    </div>
+    <div>
+      <canvas id="cvRes" style="height:400px" aria-label="Top: the current through the circuit against frequency, peaking at resonance. Bottom: the capacitor's voltage after a step, ringing and settling."></canvas>
+      <div class="readout">
+        <div class="stat"><div class="k">Resonant frequency</div><div class="v" id="lF"></div></div>
+        <div class="stat"><div class="k">Q</div><div class="v" id="lQ"></div></div>
+        <div class="stat" id="lOS"><div class="k">Peak after the step</div><div class="v" id="lO"></div></div>
+      </div>
+      <div class="verdict" id="lVerdict"></div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>Lower the resistance. What happens to the width of the peak and to the ringing?</li>
+    <li>How high can the capacitor's voltage go after a 1 V step, in the limit of very low resistance?</li>
+    <li>Find the resistance at which the ringing just disappears. How does it compare with √(L/C)?</li>
+  </ol></div>
+</div>
+<p>Resonance is useful when it's intended: it selects one frequency in a radio's tuned circuit and a crystal oscillator's crystal, and it's the basis of many filters. It's a problem when it's accidental. Every capacitor has some series inductance and every inductor some capacitance, so self-resonance appears in every real part (Module 3). And any circuit with an inductor and a capacitor, such as a supply filter, rings when a sudden change excites it.</p>
+
+<div class="example">
+  <span class="xk">Application</span>
+  <p>Power inputs often carry an LC filter, a series inductor and a capacitor to ground, to keep switching noise from travelling along the supply wiring. When a battery is connected, the step excites the LC circuit, and with very little resistance in the path the capacitor's voltage overshoots to almost twice the battery voltage before settling. A 12 V input can briefly see more than 20 V, enough to damage a regulator rated for 16 V. The fix is damping: some deliberate resistance, such as an electrolytic capacitor with a moderate ESR placed in parallel with the ceramic, or a small resistor in series with an extra capacitor, so that Q is below about 1.</p>
+</div>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">A better capacitor that made things worse</span></summary>
+  <div class="eb">
+    <p>A board's power input has a 10 µH inductor followed by a 100 µF electrolytic capacitor. To save space, the electrolytic is replaced by an equal-value ceramic capacitor with a much lower ESR. Now the board occasionally resets or fails when the battery is plugged in.</p>
+    <div class="choice"><p>What changed?</p>
+    <ol class="opts">
+      <li>The ceramic capacitor's value fell under DC bias, so the filter no longer works.<div class="why">DC-bias derating (Module 3) does reduce a ceramic's value, but that doesn't explain damage at plug-in.</div></li>
+      <li data-correct>The electrolytic's ESR was damping the LC circuit. With the low-ESR ceramic, Q is much higher, so connecting the battery makes the input ring and overshoot towards twice the battery voltage.<div class="why">Lower resistance raises Q, and a high-Q LC circuit overshoots a step by almost 100 %.</div></li>
+      <li>Ceramic capacitors can't be used on power inputs.<div class="why">They're used everywhere on power inputs; they just need damping here.</div></li>
+      <li>The inductor saturates with the ceramic capacitor.<div class="why">Saturation depends on current, not on the capacitor's type.</div></li>
+    </ol>
+    <div class="solution"><p>For 10 µH and 100 µF, √(L/C) ≈ 0.32 Ω. An electrolytic with 0.3 Ω of ESR gives Q ≈ 1: barely any overshoot. A ceramic with a few milliohms gives Q of 50 or more, and the step response rings up to nearly twice the input. The solution is to keep some damping, usually by adding a small electrolytic or polymer capacitor alongside the ceramic, chosen so that its ESR is close to √(L/C).</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 8 BRIDGE TO RF ================= -->
+<section class="sec" id="bridge" data-short="The bridge to RF">
+<h2>The bridge to the RF notes <a class="vjump" data-t="38:00"></a></h2>
+<p>Everything on this page assumes that the circuit is small compared with the wavelength of the signals in it: a wire is a wire, and a voltage at one end appears instantly at the other. That's an excellent assumption at audio frequencies and in most of a microcontroller board. At higher frequencies it stops being true. A 1 GHz signal has a wavelength of 30 cm in free space and about 15 cm on a circuit board, so a 2 cm trace is already a significant fraction of a wavelength, and the voltage along it varies.</p>
+<p>That's where the <a href="../../RF/">RF notes</a> start. Their first modules build directly on the ideas here: impedance, phase, decibels and frequency response carry over unchanged, and resonance and self-resonance become everyday design tools. If you're heading there, the most useful things to take from this module are a feel for impedance as a function of frequency and fluency with decibels.</p>
+</section>
+
+<!-- ================= DESIGN EXERCISES ================= -->
+<section class="sec" id="exercises" data-nonum data-short="Design exercises">
+<h2>Design exercises</h2>
+<p>Problems drawn from real hardware. Each takes a few steps. Enter numbers to check your reasoning as you go, or open the worked solutions and discussion. The figures above are useful for sanity-checking.</p>
+
+<div class="chal">
+  <div class="ch"><span class="cn">Exercise 1</span><span class="cd">Analysis · ●○○</span><span class="ctitle">RMS and power</span></div>
+  <div class="cbody">
+    <p>A function generator drives a 10 V peak sine wave into a 50 Ω load.</p>
+    <div class="check" data-ans="7.07" data-tol="1%" data-unit="V"><p>(a) What's the RMS voltage?</p>
+      <div class="solution"><p>10/√2 = 7.07 V.</p></div></div>
+    <div class="check" data-ans="1" data-tol="1%" data-unit="W"><p>(b) What average power does the load dissipate?</p>
+      <div class="miss" data-val="2"><p>That uses the peak voltage. Power uses the RMS value: 7.07²/50.</p></div>
+      <div class="solution"><p>P = 7.07²/50 = 1.0 W. Using the peak voltage would give 2 W, twice the real figure.</p></div></div>
+  </div>
+</div>
+
+<div class="chal">
+  <div class="ch"><span class="cn">Exercise 2</span><span class="cd">Design · ●●○</span><span class="ctitle">Filtering a sensor signal</span></div>
+  <div class="cbody">
+    <p>A sensor signal needs a low-pass filter with a cut-off of 100 Hz. R is chosen as 10 kΩ.</p>
+    <div class="check" data-ans="159" data-tol="2%" data-unit="nF"><p>(a) What capacitance is needed?</p>
+      <div class="hint">C = 1/(2πRf<sub>c</sub>).</div>
+      <div class="solution"><p>C = 1/(2π × 10 000 × 100) = 159 nF. The nearest standard value is 150 nF, giving f<sub>c</sub> = 106 Hz.</p></div></div>
+    <div class="check" data-ans="-34" data-tol="2%" data-unit="dB"><p>(b) With f<sub>c</sub> = 100 Hz, by how much is 5 kHz interference reduced?</p>
+      <div class="hint">|H| = 1/√(1 + (f/f<sub>c</sub>)²), then 20 log₁₀.</div>
+      <div class="solution"><p>f/f<sub>c</sub> = 50, |H| = 1/√2501 ≈ 0.020, which is −34 dB.</p></div></div>
+    <details><summary>Discussion: the cost in response time</summary><p>τ = RC = 1.6 ms, so the filter takes about 8 ms to settle after a step. For a pressure measurement that's usually fine. For a fast event, such as detecting an ignition transient, it might hide exactly what's being looked for, which is why the filter is chosen with the signal's needs in mind, not just the noise.</p></details>
+  </div>
+</div>
+
+<div class="chal">
+  <div class="ch"><span class="cn">Exercise 3</span><span class="cd">Analysis · ●●○</span><span class="ctitle">An input filter's resonance</span></div>
+  <div class="cbody">
+    <p>A power input filter uses a 10 µH inductor and a 22 µF capacitor.</p>
+    <div class="check" data-ans="10.7" data-tol="2%" data-unit="kHz"><p>(a) What's its resonant frequency?</p>
+      <div class="solution"><p>f<sub>0</sub> = 1/(2π√(10×10⁻⁶ × 22×10⁻⁶)) = 1/(2π × 14.8×10⁻⁶) ≈ 10.7 kHz.</p></div></div>
+    <div class="check" data-ans="0.67" data-tol="3%" data-unit="Ω"><p>(b) What series resistance would give Q = 1?</p>
+      <div class="hint">Q = (1/R)√(L/C).</div>
+      <div class="solution"><p>√(L/C) = √(10×10⁻⁶ / 22×10⁻⁶) = 0.67 Ω, so R = 0.67 Ω gives Q = 1.</p></div></div>
+    <details><summary>Discussion: why not add the resistor in series</summary><p>A 0.67 Ω resistor in series with the supply current would waste power and drop voltage. Instead, the damping resistance is placed in series with an extra capacitor, in parallel with the main one: it damps the resonance but carries no DC current. An electrolytic capacitor's own ESR often serves as this resistor.</p></details>
+  </div>
+</div>
+</section>
+
+<!-- ================= BENCH ================= -->
+<section class="sec" id="bench" data-nonum data-short="At the bench">
+<h2>At the bench</h2>
+<div class="video" data-video="lab">
+  <div class="plan">
+    <p>Planned lab demo (≈ 20 min, filmed at the bench):</p>
+    <ol>
+      <li>Measuring amplitude, frequency and phase on the oscilloscope</li>
+      <li>A true-RMS and an average-responding meter on a PWM signal</li>
+      <li>Measuring an RC filter's response point by point, and with the scope's sweep</li>
+      <li>Ringing of an LC circuit, with and without damping</li>
+    </ol>
+  </div>
+</div>
+<div class="lab">
+  <h3>Frequency response by hand</h3>
+  <div class="parts"><span>Function generator</span><span>Two-channel oscilloscope</span><span>10 kΩ resistor and 15 nF capacitor</span><span>A 100 µH inductor and 1 µF capacitor</span><span>A 10 Ω resistor</span></div>
+  <ol>
+    <li><b>RC low-pass.</b> Build the filter (f<sub>c</sub> ≈ 1 kHz). Drive it with a 1 V sine and measure the input and output amplitudes and the time delay between them at 100 Hz, 300 Hz, 1 kHz, 3 kHz, 10 kHz and 30 kHz. Plot the gain in dB and the phase on log paper or a spreadsheet, and compare with the formula.</li>
+    <li><b>Square wave.</b> Apply a 1 kHz square wave. Compare the output with the harmonic-sum figure: which harmonics survive?</li>
+    <li><b>Resonance.</b> Build a series LC circuit with the 100 µH and 1 µF (f<sub>0</sub> ≈ 16 kHz) and apply a slow square wave (100 Hz). Observe the capacitor's voltage ringing after each edge. Add the 10 Ω resistor in series and repeat.</li>
+  </ol>
+  <div class="record"><b>What you should see:</b> −3 dB and −45° near 1 kHz, falling at about 20 dB per decade above it; a square wave with rounded edges; and ringing at about 16 kHz that dies away much faster with the resistor added.</div>
+</div>
+</section>
+
+<!-- ================= SUMMARY ================= -->
+<section class="sec" id="summary" data-nonum data-short="Summary">
+<h2>Summary &amp; cheat sheet</h2>
+<ol class="takeaways">
+  <li>A sine wave has amplitude, frequency and phase. Phase is delay measured in cycles: Δφ = 360° × f × Δt.</li>
+  <li>Any repeating signal is a sum of sines at its fundamental and harmonics; sharp edges need high harmonics.</li>
+  <li>RMS is the equivalent DC value for power. For a sine, V<sub>RMS</sub> = A/√2; for other shapes, only a true-RMS meter reads correctly.</li>
+  <li>Impedance extends Ohm's law: Z<sub>C</sub> = 1/(jωC) falls with frequency, Z<sub>L</sub> = jωL rises, each with a 90° phase shift. All of Module 2's techniques work with impedances.</li>
+  <li>An RC filter's cut-off is f<sub>c</sub> = 1/(2πRC), where the gain is −3 dB and the phase 45°; beyond it, the response falls at 20 dB per decade per stage. Loading changes both.</li>
+  <li>An LC circuit resonates at f<sub>0</sub> = 1/(2π√(LC)); Q sets how sharp the peak is and how long it rings. Undamped input filters can overshoot to nearly twice the supply.</li>
+</ol>
+<div class="cheat">
+  <div><b>Sine</b>\(v = A\sin(2\pi f t + \varphi)\)<br><span class="small">T = 1/f · ω = 2πf</span></div>
+  <div><b>Phase from delay</b>\(\Delta\varphi = 360^\circ f\,\Delta t\)</div>
+  <div><b>RMS</b>sine: \(A/\sqrt2\) · square: A<br><span class="small">PWM 0–A: \(A\sqrt{D}\)</span></div>
+  <div><b>Impedance</b>\(Z_C = 1/(j\omega C)\) · \(Z_L = j\omega L\)</div>
+  <div><b>RC filter</b>\(f_c = 1/(2\pi RC)\)<br><span class="small">−3 dB, 45° at f<sub>c</sub> · −20 dB/decade</span></div>
+  <div><b>Decibels</b>\(20\log_{10}(V_2/V_1)\)<br><span class="small">×2 = 6 dB · ×10 = 20 dB</span></div>
+  <div><b>Resonance</b>\(f_0 = 1/(2\pi\sqrt{LC})\)<br><span class="small">series Q = (1/R)√(L/C) · BW = f₀/Q</span></div>
+</div>
+<h3>Further reading</h3>
+<ul class="small">
+  <li><em>The Art of Electronics</em> (Horowitz &amp; Hill), chapter 1.7: impedance and reactance, including RC filters, phasors and resonant circuits.</li>
+  <li><em>Practical Electronics for Inventors</em> (Scherz &amp; Monk), chapter 2: AC theory, including RMS, impedance, complex numbers, filters and resonant circuits, with many worked examples.</li>
+</ul>
 </section>
 
 <nav class="pager"></nav>
 </main>
 </div>
 <footer class="site">Hardware Engineering Fundamentals · EE Fundamentals</footer>
+
+<script>
+'use strict';
+const $ = s => document.querySelector(s);
+const {col, si, fmt, lin, log, ticks, logTicks, axes, line, text, dot, rgba} = Plot;
+function setVerdict(el, cls, html){ el.className = 'verdict ' + cls; el.innerHTML = html; }
+const db = x => 20*Math.log10(x);
+
+// static SVG curves, computed once so they're exact
+(() => {
+  const sw = []; for (let i = 0; i <= 300; i++){ const x = 40 + 580*i/300, t = (x - 60)/232; sw.push((i ? 'L' : 'M') + x.toFixed(1) + ' ' + (110 - 64*Math.sin(2*Math.PI*t)).toFixed(1)); }
+  $('#sw').setAttribute('d', sw.join(''));
+  const pv = [], pi = []; for (let i = 0; i <= 200; i++){ const x = 260 + 360*i/200, a = Math.PI/4 + 2*Math.PI*1.5*i/200; pv.push((i ? 'L' : 'M') + x.toFixed(1) + ' ' + (110 - 70*Math.sin(a)).toFixed(1)); pi.push((i ? 'L' : 'M') + x.toFixed(1) + ' ' + (110 - 70*Math.sin(a + Math.PI/2)).toFixed(1)); }
+  $('#phV').setAttribute('d', pv.join('')); $('#phI').setAttribute('d', pi.join(''));
+  // Bode sketch: x = 280 + 110*log10(f/fc); 0 dB at y=50, 20 dB per 40 px
+  const b1 = [], b2 = [], bp = [];
+  for (let i = 0; i <= 220; i++){ const x = 60 + 550*i/220, r = Math.pow(10, (x - 280)/110), g1 = -10*Math.log10(1 + r*r);
+    b1.push((i ? 'L' : 'M') + x.toFixed(1) + ' ' + Math.min(160, 50 - 2*g1).toFixed(1));
+    b2.push((i ? 'L' : 'M') + x.toFixed(1) + ' ' + Math.min(160, 50 - 4*g1).toFixed(1));
+    bp.push((i ? 'L' : 'M') + x.toFixed(1) + ' ' + (200 + 40*Math.atan(r)/(Math.PI/2)).toFixed(1)); }
+  $('#bd1').setAttribute('d', b1.join('')); $('#bd2').setAttribute('d', b2.join('')); $('#bdp').setAttribute('d', bp.join(''));
+})();
+
+/* ============ 1. Phase and delay ============ */
+(() => {
+  let s = {};
+  function upd(){
+    const f = Math.pow(10, +$('#hF').value), dt = +$('#hD').value*1e-3, ph = 360*f*dt;
+    s = {f, dt};
+    $('#hFv').textContent = si(f, 'Hz'); $('#hDv').textContent = fmt(dt*1e3, 3) + ' ms';
+    $('#hT').textContent = si(1/f, 's'); $('#hP').textContent = fmt(ph, 4) + '°' + (ph >= 360 ? ' (' + fmt(ph % 360, 3) + '° + ' + Math.floor(ph/360) + ' cycle' + (ph >= 720 ? 's' : '') + ')' : '');
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvPh'), (ctx, W, H) => {
+    const {f, dt} = s; if (!f) return;
+    const P = {l: 40, r: W - 14, t: 14, b: H - 34}, T = 2/f, X = lin(0, T, P.l, P.r), Y = lin(-1.2, 1.2, P.b, P.t);
+    axes(ctx, P, X, Y, {xt: ticks(0, T, 4), yt: [-1, 0, 1], xl: 'time', xf: t => si(t, 's').replace(' ', ''), xgrid: true});
+    Plot.clip(ctx, P);
+    const a = [], b = []; for (let i = 0; i <= 300; i++){ const t = T*i/300; a.push([X(t), Y(Math.sin(2*Math.PI*f*t))]); b.push([X(t), Y(Math.sin(2*Math.PI*f*(t - dt)))]); }
+    line(ctx, a, col.c1, 2.2); line(ctx, b, col.c2, 2.2);
+    if (dt < T){ const t0 = 1/(4*f), y = Y(1.08); line(ctx, [[X(t0), y], [X(t0 + dt), y]], col.ink2, 1.4); dot(ctx, X(t0), y, 2.5, col.ink2); dot(ctx, X(t0 + dt), y, 2.5, col.ink2); }
+    ctx.restore();
+  });
+  ['#hF', '#hD'].forEach(id => $(id).addEventListener('input', upd));
+  upd();
+})();
+
+/* ============ 2. Fourier series of a square wave ============ */
+(() => {
+  let N = 5;
+  function upd(){ N = +$('#fN').value; $('#fNv').textContent = N === 1 ? 'fundamental only' : N + (N === 3 ? 'rd' : 'th'); w.redraw(); }
+  const w = Plot.widget($('#cvFs'), (ctx, W, H) => {
+    const A = {l: 40, r: W - 14, t: 10, b: H*0.58}, B = {l: 40, r: W - 14, t: H*0.68, b: H - 30};
+    const X = lin(0, 2, A.l, A.r), Y = lin(-1.4, 1.4, A.b, A.t);
+    axes(ctx, A, X, Y, {xt: [], yt: [-1, 0, 1]});
+    Plot.clip(ctx, A);
+    const sq = [], sm = []; for (let i = 0; i <= 600; i++){ const t = 2*i/600; sq.push([X(t), Y(Math.sin(2*Math.PI*t) >= 0 ? 1 : -1)]); let v = 0; for (let k = 1; k <= N; k += 2) v += Math.sin(2*Math.PI*k*t)/k; sm.push([X(t), Y(4/Math.PI*v)]); }
+    line(ctx, sq, col.muted, 1.4, [5, 4]); line(ctx, sm, col.c1, 2.2);
+    ctx.restore();
+    const Xb = lin(0, 50, B.l, B.r), Yb = lin(0, 1.3, B.b, B.t);
+    axes(ctx, B, Xb, Yb, {xt: [1, 10, 20, 30, 40, 49], yt: [0, 1], xl: 'harmonic number', yl: 'amp.'});
+    for (let k = 1; k <= 49; k += 2){ const a = 4/Math.PI/k, x = Xb(k); ctx.fillStyle = k <= N ? col.c1 : rgba(col.muted, .35); ctx.fillRect(x - 3, Yb(a), 6, B.b - Yb(a)); }
+  });
+  $('#fN').addEventListener('input', upd);
+  upd();
+})();
+
+/* ============ 3. RMS ============ */
+(() => {
+  const kind = Plot.seg('#rW', upd), A = 10, N = 2000;
+  const wave = (k, t, D) => k === 'sin' ? A*Math.sin(2*Math.PI*t) : k === 'sq' ? (t % 1 < 0.5 ? A : -A) : k === 'tri' ? A*(1 - 4*Math.abs((t + 0.25) % 1 - 0.5)) : ((t % 1) < D ? A : 0);
+  let s = {};
+  function upd(){
+    const k = kind(), D = +$('#rD').value;
+    let s2 = 0, sa = 0; for (let i = 0; i < N; i++){ const v = wave(k, i/N, D); s2 += v*v; sa += Math.abs(v); }
+    const rms = Math.sqrt(s2/N), meter = 1.1107*sa/N, err = (meter/rms - 1)*100;
+    s = {k, D, rms, meter};
+    $('#rDv').textContent = Math.round(D*100) + ' %'; $('#rD').closest('.ctrl').style.opacity = k === 'pwm' ? 1 : 0.4;
+    $('#rR').textContent = fmt(rms, 3) + ' V'; $('#rM').textContent = fmt(meter, 3) + ' V'; $('#rE').textContent = Math.abs(err) < 0.05 ? '0 %' : (err >= 0 ? '+' : '') + fmt(err, 2) + ' %';
+    $('#rES').className = 'stat ' + (Math.abs(err) > 10 ? 'bad' : Math.abs(err) > 2 ? 'warn' : '');
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvRms'), (ctx, W, H) => {
+    const {k, D, rms, meter} = s; if (!k) return;
+    const P = {l: 40, r: W - 14, t: 14, b: H - 30}, X = lin(0, 2, P.l, P.r), Y = lin(-12, 12, P.b, P.t);
+    axes(ctx, P, X, Y, {xt: [], yt: [-10, -5, 0, 5, 10], yl: 'V'});
+    Plot.clip(ctx, P);
+    const sq = [[X(0), Y(0)]], v = []; for (let i = 0; i <= 600; i++){ const t = 2*i/600, x = wave(k, t, D); v.push([X(t), Y(x)]); sq.push([X(t), Y(x*x/A)]); }
+    sq.push([X(2), Y(0)]);
+    ctx.fillStyle = rgba(col.c5, .18); ctx.beginPath(); sq.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); ctx.closePath(); ctx.fill();
+    line(ctx, v, col.c1, 2.2);
+    line(ctx, [[P.l, Y(rms)], [P.r, Y(rms)]], col.good, 1.6, [6, 4]);
+    line(ctx, [[P.l, Y(meter)], [P.r, Y(meter)]], col.bad, 1.4, [3, 3]);
+    ctx.restore();
+  });
+  $('#rD').addEventListener('input', upd);
+  upd();
+})();
+
+/* ============ 4. Impedance of R, L, C ============ */
+(() => {
+  const kind = Plot.seg('#zK', upd), Rv = 100, Cv = 10e-6, Lv = 10e-3;
+  const Z = (k, f) => { const w = 2*Math.PI*f; return k === 'R' ? [Rv, 0] : k === 'C' ? [1/(w*Cv), -90] : [w*Lv, 90]; };
+  let s = {};
+  function upd(){
+    const k = kind(), f = Math.pow(10, +$('#zF').value), [m, ph] = Z(k, f);
+    s = {k, f, m, ph};
+    $('#zFv').textContent = si(f, 'Hz'); $('#zM').textContent = si(m, 'Ω'); $('#zI').textContent = si(1/m, 'A');
+    $('#zP').textContent = ph === 0 ? 'in phase' : ph < 0 ? 'leads by 90°' : 'lags by 90°';
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvZ'), (ctx, W, H) => {
+    const {k, f, m, ph} = s; if (!k) return;
+    const A = {l: 50, r: W - 24, t: 14, b: H*0.42}, B = {l: 50, r: W - 24, t: H*0.54, b: H - 34};
+    const X = lin(0, 2, A.l, A.r), Y = lin(-1.25, 1.25, A.b, A.t);
+    axes(ctx, A, X, Y, {xt: [], yt: [-1, 0, 1], yl: 'V'});
+    Plot.clip(ctx, A);
+    const v = [], c = []; for (let i = 0; i <= 300; i++){ const t = 2*i/300; v.push([X(t), Y(Math.sin(2*Math.PI*t))]); c.push([X(t), Y(Math.sin(2*Math.PI*t - ph*Math.PI/180))]); }
+    line(ctx, v, col.c1, 2.2); line(ctx, c, col.c2, 2.2);
+    ctx.restore();
+    text(ctx, 'current: ' + si(1/m, 'A') + ' peak', A.r + 4, A.t + 6, {color: col.c2, base: 'top', align: 'right'});
+    text(ctx, 'two cycles', A.l + 4, A.b - 8, {color: col.muted});
+    const Xf = log(10, 1e5, B.l, B.r), Yz = log(0.1, 1e5, B.b, B.t);
+    axes(ctx, B, Xf, Yz, {xt: [10, 100, 1e3, 1e4, 1e5], yt: [0.1, 1, 10, 100, 1e3, 1e4, 1e5], xl: 'frequency', yl: '|Z| (Ω)', xf: t => si(t, 'Hz').replace(' ', ''), yf: t => si(t, '').trim(), xgrid: true});
+    Plot.clip(ctx, B);
+    [['R', col.c3], ['C', col.c1], ['L', col.c5]].forEach(([kk, cc]) => { const pts = []; for (let i = 0; i <= 200; i++){ const ff = 10*Math.pow(1e4, i/200); pts.push([Xf(ff), Yz(Z(kk, ff)[0])]); } line(ctx, pts, kk === k ? cc : rgba(cc, .3), kk === k ? 2.6 : 1.4); });
+    dot(ctx, Xf(f), Yz(m), 5, col.ink);
+    ctx.restore();
+    text(ctx, 'R', B.r - 4, Yz(100) - 9, {align: 'right', color: col.c3}); text(ctx, 'C', Xf(14), Yz(Z('C', 14)[0]) + 2, {color: col.c1}); text(ctx, 'L', B.r - 14, Yz(Z('L', 7e4)[0]) + 12, {color: col.c5});
+  });
+  $('#zF').addEventListener('input', upd);
+  upd();
+})();
+
+/* ============ 5. RC filter ============ */
+(() => {
+  const type = Plot.seg('#fT', upd), sig = Plot.seg('#fS', upd);
+  const H = (lp, f, fc) => { const r = f/fc, m = lp ? 1/Math.sqrt(1 + r*r) : r/Math.sqrt(1 + r*r), p = lp ? -Math.atan(r) : Math.PI/2 - Math.atan(r); return [m, p]; };
+  let s = {};
+  function comps(lp, real, fs){
+    // each component: [frequency, amplitude] (frequency 0 is a DC offset)
+    if (!real) return [[fs, 1]];
+    return lp ? [[5, 1], [500, 0.4]] : [[0, 1.5], [1000, 0.4]];
+  }
+  function upd(){
+    const lp = type() === 'lp', real = sig() === 'real', R = Math.pow(10, +$('#fR').value), C = Math.pow(10, +$('#fC').value), fc = 1/(2*Math.PI*R*C), fs = Math.pow(10, +$('#fF').value);
+    s = {lp, real, fc, fs, cs: comps(lp, real, fs)};
+    $('#fRv').textContent = si(R, 'Ω'); $('#fCv').textContent = si(C, 'F'); $('#fFv').textContent = si(fs, 'Hz'); $('#fK').textContent = si(fc, 'Hz');
+    $('#fFc').style.display = real ? 'none' : '';
+    $('#fNote').textContent = real ? (lp ? 'Sensor example: a 5 Hz signal (1 V) with 500 Hz interference (0.4 V) on top.' : 'AC-coupling example: a 1 kHz, 0.4 V signal riding on a 1.5 V DC offset.') : 'A 1 V sine at the chosen frequency.';
+    const v = $('#fVerdict');
+    if (real){
+      const [ms, ps] = lp ? H(true, 5, fc) : H(false, 1000, fc), [mn] = lp ? H(true, 500, fc) : [0];
+      $('#fGk').textContent = lp ? 'Signal (5 Hz) gain' : 'Signal (1 kHz) gain'; $('#fPk').textContent = lp ? 'Interference (500 Hz) gain' : 'DC offset';
+      $('#fG').textContent = fmt(db(ms), 3) + ' dB'; $('#fP').textContent = lp ? fmt(db(mn), 3) + ' dB' : 'removed';
+      $('#fGS').className = 'stat ' + (db(ms) < -1 ? 'warn' : '');
+      if (lp){
+        if (db(ms) < -1) setVerdict(v, 'warn', `<b>The filter is eating the signal.</b> The cut-off (${si(fc, 'Hz')}) is so low that the 5 Hz signal is reduced by ${fmt(-db(ms), 2)} dB and delayed. Raise f<sub>c</sub>.`);
+        else if (db(mn) > -20) setVerdict(v, 'warn', `<b>Interference still visible.</b> The 500 Hz interference is only ${fmt(-db(mn), 2)} dB down. Lower f<sub>c</sub>, keeping it well above 5 Hz.`);
+        else setVerdict(v, 'ok', `<b>A good choice.</b> The signal passes (${fmt(db(ms), 2)} dB), and the interference is reduced by ${fmt(-db(mn), 2)} dB.`);
+      } else {
+        if (db(ms) < -1) setVerdict(v, 'warn', `<b>The signal is being reduced too.</b> With f<sub>c</sub> at ${si(fc, 'Hz')}, the 1 kHz signal loses ${fmt(-db(ms), 2)} dB. Lower f<sub>c</sub>.`);
+        else setVerdict(v, 'ok', `<b>AC coupling.</b> The DC offset is blocked completely (after the capacitor has charged), and the 1 kHz signal passes almost unchanged.`);
+      }
+    } else {
+      const [m, p] = H(lp, fs, fc);
+      $('#fGk').textContent = 'Gain at the sine\'s frequency'; $('#fPk').textContent = 'Phase there';
+      $('#fG').textContent = fmt(db(m), 3) + ' dB (×' + fmt(m, 3) + ')'; $('#fP').textContent = (p >= 0 ? '+' : '') + fmt(p*180/Math.PI, 3) + '°';
+      $('#fGS').className = 'stat';
+      setVerdict(v, 'ok', fs < fc ? `<b>${lp ? 'Passband' : 'Stopband'}.</b> The sine is ${si(fs, 'Hz')}, ${fmt(fc/fs, 3)}× below the cut-off.` : `<b>${lp ? 'Stopband' : 'Passband'}.</b> The sine is ${si(fs, 'Hz')}, ${fmt(fs/fc, 3)}× above the cut-off.`);
+    }
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvRc'), (ctx, W, Ht) => {
+    const {lp, real, fc, fs, cs} = s; if (!fc) return;
+    const A = {l: 52, r: W - 26, t: 12, b: Ht*0.36}, Bp = {l: 52, r: W - 26, t: Ht*0.42, b: Ht*0.56}, C = {l: 52, r: W - 26, t: Ht*0.66, b: Ht - 38};
+    const X = log(1, 1e6, A.l, A.r), Y = lin(-60, 5, A.b, A.t), Yp = lin(lp ? -90 : 0, lp ? 0 : 90, Bp.b, Bp.t);
+    axes(ctx, A, X, Y, {xt: W < 520 ? [1, 100, 1e4, 1e6] : [1, 10, 100, 1e3, 1e4, 1e5, 1e6], yt: [-60, -40, -20, 0], yl: 'gain (dB)', xf: t => si(t, 'Hz').replace(' ', ''), xgrid: true});
+    Plot.clip(ctx, A);
+    const pm = [], pp = []; for (let i = 0; i <= 300; i++){ const f = Math.pow(10, 6*i/300), [m, p] = H(lp, f, fc); pm.push([X(f), Y(db(m))]); pp.push([X(f), Yp(p*180/Math.PI)]); }
+    line(ctx, pm, col.c1, 2.4);
+    line(ctx, [[X(fc), A.t], [X(fc), Bp.b]], col.muted, 1, [3, 3]);
+    cs.forEach(([f]) => { if (f > 0){ const [m] = H(lp, f, fc); dot(ctx, X(f), Y(db(m)), 4.5, col.c2); } });
+    ctx.restore();
+    axes(ctx, Bp, X, Yp, {xt: [], yt: lp ? [-90, -45, 0] : [0, 45, 90], yl: 'phase'});
+    Plot.clip(ctx, Bp); line(ctx, pp, col.c5, 2); ctx.restore();
+    // time domain
+    const fmin = Math.min(...cs.map(c => c[0]).filter(f => f > 0)), T = 3/fmin;
+    const ta = [], va = [], vb = [];
+    for (let i = 0; i <= 900; i++){ const t = T*i/900; let a = 0, b = 0; cs.forEach(([f, am]) => { if (f === 0){ a += am; if (lp) b += am; } else { const [m, p] = H(lp, f, fc); a += am*Math.sin(2*Math.PI*f*t); b += am*m*Math.sin(2*Math.PI*f*t + p); } }); ta.push(t); va.push(a); vb.push(b); }
+    const lo = Math.min(...va, ...vb), hi = Math.max(...va, ...vb), pad = 0.1*(hi - lo || 1);
+    const Xt = lin(0, T, C.l, C.r), Yt = lin(lo - pad, hi + pad, C.b, C.t);
+    axes(ctx, C, Xt, Yt, {xt: ticks(0, T, 4), yt: ticks(lo, hi, 4), xl: 'time', xf: t => si(t, 's').replace(' ', ''), yl: 'V'});
+    Plot.clip(ctx, C);
+    line(ctx, ta.map((t, i) => [Xt(t), Yt(va[i])]), col.muted, 1.3, [5, 4]); line(ctx, ta.map((t, i) => [Xt(t), Yt(vb[i])]), col.c1, 2.2);
+    ctx.restore();
+    text(ctx, 'fc = ' + si(fc, 'Hz'), Math.min(X(fc) + 4, A.r - 70), A.t + 10, {color: col.muted});
+  });
+  ['#fR', '#fC', '#fF'].forEach(id => $(id).addEventListener('input', upd));
+  upd();
+})();
+
+/* ============ 6. Series RLC resonance ============ */
+(() => {
+  let s = {};
+  function step(L, C, R, t){
+    const a = R/(2*L), w0 = 1/Math.sqrt(L*C);
+    if (a < w0*0.9999){ const wd = Math.sqrt(w0*w0 - a*a); return 1 - Math.exp(-a*t)*(Math.cos(wd*t) + a/wd*Math.sin(wd*t)); }
+    if (a > w0*1.0001){ const r = Math.sqrt(a*a - w0*w0), s1 = -a + r, s2 = -a - r; return 1 + (s2*Math.exp(s1*t) - s1*Math.exp(s2*t))/(s1 - s2); }
+    return 1 - Math.exp(-a*t)*(1 + a*t);
+  }
+  function upd(){
+    const L = Math.pow(10, +$('#lL').value), C = Math.pow(10, +$('#lC').value), R = Math.pow(10, +$('#lR').value);
+    const f0 = 1/(2*Math.PI*Math.sqrt(L*C)), Q = Math.sqrt(L/C)/R, a = R/(2*L);
+    const T = Math.min(12/a, 40/f0), N = 1500; let pk = 0; for (let i = 0; i <= N; i++) pk = Math.max(pk, step(L, C, R, T*i/N));
+    s = {L, C, R, f0, Q, T};
+    $('#lLv').textContent = si(L, 'H'); $('#lCv').textContent = si(C, 'F'); $('#lRv').textContent = si(R, 'Ω');
+    $('#lF').textContent = si(f0, 'Hz'); $('#lQ').textContent = fmt(Q, 3); $('#lO').textContent = fmt(pk, 3) + ' V (+' + fmt(Math.max(0, pk - 1)*100, 2) + ' %)';
+    $('#lOS').className = 'stat ' + (pk > 1.5 ? 'bad' : pk > 1.1 ? 'warn' : '');
+    const v = $('#lVerdict');
+    if (Q < 0.5) setVerdict(v, 'ok', `<b>Overdamped.</b> The resistance (${si(R, 'Ω')}) is larger than √(L/C) = ${si(Math.sqrt(L/C), 'Ω')}, so the step response rises without ringing; the frequency response has no sharp peak.`);
+    else if (Q < 2) setVerdict(v, 'ok', `<b>Well damped.</b> Q = ${fmt(Q, 2)}: a small overshoot and a broad peak.`);
+    else setVerdict(v, 'bad', `<b>Underdamped, Q = ${fmt(Q, 3)}.</b> A narrow peak at ${si(f0, 'Hz')}, and a step makes the capacitor's voltage overshoot to ${fmt(pk, 3)} V and ring for about ${Math.round(Q/Math.PI*3)} cycles.`);
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvRes'), (ctx, W, H) => {
+    const {L, C, R, f0, T} = s; if (!L) return;
+    const A = {l: 52, r: W - 26, t: 12, b: H*0.44}, B = {l: 52, r: W - 26, t: H*0.56, b: H - 38};
+    const X = log(f0/100, f0*100, A.l, A.r), Y = lin(-60, 5, A.b, A.t);
+    axes(ctx, A, X, Y, {xt: W < 520 ? [f0/100, f0, f0*100] : [f0/100, f0/10, f0, f0*10, f0*100], yt: [-60, -40, -20, 0], xl: 'frequency', yl: 'current (dB)', xf: t => si(t, 'Hz').replace(' ', ''), xgrid: true});
+    Plot.clip(ctx, A);
+    const pts = []; for (let i = 0; i <= 400; i++){ const f = f0/100*Math.pow(1e4, i/400), w_ = 2*Math.PI*f, x = w_*L - 1/(w_*C); pts.push([X(f), Y(db(R/Math.hypot(R, x)))]); }
+    line(ctx, pts, col.c1, 2.4);
+    ctx.restore();
+    const Xt = lin(0, T, B.l, B.r), Yt = lin(0, 2.1, B.b, B.t);
+    axes(ctx, B, Xt, Yt, {xt: ticks(0, T, 4), yt: [0, 1, 2], xl: 'time after the step', yl: 'vC (V)', xf: t => si(t, 's').replace(' ', ''), xgrid: true});
+    Plot.clip(ctx, B);
+    line(ctx, [[B.l, Yt(1)], [B.r, Yt(1)]], col.muted, 1, [4, 4]);
+    const st = []; for (let i = 0; i <= 1200; i++){ const t = T*i/1200; st.push([Xt(t), Yt(step(L, C, R, t))]); }
+    line(ctx, st, col.c2, 2.2);
+    ctx.restore();
+  });
+  ['#lL', '#lC', '#lR'].forEach(id => $(id).addEventListener('input', upd));
+  upd();
+})();
+</script>
 </body>
 </html>

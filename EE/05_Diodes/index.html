@@ -4,31 +4,830 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Diodes · EE 5</title>
-<meta name="description" content="EE Fundamentals module 5: Rectifiers, LEDs, Zener/TVS protection and reverse-polarity protection. In development.">
+<meta name="description" content="EE module 5: the diode as a one-way valve, the forward drop and the I–V curve, rectifiers and smoothing capacitors, LEDs and current limiting, Zener and TVS diodes, reverse-polarity protection, and diode-OR of redundant supplies.">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
 <link rel="stylesheet" href="../../assets/site.css">
 <script src="../../assets/course.js"></script>
 <script src="../../assets/site.js"></script>
+<script src="../../assets/plot.js"></script>
 </head>
 <body>
 <div class="layout">
 <aside class="side" aria-label="Module contents"></aside>
 <main class="content">
 
-<!-- Placeholder: replace this page with the module when it's written (see README.md, "Writing a module"). -->
+<!-- ================= HERO ================= -->
 <header class="hero">
   <div class="eyebrow">EE Fundamentals · Module 5</div>
   <h1>Diodes</h1>
-  <p class="lede">Rectifiers, LEDs, Zener/TVS protection and reverse-polarity protection.</p>
+  <p class="lede">A diode lets current flow one way and blocks it the other. That single property protects circuits from batteries connected backwards, turns AC into DC, clamps the voltage spike from a switched coil, lights indicators, absorbs electrostatic discharge, and lets two batteries share a load safely. This module explains how diodes behave, including the voltage they drop and the heat that costs, and how to choose one for each of these jobs.</p>
+  <p class="meta">Builds on: EE modules 1–4. Bench: bench supply, multimeter with a diode-test range, oscilloscope, assorted diodes, LEDs and resistors.</p>
+  <div class="resources" data-auto></div>
+  <div class="objectives">
+    <h3>What's covered</h3>
+    <ul>
+      <li>What a diode does, how to identify its terminals, and what's happening inside it.</li>
+      <li>The forward voltage drop, the exponential I–V curve, and how temperature changes it.</li>
+      <li>Rectifiers and smoothing capacitors: turning AC into DC.</li>
+      <li>LEDs and why they always need current limiting.</li>
+      <li>Zener and TVS diodes: regulating and clamping voltages, and protecting inputs.</li>
+      <li>Protecting a circuit from a reversed battery, and combining two supplies with diodes.</li>
+    </ul>
+  </div>
+  <div class="video" data-video="lecture" id="lecture">
+    <div class="plan">
+      <p>Planned walkthrough of this page (≈ 40 min):</p>
+      <ol>
+        <li data-t="0:00">The diode as a one-way valve</li>
+        <li data-t="4:00">The forward drop and the I–V curve</li>
+        <li data-t="11:00">Rectifiers</li>
+        <li data-t="17:00">LEDs and current limiting</li>
+        <li data-t="22:00">Zener and TVS diodes</li>
+        <li data-t="30:00">Reverse-polarity protection</li>
+        <li data-t="35:00">Diode-OR of redundant supplies</li>
+      </ol>
+    </div>
+  </div>
 </header>
 
-<section class="sec" id="status" data-nonum data-short="In development">
-<h2>In development</h2>
-<p>This module hasn't been written yet. The other modules are listed in the strip at the top of the page, and the links below go to the neighbouring ones.</p>
+<!-- ================= 1 ONE-WAY VALVE ================= -->
+<section class="sec" id="valve" data-short="A one-way valve">
+<h2>The diode as a one-way valve <a class="vjump" data-t="0:00"></a></h2>
+<p>A <strong>diode</strong> has two terminals: the <strong>anode</strong> and the <strong>cathode</strong>. Conventional current flows easily from anode to cathode, in the direction the arrow in its symbol points, and is blocked in the other direction. A diode is said to be <strong>forward biased</strong> when its anode is more positive than its cathode, and <strong>reverse biased</strong> the other way round. On the part itself, a painted band marks the cathode.</p>
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>The diode: symbol, packages, and what's inside</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 240" role="img" aria-label="Left: the diode symbol, a triangle pointing at a bar, with the anode on the triangle side and the cathode at the bar; current flows in the direction of the arrow. Middle: an axial glass diode and a surface-mount diode, each with a band marking the cathode. Right: a PN junction, with P-type material on the anode side and N-type on the cathode side, separated by a depletion region with no free carriers.">
+    <g fill="none" stroke="var(--ink)" stroke-width="1.8">
+      <path d="M30 80H80M120 80H170"/><path d="M80 60L120 80L80 100Z" fill="var(--ink)"/><path d="M120 58V102" stroke-width="3"/>
+    </g>
+    <path d="M60 116H140" stroke="var(--c1)" stroke-width="1.8" marker-end="url(#arD1)"/>
+    <defs><marker id="arD1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--c1)"/></marker></defs>
+    <g fill="#c9c9c9" stroke="var(--ink2)"><path d="M210 80H240M320 80H350" stroke-width="2"/><rect x="240" y="68" width="80" height="24" rx="10" fill="#e9dcc6"/></g>
+    <rect x="300" y="68" width="10" height="24" fill="#333"/>
+    <rect x="230" y="140" width="90" height="40" rx="3" fill="#444"/><rect x="226" y="148" width="10" height="24" fill="#bfbfbf"/><rect x="314" y="148" width="10" height="24" fill="#bfbfbf"/>
+    <rect x="296" y="140" width="10" height="40" fill="#d8d8d8"/>
+    <rect x="400" y="50" width="100" height="90" fill="#f3d9c9" stroke="var(--ink)"/><rect x="500" y="50" width="100" height="90" fill="#d6e2f2" stroke="var(--ink)"/>
+    <rect x="484" y="50" width="32" height="90" fill="#fff" stroke="var(--ink2)" stroke-dasharray="3 3"/>
+    <g font-size="15" fill="var(--c2)"><text x="420" y="80">+</text><text x="450" y="104">+</text><text x="426" y="124">+</text><text x="462" y="72">+</text></g>
+    <g font-size="15" fill="var(--c1)"><text x="530" y="78">−</text><text x="560" y="102">−</text><text x="540" y="126">−</text><text x="578" y="70">−</text></g>
+    <g font-size="11.5" text-anchor="middle">
+      <text x="40" y="70">anode</text><text x="160" y="70">cathode</text>
+      <text x="100" y="134" fill="var(--c1)">current flows this way</text>
+      <text x="280" y="56">axial (glass)</text><text x="275" y="200">surface-mount</text>
+      <text x="305" y="114" fill="var(--muted)" font-size="10.5">band = cathode</text>
+      <text x="450" y="40">P-type (anode)</text><text x="550" y="40">N-type (cathode)</text>
+      <text x="500" y="160">depletion region</text>
+      <text x="450" y="176" fill="var(--muted)" font-size="10.5">holes (+)</text><text x="550" y="176" fill="var(--muted)" font-size="10.5">electrons (−)</text>
+      <text x="500" y="210" fill="var(--muted)">forward bias shrinks it and current flows;</text><text x="500" y="226" fill="var(--muted)">reverse bias widens it and blocks current</text>
+    </g>
+  </svg>
+  </div>
+</div>
+<p>Inside, a diode is a junction between two kinds of silicon. <strong>P-type</strong> silicon has impurities added that leave it with mobile positive charge carriers (missing electrons, called holes); <strong>N-type</strong> has impurities that provide extra mobile electrons. Where they meet, electrons and holes near the boundary combine and leave a thin <strong>depletion region</strong> with no mobile carriers, which acts as an insulator. Its charged edges set up a built-in voltage of about 0.6–0.7 V in silicon. Applying a forward voltage larger than that pushes carriers across, and current flows; applying a reverse voltage widens the depletion region, and almost nothing flows.</p>
+<p>You've already met one essential use in Module 3: the <strong>flyback diode</strong> across a switched coil, which gives the coil's current a path when the switch opens instead of letting it generate a destructive voltage spike. Much of this module covers other ways of using that one-way behaviour.</p>
+</section>
+
+<!-- ================= 2 I-V CURVE ================= -->
+<section class="sec" id="iv" data-short="Forward drop and the I–V curve">
+<h2>The forward drop and the I–V curve <a class="vjump" data-t="4:00"></a></h2>
+<p>A diode isn't a perfect switch. In the forward direction, its current rises <em>exponentially</em> with voltage, following the Shockley equation:</p>
+<div class="eq">$$I = I_S\left(e^{V/(nV_T)} - 1\right) \qquad V_T = \frac{kT}{q} \approx 26\ \text{mV at room temperature}$$<div class="n">I<sub>S</sub>: a tiny saturation current, set by the device · n: between 1 and 2</div></div>
+<p>Two practical consequences follow. First, because the curve is so steep, a forward-biased diode's voltage stays nearly constant over a wide range of current: each tenfold increase in current adds only about 60–120 mV. That's why a silicon diode is often described as "dropping about 0.7 V" when it conducts. Second, because the rise is exponential, a diode must never be connected directly across a voltage source: a little more voltage means vastly more current. Something else in the circuit, usually a resistor, has to set the current.</p>
+<p>Different diode types have different drops at the same current. <strong>Schottky diodes</strong>, made from a metal–semiconductor junction, drop 0.2–0.45 V, which makes them the choice wherever the drop costs power, at the price of higher reverse leakage. <strong>LEDs</strong> drop 1.8–3.3 V depending on their colour. And the forward drop of every type falls by about 2 mV for each degree of temperature rise, which means a hot diode conducts more easily.</p>
+
+<div class="widget wide" id="w-iv">
+  <div class="wh"><span class="tag">Interactive</span><b>The I–V curve and the operating point</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label>Diode</label><div class="seg" id="dK"><button type="button" data-v="si" class="on">Silicon</button><button type="button" data-v="sch">Schottky</button><button type="button" data-v="red">Red LED</button><button type="button" data-v="blue">Blue LED</button><button type="button" data-v="zen">5.1 V Zener</button></div></div>
+      <div class="ctrl"><label>Connected</label><div class="seg" id="dP"><button type="button" data-v="1" class="on">Forward</button><button type="button" data-v="-1">Reversed</button></div></div>
+      <div class="ctrl"><label for="dV">Supply voltage <b id="dVv"></b></label><input id="dV" type="range" min="0" max="12" step="0.1" value="5"></div>
+      <div class="ctrl"><label for="dR">Series resistor <b id="dRv"></b></label><input id="dR" type="range" min="1" max="4" step="0.01" value="2.35"></div>
+      <div class="ctrl"><label for="dT">Temperature <b id="dTv"></b></label><input id="dT" type="range" min="-20" max="100" step="1" value="25"></div>
+      <p class="small">The straight line is the resistor's load line: every combination of diode voltage and current the resistor allows. Where it crosses the diode's curve is the circuit's operating point.</p>
+    </div>
+    <div>
+      <canvas id="cvIv" style="height:320px" aria-label="Diode current against diode voltage, with the resistor's load line and the operating point where they cross"></canvas>
+      <div class="legend"><span style="--c:var(--c1)">diode</span><span class="dash" style="--c:var(--c2)">resistor load line</span></div>
+      <div class="readout">
+        <div class="stat"><div class="k">Diode voltage</div><div class="v" id="dVd"></div></div>
+        <div class="stat"><div class="k">Current</div><div class="v" id="dI"></div></div>
+        <div class="stat"><div class="k">Diode power</div><div class="v" id="dPd"></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>With the silicon diode, vary the resistor over its whole range. How much does the diode voltage change while the current changes a hundredfold?</li>
+    <li>Compare the silicon and Schottky diodes at the same current. Which wastes less power?</li>
+    <li>Heat the silicon diode from 25 °C to 100 °C. Which way does its voltage move?</li>
+    <li>Reverse the Zener and raise the supply above 5.1 V. What happens to its voltage?</li>
+  </ol></div>
+</div>
+
+<div class="example">
+  <span class="xk">Application</span>
+  <p>Most multimeters have a diode-test range, which pushes a small current (about 1 mA) through the part and displays the voltage. A good silicon diode reads 0.5–0.7 V one way and "OL" (open) the other; a Schottky about 0.2–0.3 V; a shorted diode near 0 V both ways; an open one "OL" both ways. The same range lights most LEDs faintly, which is the quickest way to find an LED's polarity, and it's also a quick check of a transistor's internal junctions (Module 6).</p>
+</div>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">Two diodes in parallel for more current</span></summary>
+  <div class="eb">
+    <p>A diode rated for 1 A must carry 1.6 A, so a designer connects two identical diodes in parallel, expecting each to carry 0.8 A.</p>
+    <div class="choice"><p>What actually happens?</p>
+    <ol class="opts">
+      <li>Each carries exactly 0.8 A, since they're identical.<div class="why">"Identical" parts differ slightly, and the exponential curve magnifies small differences.</div></li>
+      <li data-correct>One diode, with a slightly lower forward drop, takes most of the current, heats up, and its drop falls further, so it takes even more. The current doesn't share evenly, and the hotter diode can be overloaded.<div class="why">A small voltage difference is a large current ratio on an exponential curve, and the negative temperature coefficient makes it worse.</div></li>
+      <li>The current alternates between the two diodes.<div class="why">Nothing makes them take turns.</div></li>
+      <li>The two diodes cancel each other out.<div class="why">They're in parallel and in the same direction, so both conduct.</div></li>
+    </ol>
+    <div class="solution"><p>A difference of 20 mV in forward drop is a current ratio of about 2:1 on a typical diode curve, and the diode carrying more current gets hotter, which lowers its drop (−2 mV/°C) and makes it take more still. Paralleling diodes needs a small resistor in series with each to force sharing, or better, a single diode rated for the full current.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 3 RECTIFIERS ================= -->
+<section class="sec" id="rect" data-short="Rectifiers">
+<h2>Rectifiers <a class="vjump" data-t="11:00"></a></h2>
+<p>A <strong>rectifier</strong> turns AC into DC. The simplest, a <strong>half-wave rectifier</strong>, is one diode in series with the load: it passes the positive half-cycles and blocks the negative ones. A <strong>bridge rectifier</strong> uses four diodes arranged so that both half-cycles drive current through the load in the same direction, at the cost of two diode drops instead of one.</p>
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>Half-wave and bridge rectifiers, and the current path in each half-cycle</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 244" role="img" aria-label="Left: a half-wave rectifier, an AC source, one diode and a load with a smoothing capacitor. Right: a bridge rectifier of four diodes in a diamond; on the positive half-cycle current flows through one pair of diodes, on the negative half-cycle through the other pair, and through the load in the same direction both times.">
+    <defs>
+      <g id="dio"><path d="M-8 -8L8 0L-8 8Z" fill="var(--ink)"/><path d="M8 -8V8" stroke="var(--ink)" stroke-width="2"/></g>
+    </defs>
+    <g fill="none" stroke="var(--ink)" stroke-width="1.6">
+      <circle cx="50" cy="120" r="20"/><path d="M38 120q6-10 12 0t12 0"/>
+      <path d="M50 100V60H96M112 60H190V100M190 140V180H50V140"/>
+      <path d="M150 60V112M138 112h24M138 120h24M150 120V180"/>
+      <path d="M190 100l7 3l-14 6l14 6l-14 6l14 6l-7 3V140"/>
+    </g>
+    <use href="#dio" x="104" y="60"/>
+    <g fill="none" stroke="var(--ink)" stroke-width="1.6">
+      <circle cx="320" cy="120" r="20"/><path d="M308 120q6-10 12 0t12 0"/>
+      <path d="M320 100V50H440M320 140V190H440"/>
+      <path d="M440 50L480 120L440 190L400 120Z"/>
+      <path d="M480 120H600V160M560 120V152M548 152h24M548 160h24M560 160V214"/>
+      <path d="M600 160l7 3l-14 6l14 6l-14 6l14 6l-7 3V214H380V196a6 6 0 0 0 0-12V120H400"/>
+    </g>
+    <path d="M444 57L476 113M404 127L436 183" stroke="var(--c1)" stroke-width="5" opacity=".35" fill="none"/>
+    <path d="M444 183L476 127M404 113L436 57" stroke="var(--c2)" stroke-width="5" opacity=".35" fill="none"/>
+    <g transform="translate(460 85) rotate(60)"><use href="#dio"/></g>
+    <g transform="translate(460 155) rotate(-60)"><use href="#dio"/></g>
+    <g transform="translate(420 85) rotate(-60)"><use href="#dio"/></g>
+    <g transform="translate(420 155) rotate(60)"><use href="#dio"/></g>
+    <g fill="var(--ink)"><circle cx="440" cy="50" r="3"/><circle cx="440" cy="190" r="3"/><circle cx="480" cy="120" r="3"/><circle cx="400" cy="120" r="3"/><circle cx="560" cy="120" r="3"/><circle cx="560" cy="214" r="3"/></g>
+    <g font-size="11.5" text-anchor="middle">
+      <text x="120" y="24" font-weight="600">half-wave</text>
+      <text x="460" y="24" font-weight="600">bridge (full-wave)</text>
+      <text x="104" y="46">D</text><text x="170" y="130">C</text><text x="214" y="124">load</text>
+      <text x="50" y="208" fill="var(--muted)">AC in</text><text x="294" y="124" fill="var(--muted)" text-anchor="end">AC in</text>
+      <text x="586" y="140">C</text><text x="622" y="182">load</text>
+      <text x="530" y="44" fill="var(--c1)" text-anchor="start">positive half-cycle</text>
+      <text x="490" y="234" fill="var(--c2)">negative half-cycle</text>
+      <text x="490" y="112" font-size="13">+</text><text x="390" y="112" font-size="13">−</text>
+    </g>
+  </svg>
+  </div>
+</div>
+<p>The rectified output is a series of humps, not a steady voltage. A <strong>smoothing capacitor</strong> across the load charges to the peak of each hump and supplies the load in between, discharging slowly. The output then sits near the peak with a small sawtooth <strong>ripple</strong>. The ripple follows directly from Module 3's ΔV = IΔt/C: the capacitor supplies the load current I for roughly one period between peaks,</p>
+<div class="eq">$$\Delta V_\text{ripple} \approx \frac{I}{f_\text{ripple}\,C}$$<div class="n">f<sub>ripple</sub> = f for half-wave, 2f for a bridge</div></div>
+<p>The capacitor recharges only during the short time near each peak when the input exceeds its voltage, so the diodes carry the whole period's charge in brief, high-current pulses, often five to ten times the average load current. Diodes for rectifiers are rated for this repetitive peak current as well as the average.</p>
+
+<div class="widget wide" id="w-rect">
+  <div class="wh"><span class="tag">Interactive</span><b>A rectifier with a smoothing capacitor</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label>Rectifier</label><div class="seg" id="rT"><button type="button" data-v="half">Half-wave</button><button type="button" data-v="full" class="on">Bridge</button></div></div>
+      <div class="ctrl"><label for="rC">Smoothing capacitor <b id="rCv"></b></label><input id="rC" type="range" min="1" max="4" step="0.01" value="3.3"></div>
+      <div class="ctrl"><label for="rI">Load current <b id="rIv"></b></label><input id="rI" type="range" min="0.01" max="1" step="0.01" value="0.5"></div>
+      <p class="small">Input: a 12 V peak, 50 Hz sine from a transformer. Each diode drops 0.8 V when conducting.</p>
+    </div>
+    <div>
+      <canvas id="cvRect" style="height:340px" aria-label="Top: the AC input, the rectified humps and the smoothed output with its ripple. Bottom: the current pulses through the diodes."></canvas>
+      <div class="legend"><span class="dash" style="--c:var(--muted)">AC input</span><span style="--c:var(--c1)">output</span><span style="--c:var(--c2)">diode current</span></div>
+      <div class="readout">
+        <div class="stat" id="rRS"><div class="k">Ripple, peak to peak</div><div class="v" id="rR"></div></div>
+        <div class="stat"><div class="k">Average output</div><div class="v" id="rA"></div></div>
+        <div class="stat"><div class="k">Peak diode current</div><div class="v" id="rP"></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>Switch between half-wave and bridge with the same capacitor. Why does the bridge give half the ripple?</li>
+    <li>Double the capacitor. What happens to the ripple, and to the peak diode current?</li>
+  </ol></div>
+</div>
+
+<div class="example">
+  <span class="xk">Application</span>
+  <p>A transformer, bridge and capacitor were for decades the inside of every mains adapter; switching supplies have mostly replaced them, but the same rectifier still sits at their input. Rectification also appears without any transformer: a small brushed motor or alternator driven mechanically produces AC that a bridge turns into DC, and a bridge on a power input makes a circuit work whichever way round its supply is connected, at the cost of two diode drops.</p>
+</div>
+</section>
+
+<!-- ================= 4 LEDS ================= -->
+<section class="sec" id="leds" data-short="LEDs">
+<h2>LEDs and current limiting <a class="vjump" data-t="17:00"></a></h2>
+<p>A <strong>light-emitting diode</strong> is a diode made from a semiconductor whose electrons give up their energy as light when they cross the junction. The colour depends on the material, and so does the forward drop: the energy of each photon comes from the voltage across the junction, so blue light (more energy per photon) needs a higher voltage than red.</p>
+<div class="tablewrap"><table>
+  <tr><th>Colour</th><th>Typical forward drop</th><th>Notes</th></tr>
+  <tr><td>Infrared</td><td>1.2–1.5 V</td><td>Remote controls, optical sensors, optocouplers</td></tr>
+  <tr><td>Red, orange, yellow</td><td>1.8–2.2 V</td><td>Easiest to drive from 3.3 V</td></tr>
+  <tr><td>Green (modern), blue, white</td><td>2.8–3.3 V</td><td>Marginal or impossible from a 3.3 V supply through a resistor</td></tr>
+</table></div>
+<p>Brightness follows current, not voltage, and because of the exponential I–V curve, an LED's current can't be set with a voltage directly. A series resistor converts the remaining voltage into a defined current:</p>
+<div class="eq">$$R = \frac{V_\text{supply} - V_F}{I_\text{LED}}$$<div class="n">indicator LEDs are clearly visible at 1–5 mA; their maximum is usually 20–30 mA</div></div>
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>Driving an indicator LED from a supply or a logic output</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 220" role="img" aria-label="Left: a supply, a resistor and an LED to ground. Middle: a logic output pin driving a resistor and LED to ground, sourcing current when high. Right: an LED and resistor from the supply into a logic pin, sinking current when the pin is low.">
+    <defs>
+      <g id="led"><path d="M-9 -9L0 9L9 -9Z" fill="var(--ink)"/><path d="M-9 9H9" stroke="var(--ink)" stroke-width="2"/><path d="M12 -4l10 -6M12 4l10 -6" stroke="var(--c2)" stroke-width="1.4"/><path d="M22 -10l-4 0l2 3z M22 -2l-4 0l2 3z" fill="var(--c2)"/></g>
+      <g id="gnd"><path d="M-10 0h20M-6 4h12M-2 8h4" stroke="var(--ink)" stroke-width="1.6"/></g>
+    </defs>
+    <g fill="none" stroke="var(--ink)" stroke-width="1.6">
+      <path d="M100 30V60l7 3l-14 6l14 6l-14 6l14 6l-7 3V120"/><path d="M100 120V141M100 159V180"/>
+      <path d="M300 60H330V70l7 3l-14 6l14 6l-14 6l14 6l-7 3V120V141M330 159V180"/>
+      <rect x="250" y="44" width="50" height="34" fill="#f4f2ec"/>
+      <path d="M520 30V60V81M520 99V120l7 3l-14 6l14 6l-14 6l14 6l-7 3V170H540"/>
+      <rect x="540" y="154" width="50" height="34" fill="#f4f2ec"/>
+    </g>
+    <use href="#led" x="100" y="150"/><use href="#gnd" x="100" y="182"/>
+    <use href="#led" x="330" y="150"/><use href="#gnd" x="330" y="182"/>
+    <use href="#led" x="520" y="90"/>
+    <g font-size="11.5" text-anchor="middle">
+      <text x="100" y="22">+5 V</text><text x="80" y="90" text-anchor="end">R</text>
+      <text x="275" y="66">GPIO</text><text x="350" y="100" text-anchor="start">R</text>
+      <text x="520" y="22">+3.3 V</text><text x="540" y="140" text-anchor="start">R</text><text x="565" y="176">GPIO</text>
+      <text x="100" y="212" fill="var(--muted)">from a supply</text>
+      <text x="300" y="212" fill="var(--muted)">sourcing: on when the pin is high</text>
+      <text x="540" y="212" fill="var(--muted)">sinking: on when the pin is low</text>
+    </g>
+  </svg>
+  </div>
+</div>
+<p>Microcontroller pins can supply only limited current, typically a few milliamps to about 20 mA per pin and less in total across a port, so indicator LEDs are run at a few milliamps. The sinking arrangement on the right is useful when the LED's supply is higher than the logic's, or when the pin is open-drain (Module 8).</p>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">A blue LED on 3.3 V</span></summary>
+  <div class="eb">
+    <p>A blue status LED with a 3.0 V typical forward drop is driven from a 3.3 V logic output through a 100 Ω resistor. Some boards' LEDs are bright, some are dim, and some are almost off, and they get dimmer as the battery runs down.</p>
+    <div class="choice"><p>Why?</p>
+    <ol class="opts">
+      <li>The LEDs are faulty.<div class="why">The circuit itself is the problem.</div></li>
+      <li data-correct>Only about 0.3 V is left across the resistor, so the current depends on tiny differences in forward drop and output voltage. A 0.1 V variation changes the current by a third.<div class="why">With so little headroom, the resistor can't define the current.</div></li>
+      <li>The resistor is too large.<div class="why">A smaller resistor would make the variation in current even larger in absolute terms.</div></li>
+      <li>Blue LEDs need AC.<div class="why">LEDs are DC devices.</div></li>
+    </ol>
+    <div class="solution"><p>The resistor sets the current only if the voltage across it is a substantial, well-defined part of the supply. Here (3.3 − 3.0)/100 = 3 mA nominally, but the forward drop varies by ±0.1–0.2 V between parts and with temperature, and the pin's high level sags under load, so the current ranges from near zero to over 5 mA. Use a red or yellow LED (1 V or more across the resistor), drive the blue LED from a higher supply through a transistor, or use a constant-current driver.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 5 ZENER AND TVS ================= -->
+<section class="sec" id="zener" data-short="Zener and TVS diodes">
+<h2>Zener and TVS diodes <a class="vjump" data-t="22:00"></a></h2>
+<p>Push enough reverse voltage across any diode and it <strong>breaks down</strong>: the field across the depletion region becomes strong enough to pull carriers through, and the reverse current rises steeply. In an ordinary diode this is a failure mode. A <strong>Zener diode</strong> is built to break down at a precise, specified voltage, from about 2.4 V to over 100 V, and to survive doing so continuously. Reverse-biased beyond its <strong>Zener voltage</strong> V<sub>Z</sub>, it holds its voltage close to V<sub>Z</sub> over a wide range of current, just as a forward-biased diode holds about 0.7 V. You can see this in the I–V figure above by reversing the Zener.</p>
+
+<h3>The Zener shunt regulator</h3>
+<p>A resistor from a higher supply and a Zener to ground make the simplest voltage regulator. The resistor sets a current; the Zener takes whatever part of it the load doesn't, holding the output near V<sub>Z</sub>. It's inefficient, because the resistor and Zener burn power continuously, and it only works while the resistor can supply the full load current with some left over for the Zener. It's used as a reference voltage, a low-current supply, or a clamp, rarely as a main supply (Module 7 covers proper regulators).</p>
+
+<div class="widget wide" id="w-zr">
+  <div class="wh"><span class="tag">Interactive</span><b>A 5.1 V Zener shunt regulator</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label for="zV">Input voltage <b id="zVv"></b></label><input id="zV" type="range" min="4" max="16" step="0.1" value="12"></div>
+      <div class="ctrl"><label for="zR">Series resistor <b id="zRv"></b></label><input id="zR" type="range" min="1.5" max="3.3" step="0.01" value="2.26"></div>
+      <div class="ctrl"><label for="zL">Load current <b id="zLv"></b></label><input id="zL" type="range" min="0" max="60" step="0.5" value="20"></div>
+      <p class="small">Zener: 5.1 V at 5 mA, dynamic resistance 10 Ω, rated 500 mW.</p>
+    </div>
+    <div>
+      <canvas id="cvZr" style="height:280px" aria-label="Output voltage against load current, showing the flat regulated region and the point where the Zener drops out of regulation, with the present load marked"></canvas>
+      <div class="readout">
+        <div class="stat" id="zOS"><div class="k">Output voltage</div><div class="v" id="zO"></div></div>
+        <div class="stat"><div class="k">Zener current</div><div class="v" id="zI"></div></div>
+        <div class="stat" id="zPS"><div class="k">Zener power</div><div class="v" id="zP"></div></div>
+        <div class="stat"><div class="k">Resistor power</div><div class="v" id="zRP"></div></div>
+      </div>
+      <div class="verdict" id="zVerdict"></div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>Increase the load current until the output drops. What's the largest load the regulator supports with this resistor?</li>
+    <li>Remove the load (0 mA) and raise the input to 16 V. Is the Zener within its power rating?</li>
+    <li>How does the efficiency look at the default settings? (Output power is 5.1 V × load current.)</li>
+  </ol></div>
+</div>
+
+<h3>TVS diodes: absorbing transients</h3>
+<p>A <strong>TVS</strong> (transient voltage suppressor) diode is a breakdown diode built for a different job: absorbing large, brief pulses of energy, such as electrostatic discharge from a finger, a voltage spike on a long cable, or an inductive load switching off elsewhere on the same supply. It does nothing in normal operation, because its <strong>standoff voltage</strong> is above the circuit's working voltage. When a transient pushes the voltage beyond its breakdown, it conducts heavily and holds the voltage at its <strong>clamping voltage</strong>, diverting the surge current to ground. TVS diodes come in unidirectional and bidirectional forms and are rated by the peak pulse power they can absorb.</p>
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>A TVS diode clamping a transient at a connector</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 230" role="img" aria-label="Left: a connector on a cable, with a TVS diode from the signal line to ground right at the connector, and a series resistor before the circuit's input. Right: a transient spike rising to several kilovolts without protection, and the same spike clipped at the TVS clamping voltage.">
+    <g fill="none" stroke="var(--ink)" stroke-width="1.6">
+      <rect x="20" y="60" width="40" height="70" fill="#bfc3c8"/>
+      <path d="M60 80H200l3-6l6 12l6-12l6 12l6-12l6 12l3-6H260"/><path d="M110 80V106M110 134V170M98 170h24M102 174h16M106 178h8"/>
+      <rect x="260" y="64" width="40" height="32" fill="#f4f2ec"/>
+    </g>
+    <path d="M100 134L110 108L120 134Z" fill="var(--ink)"/>
+    <path d="M100 107h20M100 107l-4 5M120 107l4 -5" stroke="var(--ink)" stroke-width="2" fill="none"/>
+    <circle cx="110" cy="80" r="3" fill="var(--ink)"/>
+    <path d="M340 190H620M340 30V190" stroke="var(--ink)" stroke-width="1.2"/>
+    <path d="M340 150H372L380 34L390 120L410 150L470 150H620" fill="none" stroke="var(--bad)" stroke-width="1.8" stroke-dasharray="5 3"/>
+    <path d="M340 150H372L376 104H404L410 150H620" fill="none" stroke="var(--c1)" stroke-width="2.4"/>
+    <path d="M340 104H620" stroke="var(--c5)" stroke-dasharray="3 4"/>
+    <path d="M340 150H620" stroke="var(--line2)" stroke-dasharray="2 4"/>
+    <g font-size="11.5">
+      <text x="40" y="150" text-anchor="middle">connector</text>
+      <text x="130" y="122">TVS</text>
+      <text x="230" y="70" text-anchor="middle">R</text>
+      <text x="280" y="116" text-anchor="middle">input</text>
+      <text x="160" y="210" text-anchor="middle" fill="var(--muted)">TVS at the connector, before anything else</text>
+      <text x="394" y="28" fill="var(--bad)">unprotected spike</text>
+      <text x="470" y="98" fill="var(--c5)">clamping voltage</text>
+      <text x="470" y="144" fill="var(--muted)">normal signal level</text>
+      <text x="480" y="210" text-anchor="middle" fill="var(--muted)">time →</text>
+    </g>
+  </svg>
+  </div>
+</div>
+<p>Placement decides whether a TVS works. It must sit right at the connector, with a short, direct path to ground, so the surge current is diverted before it travels along the board; a few centimetres of trace have enough inductance (Module 3) to let a fast spike pass the TVS before it can react. A small resistor after the TVS, before a sensitive input, limits whatever current still gets through.</p>
+
+<div class="example">
+  <span class="xk">Application</span>
+  <p>Any signal that leaves the board on a cable, such as a sensor input wired through a harness, is exposed to ESD when the connector is handled and to spikes coupled from other wiring in the harness. A common protection for an analog input to an ADC is a TVS (or a low-capacitance ESD diode) at the connector, a series resistor of a few hundred ohms to a few kilohms, and the ADC's own internal clamp diodes as the last line. The series resistor matters because it limits the current into the ADC's clamp diodes to a level they can survive.</p>
+</div>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">A TVS with too low a standoff voltage</span></summary>
+  <div class="eb">
+    <p>A 12 V supply input is protected with a TVS whose standoff voltage is 12 V and whose breakdown voltage is 13.3 V. The supply is a 3-cell lithium battery that reads 12.6 V when fully charged.</p>
+    <div class="choice"><p>What's the problem?</p>
+    <ol class="opts">
+      <li>None: 12.6 V is below the breakdown voltage.<div class="why">It's close: the breakdown voltage has a tolerance, falls at low temperature for many parts, and leakage rises steeply as it's approached.</div></li>
+      <li data-correct>The battery's full-charge voltage exceeds the TVS's standoff voltage, so the TVS leaks significant current, may run warm and drain the battery, and any tolerance or charger overshoot can push it into conduction.<div class="why">The standoff voltage must be above the highest normal operating voltage, with margin.</div></li>
+      <li>The TVS will make the voltage too low for the circuit.<div class="why">A TVS doesn't drop voltage in normal operation; the issue is leakage near breakdown.</div></li>
+      <li>TVS diodes can't be used on power inputs.<div class="why">They're used on power inputs all the time, chosen for the right voltage and power.</div></li>
+    </ol>
+    <div class="solution"><p>The standoff voltage is the highest voltage at which the TVS stays essentially non-conducting; it must exceed the maximum normal voltage, here 12.6 V plus any charger overshoot. A part with a 15 V standoff is the usual choice for a 12 V nominal input. The trade-off is that its clamping voltage is higher too, so the downstream circuit must tolerate that clamping voltage for the duration of a transient.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 6 REVERSE POLARITY ================= -->
+<section class="sec" id="reverse" data-short="Reverse-polarity protection">
+<h2>Reverse-polarity protection <a class="vjump" data-t="30:00"></a></h2>
+<p>A battery connected backwards drives current the wrong way through every part on the board, and many parts, especially regulators and microcontrollers with internal protection diodes, are destroyed within milliseconds. Connectors are keyed to prevent it, but keys break, test leads get swapped, and batteries are hand-wired. A diode in the supply path makes the circuit immune, and there are three common ways to arrange it:</p>
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>Three ways to protect against a reversed supply</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 230" role="img" aria-label="Left: a series diode between the battery and the load. Middle: a P-channel MOSFET in the positive supply line, with its gate to ground through a resistor, so it conducts only when the battery is the right way round. Right: a fuse in series and a diode from the supply to ground after it, which conducts and blows the fuse if the battery is reversed.">
+    <defs><g id="d2"><path d="M-8 -8L8 0L-8 8Z" fill="var(--ink)"/><path d="M8 -8V8" stroke="var(--ink)" stroke-width="2"/></g></defs>
+    <g fill="none" stroke="var(--ink)" stroke-width="1.6">
+      <path d="M30 70H82M98 70H180V100M30 160H180V140M30 70V100M30 130V160"/><path d="M18 100h24M24 108h12" /><path d="M172 100h16v40h-16z"/>
+      <path d="M230 70H280M320 70H400V100M230 160H400V140M230 70V100M230 130V160"/>
+      <rect x="280" y="58" width="40" height="24" fill="#fff"/><path d="M218 100h24M224 108h12"/><path d="M392 100h16v40h-16z"/>
+      <path d="M300 82V100l7 3l-14 6l14 6l-14 6l14 6l-7 3V160"/>
+      <path d="M450 70H480M520 70H610V100M450 160H610V140M450 70V100M450 130V160"/><path d="M438 100h24M444 108h12"/><path d="M602 100h16v40h-16z"/>
+      <rect x="480" y="62" width="40" height="16" rx="3"/><path d="M480 70H520"/>
+      <path d="M550 70V102M550 118V160"/>
+    </g>
+    <use href="#d2" x="90" y="70"/>
+    <g transform="translate(550 110) rotate(-90)"><use href="#d2"/></g>
+    <g font-size="10.5" text-anchor="middle"><text x="300" y="74">P-FET</text><text x="276" y="54">D</text><text x="324" y="54">S</text><text x="312" y="96" text-anchor="start">G</text><text x="312" y="128" text-anchor="start">R</text></g>
+    <g font-size="11.5" text-anchor="middle">
+      <text x="105" y="28" font-weight="600">series diode</text>
+      <text x="315" y="28" font-weight="600">P-MOSFET</text>
+      <text x="530" y="28" font-weight="600">fuse and shunt diode</text>
+      <text x="56" y="120" text-anchor="end" font-size="10.5">batt</text><text x="200" y="124" font-size="10.5">load</text>
+      <text x="256" y="120" text-anchor="end" font-size="10.5">batt</text><text x="420" y="124" font-size="10.5">load</text>
+      <text x="476" y="120" text-anchor="end" font-size="10.5">batt</text><text x="630" y="124" font-size="10.5">load</text>
+      <text x="500" y="56" font-size="10.5">fuse</text>
+      <text x="105" y="190" fill="var(--muted)">drops 0.4–0.9 V</text><text x="105" y="206" fill="var(--muted)">always, wasting power</text>
+      <text x="315" y="190" fill="var(--muted)">drops only I × R<tspan font-size="9" dy="2">DS(on)</tspan></text><text x="315" y="206" fill="var(--muted)">(Module 6)</text>
+      <text x="530" y="190" fill="var(--muted)">no drop in normal use;</text><text x="530" y="206" fill="var(--muted)">reversal blows the fuse</text>
+    </g>
+  </svg>
+  </div>
+</div>
+<div class="tablewrap"><table>
+  <tr><th>Method</th><th>Loss at 2 A</th><th>Notes</th></tr>
+  <tr><td><b>Series silicon diode</b></td><td>0.8 V × 2 A = 1.6 W</td><td>Simple; the drop also reduces the voltage available to the circuit</td></tr>
+  <tr><td><b>Series Schottky diode</b></td><td>0.45 V × 2 A = 0.9 W</td><td>The usual choice for small currents; watch its reverse leakage when hot</td></tr>
+  <tr><td><b>P-channel MOSFET</b></td><td>2² × 0.02 Ω = 0.08 W</td><td>Almost lossless; the MOSFET's body diode gets it started (Module 6)</td></tr>
+  <tr><td><b>Fuse and shunt diode</b></td><td>The fuse's resistance only</td><td>No loss in normal use, but a reversal destroys the fuse, which must then be replaced</td></tr>
+</table></div>
+<p>The loss scales with current, so the right answer depends on the circuit: a Schottky diode for a sensor drawing 50 mA, a MOSFET for a board drawing amps from a battery whose every volt and watt matters.</p>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">Protection that causes a brown-out</span></summary>
+  <div class="eb">
+    <p>A board runs from a single lithium cell (3.0–4.2 V) through a 3.3 V regulator with 0.2 V of dropout. A series silicon diode is added for reverse-polarity protection.</p>
+    <div class="choice"><p>What's the consequence?</p>
+    <ol class="opts">
+      <li>None: the diode only matters if the battery is reversed.<div class="why">The diode is in the current path all the time, dropping voltage whenever the board runs.</div></li>
+      <li data-correct>The diode drops about 0.7 V, so the regulator needs 3.3 + 0.2 + 0.7 = 4.2 V at its input side of the diode; the 3.3 V rail falls out of regulation almost as soon as the battery starts to discharge.<div class="why">On a low-voltage supply, a diode's drop is a large fraction of the headroom.</div></li>
+      <li>The board draws more current.<div class="why">The current is set by the load; the diode wastes voltage, not current.</div></li>
+      <li>The regulator will oscillate.<div class="why">The diode doesn't affect the regulator's stability.</div></li>
+    </ol>
+    <div class="solution"><p>On a 3.0–4.2 V cell, there's almost no headroom: even a Schottky's 0.3–0.4 V costs a large part of the battery's usable capacity. This is the classic case for a P-channel MOSFET, whose drop is a few millivolts at these currents.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 7 DIODE-OR ================= -->
+<section class="sec" id="dor" data-short="Diode-OR of supplies">
+<h2>Diode-OR of redundant supplies <a class="vjump" data-t="35:00"></a></h2>
+<p>When two supplies, for example two batteries or an external supply and an internal battery, must both be able to power a load, connecting them directly together is dangerous: the higher one drives current into the lower, which can be large enough to damage a battery. Feeding the load through a diode from each makes a <strong>diode-OR</strong>. Each diode conducts only when its source is the higher one, so the load takes power from whichever source is higher, and no current can flow from one source back into the other.</p>
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>Two supplies combined with a diode-OR</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 200" role="img" aria-label="Two batteries, A and B, each connect through its own diode to a common node that feeds the load; the load and both batteries return to a common ground. Current flows from whichever battery is higher; the diode on the lower battery is reverse biased and blocks any current flowing into it.">
+    <defs>
+      <g id="d3"><path d="M-8 -8L8 0L-8 8Z" fill="var(--ink)"/><path d="M8 -8V8" stroke="var(--ink)" stroke-width="2"/></g>
+      <marker id="arO" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--c1)"/></marker>
+    </defs>
+    <g fill="none" stroke="var(--ink)" stroke-width="1.6">
+      <path d="M50 60V104M38 104h24M44 112h12M50 112V170"/>
+      <path d="M120 130V144M108 144h24M114 152h12M120 152V170"/>
+      <path d="M50 60H222M238 60H330V130M120 130H222M238 130H330"/>
+      <path d="M330 95H420M460 95H520V170H50"/>
+      <rect x="420" y="78" width="40" height="34" fill="#fff"/>
+    </g>
+    <use href="#d3" x="230" y="60"/><use href="#d3" x="230" y="130"/>
+    <g fill="var(--ink)"><circle cx="330" cy="95" r="3"/><circle cx="120" cy="170" r="3"/></g>
+    <path d="M110 44H200" stroke="var(--c1)" stroke-width="2" marker-end="url(#arO)"/>
+    <path d="M210 116H140" stroke="var(--bad)" stroke-width="1.6" stroke-dasharray="4 3"/>
+    <path d="M168 110l10 12M178 110l-10 12" stroke="var(--bad)" stroke-width="2"/>
+    <g font-size="11.5">
+      <text x="30" y="112" text-anchor="end">A</text><text x="100" y="152" text-anchor="end">B</text>
+      <text x="64" y="100" font-size="13">+</text><text x="134" y="140" font-size="13">+</text>
+      <text x="440" y="99" text-anchor="middle">load</text>
+      <text x="155" y="34" text-anchor="middle" fill="var(--c1)">A is higher: supplies the load</text>
+      <text x="230" y="192" text-anchor="middle" fill="var(--bad)">B's diode is reverse biased: no current back into B</text>
+      <text x="540" y="90" fill="var(--muted)">the load sees</text><text x="540" y="106" fill="var(--muted)">max(A, B) − V<tspan font-size="9" dy="2">F</tspan></text>
+    </g>
+  </svg>
+  </div>
+</div>
+
+<div class="widget wide" id="w-or">
+  <div class="wh"><span class="tag">Interactive</span><b>Sharing a load between two batteries</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label for="oA">Battery A <b id="oAv"></b></label><input id="oA" type="range" min="6" max="8.4" step="0.01" value="8.1"></div>
+      <div class="ctrl"><label for="oB">Battery B <b id="oBv"></b></label><input id="oB" type="range" min="6" max="8.4" step="0.01" value="7.9"></div>
+      <div class="ctrl"><label for="oI">Load current <b id="oIv"></b></label><input id="oI" type="range" min="0.05" max="3" step="0.05" value="1.5"></div>
+      <div class="ctrl"><label>Diodes</label><div class="seg" id="oK"><button type="button" data-v="si">Silicon</button><button type="button" data-v="sch" class="on">Schottky</button><button type="button" data-v="ideal">Ideal-diode controller</button></div></div>
+      <p class="small">Two 2-cell lithium batteries (6.0–8.4 V). An ideal-diode controller drives a MOSFET to behave like a diode with about 20 mΩ of resistance.</p>
+    </div>
+    <div>
+      <canvas id="cvOr" style="height:260px" aria-label="Bars showing how much of the load current comes from each battery, and the power lost in each diode"></canvas>
+      <div class="readout">
+        <div class="stat"><div class="k">Load voltage</div><div class="v" id="oV"></div></div>
+        <div class="stat"><div class="k">From A / from B</div><div class="v" id="oS"></div></div>
+        <div class="stat" id="oLS"><div class="k">Power lost in the diodes</div><div class="v" id="oL"></div></div>
+      </div>
+      <div class="verdict" id="oVerdict"></div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>Set the two batteries 0.2 V apart. Does the lower one supply anything? Then bring them to within 0.02 V.</li>
+    <li>Compare the power lost with silicon, Schottky and ideal diodes at 3 A.</li>
+  </ol></div>
+</div>
+<p>The figure shows a subtlety: with real diodes, the load doesn't switch abruptly from one source to the other. When the two voltages are within a few tens of millivolts, both diodes conduct and the current divides according to the exponential curve; as one battery discharges below the other, the load hands over smoothly to the higher one. Each battery discharges in turn rather than together.</p>
+
+<div class="example">
+  <span class="xk">Application</span>
+  <p>A common use of a diode-OR is switching between an external supply and an internal battery. A vehicle on the launch pad is often powered through an umbilical cable, with its internal battery taking over when the umbilical disconnects. If the umbilical supply is set slightly higher than the battery, a diode-OR draws all the power from the umbilical while it's connected, keeps the battery from being back-fed, and hands over to the battery without interruption at disconnection. At several amps, the diode losses justify ideal-diode controllers, and some designs add a dedicated power-path controller with charging (Module 7).</p>
+</div>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">Connecting two batteries directly</span></summary>
+  <div class="eb">
+    <p>To double the capacity, two 2-cell lithium batteries are connected directly in parallel. One is at 8.2 V, fully charged; the other at 7.4 V, half discharged. Each has about 50 mΩ of internal resistance.</p>
+    <div class="choice"><p>What happens at the moment they're connected?</p>
+    <ol class="opts">
+      <li>They settle at the average voltage with only a small current.<div class="why">The voltage difference is driven through very little resistance.</div></li>
+      <li data-correct>A current of about (8.2 − 7.4)/0.1 = 8 A flows from the full battery into the half-empty one until they equalise, enough to spark at the connector and stress both packs.<div class="why">Module 1's internal resistance is all that limits the current.</div></li>
+      <li>Nothing flows until a load is connected.<div class="why">The two batteries form a closed loop with each other.</div></li>
+      <li>The lower battery's voltage rises instantly to 8.2 V.<div class="why">The current flows until the voltages converge, which takes time.</div></li>
+    </ol>
+    <div class="solution"><p>With only the two internal resistances (0.1 Ω together) in the loop, 0.8 V of difference drives about 8 A. That's why batteries are only paralleled when matched in charge, through a resistor while they equalise, or through a diode-OR or ideal-diode controller that prevents current flowing from one into the other.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= DESIGN EXERCISES ================= -->
+<section class="sec" id="exercises" data-nonum data-short="Design exercises">
+<h2>Design exercises</h2>
+<p>Problems drawn from real hardware. Each takes a few steps. Enter numbers to check your reasoning as you go, or open the worked solutions and discussion. The figures above are useful for sanity-checking.</p>
+
+<div class="chal">
+  <div class="ch"><span class="cn">Exercise 1</span><span class="cd">Design · ●○○</span><span class="ctitle">An indicator LED</span></div>
+  <div class="cbody">
+    <p>A red status LED (V<sub>F</sub> = 2.0 V) is driven from a 3.3 V logic output at 5 mA.</p>
+    <div class="check" data-ans="260" data-tol="2%" data-unit="Ω"><p>(a) What resistor value is needed?</p>
+      <div class="miss" data-val="660"><p>That ignores the LED's forward drop. Only the remaining voltage, 3.3 − 2.0, appears across the resistor.</p></div>
+      <div class="solution"><p>R = (3.3 − 2.0)/0.005 = 260 Ω. The nearest standard E12 value is 270 Ω, giving 4.8 mA.</p></div></div>
+    <div class="check" data-ans="6.5" data-tol="3%" data-unit="mW"><p>(b) How much power does the resistor dissipate?</p>
+      <div class="solution"><p>P = I²R = 0.005² × 260 = 6.5 mW: tiny, so any small resistor will do.</p></div></div>
+  </div>
+</div>
+
+<div class="chal">
+  <div class="ch"><span class="cn">Exercise 2</span><span class="cd">Analysis · ●●○</span><span class="ctitle">Rectifier ripple</span></div>
+  <div class="cbody">
+    <p>A bridge rectifier runs from 50 Hz mains through a transformer and feeds a 0.5 A load. The smoothing capacitor is 2200 µF.</p>
+    <div class="check" data-ans="2.27" data-tol="3%" data-unit="V"><p>(a) Estimate the peak-to-peak ripple.</p>
+      <div class="miss" data-val="4.55"><p>That uses 50 Hz. A bridge produces two humps per cycle, so the ripple frequency is 100 Hz.</p></div>
+      <div class="hint">ΔV ≈ I/(f<sub>ripple</sub>C), with f<sub>ripple</sub> = 2 × 50 Hz.</div>
+      <div class="solution"><p>ΔV = 0.5/(100 × 0.0022) = 2.27 V.</p></div></div>
+    <div class="check" data-ans="4545" data-tol="3%" data-unit="µF"><p>(b) What capacitance would halve the ripple?</p>
+      <div class="solution"><p>Ripple is inversely proportional to C, so twice the capacitance: about 4500 µF (4700 µF in practice).</p></div></div>
+    <details><summary>Discussion: the hidden cost</summary><p>A larger capacitor lowers the ripple but shortens the time each cycle during which the diodes conduct, so the same charge arrives in shorter, higher pulses. The diodes' repetitive peak current rating, the transformer's heating and the capacitor's ripple-current rating all need checking.</p></details>
+  </div>
+</div>
+
+<div class="chal">
+  <div class="ch"><span class="cn">Exercise 3</span><span class="cd">Design · ●●○</span><span class="ctitle">Reverse-polarity protection on a 2 A board</span></div>
+  <div class="cbody">
+    <p>A board draws 2 A from a battery. Two protection options are being compared: a Schottky diode with a 0.45 V drop at 2 A, and a P-channel MOSFET with 15 mΩ of on-resistance.</p>
+    <div class="check" data-ans="0.9" data-tol="2%" data-unit="W"><p>(a) Power lost in the Schottky diode?</p>
+      <div class="solution"><p>0.45 × 2 = 0.9 W, enough to need a power package and some copper area to stay cool.</p></div></div>
+    <div class="check" data-ans="0.06" data-tol="3%" data-unit="W"><p>(b) Power lost in the MOSFET?</p>
+      <div class="hint">P = I²R.</div>
+      <div class="solution"><p>2² × 0.015 = 0.06 W, fifteen times less, with a drop of only 30 mV.</p></div></div>
+  </div>
+</div>
+
+<div class="chal">
+  <div class="ch"><span class="cn">Exercise 4</span><span class="cd">Design · ●●●</span><span class="ctitle">A Zener regulator</span></div>
+  <div class="cbody">
+    <p>A 5.1 V Zener regulator runs from an input that varies from 10 V to 14 V and supplies a load of up to 20 mA. The Zener needs at least 5 mA to stay in regulation.</p>
+    <div class="check" data-ans="196" data-tol="2%" data-unit="Ω"><p>(a) What's the largest series resistor that still regulates at the worst case?</p>
+      <div class="hint">The worst case is the lowest input with the highest load: the resistor must pass 20 + 5 mA with 10 − 5.1 V across it.</div>
+      <div class="solution"><p>R = (10 − 5.1)/0.025 = 196 Ω. Choose the next lower standard value, 180 Ω.</p></div></div>
+    <div class="check" data-ans="0.25" data-tol="4%" data-unit="W"><p>(b) With 180 Ω, how much power does the Zener dissipate at 14 V with no load?</p>
+      <div class="solution"><p>Current = (14 − 5.1)/180 = 49 mA, all through the Zener: 5.1 × 0.049 = 0.25 W. A 500 mW Zener is fine; a 200 mW part would not be.</p></div></div>
+    <details><summary>Discussion: why this is rarely the main supply</summary><p>At 14 V and full load, the resistor dissipates (8.9)²/180 = 0.44 W and the circuit delivers 0.1 W to the load: under 15 % efficient. A linear regulator does better and a switching regulator much better (Module 7). The Zener regulator earns its place as a simple reference or a clamp, where the currents are small.</p></details>
+  </div>
+</div>
+</section>
+
+<!-- ================= BENCH ================= -->
+<section class="sec" id="bench" data-nonum data-short="At the bench">
+<h2>At the bench</h2>
+<div class="video" data-video="lab">
+  <div class="plan">
+    <p>Planned lab demo (≈ 20 min, filmed at the bench):</p>
+    <ol>
+      <li>Testing diodes and LEDs with a multimeter's diode range</li>
+      <li>Measuring a diode's I–V curve point by point, and heating it</li>
+      <li>A bridge rectifier on the oscilloscope, with and without a capacitor</li>
+      <li>A Zener regulator dropping out under load</li>
+    </ol>
+  </div>
+</div>
+<div class="lab">
+  <h3>Diode behaviour at the bench</h3>
+  <div class="parts"><span>Bench supply with current limit</span><span>Multimeter</span><span>Oscilloscope and a function generator or low-voltage AC transformer</span><span>1N4148, 1N5819, a red and a blue LED, a 5.1 V Zener</span><span>Resistors: 100 Ω to 10 kΩ</span><span>A 1000 µF capacitor</span></div>
+  <ol>
+    <li><b>Diode test.</b> Check each diode and LED both ways with the meter's diode range. Record the forward readings.</li>
+    <li><b>I–V curve.</b> With a 1 kΩ resistor in series, step the supply from 0 to 10 V and record the diode's voltage and the current (from the resistor's voltage). Plot current against voltage for the 1N4148 and the 1N5819. Warm the 1N4148 with your fingers and watch its voltage fall.</li>
+    <li><b>Rectifier.</b> Build a bridge from four 1N5819s, drive it from the generator or transformer, and observe the output across a 1 kΩ load with and without the 1000 µF capacitor. Measure the ripple.</li>
+    <li><b>Zener.</b> Build the shunt regulator with a 220 Ω resistor from a 9 V supply. Measure the output as you reduce the load resistance from 10 kΩ down to 100 Ω.</li>
+  </ol>
+  <div class="record"><b>What you should see:</b> about 0.6 V for the 1N4148 and 0.25 V for the 1N5819 on the diode range; an exponential curve with the Schottky's lying to the left; a rectified output that becomes nearly flat with the capacitor; and a Zener output that stays near 5.1 V until the load draws more than the resistor can supply.</div>
+</div>
+</section>
+
+<!-- ================= SUMMARY ================= -->
+<section class="sec" id="summary" data-nonum data-short="Summary">
+<h2>Summary &amp; cheat sheet</h2>
+<ol class="takeaways">
+  <li>A diode conducts from anode to cathode (towards the band) and blocks the other way. Its current rises exponentially with forward voltage, so something else must set the current.</li>
+  <li>Forward drop: about 0.7 V for silicon, 0.2–0.45 V for Schottky, 1.8–3.3 V for LEDs, falling by about 2 mV/°C. The drop times the current is heat.</li>
+  <li>Rectifiers turn AC into DC; a smoothing capacitor reduces the ripple to about I/(fC), with the diodes conducting in short, high-current pulses.</li>
+  <li>An LED needs a series resistor (or a current source); make sure enough voltage is left across it.</li>
+  <li>A Zener holds its breakdown voltage; a TVS absorbs transients above its standoff voltage. Place a TVS at the connector with a short path to ground.</li>
+  <li>Protect against reversed batteries with a series Schottky at low current, or a P-MOSFET when the drop or the heat matters.</li>
+  <li>A diode-OR lets two supplies share a load without back-feeding each other; the higher one supplies it.</li>
+</ol>
+<div class="cheat">
+  <div><b>Shockley</b>\(I = I_S(e^{V/nV_T} - 1)\)<br><span class="small">V<sub>T</sub> ≈ 26 mV · ×10 current ≈ +60–120 mV</span></div>
+  <div><b>Forward drops</b>Si 0.7 V · Schottky 0.3–0.45 V<br><span class="small">red LED 2 V · blue LED 3 V · −2 mV/°C</span></div>
+  <div><b>Ripple</b>\(\Delta V \approx I/(f_\text{ripple}C)\)<br><span class="small">bridge: f<sub>ripple</sub> = 2f</span></div>
+  <div><b>LED resistor</b>\(R = (V_S - V_F)/I\)</div>
+  <div><b>Zener regulator</b>\(R \le (V_\text{in,min} - V_Z)/(I_\text{load,max} + I_{Z,\text{min}})\)</div>
+  <div><b>Diode loss</b>\(P = V_F\,I\)<br><span class="small">MOSFET: \(P = I^2R_\text{DS(on)}\)</span></div>
+</div>
+<h3>Further reading</h3>
+<ul class="small">
+  <li><em>The Art of Electronics</em> (Horowitz &amp; Hill), chapter 1.6: diodes and diode circuits, including rectifiers, ripple, Zeners, clamps and the diode as a circuit element.</li>
+  <li><em>Practical Electronics for Inventors</em> (Scherz &amp; Monk), chapter 4: semiconductors, with diodes, LEDs and Zeners and many practical circuits.</li>
+  <li>TVS and ESD-protection manufacturers' application notes on choosing standoff and clamping voltages and on PCB placement.</li>
+</ul>
 </section>
 
 <nav class="pager"></nav>
 </main>
 </div>
 <footer class="site">Hardware Engineering Fundamentals · EE Fundamentals</footer>
+
+<script>
+'use strict';
+const $ = s => document.querySelector(s);
+const {col, si, fmt, lin, log, ticks, axes, line, text, dot, rgba} = Plot;
+function setVerdict(el, cls, html){ el.className = 'verdict ' + cls; el.innerHTML = html; }
+
+// diode models: saturation current, ideality factor and series resistance at 25 °C
+const MODELS = {
+  si:   {Is: 2.5e-9, n: 1.75, Rs: 0.6, name: 'silicon'},
+  sch:  {Is: 3e-6,   n: 1.3,  Rs: 0.05, name: 'Schottky'},
+  red:  {Is: 1.2e-18, n: 2.0, Rs: 5, name: 'red LED'},
+  blue: {Is: 7.8e-23, n: 2.5, Rs: 10, name: 'blue LED'},
+  zen:  {Is: 2.5e-9, n: 1.75, Rs: 0.6, Vz: 5.1, name: '5.1 V Zener'}
+};
+const VT = T => 8.617e-5*(T + 273.15);
+// diode current for a given junction-plus-series voltage V (solved by bisection on the junction voltage)
+function idiode(m, V, T){
+  const Is = m.Is*Math.pow(2, (T - 25)/7), nv = m.n*VT(T);
+  const jf = vj => Is*(Math.exp(Math.min(vj/nv, 80)) - 1) - (m.Vz ? 5e-3*Math.exp(Math.min((-vj - m.Vz)/0.05, 80)) : 0);
+  let lo = -60, hi = 10;
+  for (let k = 0; k < 80; k++){ const vj = (lo + hi)/2, i = jf(vj); if (vj + i*(m.Rs + (m.Vz && vj < 0 ? 10 : 0)) < V) lo = vj; else hi = vj; }
+  return jf((lo + hi)/2);
+}
+
+/* ============ 1. I–V curve and load line ============ */
+(() => {
+  const kind = Plot.seg('#dK', upd), pol = Plot.seg('#dP', upd);
+  let s = {};
+  function upd(){
+    const m = MODELS[kind()], p = +pol(), Vs = +$('#dV').value*p, R = Math.pow(10, +$('#dR').value), T = +$('#dT').value;
+    // operating point: Vs = I R + V, with I = id(V); bisection on V
+    let lo = -Math.abs(Vs) - 1, hi = Math.abs(Vs) + 1;
+    for (let k = 0; k < 80; k++){ const v = (lo + hi)/2; if (idiode(m, v, T) - (Vs - v)/R < 0) lo = v; else hi = v; }
+    const vd = (lo + hi)/2, id = idiode(m, vd, T);
+    s = {m, Vs, R, T, vd, id};
+    $('#dVv').textContent = fmt(+$('#dV').value, 3) + ' V'; $('#dRv').textContent = si(R, 'Ω'); $('#dTv').textContent = T + ' °C';
+    $('#dVd').textContent = fmt(vd, 3) + ' V'; $('#dI').textContent = si(id, 'A'); $('#dPd').textContent = si(Math.abs(vd*id), 'W');
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvIv'), (ctx, W, H) => {
+    const {m, Vs, R, T, vd, id} = s; if (!m) return;
+    const P = {l: 56, r: W - 14, t: 14, b: H - 40};
+    const imax = Math.max(0.02, Math.abs(Vs)/R*1.1), vlo = m.Vz ? -7 : -2, vhi = 4;
+    const X = lin(vlo, vhi, P.l, P.r), Y = lin(-imax, imax, P.b, P.t);
+    axes(ctx, P, X, Y, {xt: ticks(vlo, vhi, 6), yt: ticks(-imax, imax, 4), xl: 'diode voltage (V)', yl: 'current', yf: v => si(v, 'A').replace(' ', ''), xgrid: true});
+    Plot.clip(ctx, P);
+    line(ctx, [[X(0), P.t], [X(0), P.b]], col.line2, 1);
+    const pts = []; for (let i = 0; i <= 500; i++){ const v = vlo + (vhi - vlo)*i/500; pts.push([X(v), Y(Math.max(-imax*2, Math.min(imax*2, idiode(m, v, T))))]); }
+    line(ctx, pts, col.c1, 2.4);
+    line(ctx, [[X(vlo), Y((Vs - vlo)/R)], [X(vhi), Y((Vs - vhi)/R)]], col.c2, 1.6, [6, 4]);
+    dot(ctx, X(vd), Y(id), 6, col.ink); dot(ctx, X(vd), Y(id), 2.5, '#fff');
+    ctx.restore();
+    text(ctx, m.name + ', ' + T + ' °C', P.l + 8, P.t + 10, {color: col.ink2, bold: true});
+  });
+  ['#dV', '#dR', '#dT'].forEach(id => $(id).addEventListener('input', upd));
+  upd();
+})();
+
+/* ============ 2. Rectifier ============ */
+(() => {
+  const type = Plot.seg('#rT', upd), VP = 12, F = 50, VD = 0.8;
+  let s = {};
+  function upd(){
+    const full = type() === 'full', C = Math.pow(10, +$('#rC').value)*1e-6, I = +$('#rI').value;
+    const drop = full ? 2*VD : VD, dt = 1/(F*2000), N = 2000*6;
+    let v = 0; const ts = [], vin = [], vr = [], vo = [], ic = [];
+    for (let k = 0; k <= N; k++){
+      const t = k*dt, x = VP*Math.sin(2*Math.PI*F*t), rect = (full ? Math.abs(x) : Math.max(0, x)) - drop;
+      const vdis = v - I*dt/C;
+      let idio = 0;
+      if (rect > vdis){ idio = C*(rect - v)/dt + I; v = rect; } else v = Math.max(0, vdis);
+      if (k >= N - 4000){ ts.push(t); vin.push(x); vr.push(Math.max(0, rect)); vo.push(v); ic.push(Math.max(0, idio)); }
+    }
+    const pp = Math.max(...vo) - Math.min(...vo), avg = vo.reduce((a, b) => a + b, 0)/vo.length, pk = Math.max(...ic);
+    s = {ts, vin, vr, vo, ic, pk};
+    $('#rCv').textContent = si(C, 'F'); $('#rIv').textContent = si(I, 'A');
+    $('#rR').textContent = fmt(pp, 3) + ' V'; $('#rA').textContent = fmt(avg, 3) + ' V'; $('#rP').textContent = si(pk, 'A');
+    $('#rRS').className = 'stat ' + (pp > 3 ? 'bad' : pp > 1 ? 'warn' : '');
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvRect'), (ctx, W, H) => {
+    const {ts, vin, vr, vo, ic, pk} = s; if (!ts) return;
+    const A = {l: 50, r: W - 14, t: 12, b: H*0.6}, B = {l: 50, r: W - 14, t: H*0.7, b: H - 34};
+    const t0 = ts[0], t1 = ts[ts.length - 1], X = lin(t0, t1, A.l, A.r), Y = lin(-13, 13, A.b, A.t);
+    axes(ctx, A, X, Y, {xt: [], yt: [-12, -6, 0, 6, 12], yl: 'V'});
+    Plot.clip(ctx, A);
+    line(ctx, ts.map((t, i) => [X(t), Y(vin[i])]), col.muted, 1.2, [5, 4]);
+    line(ctx, ts.map((t, i) => [X(t), Y(vr[i])]), rgba(col.c1, .35), 1.2);
+    line(ctx, ts.map((t, i) => [X(t), Y(vo[i])]), col.c1, 2.4);
+    ctx.restore();
+    const Yi = lin(0, Math.max(pk, 0.1)*1.1, B.b, B.t), Xb = lin(t0, t1, B.l, B.r);
+    axes(ctx, B, Xb, Yi, {xt: ticks(0, t1 - t0, 4).map(v => v + t0), yt: ticks(0, Math.max(pk, 0.1), 3), xl: 'time (two cycles)', yl: 'diode A', xf: v => si(v - t0, 's').replace(' ', ''), yf: v => fmt(v, 2)});
+    Plot.clip(ctx, B);
+    line(ctx, ts.map((t, i) => [Xb(t), Yi(ic[i])]), col.c2, 1.8);
+    ctx.restore();
+  });
+  ['#rC', '#rI'].forEach(id => $(id).addEventListener('input', upd));
+  upd();
+})();
+
+/* ============ 3. Zener shunt regulator ============ */
+(() => {
+  const VZ = 5.1, IZT = 5e-3, RZ = 10, PMAX = 0.5;
+  // output for a given load current: Zener modelled as VZ (at IZT) plus RZ, conducting only while its current is positive
+  const vout = (vin, R, il) => {
+    const vz0 = VZ - IZT*RZ, v = (vin/R + vz0/RZ - il)/(1/R + 1/RZ);
+    if (v > vz0) return v;
+    return Math.max(0, vin - il*R);
+  };
+  let s = {};
+  function upd(){
+    const vin = +$('#zV').value, R = Math.pow(10, +$('#zR').value), il = +$('#zL').value/1000;
+    const v = vout(vin, R, il), iz = Math.max(0, (vin - v)/R - il), pz = v*iz, pr = (vin - v)**2/R;
+    s = {vin, R, il, v};
+    $('#zVv').textContent = fmt(vin, 3) + ' V'; $('#zRv').textContent = si(R, 'Ω'); $('#zLv').textContent = fmt(il*1000, 3) + ' mA';
+    $('#zO').textContent = fmt(v, 3) + ' V'; $('#zI').textContent = si(iz, 'A'); $('#zP').textContent = si(pz, 'W'); $('#zRP').textContent = si(pr, 'W');
+    $('#zOS').className = 'stat ' + (iz < 1e-3 ? 'bad' : ''); $('#zPS').className = 'stat ' + (pz > PMAX ? 'bad' : pz > 0.7*PMAX ? 'warn' : '');
+    const vv = $('#zVerdict');
+    if (iz < 1e-3) setVerdict(vv, 'bad', `<b>Out of regulation.</b> The resistor can only supply ${si(Math.max(0, (vin - VZ)/R), 'A')} at the Zener voltage, less than the load wants, so the Zener has stopped conducting and the output sags.`);
+    else if (pz > PMAX) setVerdict(vv, 'bad', `<b>The Zener is overloaded.</b> ${si(pz, 'W')} exceeds its 500 mW rating. Use a larger resistor, or a higher-power Zener.`);
+    else if (iz < IZT) setVerdict(vv, 'warn', `<b>Barely regulating.</b> Only ${si(iz, 'A')} is left for the Zener, below its 5 mA test current, so the output is soft.`);
+    else setVerdict(vv, 'ok', `<b>Regulating.</b> The Zener takes the ${si(iz, 'A')} the load doesn't need. Efficiency: ${fmt(100*v*il/(vin*(vin - v)/R), 2)} %.`);
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvZr'), (ctx, W, H) => {
+    const {vin, R, il, v} = s; if (!vin) return;
+    const P = {l: 50, r: W - 14, t: 14, b: H - 40};
+    const X = lin(0, 60, P.l, P.r), Y = lin(0, 7, P.b, P.t);
+    axes(ctx, P, X, Y, {xt: [0, 10, 20, 30, 40, 50, 60], yt: [0, 1, 2, 3, 4, 5, 6, 7], xl: 'load current (mA)', yl: 'output (V)', xgrid: true});
+    Plot.clip(ctx, P);
+    const pts = []; for (let i = 0; i <= 240; i++){ const l = 60*i/240; pts.push([X(l), Y(vout(vin, R, l/1000))]); }
+    line(ctx, pts, col.c1, 2.4);
+    line(ctx, [[P.l, Y(VZ)], [P.r, Y(VZ)]], col.muted, 1, [4, 4]);
+    dot(ctx, X(il*1000), Y(v), 6, col.c2);
+    ctx.restore();
+    text(ctx, 'VZ = 5.1 V', P.r - 4, Y(VZ) - 9, {align: 'right', color: col.muted});
+  });
+  ['#zV', '#zR', '#zL'].forEach(id => $(id).addEventListener('input', upd));
+  upd();
+})();
+
+/* ============ 4. Diode-OR ============ */
+(() => {
+  const kind = Plot.seg('#oK', upd), RB = 0.05;
+  // current from a battery of voltage VB into the shared node at Vo, through its internal resistance and diode
+  function ib(k, VB, Vo){
+    if (VB <= Vo) return 0;
+    if (k === 'ideal'){ return (VB - Vo)/(0.02 + RB); }
+    const m = MODELS[k === 'si' ? 'si' : 'sch'], mm = {Is: m.Is, n: m.n, Rs: m.Rs + RB};
+    return Math.max(0, idiode(mm, VB - Vo, 25));
+  }
+  let s = {};
+  function upd(){
+    const k = kind(), A = +$('#oA').value, B = +$('#oB').value, I = +$('#oI').value;
+    let lo = 0, hi = Math.max(A, B);
+    for (let n = 0; n < 80; n++){ const v = (lo + hi)/2; if (ib(k, A, v) + ib(k, B, v) > I) lo = v; else hi = v; }
+    const vo = (lo + hi)/2, ia = ib(k, A, vo), ibb = ib(k, B, vo);
+    const loss = k === 'ideal' ? 0.02*(ia*ia + ibb*ibb) : (A - vo - ia*RB)*ia + (B - vo - ibb*RB)*ibb;
+    s = {ia, ib: ibb, I, loss};
+    $('#oAv').textContent = fmt(A, 3) + ' V'; $('#oBv').textContent = fmt(B, 3) + ' V'; $('#oIv').textContent = si(I, 'A');
+    $('#oV').textContent = fmt(vo, 3) + ' V'; $('#oS').textContent = fmt(ia, 2) + ' A / ' + fmt(ibb, 2) + ' A'; $('#oL').textContent = si(loss, 'W');
+    $('#oLS').className = 'stat ' + (loss > 1.5 ? 'bad' : loss > 0.5 ? 'warn' : '');
+    const v = $('#oVerdict'), share = Math.min(ia, ibb)/I;
+    if (share > 0.1) setVerdict(v, 'ok', `<b>Sharing.</b> The batteries are close enough in voltage that both diodes conduct: ${Math.round(100*ia/I)} % from A, ${Math.round(100*ibb/I)} % from B.`);
+    else setVerdict(v, 'ok', `<b>${ia > ibb ? 'A' : 'B'} supplies the load.</b> The other battery's diode is reverse biased or nearly off, so it's held in reserve and nothing flows into it.`);
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvOr'), (ctx, W, H) => {
+    const {ia, ib: ibb, I, loss} = s; if (I === undefined) return;
+    const P = {l: 50, r: W - 14, t: 20, b: H - 34}, Y = lin(0, 3.2, P.b, P.t);
+    axes(ctx, P, lin(0, 1, P.l, P.r), Y, {xt: [], yt: [0, 1, 2, 3], yl: 'current (A)'});
+    const bw = (P.r - P.l)/5;
+    [[ia, 'from A', col.c1], [ibb, 'from B', col.c3]].forEach(([v, lab, c], i) => {
+      const x = P.l + bw*(0.6 + 1.6*i);
+      ctx.fillStyle = c; ctx.fillRect(x, Y(v), bw, P.b - Y(v));
+      text(ctx, lab, x + bw/2, P.b + 12, {align: 'center', color: col.ink2});
+      text(ctx, fmt(v, 3) + ' A', x + bw/2, Y(v) - 9, {align: 'center', color: col.ink2});
+    });
+    text(ctx, 'diode loss: ' + si(loss, 'W'), P.r - 4, P.t + 4, {align: 'right', color: col.ink2, base: 'top', bold: true});
+  });
+  ['#oA', '#oB', '#oI'].forEach(id => $(id).addEventListener('input', upd));
+  upd();
+})();
+</script>
 </body>
 </html>
