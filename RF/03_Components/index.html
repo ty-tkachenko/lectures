@@ -34,11 +34,12 @@
       <li>Filters: types, order, and the trade-off between rejection, loss and delay.</li>
       <li>Mixers and the image frequency.</li>
       <li>Diplexers, duplexers, circulators, isolators, splitters, combiners and waveguide, and where the loss in each comes from.</li>
+      <li>How gain, noise figure and compression combine when blocks are connected in a chain.</li>
     </ul>
   </div>
   <div class="video" data-video="lecture" id="lecture">
     <div class="plan">
-      <p>Planned walkthrough of this page (≈ 55 min):</p>
+      <p>Planned walkthrough of this page (≈ 60 min):</p>
       <ol>
         <li data-t="0:00">A radio as a chain of blocks</li>
         <li data-t="3:00">Connectors</li>
@@ -51,6 +52,7 @@
         <li data-t="35:00">Diplexers, duplexers, circulators and isolators</li>
         <li data-t="39:00">Splitters and combiners</li>
         <li data-t="42:00">Waveguide</li>
+        <li data-t="45:00">Blocks in a chain: cascades</li>
       </ol>
     </div>
   </div>
@@ -887,6 +889,73 @@
 </details>
 </section>
 
+<!-- ================= 11 CASCADES ================= -->
+<section class="sec" id="cascades" data-short="Blocks in a chain">
+<h2>Blocks in a chain: cascades <a class="vjump" data-t="45:00"></a></h2>
+<p>Each block's datasheet describes it alone, with a 50 Ω source and load. In a radio the blocks are connected in a chain, and the questions that matter are about the chain: how much gain it has in total, how much noise it adds, and which block runs out of headroom first. Three rules answer them, and each one follows from thinking about what a single block does to the signal and noise it's handed.</p>
+
+<h3>Gain adds in decibels</h3>
+<p>Each block multiplies the power it receives by its gain, so the gains multiply, and in decibels they add. A passive block's loss is a negative gain. Drawing the signal level after each block, a <strong>level diagram</strong>, is the standard way to see a chain at a glance.</p>
+
+<h3>Noise: why the first stage dominates</h3>
+<p>A block's <strong>noise factor</strong> F (the noise figure is 10 log F) is defined by how much it degrades the signal-to-noise ratio: F = SNR<sub>in</sub>/SNR<sub>out</sub>, measured with a standard amount of noise N<sub>0</sub> at the input. A noiseless amplifier of gain G would output G·N<sub>0</sub> of noise; a real one outputs F·G·N<sub>0</sub>. So the noise the block adds, referred back to its own input, is (F − 1)·N<sub>0</sub>.</p>
+<p>Now put two blocks in a chain. The second block's added noise, (F<sub>2</sub> − 1)·N<sub>0</sub> at its input, competes with a signal that the first block has already amplified by G<sub>1</sub>. Referred back to the chain's input, it's only (F<sub>2</sub> − 1)·N<sub>0</sub>/G<sub>1</sub>. Repeating the argument for every block gives the cascade formula (Friis):</p>
+<div class="eq">$$F_\text{total} = F_1 + \frac{F_2 - 1}{G_1} + \frac{F_3 - 1}{G_1 G_2} + \cdots$$<div class="n">noise factors and gains as ratios, not decibels</div></div>
+<p>Every later stage's noise is divided by all the gain in front of it. That's the quantitative version of the LNA argument earlier on this page: a first stage with low noise and enough gain makes everything after it nearly irrelevant. A passive loss L in front has F = L and G = 1/L, so it adds its loss directly to the noise figure <em>and</em> multiplies everything after it by L.</p>
+
+<h3>Compression: why the last stage usually limits</h3>
+<p>The signal is largest at the end of the chain, so the later stages are the ones that run out of headroom first. To compare the stages fairly, refer each stage's output P1dB to the chain's output: a stage followed by gain G<sub>after</sub> compresses when the chain's output reaches P1dB<sub>i</sub>·G<sub>after</sub>. The stage with the smallest such value limits the chain, and the overall output P1dB is approximately</p>
+<div class="eq">$$\frac{1}{P_\text{1dB,out}} \approx \sum_i \frac{1}{P_{\text{1dB},i}\;G_{\text{after},i}}$$<div class="n">powers in milliwatts; an estimate that treats the stages' compression as adding</div></div>
+<p>The two results pull in opposite directions. More gain at the front lowers the noise figure, but it also raises the signal level at every later stage, so the chain compresses at a weaker input signal. Choosing the gain distribution along a receiver is a balance between sensitivity and the strongest signal it can handle, which Module 6 develops into dynamic range, intermodulation and the link budget.</p>
+
+<div class="widget wide" id="w-cas">
+  <div class="wh"><span class="tag">Interactive</span><b>A receive chain: level diagram, noise figure and compression</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label>Front-end filter position</label><div class="seg" id="kO"><button type="button" data-v="0" class="on">Before the LNA</button><button type="button" data-v="1">After the LNA</button></div></div>
+      <div class="ctrl"><label for="kL">Front-end filter loss <b id="kLv"></b></label><input id="kL" type="range" min="0.5" max="4" step="0.1" value="1.5"></div>
+      <div class="ctrl"><label for="kG">LNA gain <b id="kGv"></b></label><input id="kG" type="range" min="0" max="30" step="0.5" value="18"></div>
+      <div class="ctrl"><label for="kN">LNA noise figure <b id="kNv"></b></label><input id="kN" type="range" min="0.5" max="4" step="0.1" value="1"></div>
+      <div class="ctrl"><label for="kP">Signal at the antenna <b id="kPv"></b></label><input id="kP" type="range" min="-110" max="-10" step="1" value="-60"></div>
+      <p class="small">Passive filters are drawn with an output P1dB of +30 dBm. Fixed stages: image filter (2 dB loss), passive mixer (7 dB loss, NF 7 dB, output P1dB +3 dBm), IF amplifier (20 dB gain, NF 4 dB, output P1dB +12 dBm). LNA output P1dB +10 dBm. The noise floor is for a 100 kHz channel; Module 6 explains where it comes from.</p>
+    </div>
+    <div>
+      <canvas id="cvCas" style="height:320px" aria-label="Level diagram: the signal level after each stage of the receive chain, with each stage's output 1 dB compression point marked above it"></canvas>
+      <div class="legend"><span style="--c:var(--c1)">signal level</span><span style="--c:var(--bad)">stage output P1dB</span><span style="--c:var(--c5)">noise figure so far</span></div>
+      <div class="readout">
+        <div class="stat"><div class="k">Total gain</div><div class="v" id="kTG"></div></div>
+        <div class="stat"><div class="k">Noise figure</div><div class="v" id="kNF"></div></div>
+        <div class="stat"><div class="k">Noise floor, 100 kHz</div><div class="v" id="kFl"></div></div>
+        <div class="stat" id="kIS"><div class="k">Input P1dB</div><div class="v" id="kIP"></div></div>
+      </div>
+      <div class="verdict" id="kVerdict"></div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>Move the filter from before the LNA to after it. How much does the noise figure improve, and does anything get worse?</li>
+    <li>Set the LNA gain to 0 dB. Which stage now dominates the noise figure?</li>
+    <li>Raise the LNA gain to 30 dB, then raise the antenna signal until the chain compresses. Which stage compresses first?</li>
+    <li>With the filter first, change its loss from 0.5 to 3 dB. Does the noise figure change by the same amount?</li>
+  </ol></div>
+</div>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">Where to spend the effort on noise</span></summary>
+  <div class="eb">
+    <p>A receiver has an LNA with 20 dB of gain and a 1.5 dB noise figure, followed by a mixer with a 10 dB noise figure. Its overall noise figure is a little too high. Two improvements are on offer: an LNA with a 1.0 dB noise figure, or a mixer with a 7 dB noise figure.</p>
+    <div class="choice"><p>Which helps more, and why?</p>
+    <ol class="opts">
+      <li data-correct>The better LNA: the mixer's noise is divided by the LNA's gain of 100 before it counts, so cutting the mixer's noise figure by 3 dB changes the total by only about 0.1 dB, while the LNA's 0.5 dB improvement passes almost directly to the total.<div class="why">In the cascade formula the first stage counts in full; later stages are divided by the gain in front of them.</div></li>
+      <li>The better mixer, because a 3 dB improvement is larger than 0.5 dB.<div class="why">The mixer's contribution is divided by the LNA's gain, so its improvement is mostly hidden.</div></li>
+      <li>Both equally: noise figures in decibels add along the chain.<div class="why">Gains add in decibels; noise figures don't. They combine through the cascade formula.</div></li>
+      <li>Neither: the noise figure is set by the antenna.<div class="why">The antenna sets the noise that arrives with the signal; the receiver's noise figure is how much the chain adds to it.</div></li>
+    </ol>
+    <div class="solution"><p>With ratios: the LNA's F = 1.41, the mixer's F = 10, and G = 100. Total F = 1.41 + 9/100 = 1.50, a 1.77 dB noise figure. The better mixer (F = 5) gives 1.41 + 4/100 = 1.45 (1.62 dB). The better LNA (F = 1.26) gives 1.26 + 0.09 = 1.35 (1.30 dB). The first stage's own noise dominates whenever its gain is high, which is why receivers spend money on the LNA, and why the LNA's gain matters almost as much as its noise figure.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
 <!-- ================= DESIGN EXERCISES ================= -->
 <section class="sec" id="exercises" data-nonum data-short="Design exercises">
 <h2>Design exercises</h2>
@@ -932,6 +1001,19 @@
     <details><summary>Discussion: choosing low-side or high-side</summary><p>Either works; the choice depends on what's at the image. A high-side LO puts the image at 1055 MHz. If there's a strong transmitter near one of the two image frequencies, choose the other side. The LO itself must also be kept out of the antenna: an LO at 845 MHz leaking backwards through the LNA is radiated, and can fall in someone else's band.</p></details>
   </div>
 </div>
+<div class="chal">
+  <div class="ch"><span class="cn">Exercise 4</span><span class="cd">Analysis · ●●○</span><span class="ctitle">A receiver's noise figure</span></div>
+  <div class="cbody">
+    <p>A receive chain is: band-pass filter (1.5 dB loss), LNA (18 dB gain, 1.0 dB noise figure), mixer (−7 dB gain, 8 dB noise figure), IF amplifier (20 dB gain, 4 dB noise figure).</p>
+    <div class="check" data-ans="3.15" data-tol="3%" data-unit="dB"><p>(a) What's the chain's noise figure?</p>
+      <div class="miss" data-val="14.5"><p>That's the sum of the noise figures in decibels. Noise figures combine through the cascade formula, using ratios.</p></div>
+      <div class="hint">Convert to ratios: filter F = 1.413, G = 0.708; LNA F = 1.259, G = 63.1; mixer F = 6.31, G = 0.200; IF F = 2.51. Then F = F₁ + (F₂ − 1)/G₁ + (F₃ − 1)/(G₁G₂) + (F₄ − 1)/(G₁G₂G₃).</div>
+      <div class="solution"><p>F = 1.413 + 0.259/0.708 + 5.31/44.7 + 1.51/8.92 = 1.413 + 0.366 + 0.119 + 0.170 = 2.07, a noise figure of 3.15 dB.</p></div></div>
+    <div class="check" data-ans="1.92" data-tol="3%" data-unit="dB"><p>(b) And with the filter moved after the LNA?</p>
+      <div class="solution"><p>F = 1.259 + 0.413/63.1 + 5.31/44.7 + 1.51/8.92 = 1.259 + 0.007 + 0.119 + 0.170 = 1.55: 1.92 dB, an improvement of 1.2 dB.</p></div></div>
+    <details><summary>Discussion: why not 1.5 dB better?</summary><p>Moving the filter removes its 1.5 dB from the front, but the filter's loss was also reducing the LNA's effective gain ahead of the mixer and IF stages. After the move the mixer and IF amplifier still contribute 0.29 to F, so the improvement is a little less than the filter's loss. Whether the move is worth it depends on the strong-signal environment: with the filter after the LNA, every out-of-band signal reaches the LNA unattenuated.</p></details>
+  </div>
+</div>
 </section>
 
 <!-- ================= BENCH ================= -->
@@ -971,6 +1053,7 @@
   <li>A mixer produces sum and difference frequencies. The image, at 2f<sub>LO</sub> − f<sub>RF</sub>, must be filtered out before the mixer.</li>
   <li>Attenuators absorb, filters reflect. A balun connects balanced and unbalanced circuits; circulators and isolators separate signals by direction.</li>
   <li>An equal two-way split costs 3 dB per output; a Wilkinson adds little more, a resistive splitter costs 6 dB.</li>
+  <li>In a chain, gains add in dB; noise is dominated by the first stage (Friis); compression is usually set by the last stages. More front-end gain trades strong-signal handling for sensitivity.</li>
 </ol>
 <div class="cheat">
   <div><b>Mixer</b>\(f_\text{IF} = |f_\text{RF} - f_\text{LO}|\)<br><span class="small">image: \(2f_\text{LO} - f_\text{RF}\)</span></div>
@@ -978,6 +1061,7 @@
   <div><b>Coupler</b>directivity = isolation − coupling</div>
   <div><b>Splitter</b>equal 2-way: 3.01 dB · resistive: 6 dB<br><span class="small">Wilkinson: 70.7 Ω λ/4 lines, 100 Ω resistor</span></div>
   <div><b>Waveguide</b>\(f_c = c/2a\) (TE₁₀, air)</div>
+  <div><b>Friis cascade</b>\(F = F_1 + \frac{F_2 - 1}{G_1} + \frac{F_3 - 1}{G_1G_2} + \cdots\)<br><span class="small">ratios, not dB; passive loss: F = L</span></div>
   <div><b>Amplifier</b>P1dB: gain down 1 dB<br><span class="small">loss before the LNA adds to NF</span></div>
 </div>
 <h3>Further reading</h3>
@@ -1265,6 +1349,57 @@ const dbm2w = d => Math.pow(10, d/10)/1000, w2dbm = w => 10*Math.log10(w*1000);
     ctx.restore();
   });
   $('#wF').addEventListener('input', upd);
+  upd();
+})();
+/* ============ 7. Receive-chain cascade ============ */
+(() => {
+  const order = seg('#kO', upd);
+  const u = d => Math.pow(10, d/10), dB = x => 10*Math.log10(x);
+  let s = {};
+  function chain(){
+    const L = +$('#kL').value, flt = {n: 'filter', g: -L, nf: L, op: 30}, lna = {n: 'LNA', g: +$('#kG').value, nf: +$('#kN').value, op: 10};
+    const front = order() === '0' ? [flt, lna] : [lna, flt];
+    return front.concat([{n: 'image filter', g: -2, nf: 2, op: 30}, {n: 'mixer', g: -7, nf: 7, op: 3}, {n: 'IF amp', g: 20, nf: 4, op: 12}]);
+  }
+  function upd(){
+    const st = chain(), pin = +$('#kP').value;
+    let F = 1, G = 1; const lv = [pin], nfs = [0];
+    st.forEach(b => { F += (u(b.nf) - 1)/G; G *= u(b.g); lv.push(lv[lv.length - 1] + b.g); nfs.push(dB(F)); });
+    // output-referred compression: each stage's P1dB times the gain after it
+    const terms = st.map((b, i) => { let ga = 0; for (let j = i + 1; j < st.length; j++) ga += st[j].g; return u(b.op + ga); });
+    const op = dB(1/terms.reduce((a, t) => a + 1/t, 0)), gt = dB(G), ip = op - gt + 1;
+    const lim = terms.indexOf(Math.min(...terms));
+    const margin = st.map((b, i) => b.op - lv[i + 1]), worst = margin.indexOf(Math.min(...margin));
+    s = {st, lv, nfs};
+    $('#kLv').textContent = fmt(+$('#kL').value, 2) + ' dB'; $('#kGv').textContent = fmt(+$('#kG').value, 3) + ' dB'; $('#kNv').textContent = fmt(+$('#kN').value, 2) + ' dB'; $('#kPv').textContent = pin + ' dBm';
+    $('#kTG').textContent = fmt(gt, 3) + ' dB'; $('#kNF').textContent = fmt(dB(F), 3) + ' dB';
+    $('#kFl').textContent = fmt(-174 + 50 + dB(F), 3) + ' dBm'; $('#kIP').textContent = fmt(ip, 3) + ' dBm';
+    $('#kIS').className = 'stat ' + (pin > ip ? 'bad' : pin > ip - 6 ? 'warn' : '');
+    const v = $('#kVerdict');
+    if (pin > ip) setVerdict(v, 'bad', `<b>The chain is compressing.</b> The antenna signal is above the chain's input P1dB of ${fmt(ip, 3)} dBm; the ${st[worst].n} is ${fmt(-margin[worst], 2)} dB past its own output P1dB.`);
+    else if (pin > ip - 6) setVerdict(v, 'warn', `<b>Close to compression.</b> Only ${fmt(ip - pin, 2)} dB of headroom before the ${st[lim].n} compresses.`);
+    else setVerdict(v, 'ok', `<b>Linear.</b> Noise figure ${fmt(dB(F), 3)} dB, set mostly by the ${dB(F) - st[0].nf < 0.5 ? 'first stage' : 'first two stages'}. The ${st[lim].n} is the stage that would compress first, at an antenna level of ${fmt(ip, 3)} dBm.`);
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvCas'), (ctx, W, H) => {
+    const {st, lv, nfs} = s; if (!st) return;
+    const A = {l: 52, r: W - 14, t: 14, b: H*0.66}, B = {l: 52, r: W - 14, t: H*0.74, b: H - 30};
+    const X = i => A.l + (A.r - A.l)*(i + 0.5)/(st.length + 1);
+    const lo = Math.min(...lv) - 10, hi = Math.max(Math.max(...st.map(b => b.op)) + 5, Math.max(...lv) + 10);
+    const Y = Plot.lin(lo, hi, A.b, A.t);
+    Plot.axes(ctx, A, Plot.lin(0, 1, A.l, A.r), Y, {xt: [], yt: Plot.ticks(lo, hi, 5), yl: 'dBm'});
+    for (let i = 1; i <= st.length; i++){ const x0 = (X(i - 1) + X(i))/2; Plot.line(ctx, [[x0, A.t], [x0, A.b]], col.line, 1); }
+    st.forEach((b, i) => { const x = X(i + 1); Plot.line(ctx, [[x - 10, Y(b.op)], [x + 10, Y(b.op)]], col.bad, 2.4); });
+    Plot.line(ctx, lv.map((l, i) => [X(i), Y(l)]), col.c1, 2.4);
+    lv.forEach((l, i) => Plot.dot(ctx, X(i), Y(l), 4, col.c1));
+    const labs = W < 520 ? ['in'].concat(st.map(b => ({'filter': 'filt', 'LNA': 'LNA', 'image filter': 'img', 'mixer': 'mix', 'IF amp': 'IF'})[b.n])) : ['antenna'].concat(st.map(b => b.n));
+    labs.forEach((t, i) => Plot.text(ctx, t, X(i), A.b + 12, {align: 'center', color: col.ink2}));
+    const Yn = Plot.lin(0, Math.max(10, Math.ceil(Math.max(...nfs) + 1)), B.b, B.t);
+    Plot.axes(ctx, B, Plot.lin(0, 1, B.l, B.r), Yn, {xt: [], yt: [0, Math.max(10, Math.ceil(Math.max(...nfs) + 1))], yl: 'NF (dB)'});
+    Plot.line(ctx, nfs.map((n, i) => [X(i), Yn(n)]), col.c5, 2.2);
+    nfs.forEach((n, i) => { if (i) Plot.text(ctx, fmt(n, 2), X(i), Yn(n) - 9, {align: 'center', color: col.c5}); });
+  });
+  ['#kL', '#kG', '#kN', '#kP'].forEach(id => $(id).addEventListener('input', upd));
   upd();
 })();
 </script>
