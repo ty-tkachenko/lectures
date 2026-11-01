@@ -16,8 +16,8 @@ window.COURSE = {
         {id:'ee04', n:4,  status:'ready',   path:'EE/04_AC_and_Frequency/',       title:'AC Signals & Frequency Response', blurb:'Impedance, RC filters, Bode plots and decibels.'},
         // Moving power: driving actuators
         {id:'ee05', n:5,  status:'ready',   path:'EE/05_Diodes/',                 title:'Diodes', blurb:'Rectifiers, LEDs, Zener/TVS protection and reverse-polarity protection.'},
-        {id:'ee06', n:6,  status:'planned', path:'EE/06_Transistors/',            title:'Transistors as Switches', blurb:'MOSFET drivers for solenoid valves and pyro channels.'},
-        {id:'ee07', n:7,  status:'planned', path:'EE/07_Power/',                  title:'Power Systems', blurb:'LiPos, linear and switching regulators, power budgets and protection.'},
+        {id:'ee06', n:6,  status:'ready',   path:'EE/06_Transistors/',            title:'Transistors as Switches', blurb:'MOSFET drivers for solenoid valves and pyro channels.'},
+        {id:'ee07', n:7,  status:'ready',   path:'EE/07_Power/',                  title:'Power Systems', blurb:'LiPos, linear and switching regulators, power budgets and protection.'},
         // Sensing & computing: the signal chain
         {id:'ee08', n:8,  status:'planned', path:'EE/08_Digital_MCU/',            title:'Digital Logic & Microcontrollers', blurb:'Logic levels, GPIO, pull-ups, PWM, interrupts and watchdogs.'},
         {id:'ee09', n:9,  status:'planned', path:'EE/09_Buses/',                  title:'Communication Buses', blurb:'UART, SPI, I²C, CAN and RS-485, and when to use each.'},
@@ -61,6 +61,8 @@ window.COURSE.videos = {
   ee03: {lecture: '', lab: ''},
   ee04: {lecture: '', lab: ''},
   ee05: {lecture: '', lab: ''},
+  ee06: {lecture: '', lab: ''},
+  ee07: {lecture: '', lab: ''},
   rf00: {lecture: '', lab: ''},
   rf01: {lecture: '', lab: ''},
   rf02: {lecture: '', lab: ''},

@@ -4,31 +4,924 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Power Systems · EE 7</title>
-<meta name="description" content="EE Fundamentals module 7: LiPos, linear and switching regulators, power budgets and protection. In development.">
+<meta name="description" content="EE module 7: lithium polymer cells, C-rating, sag and safe handling, linear regulators and dropout, buck and boost converters derived from first principles, efficiency and heat, power budgets, fuses, eFuses and current limiting, switchover from an umbilical supply to an internal battery, and power sequencing.">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
 <link rel="stylesheet" href="../../assets/site.css">
 <script src="../../assets/course.js"></script>
 <script src="../../assets/site.js"></script>
+<script src="../../assets/plot.js"></script>
 </head>
 <body>
 <div class="layout">
 <aside class="side" aria-label="Module contents"></aside>
 <main class="content">
 
-<!-- Placeholder: replace this page with the module when it's written (see README.md, "Writing a module"). -->
+<!-- ================= HERO ================= -->
 <header class="hero">
   <div class="eyebrow">EE Fundamentals · Module 7</div>
-  <h1>Power Systems</h1>
-  <p class="lede">LiPos, linear and switching regulators, power budgets and protection.</p>
+  <h1>Power systems</h1>
+  <p class="lede">Every electronic system starts with energy from somewhere, usually a battery, and has to deliver it to many loads at the voltages they need, efficiently, safely, and without interruption. This module follows that energy: from a lithium cell and its limits, through linear and switching regulators, to protection against faults, the budget that sizes the battery, the switchover from an external supply, and the order in which the rails come up.</p>
+  <p class="meta">Builds on: EE modules 1–6, especially internal resistance (Module 1), inductors (Module 3), diodes (Module 5) and MOSFETs (Module 6). Bench: bench supply, electronic load if available, oscilloscope, a buck converter module, a linear regulator.</p>
+  <div class="resources" data-auto></div>
+  <div class="objectives">
+    <h3>What's covered</h3>
+    <ul>
+      <li>Lithium polymer cells: voltage, capacity, C-rating, sag, and handling them safely.</li>
+      <li>Linear regulators: how they work, dropout, and where the excess power goes.</li>
+      <li>Buck and boost converters, derived from a switch, a diode and an inductor.</li>
+      <li>Efficiency and heat, and choosing between linear and switching regulators.</li>
+      <li>Power budgets: sizing a battery from the loads and how long they run.</li>
+      <li>Fuses, resettable fuses, eFuses and current limiting.</li>
+      <li>Switching from an umbilical supply to an internal battery, and sequencing the rails at power-up.</li>
+    </ul>
+  </div>
+  <div class="video" data-video="lecture" id="lecture">
+    <div class="plan">
+      <p>Planned walkthrough of this page (≈ 50 min):</p>
+      <ol>
+        <li data-t="0:00">From battery to loads: a power tree</li>
+        <li data-t="3:00">Lithium polymer cells</li>
+        <li data-t="11:00">Linear regulators and dropout</li>
+        <li data-t="17:00">Buck and boost converters from first principles</li>
+        <li data-t="28:00">Efficiency and heat</li>
+        <li data-t="31:00">Power budgets</li>
+        <li data-t="36:00">Fuses, eFuses and current limiting</li>
+        <li data-t="41:00">Umbilical-to-internal switchover</li>
+        <li data-t="46:00">Power sequencing</li>
+      </ol>
+    </div>
+  </div>
 </header>
 
-<section class="sec" id="status" data-nonum data-short="In development">
-<h2>In development</h2>
-<p>This module hasn't been written yet. The other modules are listed in the strip at the top of the page, and the links below go to the neighbouring ones.</p>
+<!-- ================= 0 POWER TREE ================= -->
+<section class="sec" id="tree" data-short="A power tree">
+<h2>From battery to loads: a power tree <a class="vjump" data-t="0:00"></a></h2>
+<p>A system's power architecture is usually drawn as a <strong>power tree</strong>: the source at the root, then protection, then the converters that make each supply rail, then the loads on each rail. Drawing it first makes the questions of this module concrete: how much current each branch draws, how much is lost converting it, what happens if a branch shorts, and in what order the branches come alive.</p>
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>A typical power tree for an avionics board</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 260" role="img" aria-label="An umbilical supply and an internal battery are combined by a power-path stage, then pass through reverse-polarity protection and an eFuse onto a raw bus. From the raw bus, a buck converter makes 5 volts for sensors and the radio, followed by a low-dropout regulator making 3.3 volts for the microcontroller; separate switched outputs feed valves and pyro channels directly from the raw bus.">
+    <defs><marker id="arT" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--ink2)"/></marker></defs>
+    <g fill="#fff" stroke="var(--ink)" stroke-width="1.4">
+      <rect x="10" y="40" width="80" height="34"/><rect x="10" y="110" width="80" height="34"/>
+      <rect x="116" y="74" width="74" height="40" fill="#e6efd9"/>
+      <rect x="212" y="74" width="74" height="40" fill="#fbe9e2"/>
+      <rect x="402" y="30" width="80" height="36" fill="#dfe7f3"/><rect x="402" y="98" width="80" height="36" fill="#dfe7f3"/>
+      <rect x="512" y="20" width="118" height="28"/><rect x="512" y="56" width="118" height="28"/><rect x="512" y="102" width="118" height="28"/>
+      <rect x="402" y="172" width="80" height="36" fill="#f4dfd7"/><rect x="512" y="166" width="118" height="28"/><rect x="512" y="202" width="118" height="28"/>
+    </g>
+    <g fill="none" stroke="var(--ink2)" stroke-width="1.6" marker-end="url(#arT)">
+      <path d="M90 57H104V86H114"/><path d="M90 127H104V102H114"/>
+      <path d="M190 94H210"/><path d="M286 94H330"/>
+      <path d="M340 94V48H400"/><path d="M340 94V190H400"/>
+      <path d="M482 48H498V34H510"/><path d="M482 48H498V70H510"/><path d="M442 66V96"/><path d="M482 116H510"/>
+      <path d="M482 190H498V180H510"/><path d="M482 190H498V216H510"/>
+    </g>
+    <path d="M300 94H340" stroke="var(--bad)" stroke-width="5" opacity=".5"/>
+    <g font-size="11.5" text-anchor="middle">
+      <text x="50" y="61">umbilical</text><text x="50" y="131">battery</text>
+      <text x="153" y="91">power</text><text x="153" y="105">path</text>
+      <text x="249" y="91">protection,</text><text x="249" y="105">eFuse</text>
+      <text x="320" y="84" fill="var(--bad)" font-size="10.5">raw bus</text>
+      <text x="442" y="45">buck</text><text x="442" y="59" font-size="10.5">→ 5 V</text>
+      <text x="442" y="113">LDO</text><text x="442" y="127" font-size="10.5">→ 3.3 V</text>
+      <text x="571" y="38">radio, 5 V</text><text x="571" y="74">sensors, 5 V</text><text x="571" y="120">MCU, ADC, 3.3 V</text>
+      <text x="442" y="187">switched</text><text x="442" y="201">outputs</text>
+      <text x="571" y="184">valves</text><text x="571" y="220">pyro channels</text>
+      <text x="320" y="252" fill="var(--muted)">each arrow is a current to budget, a loss to estimate, and a fault to protect against</text>
+    </g>
+  </svg>
+  </div>
+</div>
+</section>
+
+<!-- ================= 1 LIPO ================= -->
+<section class="sec" id="lipo" data-short="Lithium polymer cells">
+<h2>Lithium polymer cells <a class="vjump" data-t="3:00"></a></h2>
+<p>A lithium-ion or lithium-polymer (LiPo) cell stores energy chemically and delivers it at a voltage set by its chemistry: 4.2 V when fully charged, about 3.7 V for most of its discharge, falling steeply below about 3.3 V as it empties. Cells are combined into <strong>packs</strong>: cells in series add voltage, cells in parallel add capacity. A "3S2P" pack is three groups in series, each of two cells in parallel: 11.1 V nominal, twice one cell's capacity.</p>
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>Inside a 3S LiPo pack</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 200" role="img" aria-label="Three cells in series, each 3.7 volts nominal, giving 11.1 volts at the main leads. A balance connector has a wire to each junction between cells, so a charger can measure and equalise each cell's voltage individually.">
+    <g fill="#f0e4c8" stroke="var(--ink)" stroke-width="1.4"><rect x="120" y="60" width="110" height="50" rx="4"/><rect x="260" y="60" width="110" height="50" rx="4"/><rect x="400" y="60" width="110" height="50" rx="4"/></g>
+    <g fill="none" stroke="var(--ink)" stroke-width="1.6"><path d="M120 85H60M230 85H260M370 85H400M510 85H580"/></g>
+    <g fill="none" stroke="var(--c5)" stroke-width="1.4"><path d="M120 110V160M245 85V160M385 85V160M510 110V160"/><path d="M120 160H510"/></g>
+    <g fill="var(--c5)"><circle cx="245" cy="85" r="3"/><circle cx="385" cy="85" r="3"/></g>
+    <rect x="300" y="152" width="40" height="18" fill="#fff" stroke="var(--c5)"/>
+    <g font-size="11.5" text-anchor="middle">
+      <text x="175" y="82">cell 1</text><text x="175" y="98" fill="var(--muted)" font-size="10.5">3.0–4.2 V</text>
+      <text x="315" y="82">cell 2</text><text x="315" y="98" fill="var(--muted)" font-size="10.5">3.0–4.2 V</text>
+      <text x="455" y="82">cell 3</text><text x="455" y="98" fill="var(--muted)" font-size="10.5">3.0–4.2 V</text>
+      <text x="44" y="89" text-anchor="end">−</text><text x="592" y="89" text-anchor="start">+</text>
+      <text x="320" y="40">main leads: 9.0–12.6 V (11.1 V nominal)</text>
+      <text x="320" y="190" fill="var(--c5)">balance connector: one wire per cell junction, so each cell can be measured and balanced</text>
+    </g>
+  </svg>
+  </div>
+</div>
+<p>Two numbers describe how much a pack can deliver:</p>
+<ul>
+  <li><strong>Capacity</strong>, in milliamp-hours: a 1500 mAh pack can deliver 1.5 A for one hour, or 150 mA for ten. In practice the usable capacity is less at high current and at low temperature.</li>
+  <li><strong>C-rating</strong>: the maximum continuous discharge current as a multiple of the capacity. 1C for a 1500 mAh pack is 1.5 A; a "25C" rating claims 37.5 A. Manufacturers' C-ratings are often optimistic, and what limits a pack in practice is sag and heating.</li>
+</ul>
+<p>Module 1 introduced <strong>internal resistance</strong>: a real cell behaves like an ideal voltage source in series with a small resistance, so its terminal voltage <strong>sags</strong> under load by I × R<sub>int</sub>. For a small LiPo that's 10–50 mΩ per cell. Sag matters twice: the load sees less voltage (a regulator may drop out, or a brown-out reset may trigger), and the power I²R<sub>int</sub> heats the cell.</p>
+
+<div class="widget wide" id="w-lipo">
+  <div class="wh"><span class="tag">Interactive</span><b>Discharging a LiPo pack</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label for="bS">Cells in series <b id="bSv"></b></label><input id="bS" type="range" min="1" max="6" step="1" value="3"></div>
+      <div class="ctrl"><label for="bC">Capacity <b id="bCv"></b></label><input id="bC" type="range" min="300" max="5000" step="50" value="1500"></div>
+      <div class="ctrl"><label for="bI">Load current <b id="bIv"></b></label><input id="bI" type="range" min="0.1" max="40" step="0.1" value="3"></div>
+      <p class="small">Internal resistance about 30 mΩ per cell for a 1500 mAh cell, scaling inversely with capacity. The discharge ends when any cell's loaded voltage reaches 3.3 V. Illustrative curve shape.</p>
+    </div>
+    <div>
+      <canvas id="cvLipo" style="height:280px" aria-label="Pack voltage against time while discharging at the chosen current, with the no-load voltage for comparison and the cut-off level"></canvas>
+      <div class="legend"><span class="dash" style="--c:var(--muted)">no-load voltage</span><span style="--c:var(--c1)">voltage under load</span></div>
+      <div class="readout">
+        <div class="stat"><div class="k">Discharge rate</div><div class="v" id="bR"></div></div>
+        <div class="stat"><div class="k">Sag at full charge</div><div class="v" id="bG"></div></div>
+        <div class="stat"><div class="k">Run time</div><div class="v" id="bT"></div></div>
+        <div class="stat" id="bHS"><div class="k">Heat in the pack</div><div class="v" id="bH"></div></div>
+      </div>
+      <div class="verdict" id="bVerdict"></div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>At 1C (1.5 A for this pack), how long does it run? Is that exactly an hour, and why not?</li>
+    <li>Raise the current to 20C. How much of the pack's capacity is left when the voltage hits the cut-off?</li>
+    <li>Compare a 3S pack with a 1S pack of the same capacity at the same current. Which delivers more energy?</li>
+  </ol></div>
+</div>
+
+<h3>Handling LiPo cells safely</h3>
+<p>A lithium cell stores a lot of energy in a flammable package. Abuse causes internal shorts, heating, and in the worst case thermal runaway, a fire that sustains itself. The rules follow from what damages the chemistry:</p>
+<div class="tablewrap"><table>
+  <tr><th>Rule</th><th>Why</th></tr>
+  <tr><td>Never charge above 4.2 V per cell; always use a balance charger</td><td>Overcharging plates lithium metal inside the cell, a direct route to internal shorts. A balance charger stops each cell at 4.2 V, even if the cells have drifted apart.</td></tr>
+  <tr><td>Never discharge below about 3.0 V per cell (under load, 3.3 V is a common cut-off)</td><td>Deep discharge damages the electrodes and makes the cell unsafe to recharge.</td></tr>
+  <tr><td>Don't puncture, crush or bend packs; retire swollen ("puffy") ones</td><td>Physical damage shorts the layers inside; swelling means gas has formed from degradation.</td></tr>
+  <tr><td>Charge on a non-flammable surface or in a LiPo bag, attended</td><td>If a cell does fail, it's contained and someone is there.</td></tr>
+  <tr><td>Store at about 3.8 V per cell, cool</td><td>Full cells degrade faster in storage, especially when warm.</td></tr>
+  <tr><td>Insulate the leads; never let the main or balance leads short</td><td>A short draws hundreds of amps, limited only by the internal resistance (Module 1).</td></tr>
+</table></div>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">A reset whenever the valves open</span></summary>
+  <div class="eb">
+    <p>A board's 3.3 V regulator runs from a 2S LiPo (6.0–8.4 V). It works on the bench supply, but on the battery, the microcontroller resets whenever two valves open together, drawing 4 A, late in a test when the battery is partly discharged.</p>
+    <div class="choice"><p>What's the most likely cause?</p>
+    <ol class="opts">
+      <li>The valves generate noise that resets the microcontroller.<div class="why">Possible, but then it would also happen on the bench supply and with a full battery.</div></li>
+      <li data-correct>Sag: 4 A through the pack's internal resistance and the wiring drops the battery's terminal voltage, which is already lower late in the test, below what the regulator chain needs, triggering a brown-out reset.<div class="why">The dependence on load current and state of charge, and not on the supply type, points to sag.</div></li>
+      <li>The battery's capacity is too small.<div class="why">Capacity sets run time; this happens instantly, when the current steps up.</div></li>
+      <li>The valves' flyback diodes are reversed.<div class="why">A reversed flyback diode would short the supply every time a valve opens, on the bench supply too.</div></li>
+    </ol>
+    <div class="solution"><p>A 2S pack with 40 mΩ per cell plus 50 mΩ of wiring and connectors drops 4 × 0.13 ≈ 0.5 V at 4 A. Late in the test the cells sit around 3.5 V each, and the regulator input dips toward 6 V and below, while a bench supply holds its voltage regardless. Fixes include a pack with lower internal resistance, shorter and thicker wiring, a bulk capacitor near the valves, a regulator with lower dropout or a buck-boost, and a brown-out threshold chosen with this in mind.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 2 LINEAR ================= -->
+<section class="sec" id="linear" data-short="Linear regulators">
+<h2>Linear regulators and dropout <a class="vjump" data-t="11:00"></a></h2>
+<p>A <strong>linear regulator</strong> makes a lower, steady voltage from a higher, varying one. Inside is a transistor in series between input and output (the <strong>pass element</strong>), and an amplifier that compares the output with a reference and adjusts the transistor continuously. In effect it's a variable resistor that adjusts itself to drop exactly the difference between input and output.</p>
+<p>That description gives its efficiency from first principles. The same current flows in and out (plus a small quiescent current for the regulator itself), so the input power is V<sub>in</sub> × I and the output power V<sub>out</sub> × I. Everything else becomes heat in the pass element:</p>
+<div class="eq">$$P_\text{heat} = (V_\text{in} - V_\text{out})\,I \qquad \eta = \frac{V_\text{out}}{V_\text{in}}$$<div class="n">a linear regulator's efficiency is just the voltage ratio, whatever the part</div></div>
+<p>The pass element needs some minimum voltage across it to work: the <strong>dropout voltage</strong>. Below V<sub>out</sub> + V<sub>dropout</sub> at the input, the regulator can no longer regulate and the output follows the input down. Older regulators drop out at about 2 V; <strong>low-dropout</strong> (LDO) regulators at 0.1–0.5 V.</p>
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>A linear regulator: a self-adjusting resistor</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 200" role="img" aria-label="Input voltage feeds a pass element drawn as a variable resistor; the output feeds back through a resistor divider to an error amplifier, which compares it with a reference and adjusts the pass element. The difference between input and output voltage, times the current, is dissipated as heat in the pass element.">
+    <g fill="none" stroke="var(--ink)" stroke-width="1.6">
+      <path d="M40 60H180l4-8l8 16l8-16l8 16l8-16l8 16l4-8H360"/><path d="M188 82L232 40M226 40h6v6"/>
+      <path d="M330 60V76l7 3l-14 6l14 6l-14 6l7 3V116V126l7 3l-14 6l14 6l-14 6l7 3V170"/>
+      <path d="M330 116H296M296 144H310"/>
+      <path d="M296 104V156L246 130Z" fill="#fff"/>
+      <path d="M246 130H210V86"/>
+      <path d="M310 144V150M310 166V170M40 170H380"/>
+    </g>
+    <circle cx="310" cy="158" r="8" fill="#fff" stroke="var(--ink)" stroke-width="1.4"/>
+    <g fill="var(--ink)"><circle cx="330" cy="60" r="3"/><circle cx="330" cy="116" r="3"/><circle cx="210" cy="60" r="0"/></g>
+    <g fill="#fff" stroke="var(--ink)" stroke-width="1.4"><circle cx="36" cy="60" r="4"/><circle cx="364" cy="60" r="4"/><circle cx="36" cy="170" r="4"/></g>
+    <path d="M196 34c6 -10 14 -10 20 0M204 24c6 -10 14 -10 20 0" stroke="var(--bad)" fill="none" stroke-width="1.4"/>
+    <g font-size="11.5">
+      <text x="36" y="48" text-anchor="middle">V<tspan font-size="9" dy="2">in</tspan></text><text x="364" y="48" text-anchor="middle">V<tspan font-size="9" dy="2">out</tspan></text>
+      <text x="160" y="92" text-anchor="middle">pass element</text>
+      <text x="236" y="18" fill="var(--bad)">heat = (V<tspan font-size="9" dy="2">in</tspan><tspan dy="-2"> − V</tspan><tspan font-size="9" dy="2">out</tspan><tspan dy="-2">) × I</tspan></text>
+      <text x="300" y="120" font-size="12" text-anchor="end">−</text><text x="300" y="148" font-size="12" text-anchor="end">+</text>
+      <text x="262" y="98" text-anchor="middle" font-size="10.5">error amp</text>
+      <text x="290" y="162" text-anchor="end" font-size="10.5">ref</text>
+      <text x="344" y="100" font-size="10.5">divider</text>
+      <text x="420" y="70">The amplifier adjusts the pass element</text>
+      <text x="420" y="88">until the divided-down output equals</text>
+      <text x="420" y="106">the reference. Whatever voltage isn't</text>
+      <text x="420" y="124">needed at the output is dropped across</text>
+      <text x="420" y="142">the pass element, as heat.</text>
+    </g>
+  </svg>
+  </div>
+</div>
+
+<div class="widget wide" id="w-ldo">
+  <div class="wh"><span class="tag">Interactive</span><b>A linear regulator: dropout, efficiency and heat</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label>Output</label><div class="seg" id="lO"><button type="button" data-v="3.3" class="on">3.3 V</button><button type="button" data-v="5">5 V</button></div></div>
+      <div class="ctrl"><label for="lV">Input voltage <b id="lVv"></b></label><input id="lV" type="range" min="2" max="16" step="0.05" value="8.4"></div>
+      <div class="ctrl"><label for="lI">Load current <b id="lIv"></b></label><input id="lI" type="range" min="0.01" max="1" step="0.01" value="0.2"></div>
+      <div class="ctrl"><label>Package</label><div class="seg" id="lP"><button type="button" data-v="200">SOT-23</button><button type="button" data-v="60" class="on">SOT-223 on copper</button><button type="button" data-v="35">DPAK on copper</button></div></div>
+      <p class="small">LDO with 0.3 V dropout. Ambient 40 °C. The comparison assumes a buck converter at 90 % efficiency.</p>
+    </div>
+    <div>
+      <canvas id="cvLdo" style="height:260px" aria-label="Output voltage against input voltage, showing the dropout region and the regulated region, with the present operating point; and the input power split into output power and heat"></canvas>
+      <div class="readout">
+        <div class="stat"><div class="k">Output</div><div class="v" id="lOut"></div></div>
+        <div class="stat"><div class="k">Efficiency</div><div class="v" id="lE"></div></div>
+        <div class="stat"><div class="k">Heat (linear / buck)</div><div class="v" id="lH"></div></div>
+        <div class="stat" id="lJS"><div class="k">Regulator temperature</div><div class="v" id="lJ"></div></div>
+      </div>
+      <div class="verdict" id="lVerdict"></div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>Make 3.3 V at 200 mA from a full 2S pack (8.4 V). How hot does a SOT-23 part get?</li>
+    <li>Lower the input until the output drops out. At what input voltage does that happen?</li>
+    <li>At 3.6 V in and 3.3 V out, compare the linear regulator's efficiency with the buck's 90 %.</li>
+  </ol></div>
+</div>
+<p>Linear regulators aren't obsolete: they're simple, cheap, small and, unlike switching regulators, generate no switching noise, which makes them the right choice for a small drop or a small current, and for supplying noise-sensitive circuits such as ADC references and radio front ends. A common pattern is a switching regulator to get close to the target efficiently, followed by an LDO to clean up the result.</p>
+</section>
+
+<!-- ================= 3 BUCK AND BOOST ================= -->
+<section class="sec" id="smps" data-short="Buck and boost converters">
+<h2>Buck and boost converters from first principles <a class="vjump" data-t="17:00"></a></h2>
+<p>A linear regulator wastes the voltage it drops because it carries the full current through a resistance. A switching converter avoids that by never operating as a resistor: its switch is either fully on (no voltage across it) or fully off (no current through it), so ideally it dissipates nothing. The energy is shuttled in packets through an inductor, which stores it during one part of each cycle and releases it during the other. Everything about a buck converter follows from one fact about inductors.</p>
+
+<h3>The key fact: an inductor's average voltage is zero</h3>
+<p>From Module 3, v = L di/dt. If a circuit is in steady state, the inductor's current at the start of each switching cycle is the same as at the end. Integrating over one cycle, ∫v dt = L × (change in current) = 0. So in steady state, <strong>the average voltage across an inductor is zero</strong>: the volt-seconds applied in one direction during part of the cycle must be cancelled by the volt-seconds in the other direction during the rest. This is called <strong>volt-second balance</strong>.</p>
+
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>A buck converter in its two switch states</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 230" role="img" aria-label="Left: switch on. Current flows from the input through the closed switch and the inductor to the output capacitor and load; the inductor sees the input minus the output voltage and its current rises. Right: switch off. The inductor keeps its current flowing through the diode from ground; the inductor sees minus the output voltage and its current falls.">
+    <defs><g id="gnd5"><path d="M-10 0h20M-6 4h12M-2 8h4" stroke="var(--ink)" stroke-width="1.6"/></g><g id="dup"><path d="M-8 8L0 -8L8 8Z" fill="var(--ink)"/><path d="M-8 -8H8" stroke="var(--ink)" stroke-width="2"/></g></defs>
+    <g fill="none" stroke="var(--ink)" stroke-width="1.6">
+      <path d="M20 70H60M90 70H130"/><path d="M60 70H90"/><path d="M130 70V100M130 116V170"/>
+      <path d="M130 70H150a8 8 0 0 1 16 0a8 8 0 0 1 16 0a8 8 0 0 1 16 0a8 8 0 0 1 16 0H260V100M248 100h24M248 108h24M260 108V170M260 70H290V100l7 3l-14 6l14 6l-14 6l14 6l-7 3V170M20 170H290"/>
+      <path d="M340 70H380M410 70H450"/><path d="M380 70L404 50"/><path d="M450 70V100M450 116V170"/>
+      <path d="M450 70H470a8 8 0 0 1 16 0a8 8 0 0 1 16 0a8 8 0 0 1 16 0a8 8 0 0 1 16 0H580V100M568 100h24M568 108h24M580 108V170M580 70H610V100l7 3l-14 6l14 6l-14 6l14 6l-7 3V170M340 170H610"/>
+    </g>
+    <use href="#dup" x="130" y="108"/><use href="#dup" x="450" y="108"/>
+    <path d="M24 62H298V178H24" stroke="var(--c1)" stroke-width="3" opacity=".45" fill="none"/>
+    <path d="M442 62H618V178H442Z" stroke="var(--c2)" stroke-width="3" opacity=".45" fill="none"/>
+    <g font-size="11.5" text-anchor="middle">
+      <text x="150" y="24" font-weight="600">switch on (time DT)</text><text x="475" y="24" font-weight="600">switch off (time (1−D)T)</text>
+      <text x="20" y="58" text-anchor="start">V<tspan font-size="9" dy="2">in</tspan></text><text x="340" y="58" text-anchor="start">V<tspan font-size="9" dy="2">in</tspan></text>
+      <text x="74" y="90" font-size="10.5">switch</text><text x="114" y="132" text-anchor="end" font-size="10.5">diode off</text><text x="434" y="132" text-anchor="end" font-size="10.5">diode on</text>
+      <text x="190" y="52">L</text><text x="510" y="52">L</text>
+      <text x="268" y="150" font-size="10.5" text-anchor="start">C</text><text x="304" y="138" font-size="10.5" text-anchor="start">load</text>
+      <text x="190" y="200" fill="var(--c1)">across L: V<tspan font-size="9" dy="2">in</tspan><tspan dy="-2"> − V</tspan><tspan font-size="9" dy="2">out</tspan><tspan dy="-2">, current rises</tspan></text>
+      <text x="480" y="200" fill="var(--c2)">across L: −V<tspan font-size="9" dy="2">out</tspan><tspan dy="-2">, current falls</tspan></text>
+      <text x="320" y="224" fill="var(--muted)">D is the duty cycle, the fraction of each period T that the switch is on</text>
+    </g>
+  </svg>
+  </div>
+</div>
+<p>Apply volt-second balance to the buck converter. While the switch is on, for a time DT, the inductor's left end is at V<sub>in</sub> and its right end at V<sub>out</sub>: it sees V<sub>in</sub> − V<sub>out</sub>. While the switch is off, for (1 − D)T, the inductor's current carries on through the diode, its left end is at ground, and it sees −V<sub>out</sub>. Balancing the two:</p>
+<div class="eq">$$(V_\text{in} - V_\text{out})\,DT = V_\text{out}\,(1 - D)\,T \quad\Rightarrow\quad V_\text{out} = D\,V_\text{in}$$<div class="n">the buck converter: the output is the input times the fraction of time the switch is on</div></div>
+<p>No component values appear in the result. The output voltage is set by timing alone, which is why a controller only needs to adjust the duty cycle to regulate. The same reasoning gives the inductor's <strong>ripple current</strong>: during the on-time the current rises at (V<sub>in</sub> − V<sub>out</sub>)/L, so it rises by</p>
+<div class="eq">$$\Delta I_L = \frac{(V_\text{in} - V_\text{out})\,D}{L\,f}$$<div class="n">f = 1/T, the switching frequency; a larger inductor or a faster switch gives less ripple</div></div>
+<p>The average inductor current equals the load current, since the capacitor's average current is zero by the same argument as the inductor's voltage. Energy is conserved too: ideally V<sub>in</sub>I<sub>in</sub> = V<sub>out</sub>I<sub>out</sub>, so a buck converter stepping 12 V down to 3 V at 2 A draws only 0.5 A from the input, where a linear regulator would draw the full 2 A.</p>
+
+<h3>The boost converter</h3>
+<p>Rearrange the same three parts and the output rises above the input. In a <strong>boost converter</strong> the inductor connects to the input, the switch goes from the inductor to ground, and the diode leads to the output. With the switch on, the inductor sees V<sub>in</sub> and its current builds up; with it off, the inductor's current is forced through the diode into the output, and the inductor sees V<sub>in</sub> − V<sub>out</sub>, which is negative. Volt-second balance again:</p>
+<div class="eq">$$V_\text{in}\,DT = (V_\text{out} - V_\text{in})(1 - D)T \quad\Rightarrow\quad V_\text{out} = \frac{V_\text{in}}{1 - D}$$</div>
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>The boost converter</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 170" role="img" aria-label="Input voltage feeds an inductor; from the inductor's far end, a switch goes to ground and a diode leads to the output capacitor and load. With the switch on, the inductor charges from the input; with it off, the inductor's current flows through the diode to the output at a higher voltage.">
+    <defs><g id="drt"><path d="M-8 -8L8 0L-8 8Z" fill="var(--ink)"/><path d="M8 -8V8" stroke="var(--ink)" stroke-width="2"/></g></defs>
+    <g fill="none" stroke="var(--ink)" stroke-width="1.6">
+      <path d="M60 60H100a8 8 0 0 1 16 0a8 8 0 0 1 16 0a8 8 0 0 1 16 0a8 8 0 0 1 16 0H220H302M318 60H400V90M388 90h24M388 98h24M400 98V140M400 60H450V90l7 3l-14 6l14 6l-14 6l14 6l-7 3V140M60 140H450"/>
+      <path d="M220 60V90M220 110V140M220 90L230 112"/>
+    </g>
+    <use href="#drt" x="310" y="60"/>
+    <circle cx="220" cy="60" r="3" fill="var(--ink)"/>
+    <g font-size="11.5">
+      <text x="56" y="64" text-anchor="end">V<tspan font-size="9" dy="2">in</tspan></text><text x="140" y="46" text-anchor="middle">L</text>
+      <text x="234" y="104">switch</text><text x="310" y="46" text-anchor="middle">diode</text>
+      <text x="412" y="122">C</text><text x="466" y="104">load, V<tspan font-size="9" dy="2">out</tspan><tspan dy="-2"> &gt; V</tspan><tspan font-size="9" dy="2">in</tspan></text>
+      <text x="320" y="164" text-anchor="middle" fill="var(--muted)">switch on: L charges from V<tspan font-size="9" dy="2">in</tspan><tspan dy="-2"> · switch off: L's current is pushed through the diode into the output</tspan></text>
+    </g>
+  </svg>
+  </div>
+</div>
+<p>Combining the two gives a <strong>buck-boost</strong> converter, which can produce a fixed output from an input that may be above or below it: useful for making 3.3 V from a single lithium cell over its whole 3.0–4.2 V range. Modern converters usually replace the diode with a second MOSFET switched in step (a <strong>synchronous</strong> converter), saving the diode's drop. Typical efficiencies are 85–95 %.</p>
+
+<div class="widget wide" id="w-buck">
+  <div class="wh"><span class="tag">Interactive</span><b>Inside a buck or boost converter</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label>Converter</label><div class="seg" id="sT"><button type="button" data-v="buck" class="on">Buck</button><button type="button" data-v="boost">Boost</button></div></div>
+      <div class="ctrl"><label for="sV">Input voltage <b id="sVv"></b></label><input id="sV" type="range" min="3" max="24" step="0.1" value="12"></div>
+      <div class="ctrl"><label for="sD">Duty cycle <b id="sDv"></b></label><input id="sD" type="range" min="0.05" max="0.9" step="0.0001" value="0.4167"></div>
+      <div class="ctrl"><label for="sL">Inductance <b id="sLv"></b></label><input id="sL" type="range" min="0" max="2" step="0.01" value="1"></div>
+      <div class="ctrl"><label for="sF">Switching frequency <b id="sFv"></b></label><input id="sF" type="range" min="5" max="6.3" step="0.00001" value="5.69897"></div>
+      <div class="ctrl"><label for="sI">Load current <b id="sIv"></b></label><input id="sI" type="range" min="0.05" max="3" step="0.05" value="1"></div>
+      <p class="small">Ideal components. Three switching cycles are shown.</p>
+    </div>
+    <div>
+      <canvas id="cvBuck" style="height:330px" aria-label="Top: the switch-node voltage, a rectangular wave. Bottom: the inductor current, a triangle wave around its average, which is the load current for a buck."></canvas>
+      <div class="readout">
+        <div class="stat"><div class="k">Output voltage</div><div class="v" id="sO"></div></div>
+        <div class="stat"><div class="k">Inductor ripple (p-p)</div><div class="v" id="sR"></div></div>
+        <div class="stat"><div class="k">Input current (average)</div><div class="v" id="sIn"></div></div>
+        <div class="stat" id="sPS"><div class="k">Peak inductor current</div><div class="v" id="sP"></div></div>
+      </div>
+      <div class="verdict" id="sVerdict"></div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>Set 12 V in and find the duty cycle for 5 V out. Does the inductor value change the output?</li>
+    <li>Halve the inductance, then halve the frequency. What happens to the ripple each time?</li>
+    <li>Lower the load current until the triangle touches zero. What happens below that?</li>
+    <li>Switch to boost and make 12 V from 3.7 V. How much current does the input supply for 1 A out?</li>
+  </ol></div>
+</div>
+
+<div class="example">
+  <span class="xk">Application</span>
+  <p>The inductor's <strong>peak</strong> current, not its average, decides whether it saturates (Module 3), so an inductor for a converter is chosen with a saturation current above the load current plus half the ripple, with margin. And the switching node is a fast, large voltage step: the loop from the input capacitor through the switch and diode back to ground should be as small as possible on the PCB, because that loop carries pulses of current with very fast edges and is the main source of a switching regulator's noise (Module 4's high harmonics in practice).</p>
+</div>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">Why not run at a very low duty cycle?</span></summary>
+  <div class="eb">
+    <p>A buck converter must make 1 V from 24 V, which needs D ≈ 4 %. At 2 MHz, the switch would be on for 21 ns per cycle.</p>
+    <div class="choice"><p>Why is this difficult?</p>
+    <ol class="opts">
+      <li>The formula V<sub>out</sub> = DV<sub>in</sub> doesn't hold at low duty cycle.<div class="why">Volt-second balance holds at any duty cycle; the problem is practical.</div></li>
+      <li data-correct>21 ns is comparable to the switch's own transition time and the controller's minimum on-time, so the converter can't produce such short pulses accurately, and the switching losses (which happen every cycle) become large compared with the energy delivered. Use a lower frequency, or two stages (24 V → 5 V → 1 V).<div class="why">Timing and switching loss, not the ideal equation, limit extreme ratios.</div></li>
+      <li>The inductor would saturate.<div class="why">That depends on the current and ripple, which a suitable inductor handles.</div></li>
+      <li>Buck converters can only halve the voltage.<div class="why">Any ratio below one is possible in principle.</div></li>
+    </ol>
+    <div class="solution"><p>Every controller has a minimum on-time, typically 50–150 ns, and every transition costs energy (Module 6). At a 4 % duty cycle the switch spends much of its on-time in transition. Datasheets state the minimum on-time; the usual solutions are a lower switching frequency, or two conversion stages so that each operates at a moderate duty cycle.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 4 EFFICIENCY ================= -->
+<section class="sec" id="efficiency" data-short="Efficiency and heat">
+<h2>Efficiency and heat <a class="vjump" data-t="28:00"></a></h2>
+<p>Every watt lost in conversion has two costs: battery capacity that doesn't reach the loads, and heat that has to leave the board. The choice between linear and switching regulators usually comes down to a quick calculation of both:</p>
+<div class="tablewrap"><table>
+  <tr><th>Case</th><th>Linear regulator</th><th>Buck converter at 90 %</th><th>Choice</th></tr>
+  <tr><td>3.3 V at 50 mA from 5 V</td><td>η = 66 %, 85 mW of heat</td><td>18 mW of heat</td><td>Linear: simpler, quieter, heat is trivial</td></tr>
+  <tr><td>3.3 V at 500 mA from 3S (12.6 V)</td><td>η = 26 %, 4.7 W of heat</td><td>0.18 W of heat</td><td>Buck: a linear part would need a heatsink and waste three-quarters of the battery</td></tr>
+  <tr><td>3.3 V at 200 mA from one cell (3.6 V)</td><td>η = 92 %, 60 mW of heat</td><td>73 mW of heat</td><td>Linear (LDO): the drop is small, so it's as efficient as a converter</td></tr>
+  <tr><td>Analog sensor supply, 5 V at 20 mA</td><td>Clean output</td><td>Switching ripple and noise</td><td>Linear, or a buck followed by an LDO</td></tr>
+</table></div>
+<p>The third row is worth remembering: a linear regulator's efficiency is V<sub>out</sub>/V<sub>in</sub>, so when the drop is small it's as efficient as any converter, with none of the noise. Switching converters, for their part, are least efficient at very light loads, where their fixed losses (driving the switch, the controller's own current) are large compared with the power delivered; many have a light-load mode that switches in bursts to reduce this.</p>
+</section>
+
+<!-- ================= 5 BUDGET ================= -->
+<section class="sec" id="budget" data-short="Power budgets">
+<h2>Power budgets <a class="vjump" data-t="31:00"></a></h2>
+<p>A <strong>power budget</strong> lists every load with its current, its supply rail and how much of the time it's drawing that current. It answers three questions: the <strong>average</strong> current, which with the mission duration sizes the battery; the <strong>peak</strong> current, which sizes the battery's C-rating, the wiring and the protection, and decides whether sag is a problem; and how much the converters lose along the way. Loads are referred back to the battery through the converters: a 5 V load drawing 1 A through a 90 %-efficient buck from 11.1 V draws 5/(11.1 × 0.9) = 0.5 A from the battery.</p>
+
+<div class="widget wide" id="w-bud">
+  <div class="wh"><span class="tag">Interactive</span><b>A power budget for a flight computer and its loads</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label for="uW">Time waiting on the pad <b id="uWv"></b></label><input id="uW" type="range" min="10" max="360" step="5" value="120"></div>
+      <div class="ctrl"><label for="uF">Flight and recovery time <b id="uFv"></b></label><input id="uF" type="range" min="2" max="60" step="1" value="20"></div>
+      <div class="ctrl"><label for="uC">Battery capacity <b id="uCv"></b></label><input id="uC" type="range" min="300" max="5000" step="50" value="1500"></div>
+      <div class="ctrl"><label>Battery heater</label><div class="seg" id="uH"><button type="button" data-v="0" class="on">Off</button><button type="button" data-v="1">On while waiting</button></div></div>
+      <p class="small">3S battery (11.1 V). Currents are as seen at the battery, after converter losses. Valves operate only in flight; the radio transmits in bursts. Plan to use no more than 80 % of the rated capacity.</p>
+    </div>
+    <div>
+      <canvas id="cvBud" style="height:300px" aria-label="Bar chart of the charge each load uses over the mission, stacked, compared with 80 percent of the battery's capacity"></canvas>
+      <div class="readout">
+        <div class="stat"><div class="k">Charge used</div><div class="v" id="uU"></div></div>
+        <div class="stat" id="uMS"><div class="k">Of usable capacity</div><div class="v" id="uM"></div></div>
+        <div class="stat"><div class="k">Peak current</div><div class="v" id="uP"></div></div>
+      </div>
+      <div class="verdict" id="uVerdict"></div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>Which load dominates the budget during a long wait on the pad? Which dominates the peak?</li>
+    <li>Turn the heater on. What battery capacity is now needed for a two-hour wait?</li>
+  </ol></div>
+</div>
+</section>
+
+<!-- ================= 6 PROTECTION ================= -->
+<section class="sec" id="protection" data-short="Fuses and eFuses">
+<h2>Fuses, eFuses and current limiting <a class="vjump" data-t="36:00"></a></h2>
+<p>A lithium pack shorted through a few tens of milliohms of internal resistance and wiring can deliver a hundred amps or more (Module 1). Something must interrupt a fault before that current melts a trace, burns a wire's insulation or damages the battery. Three kinds of device do it, at very different speeds:</p>
+<ul>
+  <li>A <strong>fuse</strong> is a wire designed to melt. It's characterised by its rating (the current it carries indefinitely) and its <strong>I²t</strong>, the heating energy needed to melt it. At a large fault current it opens in milliseconds; at a modest overload it can take seconds or minutes. "Fast" and "slow-blow" fuses trade speed against tolerance of brief surges such as inrush (Module 3). A blown fuse must be replaced.</li>
+  <li>A <strong>resettable fuse</strong> (PTC) is a polymer whose resistance rises sharply when it heats, limiting the current to a small value until the fault is removed and it cools. It's slow (tens of milliseconds to seconds) and has some resistance in normal use, but resets itself.</li>
+  <li>An <strong>eFuse</strong> or <strong>load switch with current limit</strong> is a MOSFET with a controller that measures the current and limits it within microseconds, then turns off if the fault persists. It can also control inrush by turning on slowly, block reverse current, and report faults to the microcontroller. It's the most capable and the most expensive.</li>
+</ul>
+
+<div class="widget wide" id="w-fuse">
+  <div class="wh"><span class="tag">Interactive</span><b>A short circuit on an output, and how each protection responds</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label>Protection</label><div class="seg" id="fP"><button type="button" data-v="none">None</button><button type="button" data-v="fuse" class="on">5 A fast fuse</button><button type="button" data-v="ptc">PTC resettable fuse</button><button type="button" data-v="efuse">eFuse, 6 A limit</button></div></div>
+      <p class="small">A 3S pack (12 V) with 90 mΩ of internal resistance shorted through 30 mΩ of wiring at time zero. Time on a logarithmic axis. Illustrative device behaviour.</p>
+    </div>
+    <div>
+      <canvas id="cvFuse" style="height:280px" aria-label="Fault current against time on a logarithmic axis, from a microsecond to a second, for the chosen protection"></canvas>
+      <div class="readout">
+        <div class="stat"><div class="k">Peak current</div><div class="v" id="fK"></div></div>
+        <div class="stat"><div class="k">Time to clear</div><div class="v" id="fT"></div></div>
+        <div class="stat" id="fES"><div class="k">Energy into the wiring (I²t)</div><div class="v" id="fE"></div></div>
+      </div>
+      <div class="verdict" id="fVerdict"></div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>Compare the fuse and the eFuse. How much less I²t does the eFuse let through?</li>
+    <li>What does "None" mean for a thin wire carrying a hundred amps?</li>
+  </ol></div>
+</div>
+<p>A bench supply's current limit is the same idea for testing: set it a little above the expected current when powering a new board for the first time (Module 14), so a mistake produces a limited current and a falling voltage instead of smoke.</p>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">A fuse that blows at switch-on</span></summary>
+  <div class="eb">
+    <p>A board protected by a 2 A fast fuse draws 1.2 A in normal operation, but the fuse sometimes blows the instant the battery is connected.</p>
+    <div class="choice"><p>What's happening?</p>
+    <ol class="opts">
+      <li>The board has a short circuit.<div class="why">With a short it would blow every time and the board would never work.</div></li>
+      <li data-correct>Inrush: the board's input capacitors are empty at connection and draw a large current spike (Module 3); its I²t occasionally exceeds the fast fuse's melting I²t. A slow-blow fuse, an inrush limiter or an eFuse with soft start fixes it.<div class="why">The fault is intermittent and happens only at connection, the signature of inrush.</div></li>
+      <li>The fuse is rated too high.<div class="why">A higher rating would blow less often, not more.</div></li>
+      <li>The battery voltage is too high.<div class="why">Voltage alone doesn't blow a fuse; current does.</div></li>
+    </ol>
+    <div class="solution"><p>Hundreds of microfarads of input capacitance connected to a low-resistance battery draw a spike of tens of amps for a few hundred microseconds. Whether that melts a fast fuse depends on the exact resistance and the moment of contact, so it happens sometimes. The fuse's datasheet gives its melting I²t; compare it with the inrush pulse's I²t, and either choose a slower fuse or limit the inrush.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 7 SWITCHOVER ================= -->
+<section class="sec" id="switchover" data-short="Umbilical switchover">
+<h2>Umbilical-to-internal power switchover <a class="vjump" data-t="41:00"></a></h2>
+<p>A vehicle waiting on the pad is often powered through an umbilical cable from ground equipment, saving its internal battery for flight, and the umbilical disconnects at or just before launch. The power system must hand over to the internal battery at that moment without the bus dropping far enough to reset anything. Three common approaches:</p>
+<ul>
+  <li><strong>Diode-OR</strong> (Module 5): the umbilical supply is set a little above the battery, so it carries the load while connected. At disconnection the battery's diode simply starts conducting: no gap at all, at the cost of a diode drop and its heat. An <strong>ideal-diode controller</strong> does the same with a MOSFET and almost no loss.</li>
+  <li><strong>Relay switchover</strong>: a relay held by the umbilical's supply selects the source. When the umbilical drops, the relay takes a few milliseconds to release and transfer, and a <strong>hold-up capacitor</strong> must carry the load through the gap: ΔV = I × t<sub>gap</sub>/C (Module 3).</li>
+  <li><strong>Power-path controllers</strong> combine priority selection, ideal diodes and often battery charging in one chip, so the battery is topped up from the umbilical while waiting.</li>
+</ul>
+
+<div class="widget wide" id="w-sw">
+  <div class="wh"><span class="tag">Interactive</span><b>The bus voltage at umbilical disconnection</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label>Switchover</label><div class="seg" id="wM"><button type="button" data-v="dor" class="on">Schottky diode-OR</button><button type="button" data-v="ideal">Ideal-diode OR</button><button type="button" data-v="relay">Relay</button></div></div>
+      <div class="ctrl"><label for="wI">Load current <b id="wIv"></b></label><input id="wI" type="range" min="0.1" max="3" step="0.05" value="1"></div>
+      <div class="ctrl"><label for="wG">Relay transfer gap <b id="wGv"></b></label><input id="wG" type="range" min="0.5" max="15" step="0.1" value="5"></div>
+      <div class="ctrl"><label for="wC">Hold-up capacitance <b id="wCv"></b></label><input id="wC" type="range" min="1" max="4" step="0.01" value="2.67"></div>
+      <p class="small">Umbilical 12.6 V, internal 3S battery at 11.4 V. Downstream, a buck converter needs at least 7 V to keep its 5 V output.</p>
+    </div>
+    <div>
+      <canvas id="cvSw" style="height:260px" aria-label="Bus voltage against time around the moment the umbilical disconnects, with the minimum voltage the downstream converter needs"></canvas>
+      <div class="readout">
+        <div class="stat" id="wMS"><div class="k">Lowest bus voltage</div><div class="v" id="wMin"></div></div>
+        <div class="stat"><div class="k">Loss while on the battery</div><div class="v" id="wL"></div></div>
+      </div>
+      <div class="verdict" id="wVerdict"></div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>With the relay, how much hold-up capacitance is needed for a 5 ms gap at 1 A? At 3 A?</li>
+    <li>Compare the losses with the Schottky and the ideal diode at 3 A.</li>
+  </ol></div>
+</div>
+</section>
+
+<!-- ================= 8 SEQUENCING ================= -->
+<section class="sec" id="sequencing" data-short="Power sequencing">
+<h2>Power sequencing <a class="vjump" data-t="46:00"></a></h2>
+<p>When power is applied, the rails don't all appear at once: each converter takes some time to start, and they start in an order set by the design. That order matters for three reasons:</p>
+<ul>
+  <li>Some chips require one supply before another (a processor's core before its input/output supply, for example), and are damaged or latch up if powered in the wrong order. Their datasheets state the requirement.</li>
+  <li>A signal driven into a chip that isn't powered yet flows through its input protection diodes into its supply rail (Module 5), partially powering it in an undefined state.</li>
+  <li>The microcontroller must not start running, and drive outputs, until its supply is stable: a <strong>reset supervisor</strong> or the microcontroller's internal <strong>brown-out reset</strong> holds it in reset until the voltage is high enough, and resets it if the voltage later sags (the valve exercise above).</li>
+</ul>
+<p>Converters provide two signals for this: an <strong>enable</strong> input that starts them, and a <strong>power-good</strong> output that goes high when their output is in regulation. Chaining each converter's power-good to the next one's enable sequences the rails in a defined order.</p>
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>A power-up sequence</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 250" role="img" aria-label="Timing diagram. The battery bus rises first. The 5 volt buck is enabled and ramps up; when it reaches regulation its power-good goes high, enabling the 3.3 volt regulator, which ramps up and asserts its own power-good. The microcontroller's reset is held low until the 3.3 volt rail has been good for a delay, then released. Outputs such as valves and pyro channels stay off until the firmware has started.">
+    <g font-size="11.5" text-anchor="end"><text x="120" y="44">battery bus</text><text x="120" y="84">5 V rail</text><text x="120" y="114">5 V power-good</text><text x="120" y="154">3.3 V rail</text><text x="120" y="184">reset (released)</text><text x="120" y="224">outputs enabled</text></g>
+    <g fill="none" stroke-width="2.2">
+      <path d="M130 50H160L175 30H620" stroke="var(--c1)"/>
+      <path d="M130 90H220L270 70H620" stroke="var(--c2)"/>
+      <path d="M130 120H280V104H620" stroke="var(--c2)" stroke-width="1.6"/>
+      <path d="M130 160H300L340 140H620" stroke="var(--c5)"/>
+      <path d="M130 190H420V174H620" stroke="var(--c3)" stroke-width="1.6"/>
+      <path d="M130 230H500V214H620" stroke="var(--ink2)" stroke-width="1.6"/>
+    </g>
+    <g fill="none" stroke="var(--muted)" stroke-dasharray="3 3"><path d="M280 104V160"/><path d="M350 140V190"/><path d="M420 190V174"/></g>
+    <path d="M350 200H420" stroke="var(--ink2)" fill="none"/><path d="M350 196v8M420 196v8" stroke="var(--ink2)"/>
+    <g font-size="10.5" fill="var(--muted)"><text x="286" y="100">PG enables the next stage</text><text x="385" y="214" text-anchor="middle">reset delay</text><text x="618" y="206" text-anchor="end">firmware starts, then enables outputs</text></g>
+    <text x="370" y="246" font-size="10.5" fill="var(--muted)" text-anchor="middle">time →</text>
+  </svg>
+  </div>
+</div>
+<p>The last row is a reminder from Module 6: outputs that control valves or pyro channels must stay off, by hardware default, through the whole sequence. The firmware enables them deliberately, once it's running and has checked the system.</p>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">A sensor that powers the microcontroller</span></summary>
+  <div class="eb">
+    <p>A sensor board is powered directly from the battery and starts sending data on a UART line immediately. The microcontroller's 3.3 V rail comes up 50 ms later. Occasionally the microcontroller starts in a strange state or doesn't start at all.</p>
+    <div class="choice"><p>What's the likely mechanism?</p>
+    <ol class="opts">
+      <li>The UART data is corrupted.<div class="why">Lost data at start-up wouldn't stop the microcontroller starting.</div></li>
+      <li data-correct>The sensor's 3.3 V UART signal drives current through the unpowered microcontroller's input protection diodes into its 3.3 V rail, partly powering it before its own supply starts, so its reset and power-up circuits see a rail that rises in an undefined way.<div class="why">"Back-powering" through I/O protection diodes is a classic sequencing failure.</div></li>
+      <li>The battery voltage is too low.<div class="why">The sensor works, and the problem is tied to start-up order.</div></li>
+      <li>The microcontroller's crystal starts slowly.<div class="why">A slow crystal delays start-up but doesn't cause an undefined state.</div></li>
+    </ol>
+    <div class="solution"><p>An I/O pin's protection diode to V<sub>DD</sub> conducts whenever the pin is driven above the chip's supply. With the supply off, a driven pin can lift the whole rail by a volt or two through that diode, leaving the chip partly powered and its brown-out circuit confused. Fixes: power the sensor from a rail that comes up with or after the microcontroller's, add series resistors on the signal lines to limit the current, or use buffers that isolate their outputs when unpowered.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= DESIGN EXERCISES ================= -->
+<section class="sec" id="exercises" data-nonum data-short="Design exercises">
+<h2>Design exercises</h2>
+<p>Problems drawn from real hardware. Each takes a few steps. Enter numbers to check your reasoning as you go, or open the worked solutions and discussion. The figures above are useful for sanity-checking.</p>
+
+<div class="chal">
+  <div class="ch"><span class="cn">Exercise 1</span><span class="cd">Analysis · ●○○</span><span class="ctitle">C-rating and sag</span></div>
+  <div class="cbody">
+    <p>A 3S, 1500 mAh, 25C pack has an internal resistance of 25 mΩ per cell.</p>
+    <div class="check" data-ans="37.5" data-tol="1%" data-unit="A"><p>(a) What continuous current does its C-rating claim?</p>
+      <div class="solution"><p>25 × 1.5 A = 37.5 A.</p></div></div>
+    <div class="check" data-ans="1.5" data-tol="2%" data-unit="V"><p>(b) How much does its voltage sag at 20 A?</p>
+      <div class="miss" data-val="0.5"><p>That's one cell. The three cells' resistances are in series: 75 mΩ.</p></div>
+      <div class="solution"><p>20 A × 3 × 0.025 Ω = 1.5 V, and the pack dissipates 20² × 0.075 = 30 W internally.</p></div></div>
+  </div>
+</div>
+
+<div class="chal">
+  <div class="ch"><span class="cn">Exercise 2</span><span class="cd">Analysis · ●○○</span><span class="ctitle">A linear regulator's heat</span></div>
+  <div class="cbody">
+    <p>An LDO makes 3.3 V at 200 mA from a fully charged 2S pack (8.4 V). Its package has θ<sub>JA</sub> = 100 K/W, and the ambient is 40 °C.</p>
+    <div class="check" data-ans="1.02" data-tol="2%" data-unit="W"><p>(a) How much power does it dissipate?</p>
+      <div class="solution"><p>(8.4 − 3.3) × 0.2 = 1.02 W. Efficiency is 3.3/8.4 = 39 %.</p></div></div>
+    <div class="check" data-ans="142" data-tol="2%" data-unit="°C"><p>(b) What's its junction temperature?</p>
+      <div class="solution"><p>40 + 1.02 × 100 = 142 °C: too hot, and many LDOs would shut down thermally. A buck converter (or a buck followed by an LDO) is the answer.</p></div></div>
+  </div>
+</div>
+
+<div class="chal">
+  <div class="ch"><span class="cn">Exercise 3</span><span class="cd">Design · ●●○</span><span class="ctitle">A buck converter's duty cycle and ripple</span></div>
+  <div class="cbody">
+    <p>A buck converter makes 5 V from 12 V, switching at 500 kHz with a 10 µH inductor.</p>
+    <div class="check" data-ans="0.417" data-tol="1%" data-unit=""><p>(a) What duty cycle does it run at (ideal components)?</p>
+      <div class="solution"><p>D = 5/12 = 0.417.</p></div></div>
+    <div class="check" data-ans="0.583" data-tol="2%" data-unit="A"><p>(b) What's the inductor's peak-to-peak ripple current?</p>
+      <div class="hint">ΔI = (V<sub>in</sub> − V<sub>out</sub>)D/(Lf).</div>
+      <div class="solution"><p>ΔI = 7 × 0.417/(10×10⁻⁶ × 500×10³) = 2.92/5 = 0.583 A.</p></div></div>
+    <details><summary>Discussion: choosing the inductor</summary><p>A common target is a ripple of 20–40 % of the full load current, which balances inductor size against output ripple and the peak current the switch and inductor must carry. At 2 A load, 0.58 A is 29 %, and the inductor must be rated for at least 2 + 0.29 = 2.3 A peak without saturating.</p></details>
+  </div>
+</div>
+
+<div class="chal">
+  <div class="ch"><span class="cn">Exercise 4</span><span class="cd">Design · ●●○</span><span class="ctitle">Sizing a hold-up capacitor</span></div>
+  <div class="cbody">
+    <p>A relay switchover leaves the bus unsupplied for 5 ms while the load draws 0.5 A. The bus can fall by at most 3 V before the downstream converter drops out.</p>
+    <div class="check" data-ans="833" data-tol="2%" data-unit="µF"><p>What hold-up capacitance is needed, at minimum?</p>
+      <div class="hint">C = I × t / ΔV.</div>
+      <div class="solution"><p>C = 0.5 × 0.005/3 = 833 µF. Choose 1000 µF or more, allowing for capacitor tolerance, ageing, and cold temperatures, which reduce an electrolytic's capacitance.</p></div></div>
+    <details><summary>Discussion: or avoid the gap</summary><p>An ideal-diode OR removes the gap altogether, at the cost of an extra controller IC. Hold-up capacitors are still worth having for brief interruptions, such as connector bounce under vibration.</p></details>
+  </div>
+</div>
+</section>
+
+<!-- ================= BENCH ================= -->
+<section class="sec" id="bench" data-nonum data-short="At the bench">
+<h2>At the bench</h2>
+<div class="video" data-video="lab">
+  <div class="plan">
+    <p>Planned lab demo (≈ 25 min, filmed at the bench):</p>
+    <ol>
+      <li>Measuring a LiPo pack's internal resistance from its sag under a known load</li>
+      <li>A linear regulator's temperature at different input voltages</li>
+      <li>A buck converter's switch node and inductor current on the oscilloscope</li>
+      <li>A diode-OR switchover captured on the scope</li>
+    </ol>
+  </div>
+</div>
+<div class="lab">
+  <h3>Power conversion at the bench</h3>
+  <div class="parts"><span>Bench supply with current limit</span><span>Electronic load or power resistors</span><span>Oscilloscope; a current probe if available</span><span>A small LiPo pack and balance charger</span><span>An LDO on a breakout board</span><span>A buck converter module</span><span>Two Schottky diodes</span></div>
+  <ol>
+    <li><b>Internal resistance.</b> Measure the pack's open-circuit voltage, then its voltage at a known load (e.g. 2 A). R<sub>int</sub> = ΔV/ΔI.</li>
+    <li><b>Linear regulator.</b> Load the LDO at 200 mA and step its input from 5 V to 12 V. Measure the input current and feel (carefully) or measure the temperature.</li>
+    <li><b>Buck converter.</b> Probe the switch node and the output; if possible, measure the inductor current. Change the load and input voltage and compare with D = V<sub>out</sub>/V<sub>in</sub>. Measure the input and output power to get the efficiency.</li>
+    <li><b>Switchover.</b> Build a Schottky diode-OR between the bench supply and the battery, load it, disconnect the bench supply, and capture the bus voltage.</li>
+  </ol>
+  <div class="record"><b>What you should see:</b> tens of milliohms per cell; an LDO input current that doesn't change with input voltage while its temperature climbs; a switch-node duty cycle close to V<sub>out</sub>/V<sub>in</sub> and efficiencies around 85–95 %; and a switchover with no gap, the bus stepping down by the difference between the two sources.</div>
+</div>
+</section>
+
+<!-- ================= SUMMARY ================= -->
+<section class="sec" id="summary" data-nonum data-short="Summary">
+<h2>Summary &amp; cheat sheet</h2>
+<ol class="takeaways">
+  <li>A LiPo cell spans 4.2 V to about 3.0 V. Capacity sets run time; the C-rating and internal resistance set peak current and sag. Follow the handling rules.</li>
+  <li>A linear regulator's efficiency is V<sub>out</sub>/V<sub>in</sub>, and it needs at least its dropout voltage across it. Good for small drops, small currents and quiet supplies.</li>
+  <li>Volt-second balance on the inductor gives the buck converter, V<sub>out</sub> = DV<sub>in</sub>, and the boost, V<sub>out</sub> = V<sub>in</sub>/(1 − D). Ripple falls with larger L and higher f.</li>
+  <li>A power budget gives average current (battery capacity), peak current (C-rating, wiring, protection) and conversion losses.</li>
+  <li>Fuses are cheap and slow; PTCs reset; eFuses limit in microseconds, control inrush and report faults.</li>
+  <li>Umbilical switchover: diode-OR or ideal diode for no gap; a relay needs a hold-up capacitor sized by C = I t/ΔV.</li>
+  <li>Sequence rails with enable and power-good; hold the microcontroller in reset until its supply is good, and keep outputs off by default.</li>
+</ol>
+<div class="cheat">
+  <div><b>Pack</b>nS: 3.0n–4.2n V · 1C = capacity in A<br><span class="small">sag = I × n × R<sub>cell</sub></span></div>
+  <div><b>Linear</b>\(P = (V_\text{in} - V_\text{out})I\)<br><span class="small">η = V<sub>out</sub>/V<sub>in</sub></span></div>
+  <div><b>Buck</b>\(V_\text{out} = DV_\text{in}\)<br><span class="small">\(\Delta I = (V_\text{in} - V_\text{out})D/(Lf)\)</span></div>
+  <div><b>Boost</b>\(V_\text{out} = V_\text{in}/(1 - D)\)<br><span class="small">\(\Delta I = V_\text{in}D/(Lf)\)</span></div>
+  <div><b>Battery current</b>\(I_\text{batt} = V_\text{out}I_\text{out}/(\eta V_\text{batt})\)</div>
+  <div><b>Hold-up</b>\(C = I\,t/\Delta V\)</div>
+</div>
+<h3>Further reading</h3>
+<ul class="small">
+  <li><em>The Art of Electronics</em> (Horowitz &amp; Hill), chapter 9: voltage regulation and power conversion, including linear regulators, switching converters, and protection.</li>
+  <li><em>Practical Electronics for Inventors</em> (Scherz &amp; Monk), the chapter on power supplies: regulators, switching supplies and batteries.</li>
+  <li>Battery manufacturers' datasheets and safety guides, and converter manufacturers' application notes on inductor selection and PCB layout.</li>
+</ul>
 </section>
 
 <nav class="pager"></nav>
 </main>
 </div>
 <footer class="site">Hardware Engineering Fundamentals · EE Fundamentals</footer>
+
+<script>
+'use strict';
+const $ = s => document.querySelector(s);
+const {col, si, fmt, lin, log, ticks, axes, line, text, dot, rgba} = Plot;
+function setVerdict(el, cls, html){ el.className = 'verdict ' + cls; el.innerHTML = html; }
+
+/* ============ 1. LiPo discharge ============ */
+(() => {
+  const SOC = [0, 0.05, 0.1, 0.2, 0.4, 0.6, 0.8, 0.9, 1], OCV = [3.0, 3.45, 3.6, 3.7, 3.78, 3.87, 4.0, 4.08, 4.2];
+  const ocv = q => { q = Math.max(0, Math.min(1, q)); for (let i = 1; i < SOC.length; i++) if (q <= SOC[i]) return OCV[i - 1] + (OCV[i] - OCV[i - 1])*(q - SOC[i - 1])/(SOC[i] - SOC[i - 1]); return 4.2; };
+  let s = {};
+  function upd(){
+    const n = +$('#bS').value, cap = +$('#bC').value/1000, I = +$('#bI').value, r = 0.03*1.5/cap;
+    const sag1 = I*r, pts = [], noload = []; let q = 1, t = 0, dt = 1/(I/cap)/2000;
+    while (q > 0 && ocv(q) - sag1 > 3.3){ pts.push([t, n*(ocv(q) - sag1)]); noload.push([t, n*ocv(q)]); q -= I*dt/cap; t += dt; if (pts.length > 4000) break; }
+    const used = 1 - q, heat = I*I*r*n;
+    s = {pts, noload, n, T: t};
+    $('#bSv').textContent = n + 'S'; $('#bCv').textContent = $('#bC').value + ' mAh'; $('#bIv').textContent = si(I, 'A');
+    $('#bR').textContent = fmt(I/cap, 2) + 'C'; $('#bG').textContent = fmt(n*sag1, 3) + ' V'; $('#bT').textContent = t*60 < 120 ? fmt(t*60, 3) + ' min' : fmt(t, 3) + ' h';
+    $('#bH').textContent = si(heat, 'W'); $('#bHS').className = 'stat ' + (heat > 10 ? 'bad' : heat > 2 ? 'warn' : '');
+    const v = $('#bVerdict');
+    if (sag1 > 0.5) setVerdict(v, 'bad', `<b>Heavy load.</b> Each cell sags by ${fmt(sag1, 2)} V, so the cut-off is reached with ${Math.round(100*(1 - used))} % of the charge still unused, and the pack heats by ${si(heat, 'W')}.`);
+    else if (sag1 > 0.15) setVerdict(v, 'warn', `<b>Noticeable sag.</b> ${fmt(sag1, 2)} V per cell; ${Math.round(100*used)} % of the capacity is delivered before cut-off.`);
+    else setVerdict(v, 'ok', `<b>Light load.</b> Little sag (${fmt(sag1*1000, 3)} mV per cell); nearly all the capacity (${Math.round(100*used)} %) is delivered.`);
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvLipo'), (ctx, W, H) => {
+    const {pts, noload, n, T} = s; if (!pts) return;
+    const P = {l: 50, r: W - 14, t: 14, b: H - 40}, tm = Math.max(T, 1e-3)*60;
+    const X = lin(0, tm, P.l, P.r), Y = lin(n*2.8, n*4.3, P.b, P.t);
+    axes(ctx, P, X, Y, {xt: ticks(0, tm, 5), yt: ticks(n*2.8, n*4.3, 4), xl: 'time (min)', yl: 'pack voltage (V)', xgrid: true, yf: v => fmt(v, 3)});
+    Plot.clip(ctx, P);
+    line(ctx, noload.map(([t, v]) => [X(t*60), Y(v)]), col.muted, 1.4, [5, 4]);
+    line(ctx, pts.map(([t, v]) => [X(t*60), Y(v)]), col.c1, 2.4);
+    line(ctx, [[P.l, Y(n*3.3)], [P.r, Y(n*3.3)]], col.bad, 1.2, [4, 4]);
+    ctx.restore();
+    text(ctx, 'cut-off, 3.3 V per cell', P.r - 4, Y(n*3.3) + 10, {align: 'right', color: col.bad});
+  });
+  ['#bS', '#bC', '#bI'].forEach(id => $(id).addEventListener('input', upd));
+  upd();
+})();
+
+/* ============ 2. Linear regulator ============ */
+(() => {
+  const out = Plot.seg('#lO', upd), pkg = Plot.seg('#lP', upd), VDO = 0.3, TA = 40;
+  let s = {};
+  function upd(){
+    const vo = +out(), vi = +$('#lV').value, I = +$('#lI').value, th = +pkg();
+    const vout = Math.min(vo, Math.max(0, vi - VDO)), ph = (vi - vout)*I, eta = vout/vi, pb = vout*I*(1/0.9 - 1), tj = TA + ph*th;
+    s = {vo, vi, vout};
+    $('#lVv').textContent = fmt(vi, 3) + ' V'; $('#lIv').textContent = si(I, 'A');
+    $('#lOut').textContent = fmt(vout, 3) + ' V'; $('#lE').textContent = Math.round(eta*100) + ' %'; $('#lH').textContent = si(ph, 'W') + ' / ' + si(pb, 'W'); $('#lJ').textContent = fmt(tj, 3) + ' °C';
+    $('#lJS').className = 'stat ' + (tj > 125 ? 'bad' : tj > 100 ? 'warn' : '');
+    const v = $('#lVerdict');
+    if (vout < vo - 0.01) setVerdict(v, 'bad', `<b>Dropout.</b> The input is less than ${fmt(vo + VDO, 3)} V, so the regulator can't hold ${vo} V; the output follows the input down.`);
+    else if (tj > 125) setVerdict(v, 'bad', `<b>Overheating.</b> ${si(ph, 'W')} in this package takes it to ${fmt(tj, 3)} °C; most regulators would shut down. A buck converter would dissipate only ${si(pb, 'W')}.`);
+    else if (eta < 0.6) setVerdict(v, 'warn', `<b>Works, but wasteful.</b> ${Math.round(100*(1 - eta))} % of the battery's energy for this rail becomes heat.`);
+    else setVerdict(v, 'ok', `<b>A good use of a linear regulator.</b> The drop is small enough that the efficiency is ${Math.round(eta*100)} %.`);
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvLdo'), (ctx, W, H) => {
+    const {vo, vi, vout} = s; if (!vo) return;
+    const P = {l: 50, r: W - 14, t: 14, b: H - 40}, X = lin(0, 16, P.l, P.r), Y = lin(0, 6, P.b, P.t);
+    axes(ctx, P, X, Y, {xt: [0, 2, 4, 6, 8, 10, 12, 14, 16], yt: [0, 1, 2, 3, 4, 5, 6], xl: 'input voltage (V)', yl: 'output (V)', xgrid: true});
+    Plot.clip(ctx, P);
+    ctx.fillStyle = rgba(col.bad, .1); ctx.fillRect(X(0), P.t, X(vo + VDO) - X(0), P.b - P.t);
+    const pts = []; for (let i = 0; i <= 160; i++){ const x = 16*i/160; pts.push([X(x), Y(Math.min(vo, Math.max(0, x - VDO)))]); }
+    line(ctx, pts, col.c1, 2.4);
+    dot(ctx, X(vi), Y(vout), 6, col.c2);
+    ctx.fillStyle = rgba(col.bad, .25); ctx.fillRect(X(vi) - 3, Y(Math.min(6, vi)), 6, Y(vout) - Y(Math.min(6, vi)));
+    ctx.restore();
+    text(ctx, 'dropout', X((vo + VDO)/2), P.t + 10, {align: 'center', color: col.bad});
+    if (vi < 15) text(ctx, 'dropped as heat ↑', X(vi) + 8, Math.max(P.t + 10, (Y(Math.min(6, vi)) + Y(vout))/2), {color: col.bad});
+  });
+  ['#lV', '#lI'].forEach(id => $(id).addEventListener('input', upd));
+  upd();
+})();
+
+/* ============ 3. Buck and boost waveforms ============ */
+(() => {
+  const type = Plot.seg('#sT', upd);
+  let s = {};
+  function upd(){
+    const bk = type() === 'buck', vi = +$('#sV').value, D = +$('#sD').value, L = Math.pow(10, +$('#sL').value)*1e-6, f = Math.pow(10, +$('#sF').value), Io = +$('#sI').value;
+    const vo = bk ? D*vi : vi/(1 - D), IL = bk ? Io : Io/(1 - D), dI = bk ? (vi - vo)*D/(L*f) : vi*D/(L*f), Iin = vo*Io/vi;
+    const dcm = dI/2 > IL;
+    s = {bk, vi, vo, D, f, IL, dI, dcm};
+    $('#sVv').textContent = fmt(vi, 3) + ' V'; $('#sDv').textContent = fmt(D*100, 3) + ' %'; $('#sLv').textContent = si(L, 'H'); $('#sFv').textContent = si(f, 'Hz'); $('#sIv').textContent = si(Io, 'A');
+    $('#sO').textContent = fmt(vo, 3) + ' V'; $('#sR').textContent = si(dI, 'A'); $('#sIn').textContent = si(Iin, 'A'); $('#sP').textContent = si(IL + dI/2, 'A');
+    $('#sPS').className = 'stat ' + (dI/IL > 0.6 ? 'warn' : '');
+    const v = $('#sVerdict');
+    if (dcm) setVerdict(v, 'warn', `<b>Discontinuous conduction.</b> The ripple (${si(dI, 'A')}) is more than twice the average inductor current, so the current would fall to zero each cycle; the simple formulas no longer hold, and the output rises above ${bk ? 'DV<sub>in</sub>' : 'V<sub>in</sub>/(1 − D)'} at light load unless the controller adjusts.`);
+    else if (dI/IL > 0.6) setVerdict(v, 'warn', `<b>Large ripple.</b> ${Math.round(100*dI/IL)} % of the average current: more output ripple and a high peak current. A larger inductor or higher frequency would help.`);
+    else setVerdict(v, 'ok', `<b>Continuous conduction.</b> ${bk ? 'V<sub>out</sub> = DV<sub>in</sub>' : 'V<sub>out</sub> = V<sub>in</sub>/(1 − D)'} = ${fmt(vo, 3)} V, with ${Math.round(100*dI/IL)} % ripple on the inductor current.`);
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvBuck'), (ctx, W, H) => {
+    const {bk, vi, vo, D, f, IL, dI, dcm} = s; if (!vi) return;
+    const A = {l: 50, r: W - 24, t: 14, b: H*0.42}, B = {l: 50, r: W - 24, t: H*0.54, b: H - 40}, T = 3/f;
+    const X = lin(0, T, A.l, A.r), vmax = Math.max(vi, vo)*1.15, Y = lin(0, vmax, A.b, A.t);
+    axes(ctx, A, X, Y, {xt: [], yt: ticks(0, vmax, 3), yl: 'switch node (V)'});
+    Plot.clip(ctx, A);
+    const sw = []; for (let k = 0; k < 3; k++){ const t0 = k/f, t1 = t0 + D/f, t2 = (k + 1)/f, on = bk ? vi : 0, off = bk ? 0 : vo; sw.push([X(t0), Y(on)], [X(t1), Y(on)], [X(t1), Y(off)], [X(t2), Y(off)]); }
+    line(ctx, sw, col.c2, 2);
+    line(ctx, [[A.l, Y(vo)], [A.r, Y(vo)]], col.c1, 1.4, [5, 4]);
+    ctx.restore();
+    text(ctx, 'Vout ' + fmt(vo, 3) + ' V', A.r - 4, Y(vo) - 9, {align: 'right', color: col.c1});
+    const lo = IL - dI/2, hi = IL + dI/2, ymin = Math.min(0, lo)*1.1, ymax = hi*1.15 + 0.01, Yi = lin(ymin, ymax, B.b, B.t), Xb = lin(0, T, B.l, B.r);
+    axes(ctx, B, Xb, Yi, {xt: ticks(0, T, 3), yt: ticks(Math.min(0, lo), hi, 3), xl: 'time', yl: 'inductor (A)', xf: t => si(t, 's').replace(' ', ''), yf: v => fmt(v, 2), xgrid: true});
+    Plot.clip(ctx, B);
+    const il = []; for (let k = 0; k < 3; k++){ const t0 = k/f, t1 = t0 + D/f, t2 = (k + 1)/f; il.push([Xb(t0), Yi(lo)], [Xb(t1), Yi(hi)], [Xb(t2), Yi(lo)]); }
+    if (dcm) line(ctx, [[B.l, Yi(0)], [B.r, Yi(0)]], col.bad, 1.2, [3, 3]);
+    line(ctx, il, col.c5, 2.4);
+    line(ctx, [[B.l, Yi(IL)], [B.r, Yi(IL)]], col.muted, 1.2, [5, 4]);
+    ctx.restore();
+    text(ctx, 'average ' + si(IL, 'A'), B.r - 4, Yi(IL) + 10, {align: 'right', color: col.muted});
+  });
+  ['#sV', '#sD', '#sL', '#sF', '#sI'].forEach(id => $(id).addEventListener('input', upd));
+  upd();
+})();
+
+/* ============ 4. Power budget ============ */
+(() => {
+  const heat = Plot.seg('#uH', upd);
+  // currents at the 11.1 V battery, after conversion losses; duty during [waiting, flight]
+  const LOADS = [
+    {n: 'flight computer', i: 0.045, d: [1, 1], c: col.c1},
+    {n: 'sensors', i: 0.025, d: [1, 1], c: col.c3},
+    {n: 'GPS', i: 0.02, d: [1, 1], c: col.c5},
+    {n: 'radio', i: 0.35, d: [0.1, 0.3], c: col.c2},
+    {n: 'valves', i: 1.2, d: [0, 0.03], c: col.c4},
+    {n: 'heater', i: 0.9, d: [0.5, 0], c: col.bad}
+  ];
+  let s = {};
+  function upd(){
+    const tw = +$('#uW').value/60, tf = +$('#uF').value/60, cap = +$('#uC').value, ht = heat() === '1';
+    const use = LOADS.map(l => (l.n === 'heater' && !ht) ? 0 : 1000*l.i*(l.d[0]*tw + l.d[1]*tf));
+    const tot = use.reduce((a, b) => a + b, 0), frac = tot/(0.8*cap);
+    const peak = LOADS.reduce((a, l) => a + ((l.n === 'heater' && !ht) ? 0 : l.i), 0);
+    s = {use, cap, tot};
+    $('#uWv').textContent = $('#uW').value + ' min'; $('#uFv').textContent = $('#uF').value + ' min'; $('#uCv').textContent = $('#uC').value + ' mAh';
+    $('#uU').textContent = fmt(tot, 3) + ' mAh'; $('#uM').textContent = Math.round(frac*100) + ' %'; $('#uP').textContent = si(peak, 'A');
+    $('#uMS').className = 'stat ' + (frac > 1 ? 'bad' : frac > 0.8 ? 'warn' : '');
+    const v = $('#uVerdict'), big = LOADS[use.indexOf(Math.max(...use))].n;
+    if (frac > 1) setVerdict(v, 'bad', `<b>Not enough battery.</b> The mission needs ${fmt(tot, 3)} mAh, more than 80 % of ${cap} mAh. The largest user is the ${big}.`);
+    else if (frac > 0.8) setVerdict(v, 'warn', `<b>Tight.</b> ${Math.round(frac*100)} % of the usable capacity; a cold day or an aged pack would leave nothing in reserve.`);
+    else setVerdict(v, 'ok', `<b>Comfortable.</b> ${Math.round(frac*100)} % of the usable capacity. The largest user is the ${big}.`);
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvBud'), (ctx, W, H) => {
+    const {use, cap, tot} = s; if (!use) return;
+    const P = {l: 56, r: W - 14, t: 20, b: H - 46}, top = Math.max(cap, tot)*1.1, Y = lin(0, top, P.b, P.t);
+    axes(ctx, P, lin(0, 1, P.l, P.r), Y, {xt: [], yt: ticks(0, top, 4), yl: 'mAh'});
+    const n = LOADS.length + 1, bw = (P.r - P.l)/(n + 0.5);
+    LOADS.forEach((l, i) => { const x = P.l + bw*(i + 0.3); ctx.fillStyle = l.c; ctx.fillRect(x, Y(use[i]), bw*0.7, P.b - Y(use[i])); text(ctx, W < 520 ? ['MCU', 'sens.', 'GPS', 'radio', 'valve', 'heat'][i] : l.n.replace('flight computer', 'computer'), x + bw*0.35, P.b + 12, {align: 'center', color: col.ink2}); text(ctx, Math.round(use[i]), x + bw*0.35, Y(use[i]) - 9, {align: 'center', color: col.ink2}); });
+    // stacked total
+    const x = P.l + bw*(LOADS.length + 0.3); let acc = 0;
+    LOADS.forEach((l, i) => { ctx.fillStyle = l.c; ctx.fillRect(x, Y(acc + use[i]), bw*0.7, Y(acc) - Y(acc + use[i])); acc += use[i]; });
+    text(ctx, 'total', x + bw*0.35, P.b + 12, {align: 'center', color: col.ink, bold: true});
+    line(ctx, [[P.l, Y(0.8*cap)], [P.r, Y(0.8*cap)]], col.bad, 1.4, [5, 4]);
+    text(ctx, '80 % of ' + cap + ' mAh', P.l + 4, Y(0.8*cap) - 9, {color: col.bad});
+  });
+  ['#uW', '#uF', '#uC'].forEach(id => $(id).addEventListener('input', upd));
+  upd();
+})();
+
+/* ============ 5. Short-circuit protection ============ */
+(() => {
+  const prot = Plot.seg('#fP', upd), V = 12, RS = 0.12;
+  // current waveforms on a logarithmic time axis (seconds); illustrative device models
+  function wave(p){
+    const ip = V/RS, pts = [];
+    for (let i = 0; i <= 400; i++){
+      const t = Math.pow(10, -6 + 6*i/400); let c;
+      if (p === 'none') c = ip;
+      else if (p === 'fuse'){ const tb = 10/(ip*ip); c = t < tb ? ip : 0; }
+      else if (p === 'ptc'){ const ipt = V/(RS + 0.08), tt = 0.03; c = t < tt ? ipt : 0.15 + (ipt - 0.15)*Math.exp(-(t - tt)/0.004); }
+      else { const tl = 2e-6, toff = 1e-3; c = t < tl ? ip*t/tl*0.3 + 6 : t < toff ? 6 : 0; c = Math.min(c, t < tl ? ip : 6); }
+      pts.push([t, c]);
+    }
+    return pts;
+  }
+  let s = {};
+  function upd(){
+    const p = prot(), pts = wave(p);
+    let e = 0; for (let i = 1; i < pts.length; i++){ const dt = pts[i][0] - pts[i - 1][0]; e += pts[i][1]**2*dt; }
+    const pk = Math.max(...pts.map(q => q[1])), clr = pts.find(q => q[1] < 0.5);
+    s = {pts};
+    $('#fK').textContent = si(pk, 'A'); $('#fT').textContent = clr ? si(clr[0], 's') : 'never'; $('#fE').textContent = fmt(e, 3) + ' A²s' + (p === 'none' ? ' (and rising)' : '');
+    $('#fES').className = 'stat ' + (e > 100 ? 'bad' : e > 5 ? 'warn' : '');
+    const v = $('#fVerdict');
+    if (p === 'none') setVerdict(v, 'bad', `<b>Nothing stops it.</b> ${si(pk, 'A')} flows until something melts: a trace, a wire, a connector or the battery. A thin wire's insulation melts within a second or two.`);
+    else if (p === 'fuse') setVerdict(v, 'ok', `<b>The fuse clears it</b> in ${si(clr[0], 's')}, but only after the full fault current has flowed; the wiring sees ${fmt(e, 3)} A²s.`);
+    else if (p === 'ptc') setVerdict(v, 'warn', `<b>The PTC trips slowly.</b> It limits the fault after about 30 ms, then holds a small current until the fault is removed, resetting itself afterwards.`);
+    else setVerdict(v, 'ok', `<b>The eFuse limits the current within microseconds</b> to 6 A, then shuts off. The wiring sees only ${fmt(e, 3)} A²s, and the controller can report the fault and retry.`);
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvFuse'), (ctx, W, H) => {
+    const {pts} = s; if (!pts) return;
+    const P = {l: 56, r: W - 14, t: 14, b: H - 40}, X = log(1e-6, 1, P.l, P.r), Y = lin(0, 110, P.b, P.t);
+    axes(ctx, P, X, Y, {xt: [1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1], yt: [0, 25, 50, 75, 100], xl: 'time after the short (log scale)', yl: 'current (A)', xf: t => si(t, 's').replace(' ', ''), xgrid: true});
+    Plot.clip(ctx, P);
+    const p2 = []; pts.forEach(([t, c], i) => { if (i) p2.push([X(t), Y(pts[i - 1][1])]); p2.push([X(t), Y(c)]); });
+    line(ctx, p2, col.c2, 2.4);
+    ctx.restore();
+  });
+  upd();
+})();
+
+/* ============ 6. Switchover ============ */
+(() => {
+  const mode = Plot.seg('#wM', upd), VU = 12.6, VB = 11.4, VMIN = 7;
+  let s = {};
+  function upd(){
+    const m = mode(), I = +$('#wI').value, gap = +$('#wG').value*1e-3, C = Math.pow(10, +$('#wC').value)*1e-6;
+    const vf = m === 'dor' ? 0.35 + 0.05*I : m === 'ideal' ? 0.02*I : 0;
+    const t0 = -2e-3, t1 = 20e-3, pts = []; let vmin = 99;
+    for (let i = 0; i <= 600; i++){
+      const t = t0 + (t1 - t0)*i/600; let v;
+      if (t < 0) v = VU - vf;
+      else if (m !== 'relay') v = VB - vf;
+      else if (t < gap) v = Math.max(0, VU - I*t/C);
+      else v = VB;
+      vmin = Math.min(vmin, v); pts.push([t, v]);
+    }
+    const loss = m === 'relay' ? 0 : vf*I;
+    s = {pts};
+    $('#wIv').textContent = si(I, 'A'); $('#wGv').textContent = fmt(gap*1e3, 3) + ' ms'; $('#wCv').textContent = si(C, 'F');
+    $('#wG').closest('.ctrl').style.opacity = m === 'relay' ? 1 : 0.4; $('#wC').closest('.ctrl').style.opacity = m === 'relay' ? 1 : 0.4;
+    $('#wMin').textContent = fmt(vmin, 3) + ' V'; $('#wL').textContent = si(loss, 'W');
+    $('#wMS').className = 'stat ' + (vmin < VMIN ? 'bad' : '');
+    const v = $('#wVerdict');
+    if (vmin < VMIN) setVerdict(v, 'bad', `<b>Brown-out.</b> During the ${fmt(gap*1e3, 3)} ms transfer the hold-up capacitor discharges to ${fmt(vmin, 3)} V, below the 7 V the converter needs. Needed: at least ${si(I*gap/(VU - VMIN), 'F')}.`);
+    else if (m === 'relay') setVerdict(v, 'ok', `<b>Rides through.</b> The capacitor holds the bus above ${fmt(vmin, 3)} V during the gap.`);
+    else setVerdict(v, 'ok', `<b>Seamless.</b> The bus steps from ${fmt(VU - vf, 3)} V to ${fmt(VB - vf, 3)} V with no gap; the ${m === 'dor' ? 'Schottky' : 'ideal diode'} dissipates ${si(loss, 'W')} while the battery supplies the load.`);
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvSw'), (ctx, W, H) => {
+    const {pts} = s; if (!pts) return;
+    const P = {l: 50, r: W - 14, t: 14, b: H - 40}, X = lin(-2e-3, 20e-3, P.l, P.r), Y = lin(0, 14, P.b, P.t);
+    axes(ctx, P, X, Y, {xt: [0, 5e-3, 10e-3, 15e-3, 20e-3], yt: [0, 4, 7, 10, 14], xl: 'time after disconnection', yl: 'bus (V)', xf: t => si(t, 's').replace(' ', ''), xgrid: true});
+    Plot.clip(ctx, P);
+    line(ctx, [[P.l, Y(VMIN)], [P.r, Y(VMIN)]], col.bad, 1.2, [5, 4]);
+    line(ctx, [[X(0), P.t], [X(0), P.b]], col.muted, 1, [3, 3]);
+    line(ctx, pts.map(([t, v]) => [X(t), Y(v)]), col.c1, 2.4);
+    ctx.restore();
+    text(ctx, 'converter minimum', P.r - 4, Y(VMIN) + 10, {align: 'right', color: col.bad});
+    text(ctx, 'umbilical disconnects', X(0) + 4, P.t + 10, {color: col.muted});
+  });
+  ['#wI', '#wG', '#wC'].forEach(id => $(id).addEventListener('input', upd));
+  upd();
+})();
+</script>
 </body>
 </html>

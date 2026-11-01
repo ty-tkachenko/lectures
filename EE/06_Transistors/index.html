@@ -4,31 +4,777 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Transistors as Switches · EE 6</title>
-<meta name="description" content="EE Fundamentals module 6: MOSFET drivers for solenoid valves and pyro channels. In development.">
+<meta name="description" content="EE module 6: MOSFETs and BJTs as switches, low-side and high-side switching, gate drive and logic-level MOSFETs, flyback clamps for solenoid valves, switching and conduction losses, and pyro-channel design with arming, continuity sensing and fail-safe states.">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
 <link rel="stylesheet" href="../../assets/site.css">
 <script src="../../assets/course.js"></script>
 <script src="../../assets/site.js"></script>
+<script src="../../assets/plot.js"></script>
 </head>
 <body>
 <div class="layout">
 <aside class="side" aria-label="Module contents"></aside>
 <main class="content">
 
-<!-- Placeholder: replace this page with the module when it's written (see README.md, "Writing a module"). -->
+<!-- ================= HERO ================= -->
 <header class="hero">
   <div class="eyebrow">EE Fundamentals · Module 6</div>
-  <h1>Transistors as Switches</h1>
-  <p class="lede">MOSFET drivers for solenoid valves and pyro channels.</p>
+  <h1>Transistors as switches</h1>
+  <p class="lede">A microcontroller pin can deliver a few milliamps at 3.3 V. A solenoid valve wants an amp or two at 12 V or more, and an igniter several amps for a fraction of a second. A transistor bridges that gap: a small control signal switches a large current. This module explains how MOSFETs and bipolar transistors behave as switches, how to drive them fully on, where the heat comes from, how to handle inductive loads, and how these pieces combine into a channel that fires an igniter only when it's meant to.</p>
+  <p class="meta">Builds on: EE modules 1–5, especially inductive kickback (Module 3) and diodes (Module 5). Bench: bench supply, oscilloscope, a logic-level MOSFET, an NPN transistor, a solenoid valve or relay, diodes and a Zener or TVS.</p>
+  <div class="resources" data-auto></div>
+  <div class="objectives">
+    <h3>What's covered</h3>
+    <ul>
+      <li>How MOSFETs and BJTs work as switches, and how to choose between them.</li>
+      <li>Low-side and high-side switching, and what each means for the load.</li>
+      <li>Gate drive: logic-level MOSFETs, gate charge, and keeping a switch off when the controller isn't running.</li>
+      <li>Clamping a solenoid valve's kickback, and how the clamp sets how fast the valve closes.</li>
+      <li>Conduction and switching losses, and the temperature they produce.</li>
+      <li>Pyro channels: arming, continuity sensing and fail-safe design.</li>
+    </ul>
+  </div>
+  <div class="video" data-video="lecture" id="lecture">
+    <div class="plan">
+      <p>Planned walkthrough of this page (≈ 45 min):</p>
+      <ol>
+        <li data-t="0:00">Why a transistor</li>
+        <li data-t="3:00">MOSFETs as switches</li>
+        <li data-t="11:00">BJTs as switches</li>
+        <li data-t="15:00">Low-side and high-side switching</li>
+        <li data-t="20:00">Gate drive and switching losses</li>
+        <li data-t="29:00">Clamping inductive loads</li>
+        <li data-t="35:00">Pyro channels: arming, continuity and fail-safe states</li>
+      </ol>
+    </div>
+  </div>
 </header>
 
-<section class="sec" id="status" data-nonum data-short="In development">
-<h2>In development</h2>
-<p>This module hasn't been written yet. The other modules are listed in the strip at the top of the page, and the links below go to the neighbouring ones.</p>
+<!-- ================= 1 WHY ================= -->
+<section class="sec" id="why" data-short="Why a transistor">
+<h2>Why a transistor <a class="vjump" data-t="0:00"></a></h2>
+<p>A microcontroller output pin is a small switch to its own supply, able to source or sink perhaps 10–20 mA at 3.3 V. Connecting a 12 V, 1 A solenoid valve to it directly would ask for fifty times more current at four times the voltage, and the pin, or the whole controller, would be destroyed. What's needed is a component that a small signal can turn fully on and fully off, and that can carry the load's current and block its voltage. That's a transistor used as a switch.</p>
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>A small signal controlling a large load</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 240" role="img" aria-label="A microcontroller's output pin, through a gate resistor, drives the gate of an N-channel MOSFET. A 100 kilohm pull-down resistor holds the gate low. The MOSFET's drain connects to the bottom of a solenoid valve coil whose top is at 12 volts, with a flyback diode across the coil. The source connects to ground. The control side carries milliamps; the load side carries an amp or more.">
+    <defs>
+      <g id="gnd"><path d="M-10 0h20M-6 4h12M-2 8h4" stroke="var(--ink)" stroke-width="1.6"/></g>
+      <g id="nfet" fill="none" stroke="var(--ink)" stroke-width="1.6"><path d="M-30 0H-12M-12 -12V12"/><path d="M-6 -14V-6M-6 -4V4M-6 6V14" stroke-width="2.4"/><path d="M-6 -10H0V-30M-6 10H0V30M-6 0H0V10"/><path d="M-5 0l6 -4v8z" fill="var(--ink)" stroke="none"/></g>
+    </defs>
+    <rect x="12" y="76" width="250" height="150" rx="6" fill="none" stroke="var(--c1)" stroke-dasharray="5 4"/>
+    <rect x="272" y="14" width="160" height="212" rx="6" fill="none" stroke="var(--c2)" stroke-dasharray="5 4"/>
+    <rect x="22" y="110" width="100" height="50" fill="#f4f2ec" stroke="var(--ink)" stroke-width="1.4"/>
+    <g fill="none" stroke="var(--ink)" stroke-width="1.6">
+      <path d="M122 135H150l3-6l6 12l6-12l6 12l6-12l6 12l3-6H270"/>
+      <path d="M230 135V150l7 3l-14 6l14 6l-14 6l14 6l-7 3V200"/>
+      <path d="M300 165V200"/>
+      <path d="M300 105V96M300 96V90a7 7 0 0 0 0-14a7 7 0 0 0 0-14a7 7 0 0 0 0-14V40H380"/>
+      <path d="M300 96H360V80M360 56V40"/>
+    </g>
+    <use href="#nfet" x="300" y="135"/>
+    <path d="M350 80L360 60L370 80Z" fill="var(--ink)"/><path d="M350 58h20" stroke="var(--ink)" stroke-width="2.2"/>
+    <use href="#gnd" x="230" y="202"/><use href="#gnd" x="300" y="202"/>
+    <g fill="var(--ink)"><circle cx="230" cy="135" r="3"/><circle cx="300" cy="96" r="3"/><circle cx="300" cy="40" r="3"/><circle cx="360" cy="40" r="3"/></g>
+    <g font-size="11.5">
+      <text x="72" y="132" text-anchor="middle">micro-</text><text x="72" y="146" text-anchor="middle">controller</text>
+      <text x="128" y="127">pin</text>
+      <text x="180" y="122" text-anchor="middle">R<tspan font-size="9" dy="2">G</tspan></text>
+      <text x="244" y="172">100 kΩ</text><text x="244" y="186" fill="var(--muted)" font-size="10.5">pull-down</text>
+      <text x="262" y="128" font-size="10.5" text-anchor="end">G</text><text x="306" y="112" font-size="10.5">D</text><text x="306" y="162" font-size="10.5">S</text>
+      <text x="290" y="66" text-anchor="end">coil</text><text x="376" y="74">flyback</text><text x="376" y="88">diode</text>
+      <text x="392" y="36">+12 V</text>
+      <text x="137" y="96" text-anchor="middle" fill="var(--c1)">control side</text>
+      <text x="352" y="216" text-anchor="middle" fill="var(--c2)">load side</text>
+      <text x="450" y="80" fill="var(--c1)">3.3 V, microamps to milliamps</text>
+      <text x="450" y="100" fill="var(--c2)">12 V or more, 1–10 A</text>
+      <text x="450" y="132" fill="var(--muted)">the two sides meet only at</text>
+      <text x="450" y="148" fill="var(--muted)">the MOSFET's gate and the</text>
+      <text x="450" y="164" fill="var(--muted)">shared ground</text>
+    </g>
+  </svg>
+  </div>
+</div>
+<p>An ideal switch has zero resistance when on, infinite resistance when off, and changes state instantly. A transistor approaches all three well enough for most purposes, and the ways it falls short (a little on-resistance, a finite switching time) are exactly what decide how hot it gets. The two common types are the <strong>MOSFET</strong> and the <strong>bipolar junction transistor</strong> (BJT).</p>
+</section>
+
+<!-- ================= 2 MOSFETs ================= -->
+<section class="sec" id="mosfet" data-short="MOSFETs">
+<h2>MOSFETs as switches <a class="vjump" data-t="3:00"></a></h2>
+<p>A MOSFET has three terminals: the <strong>gate</strong>, the <strong>drain</strong> and the <strong>source</strong>. The gate sits on a very thin insulating layer above the silicon between drain and source, so it draws no steady current at all; electrically it's the plate of a capacitor. In an N-channel MOSFET, a positive gate-to-source voltage attracts electrons to the surface under the gate. Once V<sub>GS</sub> exceeds the <strong>threshold voltage</strong> V<sub>th</sub>, those electrons form a conducting channel from drain to source, and the more the gate voltage exceeds the threshold, the more conductive the channel becomes.</p>
+<p>Fully on, the MOSFET behaves like a small resistance, R<sub>DS(on)</sub>: from a few milliohms in a power MOSFET to an ohm or so in a small-signal part. Datasheets specify R<sub>DS(on)</sub> at particular gate voltages, typically 10 V and, for <strong>logic-level</strong> MOSFETs, also 4.5 V or 2.5 V. Two warnings follow:</p>
+<ul>
+  <li><strong>The threshold voltage is where the MOSFET starts to conduct, not where it's fully on.</strong> At V<sub>th</sub> it passes perhaps 250 µA. A MOSFET with a 2 V threshold driven with 3.3 V may be only partly on.</li>
+  <li><strong>A partly-on MOSFET gets hot.</strong> If the gate voltage isn't high enough for the channel to carry the load current, the MOSFET limits the current and drops a large voltage across itself, dissipating V<sub>DS</sub> × I<sub>D</sub>.</li>
+</ul>
+<p>Every power MOSFET also contains a <strong>body diode</strong> from source to drain, a side-effect of its construction. It means a MOSFET blocks current in one direction only, which matters for reverse-polarity protection (Module 5) and for high-side switching.</p>
+
+<div class="widget wide" id="w-fet">
+  <div class="wh"><span class="tag">Interactive</span><b>Is the MOSFET fully on? Its output characteristics and the load line</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label>MOSFET</label><div class="seg" id="mT"><button type="button" data-v="logic" class="on">Logic-level (V<sub>th</sub> ≈ 1.5 V)</button><button type="button" data-v="std">Standard (V<sub>th</sub> ≈ 3 V)</button></div></div>
+      <div class="ctrl"><label for="mG">Gate voltage <b id="mGv"></b></label><input id="mG" type="range" min="0" max="10" step="0.1" value="3.3"></div>
+      <div class="ctrl"><label for="mR">Load resistance <b id="mRv"></b></label><input id="mR" type="range" min="2" max="24" step="0.5" value="4"></div>
+      <p class="small">A 12 V load switched by the MOSFET on its low side. The curves show drain current against drain-source voltage for several gate voltages; the dashed line is every combination the load allows.</p>
+    </div>
+    <div>
+      <canvas id="cvFet" style="height:320px" aria-label="Drain current against drain-source voltage for several gate voltages, with the load line and the operating point"></canvas>
+      <div class="readout">
+        <div class="stat"><div class="k">Drain current</div><div class="v" id="mI"></div></div>
+        <div class="stat"><div class="k">Voltage across the MOSFET</div><div class="v" id="mV"></div></div>
+        <div class="stat" id="mPS"><div class="k">MOSFET dissipation</div><div class="v" id="mP"></div></div>
+      </div>
+      <div class="verdict" id="mVerdict"></div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>Drive the logic-level MOSFET with 3.3 V. Is it fully on? Then try the standard MOSFET at 3.3 V.</li>
+    <li>With the standard MOSFET, raise the gate voltage until it's fully on. What gate voltage does it need?</li>
+    <li>Find the gate voltage where the MOSFET dissipates the most. Why is that point in the middle?</li>
+  </ol></div>
+</div>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">A MOSFET with a 2 V threshold on a 3.3 V pin</span></summary>
+  <div class="eb">
+    <p>A MOSFET's datasheet lists V<sub>GS(th)</sub> = 1.0–2.5 V and R<sub>DS(on)</sub> = 10 mΩ at V<sub>GS</sub> = 10 V. A designer drives it from a 3.3 V microcontroller pin to switch 5 A.</p>
+    <div class="choice"><p>Is that safe?</p>
+    <ol class="opts">
+      <li>Yes: 3.3 V is above the maximum threshold of 2.5 V.<div class="why">The threshold is where conduction begins, at a fraction of a milliamp.</div></li>
+      <li data-correct>Not from the information given: R<sub>DS(on)</sub> is only specified at 10 V. A part at the high end of the threshold range may be far from fully on at 3.3 V, limiting the current and dissipating watts. Choose a MOSFET with R<sub>DS(on)</sub> specified at 2.5 V or 3.3 V, or add a gate driver.<div class="why">Only an R<sub>DS(on)</sub> specified at your gate voltage guarantees the MOSFET is fully on.</div></li>
+      <li>Yes, because MOSFET gates draw no current.<div class="why">True, but irrelevant: the question is how well the channel conducts at 3.3 V.</div></li>
+      <li>No: MOSFETs can't be driven by microcontrollers.<div class="why">Logic-level MOSFETs are designed for exactly this.</div></li>
+    </ol>
+    <div class="solution"><p>Check the "typical output characteristics" graph and, more importantly, whether R<sub>DS(on)</sub> is guaranteed at your gate voltage. A part rated only at 10 V may have a channel that can carry 5 A at 3.3 V on a good day and a fraction of that with a high-threshold part or when cold. Logic-level parts list R<sub>DS(on)</sub> at 4.5 V and often 2.5 V; those are the ones to drive directly from logic.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 3 BJTs ================= -->
+<section class="sec" id="bjt" data-short="BJTs">
+<h2>BJTs as switches <a class="vjump" data-t="11:00"></a></h2>
+<p>A bipolar junction transistor (BJT) has a <strong>base</strong>, <strong>collector</strong> and <strong>emitter</strong>. Unlike a MOSFET's gate, its base draws current: a small base current I<sub>B</sub> allows a collector current up to β times larger, where the <strong>current gain</strong> β (or h<sub>FE</sub>) is typically 50–300 and varies widely between parts and with temperature. The base-emitter junction is a diode, so the base sits about 0.7 V above the emitter when the transistor conducts.</p>
+<p>As a switch, a BJT is driven into <strong>saturation</strong>: given more base current than the load needs, so that the collector-emitter voltage collapses to V<sub>CE(sat)</sub>, about 0.1–0.3 V. The base resistor is chosen from first principles:</p>
+<div class="eq">$$I_B = \frac{I_C}{\beta_\text{min}} \times \text{overdrive} \qquad R_B = \frac{V_\text{drive} - 0.7\ \text{V}}{I_B}$$<div class="n">an overdrive of 2–5 ensures saturation even with the lowest-gain part</div></div>
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>A BJT switching a relay, and how it compares with a MOSFET</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 220" role="img" aria-label="An NPN transistor switching a relay coil on its low side, with a base resistor from a logic output and a flyback diode across the coil. Beside it, a comparison: the BJT drops about 0.2 volts when on and needs continuous base current; the MOSFET drops current times its on-resistance and draws no steady gate current.">
+    <defs>
+      <g id="gnd2"><path d="M-10 0h20M-6 4h12M-2 8h4" stroke="var(--ink)" stroke-width="1.6"/></g>
+      <g id="npn" fill="none" stroke="var(--ink)" stroke-width="1.6"><path d="M-30 0H-12"/><path d="M-12 -14V14" stroke-width="2.6"/><path d="M-12 -6L0 -18V-34M-12 6L0 18V34"/><path d="M0 18l-9 -1l5 -7z" fill="var(--ink)" stroke="none"/></g>
+    </defs>
+    <g fill="none" stroke="var(--ink)" stroke-width="1.6">
+      <path d="M40 120H70l3-6l6 12l6-12l6 12l6-12l6 12l3-6H140"/>
+      <path d="M170 86V80a7 7 0 0 0 0-14a7 7 0 0 0 0-14a7 7 0 0 0 0-14V30H250M170 80H230V70M230 46V30"/>
+      <path d="M170 154V182"/>
+    </g>
+    <use href="#npn" x="170" y="120"/>
+    <path d="M220 70L230 50L240 70Z" fill="var(--ink)"/><path d="M220 48h20" stroke="var(--ink)" stroke-width="2.2"/>
+    <use href="#gnd2" x="170" y="184"/>
+    <g fill="var(--ink)"><circle cx="170" cy="80" r="3"/><circle cx="170" cy="30" r="3"/><circle cx="230" cy="30" r="3"/></g>
+    <g font-size="11.5">
+      <text x="34" y="124" text-anchor="end">logic</text><text x="100" y="106" text-anchor="middle">R<tspan font-size="9" dy="2">B</tspan></text>
+      <text x="136" y="112" text-anchor="end" font-size="10.5">B</text><text x="178" y="96" font-size="10.5">C</text><text x="178" y="150" font-size="10.5">E</text>
+      <text x="260" y="34">+12 V</text><text x="160" y="58" text-anchor="end">relay coil</text>
+    </g>
+    <g font-size="11.5">
+      <text x="320" y="40" font-weight="600">BJT</text><text x="490" y="40" font-weight="600">MOSFET</text>
+      <text x="320" y="66">on: V<tspan font-size="9" dy="2">CE(sat)</tspan><tspan dy="-2"> ≈ 0.2 V</tspan></text><text x="490" y="66">on: I × R<tspan font-size="9" dy="2">DS(on)</tspan></text>
+      <text x="320" y="90">needs steady base current</text><text x="490" y="90">no steady gate current</text>
+      <text x="320" y="114">cheap, robust, simple</text><text x="490" y="114">best at high current</text>
+      <text x="320" y="138">best below about 0.5 A</text><text x="490" y="138">needs enough gate voltage</text>
+      <text x="320" y="162">no body diode</text><text x="490" y="162">has a body diode</text>
+    </g>
+  </svg>
+  </div>
+</div>
+<p>At high currents the MOSFET wins: a BJT's fixed 0.2 V at 5 A is 1 W, while a 10 mΩ MOSFET dissipates 0.25 W, and the BJT would need 100 mA or more of base current. For small loads such as relays, LEDs and buzzers, a small BJT is cheap, rugged and easy to drive from any logic level. BJTs also appear as level shifters, for example to pull a P-channel MOSFET's gate low from a 3.3 V signal, as in the pyro channel later in this module.</p>
+</section>
+
+<!-- ================= 4 LOW-SIDE / HIGH-SIDE ================= -->
+<section class="sec" id="side" data-short="Low-side and high-side">
+<h2>Low-side and high-side switching <a class="vjump" data-t="15:00"></a></h2>
+<p>A switch can go between the load and ground (<strong>low-side</strong>) or between the supply and the load (<strong>high-side</strong>). Electrically both interrupt the current, but they differ in how easy they are to drive and in what the load is connected to when it's off.</p>
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>Low-side and high-side switches</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 230" role="img" aria-label="Left: low-side switching, the load connected to the supply and an N-channel MOSFET between the load and ground; when off, the load sits at the supply voltage. Right: high-side switching, a P-channel MOSFET between the supply and the load, and the load's other end at ground; when off, the load sits at ground.">
+    <defs><g id="gnd3"><path d="M-10 0h20M-6 4h12M-2 8h4" stroke="var(--ink)" stroke-width="1.6"/></g></defs>
+    <g fill="none" stroke="var(--ink)" stroke-width="1.6">
+      <path d="M150 30V60"/><rect x="130" y="60" width="40" height="50"/><path d="M150 110V134"/>
+      <rect x="130" y="134" width="40" height="34" fill="#fff"/><path d="M150 168V194"/><path d="M90 151H130"/>
+      <path d="M470 30V54"/><rect x="450" y="54" width="40" height="34" fill="#fff"/><path d="M470 88V114"/><rect x="450" y="114" width="40" height="50"/><path d="M470 164V194"/><path d="M410 71H450"/>
+    </g>
+    <use href="#gnd3" x="150" y="196"/><use href="#gnd3" x="470" y="196"/>
+    <g font-size="11.5" text-anchor="middle">
+      <text x="150" y="20">+V</text><text x="470" y="20">+V</text>
+      <text x="150" y="89">load</text><text x="470" y="143">load</text>
+      <text x="150" y="155" font-size="10.5">N-FET</text><text x="470" y="75" font-size="10.5">P-FET</text>
+      <text x="70" y="155" text-anchor="end">gate</text><text x="400" y="75" text-anchor="end">gate</text>
+      <text x="150" y="226" font-weight="600">low-side</text><text x="470" y="226" font-weight="600">high-side</text>
+      <text x="270" y="70" fill="var(--muted)" font-size="10.5">gate driven relative to ground:</text>
+      <text x="270" y="86" fill="var(--muted)" font-size="10.5">any logic output works</text>
+      <text x="270" y="120" fill="var(--bad)" font-size="10.5">off: load still at +V</text>
+      <text x="580" y="90" fill="var(--muted)" font-size="10.5">gate pulled below</text>
+      <text x="580" y="106" fill="var(--muted)" font-size="10.5">+V to turn on</text>
+      <text x="580" y="150" fill="var(--good)" font-size="10.5">off: load at ground</text>
+    </g>
+  </svg>
+  </div>
+</div>
+<ul>
+  <li><strong>Low-side</strong> with an N-channel MOSFET is the simplest: its source is at ground, so a logic output drives its gate directly. The cost is that the load stays connected to the supply when off, so a short from the load's wiring to ground (to the vehicle's structure, for example) turns the load on with no switch at all.</li>
+  <li><strong>High-side</strong> switching keeps the load at ground potential when off, which is safer for wiring that runs through a vehicle. A P-channel MOSFET does this simply: its gate is pulled below the supply to turn it on, usually through a small transistor acting as a level shifter. An N-channel MOSFET on the high side has lower resistance but needs its gate driven <em>above</em> the supply, which takes a dedicated high-side driver or a <strong>load switch</strong> chip.</li>
+</ul>
+
+<div class="example">
+  <span class="xk">Application</span>
+  <p>One common example of an inductive load switched on the low side is a solenoid valve: an N-channel MOSFET per valve, driven directly from the controller, with a clamp across the coil. A load where an accidental short must never turn it on, such as an igniter, is switched on both sides, as the pyro-channel section shows, so that no single fault in the wiring or the electronics can complete the circuit.</p>
+</div>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">A chafed wire</span></summary>
+  <div class="eb">
+    <p>A valve on a vehicle is switched low-side. Its wire from the switch to the valve runs past a sharp edge of the metal frame, which is connected to the electronics' ground. The insulation wears through.</p>
+    <div class="choice"><p>What happens?</p>
+    <ol class="opts">
+      <li>Nothing: the switch is off, so no current flows.<div class="why">The switch is on the low side; the short bypasses it.</div></li>
+      <li data-correct>The valve's low side is now connected to ground by the frame, bypassing the switch, so the valve opens and stays open regardless of the controller.<div class="why">With a low-side switch, the wire between the load and the switch is at the supply voltage through the load when off; grounding it turns the load on.</div></li>
+      <li>The supply short-circuits and the fuse blows.<div class="why">The current still flows through the valve's coil, which limits it to its normal value.</div></li>
+      <li>The valve turns off permanently.<div class="why">The short completes the circuit rather than breaking it.</div></li>
+    </ol>
+    <div class="solution"><p>With low-side switching, the wire between load and switch carries the switching function: grounding it anywhere along its length turns the load on. With high-side switching, the same chafe would short a wire that's already at ground when off, causing nothing, and when on it would short the supply through the switch, blowing a fuse rather than operating the valve. For loads where unintended activation is dangerous, this is a strong argument for high-side switching, or for switching both sides.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 5 GATE DRIVE AND LOSSES ================= -->
+<section class="sec" id="gate" data-short="Gate drive and losses">
+<h2>Gate drive and switching losses <a class="vjump" data-t="20:00"></a></h2>
+<p>The gate draws no steady current, but it's a capacitor, so turning a MOSFET on means charging it, and the current available to charge it sets how fast the switch changes state. Datasheets describe this with the <strong>total gate charge</strong> Q<sub>g</sub>, typically 5–100 nC: the switching time is roughly Q<sub>g</sub> divided by the gate current. A microcontroller pin through a 100 Ω resistor supplies about 30 mA, so a 30 nC MOSFET takes about a microsecond to switch.</p>
+<p>Switching isn't instantaneous, and during the transition the MOSFET briefly carries current while voltage is still across it. Following the charge into the gate step by step explains where the energy goes:</p>
+<ol>
+  <li>The gate charges from 0 to V<sub>th</sub>: nothing happens at the drain yet.</li>
+  <li>From V<sub>th</sub> to the <strong>plateau voltage</strong>, the drain current rises to the load current. The drain voltage hasn't moved, because the load (an inductor, or a clamped circuit) holds the current, so the MOSFET dissipates V × I.</li>
+  <li>On the <strong>Miller plateau</strong>, the gate voltage stops rising while the drain voltage falls: the gate current is busy charging the gate-drain capacitance, whose far side is moving. The MOSFET is still dissipating, now with the full current and a falling voltage.</li>
+  <li>Once the drain has fallen, the gate charges the rest of the way and R<sub>DS(on)</sub> falls to its final value.</li>
+</ol>
+<p>Each turn-on and turn-off therefore costs a burst of energy, roughly E ≈ ½ V I t<sub>switch</sub>. Switching at a frequency f costs that energy f times a second, on top of the steady <strong>conduction loss</strong> I²R<sub>DS(on)</sub>:</p>
+<div class="eq">$$P \approx \underbrace{I^2 R_\text{DS(on)}\,D}_{\text{conduction}} + \underbrace{V I\,t_\text{switch}\,f}_{\text{switching (on + off)}}$$<div class="n">D: the fraction of time the switch is on · the temperature rise is P × θ<sub>JA</sub> (RF Module 4)</div></div>
+
+<div class="widget wide" id="w-gate">
+  <div class="wh"><span class="tag">Interactive</span><b>Turning a MOSFET on: gate charge, switching loss and temperature</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label>Gate drive voltage</label><div class="seg" id="gD"><button type="button" data-v="3.3" class="on">3.3 V</button><button type="button" data-v="5">5 V</button><button type="button" data-v="10">10 V (gate driver)</button></div></div>
+      <div class="ctrl"><label for="gR">Gate resistor <b id="gRv"></b></label><input id="gR" type="range" min="0" max="3" step="0.01" value="2"></div>
+      <div class="ctrl"><label for="gF">PWM frequency <b id="gFv"></b></label><input id="gF" type="range" min="1" max="5.5" step="0.01" value="4.3"></div>
+      <div class="ctrl"><label>Package</label><div class="seg" id="gP"><button type="button" data-v="250">SOT-23</button><button type="button" data-v="60" class="on">SO-8 on copper</button><button type="button" data-v="35">DPAK on copper</button></div></div>
+      <p class="small">A logic-level MOSFET switching 3 A from 12 V at 50 % duty: C<sub>GS</sub> 1.5 nF, gate-drain charge 4 nC, V<sub>th</sub> 1.5 V. Ambient 40 °C. Turn-off is assumed to take as long as turn-on.</p>
+    </div>
+    <div>
+      <canvas id="cvGate" style="height:340px" aria-label="During turn-on: gate voltage rising with a plateau, drain current rising, drain voltage falling, and the power dissipated in the MOSFET shaded"></canvas>
+      <div class="legend"><span style="--c:var(--c1)">gate voltage</span><span style="--c:var(--c2)">drain voltage</span><span style="--c:var(--c5)">drain current</span><span style="--c:var(--bad)">power</span></div>
+      <div class="readout">
+        <div class="stat"><div class="k">Switching time</div><div class="v" id="gT"></div></div>
+        <div class="stat"><div class="k">Switching loss</div><div class="v" id="gS"></div></div>
+        <div class="stat"><div class="k">Conduction loss</div><div class="v" id="gC"></div></div>
+        <div class="stat" id="gJS"><div class="k">Junction temperature</div><div class="v" id="gJ"></div></div>
+      </div>
+      <div class="verdict" id="gVerdict"></div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>At 20 kHz, compare a 10 Ω and a 1 kΩ gate resistor. How do the switching time and the switching loss change?</li>
+    <li>Raise the PWM frequency to 300 kHz with a 100 Ω gate resistor. Which loss now dominates?</li>
+    <li>Compare 3.3 V and 10 V gate drive. Why does the conduction loss change as well as the switching speed?</li>
+  </ol></div>
+</div>
+<p>A gate resistor is still worth having even though it slows switching: it damps ringing between the gate capacitance and the wiring's inductance, and limits the current the driving pin has to supply. Values of 10–100 Ω are typical for a MOSFET driven from logic.</p>
+
+<h3>Keeping the switch off when nobody's driving it</h3>
+<p>A microcontroller's pins are inputs, effectively disconnected, while it's held in reset, during power-up, and while it's being programmed. A MOSFET gate left floating can pick up enough charge from leakage or a nearby signal to turn partly on. A <strong>pull-down resistor</strong> from gate to source (10–100 kΩ) holds the gate at 0 V whenever nothing drives it, so the load is off by default. This one resistor is the start of fail-safe design.</p>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">A valve that clicks at power-up</span></summary>
+  <div class="eb">
+    <p>A valve driver's MOSFET gate connects directly to a microcontroller pin, with no other parts. Every time the system is powered on, the valve briefly opens.</p>
+    <div class="choice"><p>What's the cause, and the fix?</p>
+    <ol class="opts">
+      <li>The firmware sets the pin high at start-up.<div class="why">Possible, but the firmware hasn't run yet during the reset period, which is when it happens.</div></li>
+      <li data-correct>During power-up and reset the pin floats, and the gate picks up enough charge to turn the MOSFET partly on. A pull-down resistor from gate to source keeps it off until the firmware drives the pin.<div class="why">A floating gate is a capacitor with nothing defining its voltage.</div></li>
+      <li>The MOSFET's body diode conducts at power-up.<div class="why">The body diode only conducts if the drain goes below the source.</div></li>
+      <li>The flyback diode turns the valve on.<div class="why">The flyback diode only conducts when the coil's current is interrupted.</div></li>
+    </ol>
+    <div class="solution"><p>Until the microcontroller has started and configured the pin as an output, the pin is high-impedance and the gate's voltage is undefined: charge from the drain through the gate-drain capacitance, as the supply ramps up, can be enough to turn it on. A 100 kΩ resistor from gate to source fixes the gate at 0 V. Configuring the pin low as early as possible in the firmware is good practice too, but the resistor covers the time before the firmware runs.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 6 INDUCTIVE CLAMPS ================= -->
+<section class="sec" id="clamp" data-short="Clamping inductive loads">
+<h2>Clamping inductive loads <a class="vjump" data-t="29:00"></a></h2>
+<p>Module 3 showed why a switched coil needs a flyback diode: an inductor's current can't stop instantly, and without a path the voltage at the switch rises until something breaks down. The diode solves that, but it also slows the coil down. Once the switch opens, the coil's current circulates through the diode, and what removes the coil's stored energy is only the small voltage across the diode and the coil's own resistance. From v = L di/dt, the current decays faster if the voltage opposing it is larger:</p>
+<div class="eq">$$L\frac{di}{dt} = -(V_\text{clamp} + iR) \quad\Rightarrow\quad t_\text{decay} = \frac{L}{R}\ln\!\left(1 + \frac{I_0 R}{V_\text{clamp}}\right)$$<div class="n">a higher clamp voltage empties the coil faster; the switch must withstand V<sub>supply</sub> + V<sub>clamp</sub></div></div>
+<p>That's the trade-off: a plain diode is gentle on the switch but slow; a diode in series with a Zener, or a TVS across the switch, lets the voltage rise to a defined level and removes the energy several times faster. Mechanically, a solenoid valve closes when its coil's current falls below the level needed to hold the plunger, so the clamp choice directly sets how quickly the valve shuts.</p>
+
+<div class="widget wide" id="w-clamp">
+  <div class="wh"><span class="tag">Interactive</span><b>How the clamp sets a valve's turn-off</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label>Clamp across the coil</label><div class="seg" id="cK"><button type="button" data-v="0.8" class="on">Diode</button><button type="button" data-v="24.8">Diode + 24 V Zener</button><button type="button" data-v="36">36 V TVS</button></div></div>
+      <div class="ctrl"><label for="cL">Coil inductance <b id="cLv"></b></label><input id="cL" type="range" min="5" max="200" step="1" value="50"></div>
+      <div class="ctrl"><label>MOSFET voltage rating</label><div class="seg" id="cV"><button type="button" data-v="30">30 V</button><button type="button" data-v="60" class="on">60 V</button></div></div>
+      <p class="small">12 V coil, 12 Ω, carrying 1 A. The valve is assumed to release when the current falls below 30 % of its holding value.</p>
+    </div>
+    <div>
+      <canvas id="cvClamp" style="height:300px" aria-label="Top: the coil current after the switch opens, for the chosen clamp. Bottom: the voltage across the switch."></canvas>
+      <div class="readout">
+        <div class="stat"><div class="k">Time to release</div><div class="v" id="cR"></div></div>
+        <div class="stat"><div class="k">Time to zero current</div><div class="v" id="cZ"></div></div>
+        <div class="stat" id="cSS"><div class="k">Peak switch voltage</div><div class="v" id="cS"></div></div>
+      </div>
+      <div class="verdict" id="cVerdict"></div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>Compare the diode and the 36 V TVS. How much faster does the valve release?</li>
+    <li>Switch to a 30 V MOSFET with the TVS. What's the problem?</li>
+  </ol></div>
+</div>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">A valve that closes too slowly</span></summary>
+  <div class="eb">
+    <p>A propellant valve must close within 10 ms of the command, but tests show it takes 25 ms. Its coil has a plain flyback diode.</p>
+    <div class="choice"><p>Which change attacks the cause?</p>
+    <ol class="opts">
+      <li>Use a faster MOSFET.<div class="why">The MOSFET already switches in microseconds; the delay is the coil's current decaying.</div></li>
+      <li data-correct>Add a Zener in series with the flyback diode (or clamp with a TVS), so the coil's current decays against a much higher voltage, and check the MOSFET's voltage rating covers the supply plus the clamp voltage.<div class="why">The decay rate is set by the voltage opposing the current; a plain diode offers less than a volt.</div></li>
+      <li>Remove the diode entirely.<div class="why">That gives the fastest decay but an uncontrolled voltage spike that will destroy the switch.</div></li>
+      <li>Increase the supply voltage.<div class="why">A higher supply raises the holding current, which makes it slower to fall.</div></li>
+    </ol>
+    <div class="solution"><p>The coil's energy has to be absorbed somewhere, and the rate is set by the opposing voltage. A diode-plus-Zener clamp lets the switch voltage rise to the supply plus the Zener voltage while the current decays, cutting the release time several-fold. The MOSFET must be rated above that total, with margin, and the Zener must absorb the coil's energy, ½LI², every time the valve closes.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 7 PYRO ================= -->
+<section class="sec" id="pyro" data-short="Pyro channels">
+<h2>Pyro channels: arming, continuity and fail-safe states <a class="vjump" data-t="35:00"></a></h2>
+<p>An igniter (often called an e-match) is a small resistive bridge wire, usually 0.5–3 Ω, coated with a pyrotechnic composition. A current above its <strong>all-fire</strong> rating, typically around an amp for a short time, heats the wire enough to ignite it; a current below its <strong>no-fire</strong> rating, typically a few hundred milliamps, can be applied indefinitely without igniting it. A channel that fires one is a high-current switch, but with requirements that go beyond any other load: it must fire reliably when commanded, and it must not fire under any single fault, at power-up, during programming, or if a wire is damaged. Everything in this module so far comes together here.</p>
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>A pyro channel with independent arming, firing and continuity sensing</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 300" role="img" aria-label="From the battery, a mechanical arming switch, then a high-side P-channel MOSFET controlled by an arm signal through a level-shifting transistor, then the igniter through a connector, then a low-side N-channel MOSFET controlled by a fire signal, to ground. Both MOSFET gates have resistors that hold them off by default. A continuity circuit puts a small current through the igniter through a large resistor, and an ADC measures the voltage at the igniter's top terminal.">
+    <defs><g id="gnd4"><path d="M-10 0h20M-6 4h12M-2 8h4" stroke="var(--ink)" stroke-width="1.6"/></g></defs>
+    <g fill="none" stroke="var(--ink)" stroke-width="1.6">
+      <path d="M40 60V100M28 100h24M34 108h12M40 108V270"/>
+      <path d="M40 60H110M150 50L110 60M150 60H200"/>
+      <rect x="200" y="44" width="70" height="32" fill="#fff"/>
+      <path d="M270 60H360V100"/>
+      <rect x="340" y="100" width="40" height="70" fill="#fbe9e2"/>
+      <path d="M360 170V200"/><rect x="318" y="200" width="84" height="32" fill="#fff"/><path d="M360 232V270M40 270H420M360 186H420V200l7 3l-14 6l14 6l-14 6l14 6l-7 3V270"/>
+      <path d="M235 76V96M235 96h-60"/><rect x="120" y="86" width="55" height="22" fill="#fff"/>
+      <path d="M300 216H318"/><rect x="245" y="205" width="55" height="22" fill="#fff"/>
+      <path d="M360 90H470l3-6l6 12l6-12l6 12l6-12l6 12l3-6H540V60"/>
+      <path d="M470 90V122"/><rect x="450" y="122" width="54" height="26" fill="#fff"/>
+    </g>
+    <circle cx="150" cy="60" r="3" fill="var(--ink)"/><circle cx="110" cy="60" r="3" fill="var(--ink)"/>
+    <g fill="var(--ink)"><circle cx="360" cy="90" r="3"/><circle cx="470" cy="90" r="3"/><circle cx="40" cy="270" r="3"/><circle cx="360" cy="186" r="3"/><circle cx="360" cy="270" r="3"/></g>
+    <path d="M354 116q12 8 0 16q12 8 0 16q12 8 0 16" fill="none" stroke="var(--bad)" stroke-width="1.6"/>
+    <g fill="#fff" stroke="var(--ink)" stroke-width="1.2"><circle cx="360" cy="102" r="3"/><circle cx="360" cy="168" r="3"/></g>
+    <use href="#gnd4" x="200" y="272"/>
+    <g font-size="11.5">
+      <text x="24" y="108" text-anchor="end">batt</text>
+      <text x="130" y="40" text-anchor="middle">arm switch</text><text x="130" y="28" text-anchor="middle" fill="var(--muted)" font-size="10.5">mechanical</text>
+      <text x="235" y="64" text-anchor="middle" font-size="10.5">P-FET (arm)</text>
+      <text x="147" y="101" text-anchor="middle" font-size="10.5">ARM</text>
+      <text x="400" y="140">igniter</text><text x="400" y="155" fill="var(--muted)" font-size="10.5">0.5–3 Ω</text>
+      <text x="360" y="220" text-anchor="middle" font-size="10.5">N-FET (fire)</text>
+      <text x="272" y="220" text-anchor="middle" font-size="10.5">FIRE</text>
+      <text x="505" y="76" text-anchor="middle">R<tspan font-size="9" dy="2">sense</tspan><tspan dy="-2"> 10 kΩ</tspan></text>
+      <text x="540" y="52" text-anchor="middle">+3.3 V</text>
+      <text x="477" y="139" text-anchor="middle" font-size="10.5">to ADC</text>
+      <text x="170" y="124" fill="var(--muted)" font-size="10.5">gate held off by pull-up</text>
+      <text x="230" y="250" fill="var(--muted)" font-size="10.5">gate held off by pull-down</text>
+      <text x="432" y="230" font-size="10.5">1 kΩ</text><text x="470" y="178" fill="var(--muted)" font-size="10.5">continuity current</text><text x="470" y="194" fill="var(--muted)" font-size="10.5">≈ 0.3 mA, far below</text><text x="470" y="210" fill="var(--muted)" font-size="10.5">the no-fire current</text>
+      <text x="320" y="294" text-anchor="middle" fill="var(--muted)">firing needs the arm switch, ARM and FIRE all on: no single fault completes the circuit</text>
+    </g>
+  </svg>
+  </div>
+</div>
+<p>The design rests on a few principles, each traceable to earlier sections:</p>
+<ul>
+  <li><strong>Independent series switches.</strong> The current passes through a mechanical arm switch (often a key or a removable plug, sometimes with a "remove before flight" tag), a high-side MOSFET controlled by an ARM signal, and a low-side MOSFET controlled by a FIRE signal. Firing needs all three; a single stuck switch, firmware bug or chafed wire (the low-side exercise above) can't do it alone.</li>
+  <li><strong>Off by default.</strong> Each gate has a resistor holding it off whenever nothing drives it, so the channel is safe during power-up, reset, brown-out and programming.</li>
+  <li><strong>Firing current with margin.</strong> The switches, wiring and battery must deliver well above the all-fire current into the igniter, even with the battery sagging (Module 1) and through every connector's resistance. MOSFETs are chosen for a low R<sub>DS(on)</sub> at the available gate voltage, and rated for the pulse current.</li>
+  <li><strong>Continuity sensing.</strong> Before arming, the controller checks that an igniter is connected and intact, using a current far below the no-fire level, measured with an ADC.</li>
+  <li><strong>A defined behaviour after firing.</strong> A fired igniter may become open or short. If it shorts, the channel would carry the battery's full current until switched off, so firmware turns the fire switch off after a fixed time, and a fuse or current limit (Module 7) protects the battery.</li>
+</ul>
+
+<div class="widget wide" id="w-cont">
+  <div class="wh"><span class="tag">Interactive</span><b>Continuity sensing: what the ADC sees</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label>Igniter</label><div class="seg" id="kS"><button type="button" data-v="ok" class="on">Connected</button><button type="button" data-v="open">Open (missing or fired)</button><button type="button" data-v="short">Top shorted to ground</button></div></div>
+      <div class="ctrl"><label for="kR">Igniter resistance <b id="kRv"></b></label><input id="kR" type="range" min="0.2" max="5" step="0.05" value="1.5"></div>
+      <div class="ctrl"><label for="kP">Sense resistor <b id="kPv"></b></label><input id="kP" type="range" min="2.5" max="5" step="0.01" value="4"></div>
+      <div class="ctrl"><label for="kD">Pull-down below the igniter <b id="kDv"></b></label><input id="kD" type="range" min="2" max="4" step="0.01" value="3"></div>
+      <p class="small">Both MOSFETs are off. The sense resistor feeds 3.3 V to the igniter's top terminal; a resistor from the igniter's bottom terminal to ground completes the path. A 12-bit ADC with a 3.3 V reference reads the top terminal.</p>
+    </div>
+    <div>
+      <canvas id="cvCont" style="height:200px" aria-label="A 0 to 3.3 volt scale with the bands the firmware treats as short, good and open, and the present ADC reading marked"></canvas>
+      <div class="readout">
+        <div class="stat"><div class="k">ADC voltage</div><div class="v" id="kV"></div></div>
+        <div class="stat"><div class="k">ADC counts</div><div class="v" id="kC"></div></div>
+        <div class="stat" id="kIS"><div class="k">Continuity current</div><div class="v" id="kI"></div></div>
+      </div>
+      <div class="verdict" id="kVerdict"></div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>Compare the three igniter states. Are they clearly distinguishable at the ADC?</li>
+    <li>Reduce the sense resistor to 300 Ω. What happens to the continuity current? How close is it to a no-fire rating of a few hundred milliamps?</li>
+    <li>Can this circuit tell a 1 Ω igniter from a 2 Ω one? Why is that usually acceptable?</li>
+  </ol></div>
+</div>
+
+<div class="tablewrap"><table>
+  <tr><th>Situation</th><th>What keeps the channel safe</th></tr>
+  <tr><td>Power-up, reset, brown-out, programming</td><td>Gate resistors hold both MOSFETs off; the mechanical arm switch is open during handling</td></tr>
+  <tr><td>Firmware fault drives FIRE high</td><td>ARM (a separate pin and signal path) is off, and the arm switch is open until flight</td></tr>
+  <tr><td>Igniter wire chafed to ground</td><td>The high-side ARM switch is off, so the wire is not live</td></tr>
+  <tr><td>One MOSFET fails short</td><td>The other MOSFET and the arm switch are still open; continuity checks and pre-flight tests reveal a failed switch</td></tr>
+  <tr><td>Igniter shorts after firing</td><td>Firmware ends the fire pulse after a fixed time; a fuse or current limit protects the battery</td></tr>
+</table></div>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">A continuity check that's too thorough</span></summary>
+  <div class="eb">
+    <p>To get a cleaner continuity reading, someone proposes reducing the sense resistor from 10 kΩ to 10 Ω, so a few hundred milliamps flow through the igniter during the check.</p>
+    <div class="choice"><p>Why is that a bad idea?</p>
+    <ol class="opts">
+      <li>The ADC can't read such a large voltage.<div class="why">The voltage would still be within 0–3.3 V; the problem is the current through the igniter.</div></li>
+      <li data-correct>A continuity current of a few hundred milliamps approaches the igniter's no-fire rating: the check itself could heat the bridge wire and fire it, or degrade it. Continuity currents are kept to milliamps or less, far below no-fire.<div class="why">The whole point of continuity sensing is to verify the igniter without any risk of firing it.</div></li>
+      <li>It would drain the battery.<div class="why">It would, briefly, but that's the lesser problem.</div></li>
+      <li>The MOSFETs would have to be on.<div class="why">The continuity path bypasses them.</div></li>
+    </ol>
+    <div class="solution"><p>The continuity current must stay far below the no-fire current under every fault, including with the sense supply at its maximum and the igniter at its lowest resistance. With 10 kΩ from 3.3 V, the worst case is 0.33 mA, a factor of a thousand below a typical no-fire rating. The reading doesn't need to be precise: it only has to separate "open", "short" and "a few ohms".</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= DESIGN EXERCISES ================= -->
+<section class="sec" id="exercises" data-nonum data-short="Design exercises">
+<h2>Design exercises</h2>
+<p>Problems drawn from real hardware. Each takes a few steps. Enter numbers to check your reasoning as you go, or open the worked solutions and discussion. The figures above are useful for sanity-checking.</p>
+
+<div class="chal">
+  <div class="ch"><span class="cn">Exercise 1</span><span class="cd">Design · ●○○</span><span class="ctitle">A base resistor for a relay</span></div>
+  <div class="cbody">
+    <p>An NPN transistor switches a 100 mA relay coil from a 3.3 V logic output. The transistor's minimum β is 50, and the design uses an overdrive of 2.</p>
+    <div class="check" data-ans="4" data-tol="2%" data-unit="mA"><p>(a) What base current is needed?</p>
+      <div class="solution"><p>I<sub>B</sub> = 100 mA / 50 × 2 = 4 mA.</p></div></div>
+    <div class="check" data-ans="650" data-tol="2%" data-unit="Ω"><p>(b) What base resistor gives that current?</p>
+      <div class="miss" data-val="825"><p>That ignores the base-emitter drop: only 3.3 − 0.7 V appears across the resistor.</p></div>
+      <div class="solution"><p>R<sub>B</sub> = (3.3 − 0.7)/0.004 = 650 Ω. Choose 620 Ω (slightly more current), not 680 Ω.</p></div></div>
+  </div>
+</div>
+
+<div class="chal">
+  <div class="ch"><span class="cn">Exercise 2</span><span class="cd">Analysis · ●●○</span><span class="ctitle">Heat in a valve driver</span></div>
+  <div class="cbody">
+    <p>A MOSFET with R<sub>DS(on)</sub> = 25 mΩ (at the gate voltage used) holds a valve open with 3 A, continuously. It's in an SO-8 package with θ<sub>JA</sub> = 60 K/W, at 40 °C ambient.</p>
+    <div class="check" data-ans="0.225" data-tol="2%" data-unit="W"><p>(a) Conduction loss?</p>
+      <div class="solution"><p>P = I²R = 9 × 0.025 = 0.225 W.</p></div></div>
+    <div class="check" data-ans="53.5" data-tol="1%" data-unit="°C"><p>(b) Junction temperature?</p>
+      <div class="solution"><p>T<sub>j</sub> = 40 + 0.225 × 60 = 53.5 °C: comfortable.</p></div></div>
+    <details><summary>Discussion: now PWM it</summary><p>If the same valve is driven with PWM at 20 kHz to reduce its holding current, each switching event costs roughly ½ × 12 V × 3 A × 100 ns = 1.8 µJ, twice per cycle, or 72 mW at 20 kHz. That's modest; at 200 kHz, or with a slow gate drive, switching loss would dominate.</p></details>
+  </div>
+</div>
+
+<div class="chal">
+  <div class="ch"><span class="cn">Exercise 3</span><span class="cd">Design · ●●○</span><span class="ctitle">A faster valve clamp</span></div>
+  <div class="cbody">
+    <p>A 12 V valve coil has L = 50 mH and R = 12 Ω (1 A).</p>
+    <div class="check" data-ans="25" data-tol="2%" data-unit="mJ"><p>(a) How much energy does the clamp absorb each time the valve is switched off?</p>
+      <div class="solution"><p>E = ½LI² = ½ × 0.05 × 1² = 25 mJ (less the part dissipated in the coil's own resistance during the decay).</p></div></div>
+    <div class="check" data-ans="1.6" data-tol="4%" data-unit="ms"><p>(b) With a 24 V Zener plus a diode (24.8 V total clamp), how long does the current take to fall to zero?</p>
+      <div class="hint">t = (L/R) ln(1 + I₀R/V<sub>clamp</sub>).</div>
+      <div class="solution"><p>L/R = 4.17 ms; ln(1 + 12/24.8) = ln(1.484) = 0.395; t ≈ 1.6 ms. With a plain diode (0.8 V) it would be 4.17 × ln(16) ≈ 11.6 ms.</p></div></div>
+  </div>
+</div>
+
+<div class="chal">
+  <div class="ch"><span class="cn">Exercise 4</span><span class="cd">Analysis · ●○○</span><span class="ctitle">Continuity reading</span></div>
+  <div class="cbody">
+    <p>The continuity circuit above uses a 10 kΩ sense resistor from 3.3 V, a 2 Ω igniter, and a 1 kΩ resistor from the igniter's bottom terminal to ground.</p>
+    <div class="check" data-ans="0.30" data-tol="2%" data-unit="V"><p>(a) What voltage does the ADC read?</p>
+      <div class="solution"><p>V = 3.3 × (2 + 1000)/(10 000 + 2 + 1000) = 3.3 × 1002/11 002 = 0.30 V.</p></div></div>
+    <div class="check" data-ans="0.30" data-tol="2%" data-unit="mA"><p>(b) What's the continuity current?</p>
+      <div class="solution"><p>I = 3.3/11 002 Ω = 0.30 mA, about a thousand times below a typical no-fire current.</p></div></div>
+  </div>
+</div>
+</section>
+
+<!-- ================= BENCH ================= -->
+<section class="sec" id="bench" data-nonum data-short="At the bench">
+<h2>At the bench</h2>
+<div class="video" data-video="lab">
+  <div class="plan">
+    <p>Planned lab demo (≈ 20 min, filmed at the bench):</p>
+    <ol>
+      <li>A logic-level and a standard MOSFET driven from 3.3 V: measuring V<sub>DS</sub> and temperature</li>
+      <li>Gate charge on the scope: the Miller plateau, with different gate resistors</li>
+      <li>A valve coil's turn-off with a diode and with a Zener clamp</li>
+      <li>A continuity circuit with a resistor standing in for the igniter</li>
+    </ol>
+  </div>
+</div>
+<div class="lab">
+  <h3>Switching real loads</h3>
+  <div class="parts"><span>Bench supply with current limit</span><span>Oscilloscope with two probes</span><span>A logic-level MOSFET (e.g. specified at 2.5 V) and a standard MOSFET</span><span>A 12 V relay or solenoid valve</span><span>1N4007 diode, 24 V Zener</span><span>100 kΩ, 100 Ω and 1 kΩ resistors</span><span>A 1–2 Ω power resistor as a dummy igniter</span></div>
+  <ol>
+    <li><b>Fully on?</b> Switch a 2 A resistive load with each MOSFET, driving the gate from 3.3 V. Measure V<sub>DS</sub> and feel (carefully) or measure the temperature.</li>
+    <li><b>Gate charge.</b> Drive the gate from the function generator through 100 Ω and then 1 kΩ, probing the gate and the drain. Find the Miller plateau.</li>
+    <li><b>Clamps.</b> Switch the coil off with a diode across it, then with the diode and Zener in series. Probe the drain and, with a current probe or a small sense resistor, the coil current.</li>
+    <li><b>Continuity.</b> Build the continuity circuit with the dummy igniter; measure the voltage with it connected, disconnected and with its top terminal shorted to ground.</li>
+  </ol>
+  <div class="record"><b>What you should see:</b> the standard MOSFET dropping volts and heating where the logic-level one drops tens of millivolts; a clear plateau that stretches with the larger gate resistor; a turn-off several times faster with the Zener, at the cost of a higher drain voltage; and three clearly separate continuity readings.</div>
+</div>
+</section>
+
+<!-- ================= SUMMARY ================= -->
+<section class="sec" id="summary" data-nonum data-short="Summary">
+<h2>Summary &amp; cheat sheet</h2>
+<ol class="takeaways">
+  <li>A transistor lets a small signal switch a large current. MOSFETs suit high currents; BJTs suit small loads and level shifting.</li>
+  <li>A MOSFET is fully on only when V<sub>GS</sub> is well above V<sub>th</sub>; check that R<sub>DS(on)</sub> is specified at your gate voltage. A partly-on MOSFET gets hot.</li>
+  <li>Drive a BJT into saturation with I<sub>B</sub> = overdrive × I<sub>C</sub>/β<sub>min</sub>.</li>
+  <li>Low-side switching is simplest; high-side keeps the load at ground when off, so a grounded wire can't turn it on.</li>
+  <li>Gate charge sets switching time; losses are conduction (I²R) plus switching (∝ V I t f). Pull-down resistors keep gates off when nothing drives them.</li>
+  <li>A plain flyback diode protects the switch but slows the coil's release; a Zener or TVS clamp speeds it, at a higher switch voltage.</li>
+  <li>A pyro channel uses independent series switches, off-by-default gates, low-current continuity sensing and a defined behaviour after firing, so that no single fault fires it.</li>
+</ol>
+<div class="cheat">
+  <div><b>MOSFET on</b>\(P = I^2 R_\text{DS(on)}\)<br><span class="small">use R<sub>DS(on)</sub> at your V<sub>GS</sub></span></div>
+  <div><b>BJT base</b>\(R_B = (V_\text{drive} - 0.7)/I_B\)<br><span class="small">\(I_B = k\,I_C/\beta_\text{min}\), k = 2–5</span></div>
+  <div><b>Switching time</b>\(t \approx Q_g / I_\text{gate}\)</div>
+  <div><b>Switching loss</b>\(P \approx V I\,t_\text{sw}\,f\) (on + off)</div>
+  <div><b>Clamp decay</b>\(t = \frac{L}{R}\ln(1 + I_0R/V_\text{clamp})\)<br><span class="small">switch sees V<sub>supply</sub> + V<sub>clamp</sub></span></div>
+  <div><b>Coil energy</b>\(E = \tfrac12 L I^2\)</div>
+  <div><b>Junction temperature</b>\(T_j = T_a + P\,\theta_{JA}\)</div>
+</div>
+<h3>Further reading</h3>
+<ul class="small">
+  <li><em>The Art of Electronics</em> (Horowitz &amp; Hill), chapter 2.2: transistor switches, and chapter 3.4–3.5: MOSFETs as power switches, gate drive and switching losses.</li>
+  <li><em>Practical Electronics for Inventors</em> (Scherz &amp; Monk), chapter 4: transistors, with BJT and MOSFET switching circuits and many practical examples.</li>
+  <li>MOSFET manufacturers' application notes on gate charge, switching losses and safe operating area.</li>
+</ul>
 </section>
 
 <nav class="pager"></nav>
 </main>
 </div>
 <footer class="site">Hardware Engineering Fundamentals · EE Fundamentals</footer>
+
+<script>
+'use strict';
+const $ = s => document.querySelector(s);
+const {col, si, fmt, lin, log, ticks, axes, line, text, dot, rgba} = Plot;
+function setVerdict(el, cls, html){ el.className = 'verdict ' + cls; el.innerHTML = html; }
+
+// square-law MOSFET model: threshold vth, transconductance parameter k (A/V²)
+const FETS = {logic: {vth: 1.5, k: 13.3}, std: {vth: 3.0, k: 7.1}};
+const idFet = (f, vgs, vds) => { const ov = vgs - f.vth; if (ov <= 0) return 0; return vds < ov ? f.k*(ov*vds - vds*vds/2) : f.k*ov*ov/2; };
+
+/* ============ 1. Output characteristics and load line ============ */
+(() => {
+  const type = Plot.seg('#mT', upd), VS = 12;
+  let s = {};
+  function upd(){
+    const f = FETS[type()], vg = +$('#mG').value, R = +$('#mR').value;
+    let lo = 0, hi = VS; for (let n = 0; n < 80; n++){ const v = (lo + hi)/2; if (idFet(f, vg, v) - (VS - v)/R > 0) hi = v; else lo = v; }
+    const vds = (lo + hi)/2, id = (VS - vds)/R, p = vds*id;
+    s = {f, vg, R, vds, id};
+    $('#mGv').textContent = fmt(vg, 2) + ' V'; $('#mRv').textContent = fmt(R, 3) + ' Ω';
+    $('#mI').textContent = si(id, 'A'); $('#mV').textContent = fmt(vds, 3) + ' V'; $('#mP').textContent = si(p, 'W');
+    $('#mPS').className = 'stat ' + (p > 2 ? 'bad' : p > 0.5 ? 'warn' : '');
+    const v = $('#mVerdict');
+    if (id < 0.01) setVerdict(v, 'ok', `<b>Off.</b> The gate is below the threshold; no channel, no current.`);
+    else if (vds < 0.3) setVerdict(v, 'ok', `<b>Fully on.</b> The MOSFET drops only ${fmt(vds*1000, 3)} mV, behaving like a ${si(vds/id, 'Ω')} resistor; nearly all of the 12 V is across the load.`);
+    else setVerdict(v, 'bad', `<b>Partly on.</b> The channel can't carry the load's full current at this gate voltage, so the MOSFET limits the current to ${si(id, 'A')} and drops ${fmt(vds, 3)} V, dissipating ${si(p, 'W')}. Without a large heatsink, it will overheat.`);
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvFet'), (ctx, W, H) => {
+    const {f, vg, R, vds, id} = s; if (!f) return;
+    const P = {l: 50, r: W - 60, t: 14, b: H - 40}, X = lin(0, 12, P.l, P.r), Y = lin(0, 6.5, P.b, P.t);
+    axes(ctx, P, X, Y, {xt: [0, 2, 4, 6, 8, 10, 12], yt: [0, 1, 2, 3, 4, 5, 6], xl: 'drain-source voltage (V)', yl: 'drain current (A)', xgrid: true});
+    Plot.clip(ctx, P);
+    [2, 2.5, 3, 3.5, 4.5, 10].forEach(g => { const pts = []; for (let i = 0; i <= 200; i++){ const v = 12*i/200; pts.push([X(v), Y(Math.min(7, idFet(f, g, v)))]); } line(ctx, pts, rgba(col.c1, .35), 1.4); });
+    const pts = []; for (let i = 0; i <= 200; i++){ const v = 12*i/200; pts.push([X(v), Y(Math.min(7, idFet(f, vg, v)))]); } line(ctx, pts, col.c1, 2.6);
+    line(ctx, [[X(0), Y(12/R)], [X(12), Y(0)]], col.c2, 1.6, [6, 4]);
+    dot(ctx, X(vds), Y(id), 6, col.ink); dot(ctx, X(vds), Y(id), 2.5, '#fff');
+    ctx.restore();
+    [2, 2.5, 3, 3.5, 4.5, 10].forEach(g => { const i = Math.min(7, idFet(f, g, 12)); if (i > 0.05 && i < 6.5) text(ctx, g + ' V', P.r + 4, Y(i), {color: col.muted}); });
+    if (idFet(f, 10, 12) >= 6.5) text(ctx, '≥ 4.5 V', P.r + 4, P.t + 6, {color: col.muted});
+  });
+  ['#mG', '#mR'].forEach(id => $(id).addEventListener('input', upd));
+  upd();
+})();
+
+/* ============ 2. Gate charge, switching and thermal ============ */
+(() => {
+  const drv = Plot.seg('#gD', upd), pkg = Plot.seg('#gP', upd);
+  const VS = 12, IL = 3, CGS = 1.5e-9, QGD = 4e-9, F = FETS.logic, TA = 40;
+  const vpl = F.vth + Math.sqrt(2*IL/F.k), rds = vg => 1/(F.k*(vg - F.vth));
+  let s = {};
+  function sim(vd, rg){
+    // returns arrays over the turn-on transition and the energy lost
+    if (vd <= vpl + 0.05) return null;
+    const tau = rg*CGS, ts = [], vgs = [], vdsA = [], idA = [], pA = [];
+    let t = 0, vg = 0, q = 0, E = 0, phase = 0, vdsv = VS;
+    const tEnd = 6*tau + QGD*rg/(vd - vpl), dt = tEnd/1500;
+    for (let k = 0; k < 1500; k++){
+      let id;
+      if (phase === 0){ vg += (vd - vg)/tau*dt; if (vg >= vpl){ vg = vpl; phase = 1; } id = vg < F.vth ? 0 : IL*Math.min(1, ((vg - F.vth)/(vpl - F.vth))**2); vdsv = VS; }
+      else if (phase === 1){ q += (vd - vpl)/rg*dt; vdsv = Math.max(IL*rds(vd), VS*(1 - q/QGD)); id = IL; if (q >= QGD) phase = 2; }
+      else { vg += (vd - vg)/tau*dt; id = IL; vdsv = IL*rds(Math.max(vg, vpl + 0.01)); }
+      const p = vdsv*id; E += p*dt; t += dt;
+      ts.push(t); vgs.push(vg); vdsA.push(vdsv); idA.push(id); pA.push(p);
+    }
+    // switching time: from the drain current starting to rise to the end of the plateau
+    const i0 = idA.findIndex(x => x > 0.01*IL), i1 = vdsA.findIndex(x => x < 0.1*VS);
+    return {ts, vgs, vdsA, idA, pA, E, tsw: (i1 > 0 && i0 >= 0 ? ts[i1] - ts[i0] : NaN)};
+  }
+  function upd(){
+    const vd = +drv(), rg = Math.pow(10, +$('#gR').value), f = Math.pow(10, +$('#gF').value), th = +pkg();
+    const r = sim(vd, rg);
+    s = {r, vd};
+    $('#gRv').textContent = si(rg, 'Ω'); $('#gFv').textContent = si(f, 'Hz');
+    const v = $('#gVerdict');
+    if (!r){ $('#gT').textContent = '—'; $('#gS').textContent = '—'; $('#gC').textContent = '—'; $('#gJ').textContent = '—'; setVerdict(v, 'bad', 'The drive voltage is too low to reach the plateau.'); w.redraw(); return; }
+    const psw = 2*r.E*f, pc = IL*IL*rds(vd)*0.5, tj = TA + (psw + pc)*th;
+    $('#gT').textContent = si(r.tsw, 's'); $('#gS').textContent = si(psw, 'W'); $('#gC').textContent = si(pc, 'W'); $('#gJ').textContent = fmt(tj, 3) + ' °C';
+    $('#gJS').className = 'stat ' + (tj > 125 ? 'bad' : tj > 100 ? 'warn' : '');
+    if (tj > 125) setVerdict(v, 'bad', `<b>Too hot.</b> ${si(psw + pc, 'W')} in this package takes the junction to ${fmt(tj, 3)} °C. ${psw > pc ? 'Switching loss dominates: switch faster (smaller gate resistor, stronger driver) or at a lower frequency.' : 'Conduction loss dominates: a lower-R<sub>DS(on)</sub> part, more gate voltage, or a better package.'}`);
+    else if (psw > pc) setVerdict(v, 'warn', `<b>Switching loss dominates.</b> Each transition takes ${si(r.tsw, 's')}; at ${si(f, 'Hz')} that costs ${si(psw, 'W')}, more than the ${si(pc, 'W')} lost while conducting.`);
+    else setVerdict(v, 'ok', `<b>Conduction loss dominates.</b> Switching costs ${si(psw, 'W')}; the junction runs at ${fmt(tj, 3)} °C.`);
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvGate'), (ctx, W, H) => {
+    const {r, vd} = s; if (!r) return;
+    const A = {l: 44, r: W - 14, t: 14, b: H*0.6}, B = {l: 44, r: W - 14, t: H*0.7, b: H - 40};
+    const T = r.ts[r.ts.length - 1], X = lin(0, T, A.l, A.r), Yg = lin(0, 13, A.b, A.t), Yd = Yg;
+    axes(ctx, A, X, Yg, {xt: [], yt: [0, 4, 8, 12], yl: 'volts'});
+    Plot.clip(ctx, A);
+    line(ctx, r.ts.map((t, i) => [X(t), Yg(r.vgs[i])]), col.c1, 2.2);
+    line(ctx, r.ts.map((t, i) => [X(t), Yd(r.vdsA[i])]), col.c2, 2.2);
+    line(ctx, r.ts.map((t, i) => [X(t), Yd(r.idA[i]*4)]), col.c5, 2, [5, 3]);
+    ctx.restore();
+    text(ctx, 'drain current: 3 A at the 12 mark', A.r - 4, A.t + 4, {color: col.c5, align: 'right', base: 'top'});
+    const pm = Math.max(...r.pA), Xb = lin(0, T, B.l, B.r), Yp = lin(0, pm*1.1, B.b, B.t);
+    axes(ctx, B, Xb, Yp, {xt: ticks(0, T, 4), yt: ticks(0, pm, 3), xl: 'time during turn-on', yl: 'W', xf: t => si(t, 's').replace(' ', ''), yf: v => fmt(v, 2)});
+    Plot.clip(ctx, B);
+    ctx.fillStyle = rgba(col.bad, .25); ctx.beginPath(); ctx.moveTo(Xb(0), Yp(0)); r.ts.forEach((t, i) => ctx.lineTo(Xb(t), Yp(r.pA[i]))); ctx.lineTo(Xb(T), Yp(0)); ctx.closePath(); ctx.fill();
+    line(ctx, r.ts.map((t, i) => [Xb(t), Yp(r.pA[i])]), col.bad, 1.6);
+    ctx.restore();
+    text(ctx, 'energy ' + si(r.E, 'J'), B.r - 4, B.t + 4, {align: 'right', base: 'top', color: col.bad, bold: true});
+  });
+  ['#gR', '#gF'].forEach(id => $(id).addEventListener('input', upd));
+  upd();
+})();
+
+/* ============ 3. Inductive clamp ============ */
+(() => {
+  const clamp = Plot.seg('#cK', upd), rate = Plot.seg('#cV', upd), VS = 12, R = 12, I0 = 1;
+  let s = {};
+  function upd(){
+    const vc = +clamp(), L = +$('#cL').value*1e-3, vr = +rate();
+    const tz = L/R*Math.log(1 + I0*R/vc), tr = L/R*Math.log((I0 + vc/R)/(0.3*I0 + vc/R)), vsw = VS + vc;
+    s = {vc, L, tz, tr, vsw, vr};
+    $('#cLv').textContent = fmt(L*1e3, 3) + ' mH';
+    $('#cR').textContent = si(tr, 's'); $('#cZ').textContent = si(tz, 's'); $('#cS').textContent = fmt(vsw, 3) + ' V';
+    $('#cSS').className = 'stat ' + (vsw > 0.8*vr ? 'bad' : '');
+    const v = $('#cVerdict');
+    if (vsw > 0.8*vr) setVerdict(v, 'bad', `<b>The switch is at risk.</b> The drain reaches ${fmt(vsw, 3)} V, ${vsw > vr ? 'above' : 'too close to'} the ${vr} V rating. Use a higher-voltage MOSFET or a lower clamp.`);
+    else if (vc < 2) setVerdict(v, 'warn', `<b>Gentle but slow.</b> The diode limits the switch to ${fmt(vsw, 3)} V, but the coil's current lingers: the valve releases after ${si(tr, 's')}.`);
+    else setVerdict(v, 'ok', `<b>Fast release.</b> The clamp lets the coil's current fall against ${fmt(vc, 3)} V: release after ${si(tr, 's')}, with the switch at ${fmt(vsw, 3)} V, within its rating.`);
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvClamp'), (ctx, W, H) => {
+    const {vc, L, tz, tr, vsw, vr} = s; if (!L) return;
+    const A = {l: 50, r: W - 14, t: 14, b: H*0.52}, B = {l: 50, r: W - 14, t: H*0.64, b: H - 40};
+    const T = Math.max(L/R*Math.log(1 + I0*R/0.8)*1.1, 0.002), X = lin(-T*0.08, T, A.l, A.r), Y = lin(0, 1.1, A.b, A.t);
+    axes(ctx, A, X, Y, {xt: [], yt: [0, 0.3, 1], yl: 'coil A'});
+    Plot.clip(ctx, A);
+    const cur = t => t < 0 ? I0 : Math.max(0, (I0 + vc/R)*Math.exp(-t*R/L) - vc/R);
+    const pts = []; for (let i = 0; i <= 500; i++){ const t = -T*0.08 + T*1.08*i/500; pts.push([X(t), Y(cur(t))]); }
+    line(ctx, pts, col.c1, 2.4);
+    line(ctx, [[A.l, Y(0.3)], [A.r, Y(0.3)]], col.muted, 1, [4, 4]);
+    line(ctx, [[X(tr), A.t], [X(tr), A.b]], col.good, 1.2, [3, 3]);
+    ctx.restore();
+    text(ctx, 'valve releases', Math.min(X(tr) + 4, A.r - 90), A.t + 10, {color: col.good});
+    const Xb = lin(-T*0.08, T, B.l, B.r), Yv = lin(0, Math.max(vr, vsw)*1.1, B.b, B.t);
+    axes(ctx, B, Xb, Yv, {xt: ticks(0, T, 4), yt: [0, 12, vr], xl: 'time after the switch opens', yl: 'switch V', xf: t => si(t, 's').replace(' ', '')});
+    Plot.clip(ctx, B);
+    const vs = []; for (let i = 0; i <= 500; i++){ const t = -T*0.08 + T*1.08*i/500; vs.push([Xb(t), Yv(t < 0 ? 0.05 : cur(t) > 0 ? vsw : VS)]); }
+    line(ctx, vs, col.c2, 2.2);
+    line(ctx, [[B.l, Yv(vr)], [B.r, Yv(vr)]], col.bad, 1.2, [5, 4]);
+    ctx.restore();
+    text(ctx, 'MOSFET rating', B.r - 4, Yv(vr) - 9, {align: 'right', color: col.bad});
+  });
+  $('#cL').addEventListener('input', upd);
+  upd();
+})();
+
+/* ============ 4. Continuity sensing ============ */
+(() => {
+  const state = Plot.seg('#kS', upd), VR = 3.3;
+  let s = {};
+  function upd(){
+    const st = state(), rig = +$('#kR').value, rs = Math.pow(10, +$('#kP').value), rd = Math.pow(10, +$('#kD').value);
+    let v, i;
+    if (st === 'open'){ v = VR; i = 0; }
+    else if (st === 'short'){ v = 0; i = VR/rs; }
+    else { v = VR*(rig + rd)/(rs + rig + rd); i = VR/(rs + rig + rd); }
+    // firmware bands: below 0.05 V short, above 3.0 V open, otherwise connected
+    const good = VR*(rd)/(rs + rd);
+    s = {v, good, st};
+    $('#kRv').textContent = fmt(rig, 2) + ' Ω'; $('#kPv').textContent = si(rs, 'Ω'); $('#kDv').textContent = si(rd, 'Ω');
+    $('#kV').textContent = fmt(v, 3) + ' V'; $('#kC').textContent = Math.round(v/VR*4095); $('#kI').textContent = si(i, 'A');
+    $('#kIS').className = 'stat ' + (i > 0.02 ? 'bad' : i > 0.005 ? 'warn' : '');
+    const vv = $('#kVerdict');
+    if (i > 0.02) setVerdict(vv, 'bad', `<b>Too much continuity current.</b> ${si(i, 'A')} is getting close to a no-fire rating of a few hundred milliamps. Keep the sense resistor large.`);
+    else if (st === 'open') setVerdict(vv, 'warn', `<b>Open.</b> The sense resistor pulls the input to 3.3 V: no igniter, or a fired one.`);
+    else if (st === 'short') setVerdict(vv, 'bad', `<b>Shorted to ground.</b> The reading is 0 V: the igniter's wiring is touching ground. Don't arm.`);
+    else setVerdict(vv, 'ok', `<b>Continuity good.</b> ${fmt(v, 3)} V, inside the "connected" band, with ${si(i, 'A')} through the igniter.`);
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvCont'), (ctx, W, H) => {
+    const {v, good} = s; if (v === undefined) return;
+    const P = {l: 20, r: W - 20, t: 50, b: H - 50}, X = lin(0, 3.3, P.l, P.r);
+    const band = (a, b, c, lab) => { ctx.fillStyle = c; ctx.fillRect(X(a), P.t, X(b) - X(a), P.b - P.t); text(ctx, lab, (X(a) + X(b))/2, P.t - 12, {align: 'center', color: col.ink2}); };
+    band(0, 0.05, rgba(col.bad, .3), ''); band(0.05, 3.0, rgba(col.good, .18), 'connected'); band(3.0, 3.3, rgba(col.warn, .3), 'open');
+    text(ctx, 'short', P.l, P.t - 12, {color: col.bad});
+    axes(ctx, P, X, lin(0, 1, P.b, P.t), {xt: [0, 0.5, 1, 1.5, 2, 2.5, 3, 3.3], yt: [], xl: ''});
+    line(ctx, [[X(v), P.t - 4], [X(v), P.b + 4]], col.ink, 3);
+    dot(ctx, X(v), (P.t + P.b)/2, 6, col.ink);
+    text(ctx, 'ADC: ' + fmt(v, 3) + ' V', Math.min(Math.max(X(v), P.l + 50), P.r - 50), P.b + 30, {align: 'center', color: col.ink, bold: true});
+  });
+  ['#kR', '#kP', '#kD'].forEach(id => $(id).addEventListener('input', upd));
+  upd();
+})();
+</script>
 </body>
 </html>
