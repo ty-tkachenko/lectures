@@ -19,8 +19,8 @@ window.COURSE = {
         {id:'ee06', n:6,  status:'ready',   path:'EE/06_Transistors/',            title:'Transistors as Switches', blurb:'MOSFET drivers for solenoid valves and pyro channels.'},
         {id:'ee07', n:7,  status:'ready',   path:'EE/07_Power/',                  title:'Power Systems', blurb:'LiPos, linear and switching regulators, power budgets and protection.'},
         // Sensing & computing: the signal chain
-        {id:'ee08', n:8,  status:'planned', path:'EE/08_Digital_MCU/',            title:'Digital Logic & Microcontrollers', blurb:'Logic levels, GPIO, pull-ups, PWM, interrupts and watchdogs.'},
-        {id:'ee09', n:9,  status:'planned', path:'EE/09_Buses/',                  title:'Communication Buses', blurb:'UART, SPI, I²C, CAN and RS-485, and when to use each.'},
+        {id:'ee08', n:8,  status:'ready',   path:'EE/08_Digital_MCU/',            title:'Digital Logic & Microcontrollers', blurb:'Logic levels, GPIO, pull-ups, PWM, interrupts and watchdogs.'},
+        {id:'ee09', n:9,  status:'ready',   path:'EE/09_Buses/',                  title:'Communication Buses', blurb:'UART, SPI, I²C, CAN and RS-485, and when to use each.'},
         {id:'ee10', n:10, status:'planned', path:'EE/10_OpAmps_Sensors/',         title:'Op-Amps & Sensor Front Ends', blurb:'Bridges, instrumentation amps, thermocouples and 4–20 mA loops.'},
         {id:'ee11', n:11, status:'planned', path:'EE/11_Data_Acquisition/',       title:'Data Acquisition', blurb:'ADCs, aliasing and anti-alias filters: from transducer to logged data.'},
         // Building hardware
@@ -63,6 +63,8 @@ window.COURSE.videos = {
   ee05: {lecture: '', lab: ''},
   ee06: {lecture: '', lab: ''},
   ee07: {lecture: '', lab: ''},
+  ee08: {lecture: '', lab: ''},
+  ee09: {lecture: '', lab: ''},
   rf00: {lecture: '', lab: ''},
   rf01: {lecture: '', lab: ''},
   rf02: {lecture: '', lab: ''},

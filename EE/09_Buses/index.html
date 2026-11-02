@@ -4,31 +4,698 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Communication Buses · EE 9</title>
-<meta name="description" content="EE Fundamentals module 9: UART, SPI, I²C, CAN and RS-485, and when to use each. In development.">
+<meta name="description" content="EE module 9: UART, SPI and I2C, single-ended versus differential signalling, CAN and RS-485 for long runs, choosing a bus, ringing and termination on long wires, and debugging with a logic analyzer.">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
 <link rel="stylesheet" href="../../assets/site.css">
 <script src="../../assets/course.js"></script>
 <script src="../../assets/site.js"></script>
+<script src="../../assets/plot.js"></script>
 </head>
 <body>
 <div class="layout">
 <aside class="side" aria-label="Module contents"></aside>
 <main class="content">
 
-<!-- Placeholder: replace this page with the module when it's written (see README.md, "Writing a module"). -->
+<!-- ================= HERO ================= -->
 <header class="hero">
   <div class="eyebrow">EE Fundamentals · Module 9</div>
-  <h1>Communication Buses</h1>
-  <p class="lede">UART, SPI, I²C, CAN and RS-485, and when to use each.</p>
+  <h1>Communication buses</h1>
+  <p class="lede">Chips talk to each other over a handful of standard buses: UART, SPI and I²C between chips on a board, CAN and RS-485 between boards over cables. Each is a set of agreements about which wire carries what and when. This module explains how each works at the level of voltages and timing, why some buses use two wires per signal, what happens to a fast edge on a long cable, how to choose a bus, and how to find out what's actually on the wires when something doesn't work.</p>
+  <p class="meta">Builds on: EE modules 1–8, especially open-drain outputs and pull-ups (Module 8). Bench: a microcontroller board, a sensor with I²C or SPI, a logic analyzer, an oscilloscope, and a length of twisted-pair cable.</p>
+  <div class="resources" data-auto></div>
+  <div class="objectives">
+    <h3>What's covered</h3>
+    <ul>
+      <li>UART: asynchronous framing, and why both ends must agree on the baud rate.</li>
+      <li>SPI: a fast, clocked, point-to-point bus.</li>
+      <li>I²C: two shared open-drain wires, addresses, and the pull-up trade-off.</li>
+      <li>Single-ended versus differential signalling, and CAN and RS-485 for long runs.</li>
+      <li>Ringing and termination: a first look at signal integrity on long wires.</li>
+      <li>Choosing a bus, and debugging with a logic analyzer.</li>
+    </ul>
+  </div>
+  <div class="video" data-video="lecture" id="lecture">
+    <div class="plan">
+      <p>Planned walkthrough of this page (≈ 45 min):</p>
+      <ol>
+        <li data-t="0:00">What a bus agrees on</li>
+        <li data-t="3:00">UART</li>
+        <li data-t="10:00">SPI</li>
+        <li data-t="15:00">I²C</li>
+        <li data-t="23:00">Single-ended and differential</li>
+        <li data-t="27:00">CAN and RS-485</li>
+        <li data-t="32:00">Ringing and termination</li>
+        <li data-t="39:00">Choosing a bus</li>
+        <li data-t="42:00">Debugging with a logic analyzer</li>
+      </ol>
+    </div>
+  </div>
 </header>
 
-<section class="sec" id="status" data-nonum data-short="In development">
-<h2>In development</h2>
-<p>This module hasn't been written yet. The other modules are listed in the strip at the top of the page, and the links below go to the neighbouring ones.</p>
+<!-- ================= 0 INTRO ================= -->
+<section class="sec" id="intro" data-short="What a bus agrees on">
+<h2>What a bus agrees on <a class="vjump" data-t="0:00"></a></h2>
+<p>Sending a byte from one chip to another needs agreement on four things: which voltages mean 1 and 0 (Module 8), when each bit is valid (timing: either a shared clock wire, or a pre-agreed rate), who may talk when (one transmitter per wire, or rules for sharing), and how each bit is carried electrically (one wire against ground, or a pair of wires against each other). The buses in this module are different answers to those questions, each suited to a different distance, speed and number of devices.</p>
+</section>
+
+<!-- ================= 1 UART ================= -->
+<section class="sec" id="uart" data-short="UART">
+<h2>UART <a class="vjump" data-t="3:00"></a></h2>
+<p>A <strong>UART</strong> (universal asynchronous receiver-transmitter) sends bytes over a single wire in each direction (TX from one device to RX on the other), with no clock wire. The line idles high. Each byte is a <strong>frame</strong>: a <strong>start bit</strong> (low), the data bits least-significant first, an optional parity bit, and a <strong>stop bit</strong> (high). The common "8N1" format is 8 data bits, no parity, one stop bit: 10 bit times per byte.</p>
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>A UART frame: 0x4B in 8N1</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 170" role="img" aria-label="The line idles high. A start bit pulls it low for one bit time, then eight data bits follow, least significant first: 1, 1, 0, 1, 0, 0, 1, 0 for the byte 0x4B, then a stop bit returns it high. The receiver samples each bit in the middle of its bit time, counting from the falling edge of the start bit.">
+    <path id="uf" fill="none" stroke="var(--c1)" stroke-width="2.4"/>
+    <g id="ug" stroke="var(--line)"></g>
+    <g id="ut" font-size="11" text-anchor="middle"></g>
+    <text x="320" y="164" font-size="11" text-anchor="middle" fill="var(--muted)">bit time = 1/baud rate · the receiver samples in the middle of each bit (dots), timed from the start bit's falling edge</text>
+  </svg>
+  </div>
+</div>
+<p>Without a clock, the receiver relies on timing alone. It waits for the start bit's falling edge, then samples each bit at the middle of its expected bit time, using its own clock. Both ends must therefore agree on the <strong>baud rate</strong> (bits per second), and their clocks must be close: an error between them accumulates over the frame, and by the stop bit the sampling point has drifted by ten times the per-bit error. The frame survives as long as the last sample stays inside its bit, roughly a ±4–5 % total mismatch in practice, shared between the two ends.</p>
+
+<div class="widget wide" id="w-uart">
+  <div class="wh"><span class="tag">Interactive</span><b>UART sampling with mismatched clocks</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label for="uE">Receiver clock error <b id="uEv"></b></label><input id="uE" type="range" min="-10" max="10" step="0.1" value="2"></div>
+      <div class="ctrl"><label>Byte sent</label><div class="seg" id="uB"><button type="button" data-v="75" class="on">0x4B</button><button type="button" data-v="85">0x55</button><button type="button" data-v="255">0xFF</button></div></div>
+      <p class="small">The receiver measures its sampling times with its own clock, so a fast receiver samples progressively earlier and a slow one progressively later.</p>
+    </div>
+    <div>
+      <canvas id="cvUart" style="height:220px" aria-label="The transmitted frame with the receiver's sampling points, coloured by whether each lands safely inside its intended bit"></canvas>
+      <div class="readout">
+        <div class="stat"><div class="k">Stop-bit sample offset</div><div class="v" id="uO"></div></div>
+        <div class="stat" id="uRS"><div class="k">Byte received</div><div class="v" id="uR"></div></div>
+      </div>
+      <div class="verdict" id="uVerdict"></div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>How large can the clock error get before a sample lands in the wrong bit?</li>
+    <li>Why does the error show up at the end of the frame and not the start?</li>
+  </ol></div>
+</div>
+
+<div class="example">
+  <span class="xk">Application</span>
+  <p>A microcontroller running from its internal RC oscillator, which may be accurate only to ±1–3 % over temperature, can talk to a GPS module or a radio over UART at room temperature and fail when cold. Running the microcontroller from a crystal (±0.005 %) removes the problem, and is good practice for any UART link. A related trap: the baud rate is generated by dividing the processor clock, so some rates can't be produced exactly; the microcontroller's reference manual tabulates the resulting error.</p>
+</div>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">TX to TX</span></summary>
+  <div class="eb">
+    <p>A new board's UART link to a sensor produces nothing at all. The schematic connects the microcontroller's TX pin to the sensor's pin labelled TX, and RX to RX.</p>
+    <div class="choice"><p>What's wrong?</p>
+    <ol class="opts">
+      <li>The baud rates differ.<div class="why">A baud mismatch produces garbled data, not silence on both ends.</div></li>
+      <li data-correct>TX and RX are named from each device's own point of view: one device's TX must connect to the other's RX. Two outputs are connected together, and two inputs listen to nothing.<div class="why">The classic UART wiring mistake; many boards add series resistors or solder jumpers so it can be fixed.</div></li>
+      <li>UART needs a clock wire.<div class="why">UART is asynchronous: no clock wire.</div></li>
+      <li>The sensor needs pull-up resistors on TX and RX.<div class="why">UART lines are push-pull and idle high by themselves.</div></li>
+    </ol>
+    <div class="solution"><p>Each device labels its pins from its own perspective, so TX connects to RX in each direction. When pin names are ambiguous (some modules label them from the host's perspective), check the datasheet's direction, and consider footprints for 0 Ω links that let the two be swapped on the board.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 2 SPI ================= -->
+<section class="sec" id="spi" data-short="SPI">
+<h2>SPI <a class="vjump" data-t="10:00"></a></h2>
+<p><strong>SPI</strong> (serial peripheral interface) adds the clock that UART lacks. A <strong>controller</strong> (the microcontroller) drives a clock line, <strong>SCLK</strong>, and data travels on each edge of it: controller to peripheral on <strong>MOSI</strong> (also called COPI or SDO), and peripheral to controller on <strong>MISO</strong> (CIPO or SDI), simultaneously. Each peripheral has its own <strong>chip-select</strong> line (CS), which the controller pulls low to talk to it; only the selected device drives MISO.</p>
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>An SPI bus with two peripherals, and its timing</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 280" role="img" aria-label="Top: a controller connects SCLK, MOSI and MISO to two peripherals in parallel, with a separate chip-select line to each. Bottom: timing. Chip select goes low; eight clock pulses follow; data on MOSI and MISO changes on one clock edge and is sampled on the other; chip select returns high.">
+    <g fill="#f4f2ec" stroke="var(--ink)" stroke-width="1.4"><rect x="20" y="20" width="110" height="110"/><rect x="330" y="20" width="110" height="56"/><rect x="330" y="90" width="110" height="56"/></g>
+    <g fill="none" stroke="var(--ink)" stroke-width="1.4">
+      <path d="M130 34H330M310 34V100H330"/>
+      <path d="M130 48H330M296 48V114H330"/>
+      <path d="M130 62H330M282 62V128H330"/>
+    </g>
+    <g fill="none" stroke="var(--c2)" stroke-width="1.4"><path d="M130 96H240V10H390V20"/><path d="M130 112H230V160H390V146"/></g>
+    <g fill="var(--ink)"><circle cx="310" cy="34" r="2.6"/><circle cx="296" cy="48" r="2.6"/><circle cx="282" cy="62" r="2.6"/></g>
+    <g font-size="11"><text x="75" y="80" text-anchor="middle">controller</text><text x="385" y="56" text-anchor="middle">peripheral 1</text><text x="385" y="126" text-anchor="middle">peripheral 2</text>
+      <text x="136" y="30">SCLK</text><text x="136" y="44">MOSI</text><text x="136" y="58">MISO</text><text x="136" y="92" fill="var(--c2)">CS1</text><text x="136" y="108" fill="var(--c2)">CS2</text></g>
+    <g font-size="11" text-anchor="end"><text x="80" y="184">CS</text><text x="80" y="214">SCLK</text><text x="80" y="244">MOSI</text><text x="80" y="270">MISO</text></g>
+    <path d="M90 174H120V188H560V174H600" fill="none" stroke="var(--c2)" stroke-width="2"/>
+    <path id="sclk" fill="none" stroke="var(--ink)" stroke-width="1.8"/>
+    <path id="smosi" fill="none" stroke="var(--c1)" stroke-width="1.8"/>
+    <path id="smiso" fill="none" stroke="var(--c5)" stroke-width="1.8"/>
+    <text x="630" y="110" font-size="10.5" fill="var(--muted)" text-anchor="end">mode 0: data changes on the</text><text x="630" y="124" font-size="10.5" fill="var(--muted)" text-anchor="end">falling edge, sampled on</text><text x="630" y="138" font-size="10.5" fill="var(--muted)" text-anchor="end">the rising edge</text>
+  </svg>
+  </div>
+</div>
+<p>Because every signal is driven push-pull and the clock comes from the controller, SPI is simple and fast: tens of megahertz on a board, with no addresses and no protocol overhead. The cost is wires, one chip select per device, and the need to agree on the <strong>mode</strong>: which clock polarity idles, and which edge samples the data. Mismatched modes are the most common SPI bug, and usually show up as data shifted by one bit.</p>
+</section>
+
+<!-- ================= 3 I2C ================= -->
+<section class="sec" id="i2c" data-short="I²C">
+<h2>I²C <a class="vjump" data-t="15:00"></a></h2>
+<p><strong>I²C</strong> uses only two wires, <strong>SDA</strong> (data) and <strong>SCL</strong> (clock), shared by every device. Both are open-drain with a pull-up each (Module 8), so any device can pull a line low and none can fight another. Each peripheral has a 7-bit <strong>address</strong>: the controller starts a transaction with a <strong>start condition</strong> (SDA falling while SCL is high), sends the address and a read/write bit, and the addressed device answers by pulling SDA low for one clock, an <strong>acknowledge</strong> (ACK). Data bytes follow, each acknowledged, and a <strong>stop condition</strong> (SDA rising while SCL is high) ends the transaction.</p>
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>An I²C bus and the start of a transaction</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 256" role="img" aria-label="Top: SDA and SCL lines, each with a pull-up resistor to 3.3 volts, connect a controller and three peripherals with different addresses. Bottom: a start condition, seven address bits, a read or write bit, and the peripheral's acknowledge, with SDA changing only while SCL is low.">
+    <g fill="none" stroke="var(--ink)" stroke-width="1.4">
+      <path d="M40 60H600M40 84H600"/>
+      <path d="M520 20V30l5 2l-10 4l10 4l-10 4l10 4l-5 2V60M560 20V36l5 2l-10 4l10 4l-10 4l10 4l-5 2V84M500 20H580"/>
+      <path d="M90 60V100M110 84V100M230 60V100M250 84V100M350 60V100M370 84V100M450 60V100M470 84V100"/>
+    </g>
+    <g fill="#f4f2ec" stroke="var(--ink)" stroke-width="1.2"><rect x="70" y="100" width="60" height="26"/><rect x="210" y="100" width="60" height="26"/><rect x="330" y="100" width="60" height="26"/><rect x="430" y="100" width="60" height="26"/></g>
+    <g font-size="10.5" text-anchor="middle"><text x="100" y="117">controller</text><text x="240" y="117">0x48</text><text x="360" y="117">0x68</text><text x="460" y="117">0x76</text>
+      <text x="26" y="64" text-anchor="end">SDA</text><text x="26" y="88" text-anchor="end">SCL</text><text x="540" y="16">3.3 V</text><text x="586" y="48" text-anchor="start" fill="var(--muted)">pull-ups</text></g>
+    <g font-size="11" text-anchor="end"><text x="60" y="184">SDA</text><text x="60" y="232">SCL</text></g>
+    <path id="isda" fill="none" stroke="var(--c1)" stroke-width="2"/>
+    <path id="iscl" fill="none" stroke="var(--ink)" stroke-width="1.8"/>
+    <g id="ilab" font-size="10.5" text-anchor="middle"></g>
+  </svg>
+  </div>
+</div>
+<p>Open-drain lines are what make I²C's sharing safe, and also what limit its speed: every rising edge is the pull-up charging the bus capacitance, so the rise time is set by R × C, exactly as in Module 8. The specification limits the rise time (1000 ns in standard mode, 100 kHz; 300 ns in fast mode, 400 kHz), and limits how much current a device must sink (3 mA), which sets a minimum pull-up. The right pull-up sits between the two limits:</p>
+<div class="eq">$$R_\text{min} = \frac{V_{DD} - V_{OL}}{I_{OL}} \qquad R_\text{max} = \frac{t_r}{0.8473\,C_\text{bus}}$$<div class="n">0.8473 RC is the time to rise from 30 % to 70 % of V<sub>DD</sub>, the span the specification measures</div></div>
+
+<div class="widget wide" id="w-i2c">
+  <div class="wh"><span class="tag">Interactive</span><b>Choosing I²C pull-ups</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label>Speed</label><div class="seg" id="iM"><button type="button" data-v="100" class="on">100 kHz</button><button type="button" data-v="400">400 kHz</button></div></div>
+      <div class="ctrl"><label for="iR">Pull-up resistance <b id="iRv"></b></label><input id="iR" type="range" min="2.7" max="4.7" step="0.01" value="4"></div>
+      <div class="ctrl"><label for="iN">Devices on the bus <b id="iNv"></b></label><input id="iN" type="range" min="1" max="10" step="1" value="4"></div>
+      <div class="ctrl"><label for="iL">Wiring length <b id="iLv"></b></label><input id="iL" type="range" min="0" max="200" step="5" value="20"></div>
+      <p class="small">3.3 V. Each device adds about 10 pF; board traces and cable add about 0.6 pF/cm. A device must sink at most 3 mA at 0.4 V.</p>
+    </div>
+    <div>
+      <canvas id="cvI2c" style="height:260px" aria-label="Two periods of the SCL waveform at the chosen speed, showing the slow rising edge set by the pull-up and the bus capacitance, with the logic thresholds"></canvas>
+      <div class="readout">
+        <div class="stat"><div class="k">Bus capacitance</div><div class="v" id="iC"></div></div>
+        <div class="stat" id="iTS"><div class="k">Rise time (30–70 %)</div><div class="v" id="iT"></div></div>
+        <div class="stat" id="iIS"><div class="k">Sink current</div><div class="v" id="iI"></div></div>
+      </div>
+      <div class="verdict" id="iVerdict"></div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>At 100 kHz with four devices and short wiring, which pull-up values work?</li>
+    <li>Switch to 400 kHz. Does a 10 kΩ pull-up still work?</li>
+    <li>Run the bus 2 m along a cable to another board. What happens, and what does that say about using I²C off the board?</li>
+  </ol></div>
+</div>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">Two sensors with the same address</span></summary>
+  <div class="eb">
+    <p>A board needs two identical pressure sensors on one I²C bus, but each has a fixed address, 0x76.</p>
+    <div class="choice"><p>Which solution works?</p>
+    <ol class="opts">
+      <li>Connect them both; the controller will see two acknowledges.<div class="why">Both would respond to every transaction and corrupt each other's data on reads.</div></li>
+      <li data-correct>Use the sensor's address-select pin if it has one (many have a pin that changes the address to 0x77), or put them on separate buses, or use an I²C multiplexer that connects one at a time.<div class="why">Each device on a bus needs a unique address; hardware provides several ways to get one.</div></li>
+      <li>Use different pull-up values for each sensor.<div class="why">Pull-ups belong to the bus, not to a device, and don't change addresses.</div></li>
+      <li>Read them at different clock speeds.<div class="why">Both would still respond to the same address.</div></li>
+    </ol>
+    <div class="solution"><p>Most sensors offer an address-select pin with two or four options. Without one, a second I²C peripheral on the microcontroller, or an I²C multiplexer, separates them. Checking every device's address for conflicts is part of the schematic review.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 4 DIFFERENTIAL ================= -->
+<section class="sec" id="diff" data-short="Single-ended and differential">
+<h2>Single-ended and differential signalling <a class="vjump" data-t="23:00"></a></h2>
+<p>UART, SPI and I²C are <strong>single-ended</strong>: each signal is one wire, measured against ground. That works on a board, where ground is a solid plane and the wires are short. Over a cable it has two weaknesses. Noise induced on the wire, from a motor, a radio or a nearby power cable, adds directly to the signal. And the two ends' grounds aren't at exactly the same voltage, because return current through the ground wire's resistance shifts one end relative to the other (Module 1); the receiver sees that shift as part of the signal.</p>
+<p><strong>Differential</strong> signalling sends each signal on a pair of wires driven in opposite directions, and the receiver looks only at the difference between them. Noise induced on a closely twisted pair appears almost equally on both wires (<strong>common-mode</strong>) and cancels in the subtraction; so does any ground offset between the ends, within the receiver's common-mode range. Twisting the pair makes the induced noise more equal on both wires, and also reduces the pair's own radiation.</p>
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>Noise on a single-ended and a differential link</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 250" role="img" aria-label="Left: a single-ended signal with noise added; the receiver compares it with its own ground, which is shifted, and the noise crosses the threshold. Right: a differential pair; the same noise appears on both wires, and the difference between them is clean.">
+    <path id="d1" fill="none" stroke="var(--c1)" stroke-width="2"/>
+    <path id="d2" fill="none" stroke="var(--c1)" stroke-width="2"/><path id="d3" fill="none" stroke="var(--c2)" stroke-width="2"/>
+    <path id="d4" fill="none" stroke="var(--good)" stroke-width="2.4"/>
+    <path d="M20 128H300" stroke="var(--bad)" stroke-dasharray="4 3"/>
+    <g font-size="11.5" text-anchor="middle">
+      <text x="160" y="20" font-weight="600">single-ended</text><text x="480" y="20" font-weight="600">differential</text>
+      <text x="296" y="122" fill="var(--bad)" font-size="10.5" text-anchor="end">threshold</text>
+      <text x="160" y="240" fill="var(--muted)">noise and ground shift add to the signal</text>
+      <text x="334" y="74" fill="var(--c1)" font-size="10.5" text-anchor="end">A</text><text x="334" y="124" fill="var(--c2)" font-size="10.5" text-anchor="end">B</text>
+      <text x="334" y="190" fill="var(--good)" font-size="10.5" text-anchor="end">A − B</text>
+      <text x="480" y="240" fill="var(--muted)">the same noise on both wires cancels</text>
+    </g>
+  </svg>
+  </div>
+</div>
+</section>
+
+<!-- ================= 5 CAN AND RS-485 ================= -->
+<section class="sec" id="can" data-short="CAN and RS-485">
+<h2>CAN and RS-485 for long runs <a class="vjump" data-t="27:00"></a></h2>
+<p>Both are differential buses designed for cables between boards, tens to hundreds of metres long, in electrically noisy places. Both run on a twisted pair with a <strong>120 Ω termination resistor at each end</strong> of the bus, and allow many devices along it. Each microcontroller connects through a small <strong>transceiver</strong> chip that converts between its logic-level UART or CAN pins and the differential pair.</p>
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>A multi-drop differential bus</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 210" role="img" aria-label="A twisted pair runs between two 120 ohm termination resistors at its two ends. Three nodes connect to it along its length through short stubs, each with a microcontroller and a transceiver. The transceivers convert logic-level signals to and from the differential pair.">
+    <path id="tw1" fill="none" stroke="var(--c1)" stroke-width="1.8"/><path id="tw2" fill="none" stroke="var(--c2)" stroke-width="1.8"/>
+    <g fill="none" stroke="var(--ink)" stroke-width="1.4">
+      <path d="M50 80V92l6 3l-12 6l12 6l-12 6l6 3V130M590 80V92l6 3l-12 6l12 6l-12 6l6 3V130"/>
+      <path d="M178 84V150M190 76V150M318 84V150M330 76V150M458 84V150M470 76V150"/>
+    </g>
+    <g fill="#f4f2ec" stroke="var(--ink)" stroke-width="1.2"><rect x="150" y="150" width="70" height="24"/><rect x="290" y="150" width="70" height="24"/><rect x="430" y="150" width="70" height="24"/></g>
+    <g fill="#fff" stroke="var(--ink)" stroke-width="1.2"><rect x="150" y="178" width="70" height="24"/><rect x="290" y="178" width="70" height="24"/><rect x="430" y="178" width="70" height="24"/></g>
+    <g font-size="10.5" text-anchor="middle">
+      <text x="185" y="166">transceiver</text><text x="325" y="166">transceiver</text><text x="465" y="166">transceiver</text>
+      <text x="185" y="194">MCU</text><text x="325" y="194">MCU</text><text x="465" y="194">MCU</text>
+      <text x="50" y="146">120 Ω</text><text x="590" y="146">120 Ω</text>
+      <text x="320" y="40" font-size="11.5">twisted pair (CAN-H / CAN-L, or A / B)</text>
+      <text x="320" y="58" fill="var(--muted)">terminated at the two physical ends only; nodes connect with short stubs</text>
+    </g>
+  </svg>
+  </div>
+</div>
+<div class="tablewrap"><table>
+  <tr><th></th><th>RS-485</th><th>CAN</th></tr>
+  <tr><td><b>What it defines</b></td><td>Only the electrical layer: voltages, drivers, receivers</td><td>Electrical layer plus framing, addressing by message ID, error checking and retransmission</td></tr>
+  <tr><td><b>Typical use</b></td><td>A UART carried over a long, noisy run; industrial sensors (e.g. Modbus)</td><td>Vehicles, distributed avionics and control systems</td></tr>
+  <tr><td><b>Who talks when</b></td><td>The protocol on top must decide; usually one controller polls the others</td><td>Any node can transmit; collisions are resolved bit by bit, with the lowest ID winning without corrupting the message</td></tr>
+  <tr><td><b>Speed and length</b></td><td>Up to about 10 Mbit/s over short runs; about 100 kbit/s over 1 km</td><td>1 Mbit/s up to about 40 m (CAN FD faster for data)</td></tr>
+</table></div>
+<p>CAN's arbitration is worth understanding from the electrical side. The bus has two states: <strong>dominant</strong>, when a transceiver drives the pair apart, and <strong>recessive</strong>, when nobody drives and the termination pulls the pair together. Like an open-drain line, a dominant bit from any node overrides recessive bits from all others. Each node reads the bus while it transmits; a node that sends recessive but reads dominant knows it has lost arbitration and stops, leaving the higher-priority message intact.</p>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">A CAN bus with the wrong termination</span></summary>
+  <div class="eb">
+    <p>A CAN bus with four nodes works on the bench with short wires, but in the vehicle, with 15 m of cable, it reports frequent errors. Measuring between CAN-H and CAN-L with power off reads 30 Ω.</p>
+    <div class="choice"><p>What's wrong?</p>
+    <ol class="opts">
+      <li>The cable is too long for CAN.<div class="why">15 m is well within CAN's range at typical speeds.</div></li>
+      <li data-correct>A correctly terminated bus measures 60 Ω (two 120 Ω resistors in parallel). 30 Ω means four terminators: every node has its own 120 Ω fitted. The extra terminations load the drivers and add reflections at the stubs; only the two nodes at the physical ends should be terminated.<div class="why">The resistance measurement is the quickest check of a CAN bus's termination.</div></li>
+      <li>The nodes need pull-up resistors.<div class="why">CAN transceivers bias the bus themselves; pull-ups aren't used.</div></li>
+      <li>Twisted pair should be replaced by two separate wires.<div class="why">Twisted pair is what makes the bus immune to noise.</div></li>
+    </ol>
+    <div class="solution"><p>Termination resistors belong at the two ends of the bus, matching the cable's characteristic impedance (next section). Modules that ship with a terminator fitted usually have a jumper or solder bridge to remove it. With power off, the bus should read about 60 Ω; 120 Ω means one is missing, 40 Ω or 30 Ω means extras.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 6 RINGING ================= -->
+<section class="sec" id="ringing" data-short="Ringing and termination">
+<h2>Ringing and termination on long wires <a class="vjump" data-t="32:00"></a></h2>
+<p>A signal doesn't arrive at the far end of a wire instantly: it travels at roughly two-thirds of the speed of light, about 5 ns per metre in a cable. When the time for an edge to travel the wire is comparable to the edge's rise time, the wire has to be treated as a <strong>transmission line</strong>: it has a <strong>characteristic impedance</strong> Z₀, typically around 100–120 Ω for a twisted pair, and an edge arriving at an end that doesn't match Z₀ partly reflects (the RF notes, Module 1, cover this in depth).</p>
+<p>A logic input is almost an open circuit, so it reflects nearly all of an arriving edge back towards the driver. The driver's low output impedance reflects it again, and the edge bounces back and forth, appearing at the receiver as overshoot and <strong>ringing</strong>. If a ring crosses the input's threshold, the receiver sees extra transitions, which on a clock line means extra clock edges and corrupted data. The fix is to make one end of the line match Z₀ so the reflection is absorbed:</p>
+<ul>
+  <li><strong>End (parallel) termination</strong>: a resistor equal to Z₀ across the line at the receiver. The edge is absorbed when it arrives. Used on CAN and RS-485, at both ends since either end may transmit.</li>
+  <li><strong>Series (source) termination</strong>: a resistor at the driver that, added to the driver's own output impedance, equals Z₀. The edge launches at half amplitude, doubles at the open receiver end, and its reflection is absorbed when it returns to the source. It uses no steady current, which suits point-to-point logic signals such as SPI clocks.</li>
+</ul>
+<p>A useful rule: termination is needed when the wire's one-way delay exceeds about one-sixth of the signal's rise time. Note that it depends on the <em>edge speed</em>, not the data rate: a slow UART from a fast microcontroller pin can still ring.</p>
+
+<div class="widget wide" id="w-ring">
+  <div class="wh"><span class="tag">Interactive</span><b>A fast edge on a long wire</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label for="rL">Wire length <b id="rLv"></b></label><input id="rL" type="range" min="0.05" max="10" step="0.05" value="2"></div>
+      <div class="ctrl"><label for="rT">Edge rise time <b id="rTv"></b></label><input id="rT" type="range" min="0" max="2" step="0.01" value="0.5"></div>
+      <div class="ctrl"><label>Termination</label><div class="seg" id="rM"><button type="button" data-v="none" class="on">None</button><button type="button" data-v="end">120 Ω at the receiver</button><button type="button" data-v="series">Series at the driver</button></div></div>
+      <p class="small">3.3 V driver with 20 Ω output impedance, twisted pair with Z₀ = 120 Ω and 5 ns/m. The receiver is a logic input; thresholds are drawn at 0.3 and 0.7 V<sub>DD</sub>. An end-terminated line settles at a lower voltage because the termination and the driver form a divider.</p>
+    </div>
+    <div>
+      <canvas id="cvRing" style="height:280px" aria-label="Voltage at the receiver against time after the driver switches, showing overshoot and ringing for an unterminated line, and a clean edge for a terminated one"></canvas>
+      <div class="readout">
+        <div class="stat"><div class="k">One-way delay</div><div class="v" id="rD"></div></div>
+        <div class="stat" id="rOS"><div class="k">Overshoot</div><div class="v" id="rO"></div></div>
+        <div class="stat" id="rXS"><div class="k">False threshold crossings</div><div class="v" id="rX"></div></div>
+      </div>
+      <div class="verdict" id="rVerdict"></div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>With a 3 ns edge, how long can the wire be before ringing appears?</li>
+    <li>On a 2 m wire, slow the edge to 50 ns. What happens to the ringing?</li>
+    <li>Compare end and series termination. Why does the series-terminated edge arrive in one clean step?</li>
+  </ol></div>
+</div>
+<p>Slowing the edge is a legitimate fix too: a series resistor of a few hundred ohms with the input's capacitance, or the slower slew-rate setting many microcontrollers offer on their pins, reduces both ringing and electromagnetic emissions, as long as the signal's timing can tolerate it.</p>
+</section>
+
+<!-- ================= 7 CHOOSING ================= -->
+<section class="sec" id="choose" data-short="Choosing a bus">
+<h2>Choosing a bus <a class="vjump" data-t="39:00"></a></h2>
+<div class="tablewrap"><table>
+  <tr><th>Bus</th><th>Wires</th><th>Typical speed</th><th>Distance</th><th>Devices</th><th>Best for</th></tr>
+  <tr><td><b>UART</b></td><td>2 (TX, RX) + ground</td><td>9.6 kbit/s – 1 Mbit/s</td><td>On a board, or a short cable</td><td>Point to point</td><td>GPS modules, radios, debug consoles</td></tr>
+  <tr><td><b>SPI</b></td><td>3 + one CS per device</td><td>1–50 Mbit/s</td><td>On a board</td><td>A few</td><td>ADCs, flash memory, displays, fast sensors</td></tr>
+  <tr><td><b>I²C</b></td><td>2 (shared) + ground</td><td>100–400 kbit/s</td><td>On a board (tens of cm)</td><td>Many (by address)</td><td>Slow sensors, configuration, many small devices</td></tr>
+  <tr><td><b>RS-485</b></td><td>Twisted pair (+ ground)</td><td>Up to 10 Mbit/s</td><td>Up to ~1 km</td><td>Up to 32+ (unit loads)</td><td>A UART link over a long, noisy cable</td></tr>
+  <tr><td><b>CAN</b></td><td>Twisted pair (+ ground)</td><td>125 kbit/s – 1 Mbit/s</td><td>~40 m at 1 Mbit/s</td><td>Many, any can talk</td><td>Distributed systems between boards</td></tr>
+</table></div>
+<p>Two rules of thumb settle most choices. Single-ended buses (UART, SPI, I²C) belong on a board, or at most on a short cable inside an enclosure; anything that leaves a box on a long cable, or runs past motors, valves and radios, should be differential. And when several boards must share information robustly, with error detection built in, CAN's arbitration and checksums save writing them in firmware.</p>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">A sensor 3 m away</span></summary>
+  <div class="eb">
+    <p>A pressure sensor with an I²C interface must be mounted 3 m from the flight computer, along a harness that also carries valve wiring.</p>
+    <div class="choice"><p>What's the best approach?</p>
+    <ol class="opts">
+      <li>Run I²C directly over the harness with strong pull-ups.<div class="why">3 m of cable adds hundreds of picofarads and couples valve switching noise onto single-ended, open-drain lines with slow edges.</div></li>
+      <li data-correct>Put a small microcontroller (or an I²C-to-differential extender) next to the sensor, and carry the data to the flight computer over a differential bus such as CAN or RS-485.<div class="why">Keep I²C short, on the board; use a differential bus for the long, noisy run.</div></li>
+      <li>Use a shielded cable and keep I²C at 400 kHz.<div class="why">Shielding helps noise but not capacitance; 400 kHz makes the rise-time problem worse.</div></li>
+      <li>Use an analog sensor instead and run the analog signal 3 m.<div class="why">An analog signal over the same harness picks up the same noise, with no error detection at all.</div></li>
+    </ol>
+    <div class="solution"><p>I²C is designed for a bus capacitance of a few hundred picofarads and a single shared ground, both of which a 3 m harness next to switching valves violates. Converting to a differential bus near the sensor gives noise immunity, tolerance of ground offsets and, with CAN, built-in error detection. Dedicated I²C bus extenders exist for when firmware changes aren't possible.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 8 LOGIC ANALYZER ================= -->
+<section class="sec" id="analyzer" data-short="Logic analyzers">
+<h2>Debugging with a logic analyzer <a class="vjump" data-t="42:00"></a></h2>
+<p>A <strong>logic analyzer</strong> records many digital lines at once, as ones and zeros against time, and decodes the protocols on them: it can show a UART's bytes as text, an I²C transaction's address, acknowledges and data, an SPI exchange's bytes on each line. Inexpensive USB analyzers do this well up to a few megahertz, which covers most microcontroller buses, and are the most useful tool for "the sensor doesn't respond".</p>
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>A logic analyzer capture of an I²C read, decoded</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 200" role="img" aria-label="Two captured lines, SDA and SCL, shown as square waves, with decoded annotations above: start, address 0x76 write, ACK, register 0xD0, ACK, repeated start, address 0x76 read, ACK, data 0x60, NACK, stop.">
+    <rect x="10" y="10" width="620" height="180" rx="6" fill="#1f2430"/>
+    <path id="la1" fill="none" stroke="#7fd1ff" stroke-width="1.6"/><path id="la2" fill="none" stroke="#ffd27f" stroke-width="1.6"/>
+    <g id="lab" font-size="10.5"></g>
+    <g font-size="11" fill="#cfd6e3"><text x="20" y="106">SDA</text><text x="20" y="156">SCL</text><text x="320" y="184" text-anchor="middle" font-size="10.5">S: start · Sr: repeated start · A: acknowledge · N: not acknowledged (ends the read) · P: stop</text></g>
+  </svg>
+  </div>
+</div>
+<p>A few practices make captures reliable:</p>
+<ul>
+  <li><strong>Sample fast enough</strong>: at least four times, better ten times, the bit rate, so short pulses and edges are captured accurately.</li>
+  <li><strong>Connect ground</strong> close to the signals being measured, as with the oscilloscope (Module 3).</li>
+  <li><strong>Trigger</strong> on the event of interest, such as a chip select going low or an I²C start, so the capture begins where it matters.</li>
+  <li><strong>Use the oscilloscope</strong> when the logic analyzer's ones and zeros look plausible but the system still misbehaves. A logic analyzer shows what a threshold decided; it can't show a slow edge, a ring crossing the threshold or a level sitting near the threshold, which is often the real problem.</li>
+</ul>
+
+<div class="example">
+  <span class="xk">Application</span>
+  <p>A typical first capture when a sensor doesn't respond: the controller sends the start, the address and the read/write bit, and the ninth clock shows SDA high, a NACK. That narrows the cause to the sensor: wrong address (check the address-select pin), no power, held in reset, or the SDA and SCL lines swapped. If instead the capture shows nothing at all on the lines, the problem is the microcontroller's pin configuration or firmware, and the wiring to the sensor isn't the suspect.</p>
+</div>
+</section>
+
+<!-- ================= DESIGN EXERCISES ================= -->
+<section class="sec" id="exercises" data-nonum data-short="Design exercises">
+<h2>Design exercises</h2>
+<p>Problems drawn from real hardware. Each takes a few steps. Enter numbers to check your reasoning as you go, or open the worked solutions and discussion. The figures above are useful for sanity-checking.</p>
+
+<div class="chal">
+  <div class="ch"><span class="cn">Exercise 1</span><span class="cd">Analysis · ●○○</span><span class="ctitle">UART throughput</span></div>
+  <div class="cbody">
+    <p>A GPS module sends data at 115 200 baud in 8N1 format.</p>
+    <div class="check" data-ans="86.8" data-tol="1%" data-unit="µs"><p>(a) How long does one byte take?</p>
+      <div class="miss" data-val="69.4"><p>That's 8 bits. A frame also has a start and a stop bit: 10 bits per byte.</p></div>
+      <div class="solution"><p>10 bits/115 200 = 86.8 µs.</p></div></div>
+    <div class="check" data-ans="11520" data-tol="1%" data-unit="bytes/s"><p>(b) What's the maximum throughput?</p>
+      <div class="solution"><p>115 200/10 = 11 520 bytes per second. A GPS module sending 600 bytes of messages ten times a second needs 6000 bytes/s: fine at 115 200, too much at 9600.</p></div></div>
+  </div>
+</div>
+
+<div class="chal">
+  <div class="ch"><span class="cn">Exercise 2</span><span class="cd">Design · ●●○</span><span class="ctitle">I²C pull-up limits</span></div>
+  <div class="cbody">
+    <p>A 3.3 V I²C bus runs at 400 kHz (rise time ≤ 300 ns) with 100 pF of bus capacitance. Devices must sink at most 3 mA at V<sub>OL</sub> = 0.4 V.</p>
+    <div class="check" data-ans="967" data-tol="2%" data-unit="Ω"><p>(a) Minimum pull-up?</p>
+      <div class="solution"><p>(3.3 − 0.4)/0.003 = 967 Ω.</p></div></div>
+    <div class="check" data-ans="3540" data-tol="2%" data-unit="Ω"><p>(b) Maximum pull-up?</p>
+      <div class="hint">t<sub>r</sub> = 0.8473 RC.</div>
+      <div class="solution"><p>R = 300 ns/(0.8473 × 100 pF) = 3.54 kΩ. A 2.2 kΩ pull-up sits comfortably between the limits.</p></div></div>
+  </div>
+</div>
+
+<div class="chal">
+  <div class="ch"><span class="cn">Exercise 3</span><span class="cd">Analysis · ●●○</span><span class="ctitle">When does a wire need termination?</span></div>
+  <div class="cbody">
+    <p>An SPI clock with 3 ns edges runs over a 1.5 m ribbon cable (about 5 ns/m).</p>
+    <div class="check" data-ans="7.5" data-tol="2%" data-unit="ns"><p>(a) What's the one-way delay?</p>
+      <div class="solution"><p>1.5 × 5 = 7.5 ns.</p></div></div>
+    <div class="check" data-ans="0.1" data-tol="3%" data-unit="m"><p>(b) Using the one-sixth rule, what's the longest wire that doesn't need termination for this edge?</p>
+      <div class="hint">Delay ≤ t<sub>r</sub>/6.</div>
+      <div class="solution"><p>3 ns/6 = 0.5 ns of delay, or about 0.1 m. At 1.5 m the line needs series termination at the driver, slower edges, or both.</p></div></div>
+  </div>
+</div>
+
+<div class="chal">
+  <div class="ch"><span class="cn">Exercise 4</span><span class="cd">Analysis · ●○○</span><span class="ctitle">Checking a CAN bus</span></div>
+  <div class="cbody">
+    <p>A CAN bus is correctly terminated with 120 Ω at each end.</p>
+    <div class="check" data-ans="60" data-tol="1%" data-unit="Ω"><p>What resistance should a meter read between CAN-H and CAN-L with power off?</p>
+      <div class="solution"><p>Two 120 Ω resistors in parallel: 60 Ω.</p></div></div>
+  </div>
+</div>
+</section>
+
+<!-- ================= BENCH ================= -->
+<section class="sec" id="bench" data-nonum data-short="At the bench">
+<h2>At the bench</h2>
+<div class="video" data-video="lab">
+  <div class="plan">
+    <p>Planned lab demo (≈ 25 min, filmed at the bench):</p>
+    <ol>
+      <li>Decoding UART, SPI and I²C with a logic analyzer</li>
+      <li>I²C rise times with different pull-ups, on the oscilloscope</li>
+      <li>Ringing on a long cable, and fixing it with termination</li>
+      <li>Measuring a CAN bus's termination</li>
+    </ol>
+  </div>
+</div>
+<div class="lab">
+  <h3>Buses on the wire</h3>
+  <div class="parts"><span>A microcontroller board</span><span>An I²C sensor and an SPI device</span><span>A USB logic analyzer</span><span>Oscilloscope</span><span>2 m of twisted-pair cable</span><span>Resistors: 1 kΩ, 4.7 kΩ, 10 kΩ, 100 Ω, 120 Ω</span></div>
+  <ol>
+    <li><b>Decode.</b> Capture the board talking to the sensor over I²C and SPI. Find the address, the acknowledges and the data bytes.</li>
+    <li><b>Pull-ups.</b> Probe SCL with 10 kΩ, 4.7 kΩ and 1 kΩ pull-ups at 100 kHz and 400 kHz; measure the rise time.</li>
+    <li><b>Ringing.</b> Drive a fast edge from a microcontroller pin down the 2 m cable to an open end and probe the far end. Add 120 Ω at the far end, then remove it and add 100 Ω in series at the driver.</li>
+    <li><b>Termination check.</b> If a CAN setup is available, measure the resistance between CAN-H and CAN-L with power off.</li>
+  </ol>
+  <div class="record"><b>What you should see:</b> decoded transactions with ACKs on every byte; rise times scaling with the pull-up; strong ringing on the open cable, a smaller but clean step with end termination, and a two-step edge at the driver but a clean one at the far end with series termination; and 60 Ω on a correctly terminated CAN bus.</div>
+</div>
+</section>
+
+<!-- ================= SUMMARY ================= -->
+<section class="sec" id="summary" data-nonum data-short="Summary">
+<h2>Summary &amp; cheat sheet</h2>
+<ol class="takeaways">
+  <li>UART: no clock; both ends must agree on baud rate, and clock errors accumulate across the frame. TX connects to RX.</li>
+  <li>SPI: clocked, push-pull, fast, one chip select per device; agree on the mode.</li>
+  <li>I²C: two shared open-drain lines with addresses; pull-ups trade sink current against rise time.</li>
+  <li>Differential signalling rejects common-mode noise and ground offsets; use it for anything on a long cable.</li>
+  <li>CAN and RS-485 run on twisted pair with 120 Ω at each end; CAN adds arbitration and error checking.</li>
+  <li>A wire longer than about rise time/6 of delay is a transmission line: terminate it, or slow the edges.</li>
+  <li>A logic analyzer shows decoded traffic; an oscilloscope shows why a threshold decided what it did.</li>
+</ol>
+<div class="cheat">
+  <div><b>UART 8N1</b>10 bits per byte<br><span class="small">bytes/s = baud/10</span></div>
+  <div><b>I²C pull-up</b>\(R_\text{min} = (V_{DD} - V_{OL})/I_{OL}\)<br><span class="small">\(R_\text{max} = t_r/(0.8473\,C)\)</span></div>
+  <div><b>I²C rise limits</b>100 kHz: 1000 ns<br><span class="small">400 kHz: 300 ns</span></div>
+  <div><b>Cable delay</b>≈ 5 ns/m<br><span class="small">terminate if delay &gt; t<sub>r</sub>/6</span></div>
+  <div><b>Termination</b>end: R = Z₀ · series: R + R<sub>driver</sub> = Z₀<br><span class="small">CAN: 120 Ω each end, 60 Ω measured</span></div>
+</div>
+<h3>Further reading</h3>
+<ul class="small">
+  <li><em>The Art of Electronics</em> (Horowitz &amp; Hill), chapter 12: logic interfacing, including transmission lines, termination and differential signalling, and chapter 14–15 on serial buses with microcontrollers.</li>
+  <li><em>Practical Electronics for Inventors</em> (Scherz &amp; Monk), chapters on microcontrollers and serial communication, with UART, SPI and I²C examples.</li>
+  <li>The I²C-bus specification (NXP UM10204), and transceiver manufacturers' application notes on RS-485 and CAN bus design.</li>
+</ul>
 </section>
 
 <nav class="pager"></nav>
 </main>
 </div>
 <footer class="site">Hardware Engineering Fundamentals · EE Fundamentals</footer>
+
+<script>
+'use strict';
+const $ = s => document.querySelector(s);
+const {col, si, fmt, lin, log, ticks, axes, line, text, dot, rgba} = Plot;
+function setVerdict(el, cls, html){ el.className = 'verdict ' + cls; el.innerHTML = html; }
+const svgPath = pts => pts.map(([x, y], i) => (i ? 'L' : 'M') + x.toFixed(1) + ' ' + y.toFixed(1)).join('');
+const frameBits = b => [0].concat([0, 1, 2, 3, 4, 5, 6, 7].map(k => (b >> k) & 1)).concat([1]);
+
+// static SVG drawings computed once
+(() => {
+  // UART frame of 0x4B
+  const bits = frameBits(0x4B), x0 = 40, bw = 52, hi = 50, lo = 110, pts = [[20, hi], [x0, hi]];
+  bits.forEach((b, k) => { const y = b ? hi : lo; pts.push([x0 + k*bw, y], [x0 + (k + 1)*bw, y]); });
+  pts.push([620, hi]);
+  $('#uf').setAttribute('d', svgPath(pts));
+  const names = ['start', 'D0', 'D1', 'D2', 'D3', 'D4', 'D5', 'D6', 'D7', 'stop'];
+  let g = '', t = '';
+  bits.forEach((b, k) => { const x = x0 + k*bw; g += `<path d="M${x} 30V128"/>`; t += `<text x="${x + bw/2}" y="26">${names[k]}</text><text x="${x + bw/2}" y="146" fill="var(--muted)">${b}</text><circle cx="${x + bw/2}" cy="${b ? hi : lo}" r="3.5" fill="var(--c2)"/>`; });
+  g += `<path d="M${x0 + 10*bw} 30V128"/>`;
+  $('#ug').innerHTML = g; $('#ut').innerHTML = t;
+  // SPI timing
+  const sx0 = 130, sp = 50, sc = [[90, 230], [sx0, 230]], mo = [], mi = [];
+  for (let k = 0; k < 8; k++){ const x = sx0 + k*sp; sc.push([x + 10, 230], [x + 10, 206], [x + 35, 206], [x + 35, 230], [x + sp, 230]); }
+  sc.push([600, 230]);
+  $('#sclk').setAttribute('d', svgPath(sc));
+  const dm = [1, 0, 1, 1, 0, 0, 1, 0], ds = [0, 1, 1, 0, 1, 0, 0, 1];
+  const bus = (arr, y0) => { let p = `M90 ${y0 - 8}H${sx0 - 10}`; arr.forEach((b, k) => { const x = sx0 - 10 + k*sp; p += `M${x} ${y0 - 8}L${x + 4} ${y0}L${x} ${y0 + 8}M${x} ${y0 - 8}L${x + 4} ${y0}`; p += `M${x + 4} ${y0 - 8 + (b ? 0 : 16)}H${x + sp - 4}`; }); return p; };
+  const dbus = (arr, y0) => { let p = ''; arr.forEach((b, k) => { const x1 = sx0 - 10 + k*sp, x2 = x1 + sp; p += `M${x1} ${y0}L${x1 + 5} ${y0 - 8}H${x2 - 5}L${x2} ${y0}L${x2 - 5} ${y0 + 8}H${x1 + 5}Z`; }); return p; };
+  $('#smosi').setAttribute('d', dbus(dm, 240)); $('#smiso').setAttribute('d', dbus(ds, 266));
+  // I2C start, address 0x76, W, ACK
+  const ix0 = 80, ip = 50, ihi = 168, ilo = 196, chi = 216, clo = 244;
+  const addr = [1, 1, 1, 0, 1, 1, 0], rw = 0, bitsI = addr.concat([rw, 0]);
+  const sda = [[70, ihi], [ix0 + 10, ihi], [ix0 + 20, ilo]], scl = [[70, chi], [ix0 + 30, chi], [ix0 + 34, clo]];
+  let prev = 0, lab = `<text x="${ix0 + 14}" y="158">S</text>`;
+  bitsI.forEach((b, k) => {
+    const x = ix0 + 40 + k*ip, y = b ? ihi : ilo;
+    sda.push([x, prev ? ihi : ilo], [x + 4, y], [x + ip - 4, y]); prev = b;
+    scl.push([x + 12, clo], [x + 14, chi], [x + 34, chi], [x + 36, clo], [x + ip, clo]);
+    const nm = k < 7 ? addr[k] : k === 7 ? 'W' : 'ACK';
+    lab += `<text x="${x + 24}" y="158" fill="${k === 8 ? 'var(--good)' : 'var(--ink)'}">${nm}</text>`;
+  });
+  sda.push([620, prev ? ihi : ilo]); scl.push([620, clo]);
+  lab += `<text x="${ix0 + 40 + 3.5*ip}" y="142" fill="var(--muted)">address 0x76, sent most-significant bit first</text>`;
+  $('#isda').setAttribute('d', svgPath(sda)); $('#iscl').setAttribute('d', svgPath(scl)); $('#ilab').innerHTML = lab;
+  // differential vs single-ended
+  const N = 200, se = [], a = [], b2 = [], df = [];
+  for (let i = 0; i <= N; i++){
+    const u = i/N, sig = Math.floor(u*4) % 2 ? 1 : 0, nz = 0.35*Math.sin(2*Math.PI*u*9) + 0.2*Math.sin(2*Math.PI*u*23 + 1);
+    se.push([20 + 280*u, 160 - 70*sig - 60*nz]);
+    a.push([340 + 280*u, 80 - 30*sig - 30*nz]); b2.push([340 + 280*u, 120 + 30*sig - 30*nz - 40]);
+    df.push([340 + 280*u, 200 - 50*sig]);
+  }
+  $('#d1').setAttribute('d', svgPath(se)); $('#d2').setAttribute('d', svgPath(a)); $('#d3').setAttribute('d', svgPath(b2)); $('#d4').setAttribute('d', svgPath(df));
+  // twisted pair
+  const t1 = [], t2 = []; for (let i = 0; i <= 300; i++){ const x = 50 + 540*i/300, y = 6*Math.sin(2*Math.PI*i/300*18); t1.push([x, 80 + y]); t2.push([x, 80 - y]); }
+  $('#tw1').setAttribute('d', svgPath(t1).replace(/^M[^L]+/, 'M50 80')); $('#tw2').setAttribute('d', svgPath(t2));
+  // logic analyzer capture: an I2C register read, with correct start, repeated-start and stop conditions
+  const H1 = 92, L1 = 112, H2 = 142, L2 = 162, la1 = [[50, H1]], la2 = [[50, H2]];
+  const set = (arr, xx, y) => { const last = arr[arr.length - 1]; arr.push([xx, last[1]], [xx, y]); };
+  let x = 54, labs = '';
+  const tag = (x0, w, nm, small) => { const c = nm === 'N' ? '#ff9a8a' : nm === 'A' ? '#9be59b' : '#cfd6e3'; labs += `<rect x="${x0}" y="${small ? 52 : 40}" width="${w}" height="${small ? 14 : 22}" rx="3" fill="${c}" opacity=".25"/><text x="${x0 + w/2}" y="${small ? 63 : 55}" text-anchor="middle" fill="${c}" font-size="${small ? 9 : 10.5}">${nm}</text>`; };
+  const bit = v => { set(la1, x + 1, v ? H1 : L1); set(la2, x + 4, H2); set(la2, x + 9, L2); x += 12; };
+  const byte = (bits, nm) => { const x0 = x; bits.forEach(bit); tag(x0, x - x0, nm); };
+  const ack = (v, nm) => { const x0 = x; bit(v); tag(x0, 12, nm, true); };
+  // start: SDA falls while SCL is high
+  tag(x, 12, 'S', true); set(la1, x + 3, L1); set(la2, x + 8, L2); x += 12;
+  byte([1, 1, 1, 0, 1, 1, 0, 0], '0x76 W'); ack(0, 'A'); x += 4;
+  byte([1, 1, 0, 1, 0, 0, 0, 0], '0xD0'); ack(0, 'A'); x += 4;
+  // repeated start
+  tag(x, 12, 'Sr', true); set(la1, x + 1, H1); set(la2, x + 3, H2); set(la1, x + 6, L1); set(la2, x + 9, L2); x += 12;
+  byte([1, 1, 1, 0, 1, 1, 0, 1], '0x76 R'); ack(0, 'A'); x += 4;
+  byte([0, 1, 1, 0, 0, 0, 0, 0], '0x60'); ack(1, 'N');
+  // stop: SDA rises while SCL is high
+  tag(x, 12, 'P', true); set(la1, x + 1, L1); set(la2, x + 3, H2); set(la1, x + 7, H1); x += 12;
+  la1.push([620, H1]); la2.push([620, H2]);
+  $('#la1').setAttribute('d', svgPath(la1)); $('#la2').setAttribute('d', svgPath(la2)); $('#lab').innerHTML = labs;
+})();
+
+/* ============ 1. UART sampling ============ */
+(() => {
+  const byte = Plot.seg('#uB', upd);
+  let s = {};
+  function upd(){
+    const e = +$('#uE').value/100, b = +byte(), bits = frameBits(b);
+    // receiver bit time in transmitter bit times; a fast receiver (positive error) samples early
+    const tr = 1/(1 + e), samples = bits.map((_, k) => (k + 0.5)*tr);
+    const got = samples.map(t => { const k = Math.floor(t); return k >= 0 && k < bits.length ? bits[k] : 1; });
+    let rx = 0; for (let k = 0; k < 8; k++) rx |= got[k + 1] << k;
+    const framing = got[9] !== 1, off = samples[9] - 9.5;
+    s = {bits, samples};
+    $('#uEv').textContent = (e >= 0 ? '+' : '') + fmt(e*100, 2) + ' %';
+    $('#uO').textContent = (off >= 0 ? '+' : '') + fmt(off*100, 3) + ' % of a bit';
+    $('#uR').textContent = '0x' + rx.toString(16).toUpperCase().padStart(2, '0') + (framing ? ' (framing error)' : '');
+    const ok = rx === b && !framing;
+    $('#uRS').className = 'stat ' + (ok ? '' : 'bad');
+    const v = $('#uVerdict');
+    if (!ok) setVerdict(v, 'bad', `<b>Corrupted.</b> By the end of the frame the samples have drifted ${fmt(Math.abs(off)*100, 3)} % of a bit, into the neighbouring bits.`);
+    else if (Math.abs(off) > 0.3) setVerdict(v, 'warn', `<b>Received, but only just.</b> The stop-bit sample is ${fmt(Math.abs(off)*100, 3)} % of a bit from its centre, close to an edge; a little jitter or a slow edge would corrupt it.`);
+    else setVerdict(v, 'ok', `<b>Received correctly.</b> The last sample is ${fmt(Math.abs(off)*100, 3)} % of a bit from centre.`);
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvUart'), (ctx, W, H) => {
+    const {bits, samples} = s; if (!bits) return;
+    const P = {l: 20, r: W - 14, t: 26, b: H - 40}, X = lin(-0.5, 10.6, P.l, P.r), Y = lin(-0.3, 1.3, P.b, P.t);
+    for (let k = 0; k <= 10; k++) line(ctx, [[X(k), P.t], [X(k), P.b]], col.line, 1);
+    const pts = [[X(-0.5), Y(1)], [X(0), Y(1)]]; bits.forEach((b, k) => pts.push([X(k), Y(b)], [X(k + 1), Y(b)])); pts.push([X(10.6), Y(1)]);
+    line(ctx, pts, col.c1, 2.2);
+    samples.forEach((t, k) => { const kk = Math.floor(t), frac = t - kk, safe = kk === k && frac > 0.15 && frac < 0.85; const c = kk !== k ? col.bad : safe ? col.good : col.warn; line(ctx, [[X(t), P.t], [X(t), P.b]], c, 1.4, [3, 3]); dot(ctx, X(t), Y(kk >= 0 && kk < bits.length ? bits[kk] : 1), 5, c); });
+    ['S', '0', '1', '2', '3', '4', '5', '6', '7', 'P'].forEach((n, k) => text(ctx, n === 'P' ? 'stop' : n === 'S' ? 'start' : 'D' + n, X(k + 0.5), P.t - 12, {align: 'center', color: col.ink2}));
+    text(ctx, 'dots: where the receiver samples', P.l, P.b + 20, {color: col.muted});
+  });
+  $('#uE').addEventListener('input', upd);
+  upd();
+})();
+
+/* ============ 2. I2C pull-ups ============ */
+(() => {
+  const mode = Plot.seg('#iM', upd), VDD = 3.3;
+  let s = {};
+  function upd(){
+    const f = +mode()*1e3, R = Math.pow(10, +$('#iR').value), n = +$('#iN').value, L = +$('#iL').value;
+    const C = (n*10 + L*0.6 + 10)*1e-12, tr = 0.8473*R*C, trmax = f > 200e3 ? 300e-9 : 1000e-9, isink = (VDD - 0.4)/R;
+    s = {f, R, C, tr};
+    $('#iRv').textContent = si(R, 'Ω'); $('#iNv').textContent = n; $('#iLv').textContent = L + ' cm';
+    $('#iC').textContent = si(C, 'F'); $('#iT').textContent = si(tr, 's') + ' (max ' + si(trmax, 's') + ')'; $('#iI').textContent = si(isink, 'A') + ' (max 3 mA)';
+    $('#iTS').className = 'stat ' + (tr > trmax ? 'bad' : tr > 0.8*trmax ? 'warn' : ''); $('#iIS').className = 'stat ' + (isink > 3e-3 ? 'bad' : '');
+    const v = $('#iVerdict');
+    if (isink > 3e-3) setVerdict(v, 'bad', `<b>Pull-up too strong.</b> A device pulling the line low must sink ${si(isink, 'A')}, more than the 3 mA it's guaranteed to handle, so its low level may not reach 0.4 V.`);
+    else if (tr > trmax) setVerdict(v, 'bad', `<b>Too slow.</b> The ${si(R, 'Ω')} pull-up and ${si(C, 'F')} of bus capacitance give a ${si(tr, 's')} rise, beyond the ${si(trmax, 's')} limit; at this speed the clock barely reaches a valid high before it's pulled low again. Use a smaller pull-up, less capacitance, or a lower speed.`);
+    else setVerdict(v, 'ok', `<b>Within specification.</b> Rise time ${si(tr, 's')}; any pull-up between ${si((VDD - 0.4)/3e-3, 'Ω')} and ${si(trmax/(0.8473*C), 'Ω')} works for this bus.`);
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvI2c'), (ctx, W, H) => {
+    const {f, R, C} = s; if (!f) return;
+    const P = {l: 44, r: W - 14, t: 14, b: H - 40}, T = 2/f, X = lin(0, T, P.l, P.r), Y = lin(-0.2, 3.6, P.b, P.t);
+    axes(ctx, P, X, Y, {xt: ticks(0, T, 4), yt: [0, 0.99, 2.31, 3.3], xl: 'time', yl: 'SCL (V)', xf: t => si(t, 's').replace(' ', ''), yf: v => fmt(v, 2), xgrid: true});
+    Plot.clip(ctx, P);
+    line(ctx, [[P.l, Y(2.31)], [P.r, Y(2.31)]], col.good, 1, [4, 4]); line(ctx, [[P.l, Y(0.99)], [P.r, Y(0.99)]], col.c1, 1, [4, 4]);
+    const pts = []; let v = 0; const N = 800, dt = T/N;
+    for (let i = 0; i <= N; i++){ const t = i*dt, ph = (t*f) % 1; if (ph < 0.5) v = 0; else v += (3.3 - v)*(1 - Math.exp(-dt/(R*C))); pts.push([X(t), Y(v)]); }
+    line(ctx, pts, col.c2, 2.2);
+    ctx.restore();
+    text(ctx, 'reads high', P.r - 4, Y(2.31) - 9, {align: 'right', color: col.good}); text(ctx, 'reads low', P.r - 4, Y(0.99) + 10, {align: 'right', color: col.c1});
+  });
+  ['#iR', '#iN', '#iL'].forEach(id => $(id).addEventListener('input', upd));
+  upd();
+})();
+
+/* ============ 3. Ringing and termination ============ */
+(() => {
+  const term = Plot.seg('#rM', upd), VS = 3.3, RD = 20, Z0 = 120, NS = 5e-9;
+  let s = {};
+  function upd(){
+    const L = +$('#rL').value, tr = Math.pow(10, +$('#rT').value)*1e-9, m = term(), td = L*NS;
+    const Rs = m === 'series' ? Z0 : RD, ZL = m === 'end' ? Z0 : 1e9;
+    const v1 = VS*Z0/(Rs + Z0), gL = (ZL - Z0)/(ZL + Z0), gS = (Rs - Z0)/(Rs + Z0);
+    const ramp = t => Math.max(0, Math.min(1, t/tr));
+    const T = Math.max(14*td, 4*tr) + tr, N = 900, ts = [], vs = [];
+    for (let i = 0; i <= N; i++){
+      const t = T*i/N; let v = 0;
+      for (let k = 0; k < 60; k++){ const t0 = (2*k + 1)*td; if (t < t0) break; v += v1*(1 + gL)*Math.pow(gL*gS, k)*ramp(t - t0); }
+      ts.push(t); vs.push(v);
+    }
+    const vf = vs[vs.length - 1], pk = Math.max(...vs), os = Math.max(0, (pk - vf)/vf*100);
+    // false crossings: after first exceeding the high threshold, any dip below it again
+    let cross = 0, above = false; for (const v of vs){ if (!above && v > 2.31) above = true; else if (above && v < 2.31){ cross++; above = false; } }
+    s = {ts, vs, T, vf};
+    $('#rLv').textContent = fmt(L, 3) + ' m'; $('#rTv').textContent = si(tr, 's');
+    $('#rD').textContent = si(td, 's'); $('#rO').textContent = fmt(os, 3) + ' %'; $('#rX').textContent = cross;
+    $('#rOS').className = 'stat ' + (os > 30 ? 'bad' : os > 10 ? 'warn' : ''); $('#rXS').className = 'stat ' + (cross > 0 ? 'bad' : '');
+    const v = $('#rVerdict');
+    if (cross > 0) setVerdict(v, 'bad', `<b>Ringing crosses the threshold.</b> The receiver would see ${cross + 1} rising edges instead of one; on a clock line that's extra clock pulses and corrupted data.`);
+    else if (os > 15) setVerdict(v, 'warn', `<b>Overshoot.</b> ${fmt(os, 3)} % above the final level. The input's protection diodes are conducting, and the ringing radiates.`);
+    else if (td < tr/6) setVerdict(v, 'ok', `<b>Electrically short.</b> The ${si(td, 's')} delay is less than a sixth of the ${si(tr, 's')} edge, so reflections are over before the edge is.`);
+    else setVerdict(v, 'ok', `<b>Clean.</b> The termination absorbs the reflection${m === 'end' ? `; the final level is ${fmt(vf, 3)} V, set by the driver and the termination dividing the supply` : ''}.`);
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvRing'), (ctx, W, H) => {
+    const {ts, vs, T} = s; if (!ts) return;
+    const P = {l: 44, r: W - 14, t: 14, b: H - 40}, X = lin(0, T, P.l, P.r), Y = lin(-0.5, 6.4, P.b, P.t);
+    axes(ctx, P, X, Y, {xt: ticks(0, T, 4), yt: [0, 0.99, 2.31, 3.3, 5], xl: 'time after the driver switches', yl: 'receiver (V)', xf: t => si(t, 's').replace(' ', ''), yf: v => fmt(v, 2), xgrid: true});
+    Plot.clip(ctx, P);
+    line(ctx, [[P.l, Y(2.31)], [P.r, Y(2.31)]], col.good, 1, [4, 4]); line(ctx, [[P.l, Y(0.99)], [P.r, Y(0.99)]], col.c1, 1, [4, 4]);
+    line(ctx, ts.map((t, i) => [X(t), Y(vs[i])]), col.c2, 2.2);
+    ctx.restore();
+  });
+  ['#rL', '#rT'].forEach(id => $(id).addEventListener('input', upd));
+  upd();
+})();
+</script>
 </body>
 </html>

@@ -4,31 +4,698 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Digital Logic &amp; Microcontrollers · EE 8</title>
-<meta name="description" content="EE Fundamentals module 8: Logic levels, GPIO, pull-ups, PWM, interrupts and watchdogs. In development.">
+<meta name="description" content="EE module 8: logic levels and noise margins, CMOS inputs and floating pins, pull-up and pull-down resistors, switch bounce, push-pull and open-drain outputs, timers and PWM, interrupts, watchdogs and brown-out resets, and level shifting.">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
 <link rel="stylesheet" href="../../assets/site.css">
 <script src="../../assets/course.js"></script>
 <script src="../../assets/site.js"></script>
+<script src="../../assets/plot.js"></script>
 </head>
 <body>
 <div class="layout">
 <aside class="side" aria-label="Module contents"></aside>
 <main class="content">
 
-<!-- Placeholder: replace this page with the module when it's written (see README.md, "Writing a module"). -->
+<!-- ================= HERO ================= -->
 <header class="hero">
   <div class="eyebrow">EE Fundamentals · Module 8</div>
-  <h1>Digital Logic &amp; Microcontrollers</h1>
-  <p class="lede">Logic levels, GPIO, pull-ups, PWM, interrupts and watchdogs.</p>
+  <h1>Digital logic &amp; microcontrollers</h1>
+  <p class="lede">A microcontroller reads the world as ones and zeros and acts on it through its pins. Underneath, those ones and zeros are analog voltages with thresholds, margins and timing, and most digital hardware problems are analog problems in disguise: a floating input that reads random values, a switch that bounces, an output that can't drive what it's connected to, two chips that disagree on what "high" means. This module covers the electrical side of a microcontroller's pins, and the hardware features (timers, interrupts, watchdogs, brown-out detection) that make firmware reliable.</p>
+  <p class="meta">Builds on: EE modules 1–7, especially RC time constants (Module 3) and transistors as switches (Module 6). Bench: a microcontroller development board, oscilloscope, a push-button, resistors, and a logic analyzer if available.</p>
+  <div class="resources" data-auto></div>
+  <div class="objectives">
+    <h3>What's covered</h3>
+    <ul>
+      <li>Logic levels, thresholds and noise margins, and whether two chips can talk.</li>
+      <li>What's inside a CMOS input, why it must never float, and how pull-up and pull-down resistors fix it.</li>
+      <li>Switch bounce and debouncing.</li>
+      <li>Push-pull and open-drain outputs, and what each can drive.</li>
+      <li>Timers and PWM, and interrupts.</li>
+      <li>Watchdogs and brown-out resets: recovering from firmware hangs and sagging supplies.</li>
+      <li>Level shifting between 5 V, 3.3 V and 1.8 V logic.</li>
+    </ul>
+  </div>
+  <div class="video" data-video="lecture" id="lecture">
+    <div class="plan">
+      <p>Planned walkthrough of this page (≈ 45 min):</p>
+      <ol>
+        <li data-t="0:00">Logic levels and noise margins</li>
+        <li data-t="7:00">CMOS inputs and floating pins</li>
+        <li data-t="12:00">Pull-ups, pull-downs and switch bounce</li>
+        <li data-t="19:00">Push-pull and open-drain outputs</li>
+        <li data-t="25:00">Timers and PWM</li>
+        <li data-t="31:00">Interrupts</li>
+        <li data-t="35:00">Watchdogs and brown-out resets</li>
+        <li data-t="40:00">Level shifting</li>
+      </ol>
+    </div>
+  </div>
 </header>
 
-<section class="sec" id="status" data-nonum data-short="In development">
-<h2>In development</h2>
-<p>This module hasn't been written yet. The other modules are listed in the strip at the top of the page, and the links below go to the neighbouring ones.</p>
+<!-- ================= 1 LOGIC LEVELS ================= -->
+<section class="sec" id="levels" data-short="Logic levels">
+<h2>Logic levels and noise margins <a class="vjump" data-t="0:00"></a></h2>
+<p>A digital signal is a voltage that's meant to be either near the supply (a <strong>1</strong>, high) or near ground (a <strong>0</strong>, low). Real voltages are never exactly at either, so every logic family specifies four guaranteed limits:</p>
+<ul>
+  <li>V<sub>OH(min)</sub>: the lowest voltage an output produces when driving high.</li>
+  <li>V<sub>OL(max)</sub>: the highest voltage an output produces when driving low.</li>
+  <li>V<sub>IH(min)</sub>: the lowest voltage an input is guaranteed to read as high.</li>
+  <li>V<sub>IL(max)</sub>: the highest voltage an input is guaranteed to read as low.</li>
+</ul>
+<p>Between V<sub>IL</sub> and V<sub>IH</sub> is a forbidden zone where the input may read either value. The gaps between what an output guarantees and what an input needs are the <strong>noise margins</strong>: how much noise, ground shift or voltage drop the signal can pick up on its way and still be read correctly.</p>
+<div class="eq">$$\text{NM}_H = V_{OH(\min)} - V_{IH(\min)} \qquad \text{NM}_L = V_{IL(\max)} - V_{OL(\max)}$$</div>
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>Output and input levels for 3.3 V CMOS logic</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 260" role="img" aria-label="Two vertical voltage scales from 0 to 3.3 volts. On the output side, a driven high is guaranteed above 2.9 volts and a driven low below 0.4 volts. On the input side, anything above 2.3 volts reads high and anything below 1.0 volt reads low, with an undefined zone in between. The gaps between them are the noise margins.">
+    <g fill="none" stroke="var(--ink)" stroke-width="1.2"><path d="M140 30V230M420 30V230"/></g>
+    <rect x="120" y="30" width="40" height="38" fill="var(--good)" opacity=".35"/><rect x="120" y="198" width="40" height="32" fill="var(--c1)" opacity=".35"/>
+    <rect x="400" y="30" width="40" height="76" fill="var(--good)" opacity=".35"/><rect x="400" y="106" width="40" height="70" fill="var(--bad)" opacity=".2"/><rect x="400" y="176" width="40" height="54" fill="var(--c1)" opacity=".35"/>
+    <g stroke="var(--ink2)" stroke-dasharray="3 3"><path d="M160 68H400M160 198H400"/></g>
+    <g stroke="var(--c5)" stroke-width="2"><path d="M280 68V106M272 68h16M272 106h16"/><path d="M280 176V198M272 176h16M272 198h16"/></g>
+    <g font-size="11.5">
+      <text x="140" y="20" text-anchor="middle" font-weight="600">output</text><text x="420" y="20" text-anchor="middle" font-weight="600">input</text>
+      <text x="112" y="34" text-anchor="end">3.3 V</text><text x="112" y="72" text-anchor="end">V<tspan font-size="9" dy="2">OH</tspan><tspan dy="-2"> 2.9 V</tspan></text><text x="112" y="202" text-anchor="end">V<tspan font-size="9" dy="2">OL</tspan><tspan dy="-2"> 0.4 V</tspan></text><text x="112" y="234" text-anchor="end">0 V</text>
+      <text x="448" y="72">reads high</text><text x="448" y="110">V<tspan font-size="9" dy="2">IH</tspan><tspan dy="-2"> 2.3 V</tspan></text>
+      <text x="448" y="146" fill="var(--bad)">undefined</text>
+      <text x="448" y="180">V<tspan font-size="9" dy="2">IL</tspan><tspan dy="-2"> 1.0 V</tspan></text><text x="448" y="214">reads low</text>
+      <text x="290" y="92" fill="var(--c5)">high noise margin 0.6 V</text>
+      <text x="290" y="191" fill="var(--c5)">low noise margin 0.6 V</text>
+      <text x="320" y="252" text-anchor="middle" fill="var(--muted)">typical values; each chip's datasheet gives its own (often as fractions of V<tspan font-size="9" dy="2">DD</tspan><tspan dy="-2">, e.g. V</tspan><tspan font-size="9" dy="2">IH</tspan><tspan dy="-2"> = 0.7 V</tspan><tspan font-size="9" dy="2">DD</tspan><tspan dy="-2">)</tspan></text>
+    </g>
+  </svg>
+  </div>
+</div>
+
+<div class="widget wide" id="w-lv">
+  <div class="wh"><span class="tag">Interactive</span><b>Can this output drive that input?</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label>Driving chip</label><div class="seg" id="lD"><button type="button" data-v="c18">1.8 V CMOS</button><button type="button" data-v="c33" class="on">3.3 V CMOS</button><button type="button" data-v="c5">5 V CMOS</button><button type="button" data-v="ttl">5 V TTL</button></div></div>
+      <div class="ctrl"><label>Receiving chip</label><div class="seg" id="lR"><button type="button" data-v="c18">1.8 V CMOS</button><button type="button" data-v="c33">3.3 V CMOS</button><button type="button" data-v="c5" class="on">5 V CMOS</button><button type="button" data-v="ttl">5 V TTL-compatible</button></div></div>
+      <div class="ctrl"><label for="lN">Noise and ground shift on the wire <b id="lNv"></b></label><input id="lN" type="range" min="0" max="1" step="0.01" value="0.2"></div>
+      <p class="small">Typical datasheet limits. A 5 V input is also checked against its absolute maximum: a 3.3 V input driven to 5 V is overdriven.</p>
+    </div>
+    <div>
+      <canvas id="cvLv" style="height:280px" aria-label="Side-by-side voltage bars: the driver's guaranteed high and low output ranges and the receiver's high, undefined and low input ranges, with the noise allowance shown"></canvas>
+      <div class="readout">
+        <div class="stat" id="lHS"><div class="k">High noise margin</div><div class="v" id="lH"></div></div>
+        <div class="stat" id="lLS"><div class="k">Low noise margin</div><div class="v" id="lL"></div></div>
+      </div>
+      <div class="verdict" id="lVerdict"></div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>Drive a 5 V CMOS input from a 3.3 V output. Which margin fails?</li>
+    <li>Drive a TTL-compatible 5 V input from the same 3.3 V output. Why does it work?</li>
+    <li>Drive a 3.3 V input from a 5 V output. What's the problem now?</li>
+  </ol></div>
+</div>
+</section>
+
+<!-- ================= 2 CMOS INPUTS ================= -->
+<section class="sec" id="cmos" data-short="CMOS inputs">
+<h2>CMOS inputs and floating pins <a class="vjump" data-t="7:00"></a></h2>
+<p>A CMOS input is the gates of two MOSFETs, a P-channel to the supply and an N-channel to ground, connected together (Module 6). Like any MOSFET gate, it's a small capacitor, a few picofarads, with almost no leakage: its input resistance is in the gigaohms. Protection diodes from the pin to the supply and to ground clamp static discharge and overvoltages.</p>
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>Inside a CMOS input pin</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 220" role="img" aria-label="An input pin connects to a pair of protection diodes, one to the supply and one to ground, and then to the joined gates of a P-channel MOSFET connected to the supply and an N-channel MOSFET connected to ground, whose joined drains drive the chip's internal logic. The gates form a few picofarads of capacitance and draw almost no current.">
+    <defs><g id="gnd8"><path d="M-10 0h20M-6 4h12M-2 8h4" stroke="var(--ink)" stroke-width="1.6"/></g></defs>
+    <g fill="none" stroke="var(--ink)" stroke-width="1.6">
+      <path d="M40 110H300M120 110V80M120 110V170M120 40V60M300 70V150"/>
+      <path d="M300 70H320M300 150H320M326 56V84M326 136V164M334 50V60M334 66V74M334 80V90M334 130V140M334 146V154M334 160V170M334 55H360V30M334 85H360V110M334 135H360V110M334 165H360V190M360 110H440"/>
+      <path d="M120 40H360"/>
+    </g>
+    <path d="M110 80L120 62L130 80Z" fill="var(--ink)"/><path d="M110 62h20" stroke="var(--ink)" stroke-width="2"/>
+    <path d="M110 158L120 140L130 158Z" fill="var(--ink)"/><path d="M110 140h20" stroke="var(--ink)" stroke-width="2"/>
+    <circle cx="320" cy="70" r="4" fill="#fff" stroke="var(--ink)" stroke-width="1.4"/>
+    <use href="#gnd8" x="120" y="172"/><use href="#gnd8" x="360" y="192"/>
+    <rect x="440" y="90" width="90" height="40" fill="#f4f2ec" stroke="var(--ink)"/>
+    <g fill="#fff" stroke="var(--ink)" stroke-width="1.4"><circle cx="36" cy="110" r="4"/></g>
+    <g font-size="11.5">
+      <text x="30" y="98">pin</text><text x="240" y="34" text-anchor="middle">V<tspan font-size="9" dy="2">DD</tspan></text>
+      <text x="96" y="76" text-anchor="end" font-size="10.5">clamp to V<tspan font-size="9" dy="2">DD</tspan></text><text x="96" y="154" text-anchor="end" font-size="10.5">clamp to ground</text>
+      <text x="372" y="60" font-size="10.5">P-FET</text><text x="372" y="166" font-size="10.5">N-FET</text>
+      <text x="485" y="114" text-anchor="middle">internal logic</text>
+      <text x="210" y="128" text-anchor="middle" fill="var(--muted)">gates: a few pF, gigaohms</text>
+      <text x="320" y="214" text-anchor="middle" fill="var(--muted)">near mid-supply, both transistors conduct at once: extra current, and the output can oscillate</text>
+    </g>
+  </svg>
+  </div>
+</div>
+<p>Three consequences follow, each a common source of trouble:</p>
+<ul>
+  <li><strong>An unconnected input floats.</strong> With nothing driving it, its voltage is set by leakage and by whatever couples to it capacitively: nearby signals, a hand near the board, mains hum. It drifts and wanders across the threshold, and the firmware reads random values.</li>
+  <li><strong>An input held near mid-supply wastes power.</strong> Both transistors partly conduct, so current flows straight from supply to ground through them; a floating input can raise a sleeping microcontroller's current from microamps to milliamps.</li>
+  <li><strong>An input driven above the supply</strong>, or driven while the chip is unpowered, conducts through the protection diode into the supply rail: the back-powering problem of Module 7.</li>
+</ul>
+<p>Unused pins should therefore be configured as outputs, or as inputs with the internal pull-up or pull-down enabled, never left as floating inputs.</p>
+</section>
+
+<!-- ================= 3 PULL-UPS AND BOUNCE ================= -->
+<section class="sec" id="pullups" data-short="Pull-ups and bounce">
+<h2>Pull-ups, pull-downs and switch bounce <a class="vjump" data-t="12:00"></a></h2>
+<p>A <strong>pull-up resistor</strong> connects an input to the supply, so it reads high whenever nothing else drives it; a <strong>pull-down</strong> does the same to ground. A push-button between the pin and ground, with a pull-up, then reads high when released and low when pressed. Most microcontrollers have built-in pull-ups of 20–50 kΩ that firmware can enable.</p>
+<p>The value is a trade-off, and both sides come from earlier modules. A small resistor wastes current whenever the button is pressed (I = V/R) and is harder for an open-drain output to overcome. A large resistor is weak: with the pin's capacitance and the wiring's, it forms an RC time constant that slows the rising edge (Module 3), and it's more easily overcome by noise coupled onto a long wire.</p>
+
+<div class="widget wide" id="w-pu">
+  <div class="wh"><span class="tag">Interactive</span><b>A button input: floating, or pulled up</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label>Input configuration</label><div class="seg" id="pM"><button type="button" data-v="float">No pull-up</button><button type="button" data-v="pu" class="on">Pull-up</button></div></div>
+      <div class="ctrl"><label for="pR">Pull-up resistance <b id="pRv"></b></label><input id="pR" type="range" min="3" max="6" step="0.01" value="4"></div>
+      <div class="ctrl"><label for="pC">Pin and wiring capacitance <b id="pCv"></b></label><input id="pC" type="range" min="1" max="3" step="0.001" value="1.699"></div>
+      <div class="ctrl"><label>Button contacts</label><div class="seg" id="pB"><button type="button" data-v="0" class="on">Clean</button><button type="button" data-v="1">Bouncing</button></div></div>
+      <p class="small">3.3 V logic, threshold about 1.65 V. The button is pressed at 1 ms and released at 4 ms. Without a pull-up, the pin picks up noise coupled from nearby wiring.</p>
+    </div>
+    <div>
+      <canvas id="cvPu" style="height:300px" aria-label="Top: the pin voltage over time as the button is pressed and released. Bottom: what the microcontroller reads, high or low, each time it samples the pin."></canvas>
+      <div class="readout">
+        <div class="stat"><div class="k">Current while pressed</div><div class="v" id="pI"></div></div>
+        <div class="stat"><div class="k">Rise time after release</div><div class="v" id="pT"></div></div>
+        <div class="stat" id="pES"><div class="k">Extra transitions read</div><div class="v" id="pE"></div></div>
+      </div>
+      <div class="verdict" id="pVerdict"></div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>Remove the pull-up. What does the microcontroller read while the button isn't pressed?</li>
+    <li>With a 1 MΩ pull-up and 1 nF of wiring capacitance, how long does the pin take to return high?</li>
+    <li>Turn on bouncing contacts. How many presses does the firmware count?</li>
+  </ol></div>
+</div>
+
+<h3>Switch bounce and debouncing</h3>
+<p>Mechanical contacts don't close cleanly: they bounce several times over a millisecond or more before settling. A microcontroller sampling every microsecond sees each bounce as a separate press. Two cures, often used together:</p>
+<ul>
+  <li><strong>Hardware:</strong> an RC low-pass filter on the input (Module 4), with a time constant longer than the bounce, ideally into a Schmitt-trigger input whose hysteresis prevents a slow edge from being read as several transitions.</li>
+  <li><strong>Firmware:</strong> accept a change only when the input has stayed in its new state for some time, typically 10–50 ms.</li>
+</ul>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">A sleeping board that draws too much</span></summary>
+  <div class="eb">
+    <p>A board's microcontroller is specified to draw 5 µA in sleep, but the whole board draws 1.2 mA. Several unused pins are configured as inputs with nothing connected.</p>
+    <div class="choice"><p>What's the likely cause?</p>
+    <ol class="opts">
+      <li>The datasheet is wrong.<div class="why">Sleep currents are usually measured carefully; the board's configuration is the suspect.</div></li>
+      <li data-correct>The floating inputs drift to mid-supply, where both transistors in each input partly conduct, passing current from supply to ground. Configuring unused pins as outputs, or enabling their pull-ups or pull-downs, removes it.<div class="why">A CMOS input held near the threshold draws "shoot-through" current.</div></li>
+      <li>The pull-up resistors on the used pins draw current.<div class="why">A pull-up only draws current when its line is held low.</div></li>
+      <li>The board's capacitors leak.<div class="why">Ceramic capacitor leakage is far below a milliamp.</div></li>
+    </ol>
+    <div class="solution"><p>Each floating CMOS input settles somewhere near mid-supply, where its P- and N-channel transistors are both partly on, passing tens to hundreds of microamps each. Defining every pin's state is part of every low-power design.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 4 OUTPUTS ================= -->
+<section class="sec" id="outputs" data-short="Push-pull and open-drain">
+<h2>Push-pull and open-drain outputs <a class="vjump" data-t="19:00"></a></h2>
+<p>A <strong>push-pull</strong> output has two transistors: one connects the pin to the supply to drive it high, the other to ground to drive it low. It drives actively in both directions, with fast edges. An <strong>open-drain</strong> output (open-collector for BJTs) has only the transistor to ground: it can pull the pin low, and when "high" it simply lets go, relying on a pull-up resistor to raise the line.</p>
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>Push-pull and open-drain outputs</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 230" role="img" aria-label="Left: a push-pull output, a switch to the supply above the pin and a switch to ground below it; only one is on at a time. Right: two open-drain outputs share one line with a pull-up resistor to the supply; either can pull the line low, and the line is high only when both let go, a wired-AND.">
+    <defs><g id="gnd9"><path d="M-10 0h20M-6 4h12M-2 8h4" stroke="var(--ink)" stroke-width="1.6"/></g></defs>
+    <g fill="none" stroke="var(--ink)" stroke-width="1.6">
+      <path d="M120 30V60M120 90L138 76M120 100V110H200M120 110V120M120 150L138 136M120 160V184"/>
+      <path d="M400 30V50l7 3l-14 6l14 6l-14 6l14 6l-7 3V100M340 110H600M360 110V130M360 160L378 146M360 170V184M520 110V130M520 160L538 146M520 170V184"/>
+    </g>
+    <g fill="var(--ink)"><circle cx="120" cy="60" r="3"/><circle cx="120" cy="90" r="3"/><circle cx="120" cy="120" r="3"/><circle cx="120" cy="150" r="3"/><circle cx="360" cy="130" r="3"/><circle cx="360" cy="160" r="3"/><circle cx="520" cy="130" r="3"/><circle cx="520" cy="160" r="3"/><circle cx="400" cy="110" r="3"/><circle cx="360" cy="110" r="3"/><circle cx="520" cy="110" r="3"/></g>
+    <path d="M400 100V110" stroke="var(--ink)" stroke-width="1.6"/>
+    <use href="#gnd9" x="120" y="186"/><use href="#gnd9" x="360" y="186"/><use href="#gnd9" x="520" y="186"/>
+    <g fill="#fff" stroke="var(--ink)" stroke-width="1.4"><circle cx="204" cy="110" r="4"/><circle cx="604" cy="110" r="4"/></g>
+    <g font-size="11.5">
+      <text x="120" y="22" text-anchor="middle">V<tspan font-size="9" dy="2">DD</tspan></text><text x="400" y="22" text-anchor="middle">V<tspan font-size="9" dy="2">DD</tspan></text>
+      <text x="146" y="80">drives high</text><text x="146" y="142">drives low</text><text x="212" y="114">pin</text>
+      <text x="420" y="74">pull-up</text>
+      <text x="386" y="152">device A</text><text x="546" y="152">device B</text><text x="612" y="114">line</text>
+      <text x="140" y="214" text-anchor="middle" font-weight="600">push-pull</text>
+      <text x="470" y="214" text-anchor="middle" font-weight="600">open-drain, shared line</text>
+      <text x="470" y="96" text-anchor="middle" fill="var(--muted)" font-size="10.5">low if any device pulls low</text>
+    </g>
+  </svg>
+  </div>
+</div>
+<p>Open-drain looks like a weaker version of push-pull, but it has three uses push-pull can't match:</p>
+<ul>
+  <li><strong>Sharing a line.</strong> Several open-drain outputs can connect to one line: any of them can pull it low, and none can fight another. Two push-pull outputs driving opposite levels would short the supply through their transistors. I²C (Module 9), interrupt lines and reset lines are open-drain for this reason.</li>
+  <li><strong>Translating levels.</strong> The pull-up can go to a different supply voltage from the chip's own, within the pin's rating, so a 3.3 V chip can signal to a 5 V input.</li>
+  <li><strong>Driving loads.</strong> An open-drain pin sinking current from a higher supply is the same circuit as Module 6's low-side switch, in miniature.</li>
+</ul>
+<p>The cost is speed: the falling edge is driven hard, but the rising edge is only the pull-up charging the line's capacitance, the same RC curve as the button figure above.</p>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">Two outputs on one reset line</span></summary>
+  <div class="eb">
+    <p>A board has a reset line that a supervisor chip and a debug connector should both be able to pull low. Both drive it with push-pull outputs.</p>
+    <div class="choice"><p>What's wrong?</p>
+    <ol class="opts">
+      <li>Nothing: the line goes low whenever either drives it low.<div class="why">When one drives low and the other drives high, they fight.</div></li>
+      <li data-correct>When one output drives high while the other drives low, the two transistors short the supply to ground through the line: a large current, an undefined voltage, and possible damage. The line should be open-drain with a single pull-up.<div class="why">Push-pull outputs must never share a line.</div></li>
+      <li>Reset lines must be active-high.<div class="why">The polarity isn't the problem; the output type is.</div></li>
+      <li>It needs a pull-down resistor.<div class="why">A resistor doesn't stop two active outputs fighting.</div></li>
+    </ol>
+    <div class="solution"><p>Shared lines use open-drain outputs and one pull-up: each device can only pull low, so there's never a conflict, and the line is low if any device asserts it (a "wired-AND" of the high states). Most reset and interrupt lines are designed this way.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 5 TIMERS AND PWM ================= -->
+<section class="sec" id="timers" data-short="Timers and PWM">
+<h2>Timers and PWM <a class="vjump" data-t="25:00"></a></h2>
+<p>A <strong>timer</strong> is a hardware counter that increments on every tick of a clock, independently of the firmware. Its clock is the microcontroller's clock divided by a <strong>prescaler</strong>, and it counts up to a <strong>period</strong> value, then restarts. That simple structure does a lot: periodic interrupts for a control loop, timestamps for events, measuring pulse widths, and generating PWM.</p>
+<p>For <strong>PWM</strong> (pulse-width modulation), the timer compares its count with a <strong>compare</strong> value: the output is high while the count is below it and low afterwards. The period value sets the frequency, and the compare value the duty cycle, with no firmware involvement once configured:</p>
+<div class="eq">$$f_\text{PWM} = \frac{f_\text{clk}}{\text{prescaler} \times (\text{period} + 1)} \qquad D = \frac{\text{compare}}{\text{period} + 1} \qquad \text{resolution} = \log_2(\text{period} + 1)\ \text{bits}$$</div>
+
+<div class="widget wide" id="w-pwm">
+  <div class="wh"><span class="tag">Interactive</span><b>A timer generating PWM</b></div>
+  <div class="wb wcols">
+    <div>
+      <div class="ctrl"><label for="tC">Timer clock <b id="tCv"></b></label><input id="tC" type="range" min="6" max="8.2" step="0.00001" value="7.68124"></div>
+      <div class="ctrl"><label for="tF">Wanted PWM frequency <b id="tFv"></b></label><input id="tF" type="range" min="2" max="6" step="0.00001" value="4.30103"></div>
+      <div class="ctrl"><label for="tD">Duty cycle <b id="tDv"></b></label><input id="tD" type="range" min="0" max="1" step="0.001" value="0.3"></div>
+      <p class="small">Prescaler 1. The period register is set to the nearest whole count for the wanted frequency; the duty cycle is rounded to the nearest count.</p>
+    </div>
+    <div>
+      <canvas id="cvPwm" style="height:280px" aria-label="Top: the timer's count rising to the period value and restarting, with the compare value marked. Bottom: the PWM output, high while the count is below the compare value."></canvas>
+      <div class="readout">
+        <div class="stat"><div class="k">Period register</div><div class="v" id="tP"></div></div>
+        <div class="stat"><div class="k">Actual frequency</div><div class="v" id="tA"></div></div>
+        <div class="stat" id="tRS"><div class="k">Duty resolution</div><div class="v" id="tR"></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="try"><b>Things to try</b><ol>
+    <li>At a 48 MHz clock, how much duty-cycle resolution do you get at 20 kHz? At 1 MHz?</li>
+    <li>Why can't you have both a high PWM frequency and fine resolution from the same clock?</li>
+  </ol></div>
+</div>
+
+<div class="example">
+  <span class="xk">Application</span>
+  <p>A common use of PWM is reducing a solenoid valve's power once it has opened. The coil needs its full current to pull the plunger in, but much less to hold it. Driving the valve's MOSFET (Module 6) at full duty for the first 50 ms and then at 30–40 % PWM at 20 kHz, above the audible range, cuts the coil's heating several-fold, while the coil's inductance smooths the current. The flyback diode carries the current during each off-time.</p>
+</div>
+</section>
+
+<!-- ================= 6 INTERRUPTS ================= -->
+<section class="sec" id="interrupts" data-short="Interrupts">
+<h2>Interrupts <a class="vjump" data-t="31:00"></a></h2>
+<p>A microcontroller can watch for events in two ways. <strong>Polling</strong> means the main loop checks a flag or a pin each time round; simple, but the response time is a whole loop iteration and the loop has to keep checking. An <strong>interrupt</strong> lets the hardware stop the main program as soon as an event happens, run a short <strong>interrupt service routine</strong> (ISR), and return to where it left off.</p>
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>An interrupt arriving during the main loop</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 190" role="img" aria-label="Timeline. The main loop runs; an event occurs on a pin; after a short latency the processor saves its state and runs the interrupt service routine, which sets a flag and returns; the main loop resumes and later handles the flag.">
+    <defs><marker id="arI" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--bad)"/></marker></defs>
+    <path d="M30 140H610" stroke="var(--ink)" stroke-width="1.2"/>
+    <g stroke-width="14"><path d="M40 100H250" stroke="var(--c1)" opacity=".7"/><path d="M262 60H330" stroke="var(--c2)" opacity=".8"/><path d="M342 100H600" stroke="var(--c1)" opacity=".7"/></g>
+    <path d="M240 20V140" stroke="var(--bad)" stroke-width="1.6" marker-end="url(#arI)"/>
+    <path d="M240 150H262M240 146v8M262 146v8" stroke="var(--ink2)"/>
+    <path d="M470 100V60" stroke="var(--ink2)" stroke-dasharray="3 3"/>
+    <g font-size="11.5">
+      <text x="140" y="90" text-anchor="middle">main loop</text><text x="296" y="50" text-anchor="middle" fill="var(--c2)">ISR</text><text x="470" y="90" text-anchor="middle">main loop</text>
+      <text x="246" y="18" fill="var(--bad)">event on a pin</text>
+      <text x="251" y="170" text-anchor="middle" font-size="10.5">latency</text>
+      <text x="296" y="84" text-anchor="middle" font-size="10.5">set a flag, store a timestamp</text>
+      <text x="470" y="50" text-anchor="middle" font-size="10.5">handle the flag</text>
+      <text x="320" y="186" text-anchor="middle" fill="var(--muted)">keep ISRs short; do the slow work in the main loop</text>
+    </g>
+  </svg>
+  </div>
+</div>
+<p>Three rules keep interrupts from causing more problems than they solve:</p>
+<ul>
+  <li><strong>Keep ISRs short.</strong> While one runs, other events wait. Record what happened (a flag, a timestamp, a byte) and do the processing in the main loop.</li>
+  <li><strong>Protect shared data.</strong> A variable that both the ISR and the main loop use can be changed halfway through the main loop reading it, for example between the two halves of a 32-bit value on an 8-bit processor. Mark it <code>volatile</code>, and briefly disable interrupts when reading or writing it as a whole.</li>
+  <li><strong>Don't interrupt on a bouncing input</strong> without debouncing, or each bounce triggers the ISR.</li>
+</ul>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">A timestamp that's occasionally wildly wrong</span></summary>
+  <div class="eb">
+    <p>An ISR updates a 32-bit millisecond counter. The main loop on an 8-bit microcontroller occasionally reads a value that's off by 256 or 65 536, but only once in thousands of reads.</p>
+    <div class="choice"><p>Why?</p>
+    <ol class="opts">
+      <li>The timer is inaccurate.<div class="why">A timing error wouldn't produce jumps of exactly 256 or 65 536.</div></li>
+      <li data-correct>The 8-bit processor reads the 32-bit value one byte at a time. If the ISR increments it between two of those byte reads, and the increment carries into the next byte, the main loop combines bytes from before and after the change.<div class="why">Jumps by powers of 256 are the signature of a torn multi-byte read.</div></li>
+      <li>The variable isn't declared as an integer.<div class="why">The type is fine; the access isn't atomic.</div></li>
+      <li>The ISR runs too slowly.<div class="why">The ISR's speed doesn't matter; what matters is that it can run in the middle of the read.</div></li>
+    </ol>
+    <div class="solution"><p>Disable interrupts while copying the counter into a local variable, then re-enable them, or read it twice and repeat until both reads agree. Declaring it <code>volatile</code> is also necessary, so the compiler reads it from memory every time, but on its own doesn't make the read atomic.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 7 WATCHDOG AND BOR ================= -->
+<section class="sec" id="watchdog" data-short="Watchdogs and brown-out">
+<h2>Watchdogs and brown-out resets <a class="vjump" data-t="35:00"></a></h2>
+<p>Embedded systems have to recover by themselves from two kinds of fault: firmware that stops making progress, and a supply that sags.</p>
+<p>A <strong>watchdog timer</strong> is a hardware timer, running from its own clock, that resets the microcontroller if it ever counts to the end. Healthy firmware "kicks" (restarts) it regularly, so it never expires. If the firmware hangs, in an infinite loop, a deadlock, or waiting forever for a peripheral that has stopped responding, the kicks stop, the watchdog expires, and the system restarts in a known state.</p>
+<p>A <strong>brown-out reset</strong> (BOR) circuit watches the supply. Below a threshold, the processor's logic and memory can't be trusted to work correctly; rather than run unpredictably, the BOR holds the microcontroller in reset until the supply recovers, with some hysteresis so it doesn't chatter. Module 7's valve example shows the classic trigger: a battery sagging under a heavy load.</p>
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>A watchdog catching a hang, and a brown-out reset</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 260" role="img" aria-label="Top: a watchdog counter rising and being reset by regular kicks from the firmware; when the firmware hangs, the kicks stop, the counter reaches its timeout and the microcontroller is reset. Bottom: the supply voltage dips below the brown-out threshold; the reset line is held active until the supply has recovered above the threshold plus hysteresis.">
+    <path d="M40 110H620" stroke="var(--ink)" stroke-width="1"/>
+    <path d="M40 40H620" stroke="var(--bad)" stroke-dasharray="5 4"/>
+    <path d="M40 110L90 80L90 110L140 80L140 110L190 80L190 110L240 80L240 110L360 40" fill="none" stroke="var(--c1)" stroke-width="2.2"/>
+    <path d="M360 40V110L410 80L410 110L460 80L460 110L510 80L510 110L560 80L560 110" fill="none" stroke="var(--c1)" stroke-width="2.2" opacity=".5"/>
+    <g fill="var(--good)"><circle cx="90" cy="110" r="3"/><circle cx="140" cy="110" r="3"/><circle cx="190" cy="110" r="3"/><circle cx="240" cy="110" r="3"/></g>
+    <path d="M240 120H360" stroke="var(--bad)" stroke-width="4" opacity=".5"/>
+    <path d="M40 160H200C240 160 240 220 270 222C300 220 300 160 340 160H620" fill="none" stroke="var(--c2)" stroke-width="2.2"/>
+    <path d="M40 198H620" stroke="var(--bad)" stroke-dasharray="5 4"/><path d="M40 184H620" stroke="var(--warn)" stroke-dasharray="2 4"/>
+    <path d="M40 250H234V236H326V250H620" fill="none" stroke="var(--ink2)" stroke-width="1.8"/>
+    <g font-size="11.5">
+      <text x="44" y="34" fill="var(--bad)">watchdog timeout</text>
+      <text x="165" y="128" text-anchor="middle" fill="var(--good)" font-size="10.5">kicks</text>
+      <text x="300" y="134" text-anchor="middle" fill="var(--bad)" font-size="10.5">firmware hangs</text>
+      <text x="364" y="34">reset → firmware restarts</text>
+      <text x="44" y="154" fill="var(--c2)">supply</text>
+      <text x="616" y="194" text-anchor="end" fill="var(--bad)" font-size="10.5">brown-out threshold</text>
+      <text x="616" y="180" text-anchor="end" fill="var(--warn)" font-size="10.5">release level (hysteresis)</text>
+      <text x="280" y="232" text-anchor="middle" font-size="10.5">reset held</text>
+    </g>
+  </svg>
+  </div>
+</div>
+<p>A watchdog only helps if it's kicked from the right place: kicking it from a timer interrupt keeps it happy even while the main loop is stuck. Good practice is to kick it once per main loop iteration, after confirming that each important task has run. And after any reset, the firmware should check the reset cause register and record whether it was a watchdog, a brown-out or a power-up, which is invaluable when diagnosing a failure afterwards.</p>
+
+<details class="exercise">
+  <summary><span class="ek">Design exercise</span><span class="et">A watchdog that never fires</span></summary>
+  <div class="eb">
+    <p>Firmware kicks the watchdog from a 1 ms timer interrupt. During a test, the main loop locks up waiting for a sensor that has stopped responding, and the board sits frozen for minutes without resetting.</p>
+    <div class="choice"><p>Why didn't the watchdog help?</p>
+    <ol class="opts">
+      <li>The watchdog's timeout was too long.<div class="why">It would never have expired: something kept kicking it.</div></li>
+      <li data-correct>The timer interrupt keeps running and kicking the watchdog even though the main loop is stuck, so the watchdog sees a healthy system. Kick it from the main loop, after checking that each task has made progress.<div class="why">The watchdog only knows what the code that kicks it knows.</div></li>
+      <li>Watchdogs don't work while waiting for a peripheral.<div class="why">A watchdog runs independently of the processor's activity.</div></li>
+      <li>The sensor's failure disabled the watchdog.<div class="why">A peripheral can't disable the watchdog.</div></li>
+    </ol>
+    <div class="solution"><p>Interrupts run regardless of what the main loop is doing, so a kick from an interrupt proves only that interrupts work. The kick belongs in the main loop, ideally conditioned on each task having reported progress since the last kick. Waits for peripherals should also have timeouts of their own.</p></div>
+    </div>
+  </div>
+</details>
+</section>
+
+<!-- ================= 8 LEVEL SHIFTING ================= -->
+<section class="sec" id="shifting" data-short="Level shifting">
+<h2>Level shifting <a class="vjump" data-t="40:00"></a></h2>
+<p>Many systems mix logic voltages: a 3.3 V microcontroller, a 5 V sensor or display, a 1.8 V radio or memory. The logic-level figure above shows when a direct connection works; when it doesn't, one of these is used:</p>
+<div class="widget">
+  <div class="wh"><span class="tag">Diagram</span><b>Three ways to connect different logic voltages</b></div>
+  <div class="wb">
+  <svg viewBox="0 0 640 240" role="img" aria-label="Left: a resistor divider reduces a 5 volt output to 3.3 volts for a 3.3 volt input, in one direction only. Middle: a single N-channel MOSFET with pull-ups on both sides, the common bidirectional shifter for open-drain lines such as I2C. Right: a dedicated translator chip with a supply pin for each side.">
+    <defs><g id="gndA"><path d="M-10 0h20M-6 4h12M-2 8h4" stroke="var(--ink)" stroke-width="1.6"/></g></defs>
+    <g fill="none" stroke="var(--ink)" stroke-width="1.6">
+      <path d="M30 80H100V90l7 3l-14 6l14 6l-14 6l7 3V130H180M100 130V140l7 3l-14 6l14 6l-14 6l7 3V178"/>
+      <path d="M236 130H304V122M336 122V130H404M306 112H334M320 112V60M260 60H320"/>
+      <path d="M260 130V110l-6-3l12-6l-12-6l12-6l-6-3V60M380 130V110l6-3l-12-6l12-6l-12-6l6-3V60"/>
+      <rect x="470" y="70" width="110" height="90" fill="#f4f2ec"/>
+      <path d="M440 100H470M580 100H610M440 130H470M580 130H610M500 70V50M550 70V50M525 160V178"/>
+    </g>
+    <path d="M302 122h36" stroke="var(--ink)" stroke-width="2.6"/>
+    <use href="#gndA" x="100" y="180"/><use href="#gndA" x="525" y="180"/>
+    <g fill="var(--ink)"><circle cx="100" cy="130" r="3"/></g>
+    <g font-size="11.5">
+      <text x="30" y="72">5 V out</text><text x="182" y="124" font-size="10.5">to 3.3 V in</text><text x="120" y="110" font-size="10.5">1.8 k</text><text x="120" y="160" font-size="10.5">3.3 k</text>
+      <text x="256" y="52" text-anchor="middle">3.3 V</text><text x="384" y="52" text-anchor="middle">5 V</text><text x="328" y="96" font-size="10.5">gate</text><text x="320" y="108" text-anchor="middle" font-size="10.5" dx="-26">N-FET</text>
+      <text x="240" y="150" font-size="10.5">3.3 V side</text><text x="400" y="150" text-anchor="end" font-size="10.5">5 V side</text>
+      <text x="525" y="114" text-anchor="middle">translator</text><text x="525" y="130" text-anchor="middle" font-size="10.5">chip</text>
+      <text x="500" y="44" text-anchor="middle" font-size="10.5">V<tspan font-size="8" dy="2">A</tspan></text><text x="550" y="44" text-anchor="middle" font-size="10.5">V<tspan font-size="8" dy="2">B</tspan></text>
+      <text x="110" y="216" text-anchor="middle" font-weight="600">divider</text><text x="110" y="232" text-anchor="middle" fill="var(--muted)" font-size="10.5">one-way, down only, slow edges</text>
+      <text x="320" y="216" text-anchor="middle" font-weight="600">MOSFET shifter</text><text x="320" y="232" text-anchor="middle" fill="var(--muted)" font-size="10.5">bidirectional, open-drain lines</text>
+      <text x="525" y="216" text-anchor="middle" font-weight="600">translator IC</text><text x="525" y="232" text-anchor="middle" fill="var(--muted)" font-size="10.5">fast, push-pull, many lines</text>
+    </g>
+  </svg>
+  </div>
+</div>
+<ul>
+  <li>A <strong>resistor divider</strong> scales a higher-voltage output down for a lower-voltage input (Module 2's divider). It's one-directional, and the resistors and the input's capacitance slow the edges, so it suits slow signals such as a UART at modest speed.</li>
+  <li>A single <strong>N-channel MOSFET</strong> with pull-ups on each side shifts open-drain lines in both directions, and is the standard shifter for I²C (Module 9).</li>
+  <li>A <strong>translator IC</strong>, with a separate supply pin for each side, handles fast push-pull signals such as SPI. Some are direction-controlled, some auto-sensing; their datasheets state which kinds of signal they suit.</li>
+</ul>
+<p>Some microcontroller pins are <strong>5 V tolerant</strong>: their protection is designed so they can accept a 5 V input while running at 3.3 V. The datasheet's pin table says which; it's common for most pins but not all, and the feature usually only applies while the chip is powered.</p>
+</section>
+
+<!-- ================= DESIGN EXERCISES ================= -->
+<section class="sec" id="exercises" data-nonum data-short="Design exercises">
+<h2>Design exercises</h2>
+<p>Problems drawn from real hardware. Each takes a few steps. Enter numbers to check your reasoning as you go, or open the worked solutions and discussion. The figures above are useful for sanity-checking.</p>
+
+<div class="chal">
+  <div class="ch"><span class="cn">Exercise 1</span><span class="cd">Analysis · ●○○</span><span class="ctitle">Noise margins</span></div>
+  <div class="cbody">
+    <p>A driver guarantees V<sub>OH(min)</sub> = 2.4 V and V<sub>OL(max)</sub> = 0.4 V. The receiver needs V<sub>IH(min)</sub> = 2.0 V and V<sub>IL(max)</sub> = 0.8 V.</p>
+    <div class="check" data-ans="0.4" data-tol="1%" data-unit="V"><p>(a) High noise margin?</p>
+      <div class="solution"><p>2.4 − 2.0 = 0.4 V.</p></div></div>
+    <div class="check" data-ans="0.4" data-tol="1%" data-unit="V"><p>(b) Low noise margin?</p>
+      <div class="solution"><p>0.8 − 0.4 = 0.4 V. These are the classic TTL levels, which is why a 3.3 V CMOS output (V<sub>OH</sub> near 3 V) can drive a TTL-compatible 5 V input.</p></div></div>
+  </div>
+</div>
+
+<div class="chal">
+  <div class="ch"><span class="cn">Exercise 2</span><span class="cd">Analysis · ●●○</span><span class="ctitle">A pull-up's rise time</span></div>
+  <div class="cbody">
+    <p>An input with a 10 kΩ pull-up to 3.3 V has 50 pF of pin and wiring capacitance. It's read as high above 0.7 V<sub>DD</sub>.</p>
+    <div class="check" data-ans="0.5" data-tol="1%" data-unit="µs"><p>(a) What's the time constant?</p>
+      <div class="solution"><p>τ = RC = 10 000 × 50×10⁻¹² = 0.5 µs.</p></div></div>
+    <div class="check" data-ans="0.60" data-tol="3%" data-unit="µs"><p>(b) How long after the line is released does it read high?</p>
+      <div class="hint">v = V(1 − e<sup>−t/τ</sup>) reaches 0.7V when e<sup>−t/τ</sup> = 0.3.</div>
+      <div class="solution"><p>t = −τ ln 0.3 = 1.2τ = 0.60 µs.</p></div></div>
+  </div>
+</div>
+
+<div class="chal">
+  <div class="ch"><span class="cn">Exercise 3</span><span class="cd">Design · ●●○</span><span class="ctitle">PWM for a valve</span></div>
+  <div class="cbody">
+    <p>A timer runs from a 48 MHz clock with a prescaler of 1, generating 20 kHz PWM.</p>
+    <div class="check" data-ans="2399" data-tol="0.1%" data-unit=""><p>(a) What value goes in the period register?</p>
+      <div class="solution"><p>48 000 000/20 000 = 2400 counts per period, so the register holds 2399 (counting 0 to 2399).</p></div></div>
+    <div class="check" data-ans="11.2" data-tol="2%" data-unit="bits"><p>(b) What's the duty-cycle resolution?</p>
+      <div class="solution"><p>log₂(2400) = 11.2 bits: steps of 1/2400 of the period, about 0.04 %.</p></div></div>
+  </div>
+</div>
+
+<div class="chal">
+  <div class="ch"><span class="cn">Exercise 4</span><span class="cd">Design · ●○○</span><span class="ctitle">A divider for a 5 V signal</span></div>
+  <div class="cbody">
+    <p>A 5 V output drives a 3.3 V input through a divider. The bottom resistor is 3.3 kΩ.</p>
+    <div class="check" data-ans="1.7" data-tol="3%" data-unit="kΩ"><p>What top resistor gives 3.3 V from 5 V?</p>
+      <div class="hint">V<sub>out</sub> = V<sub>in</sub> × R<sub>2</sub>/(R<sub>1</sub> + R<sub>2</sub>).</div>
+      <div class="solution"><p>3.3 = 5 × 3.3/(R₁ + 3.3) gives R₁ + 3.3 = 5 kΩ, so R₁ = 1.7 kΩ; 1.8 kΩ (standard) gives 3.24 V.</p></div></div>
+  </div>
+</div>
+</section>
+
+<!-- ================= BENCH ================= -->
+<section class="sec" id="bench" data-nonum data-short="At the bench">
+<h2>At the bench</h2>
+<div class="video" data-video="lab">
+  <div class="plan">
+    <p>Planned lab demo (≈ 20 min, filmed at the bench):</p>
+    <ol>
+      <li>A floating input on the oscilloscope, and what the firmware reads</li>
+      <li>Capturing switch bounce, and debouncing it with an RC filter</li>
+      <li>An open-drain line's rise time with different pull-ups</li>
+      <li>A watchdog resetting a deliberately hung program</li>
+    </ol>
+  </div>
+</div>
+<div class="lab">
+  <h3>Pins at the bench</h3>
+  <div class="parts"><span>A microcontroller development board</span><span>Oscilloscope</span><span>A push-button</span><span>Resistors: 1 kΩ, 10 kΩ, 100 kΩ, 1 MΩ</span><span>Capacitors: 100 nF, 1 nF</span></div>
+  <ol>
+    <li><b>Floating input.</b> Configure a pin as an input with no pull-up, attach a short wire, and print its value in a loop. Move your hand near it. Then enable the internal pull-up.</li>
+    <li><b>Bounce.</b> Wire the button to ground with a 10 kΩ pull-up, trigger the scope on the falling edge, and capture the bounce. Count presses in firmware with and without a 10 ms software debounce.</li>
+    <li><b>Rise time.</b> Configure a pin as open-drain and toggle it with 1 kΩ, 10 kΩ and 100 kΩ pull-ups; measure the rise time, then add 1 nF.</li>
+    <li><b>Watchdog.</b> Enable the watchdog with a 1 s timeout, kick it from the main loop, then add a button that enters an infinite loop. Print the reset cause at start-up.</li>
+  </ol>
+  <div class="record"><b>What you should see:</b> a floating input that changes with nothing connected; bounce lasting tens to hundreds of microseconds; rise times that scale with R and C; and a reset about a second after the hang, reported as a watchdog reset.</div>
+</div>
+</section>
+
+<!-- ================= SUMMARY ================= -->
+<section class="sec" id="summary" data-nonum data-short="Summary">
+<h2>Summary &amp; cheat sheet</h2>
+<ol class="takeaways">
+  <li>Logic levels are guaranteed ranges; noise margins are the gaps between what an output guarantees and what an input needs.</li>
+  <li>CMOS inputs are tiny capacitors: never leave one floating. Use pull-ups or pull-downs, or configure unused pins as outputs.</li>
+  <li>A pull-up's value trades current against rise time (τ = RC). Debounce mechanical contacts in hardware, firmware or both.</li>
+  <li>Push-pull drives both ways and must never share a line; open-drain only pulls low, shares lines safely, and rises slowly through its pull-up.</li>
+  <li>Timers generate PWM in hardware: frequency from the period, duty from the compare value, resolution log₂(period + 1).</li>
+  <li>Keep ISRs short and protect data shared with the main loop.</li>
+  <li>A watchdog recovers from hangs only if kicked from the main loop; a brown-out reset holds the chip in reset while the supply is too low.</li>
+  <li>Shift levels with a divider (slow, one-way), a MOSFET (open-drain, bidirectional) or a translator IC (fast).</li>
+</ol>
+<div class="cheat">
+  <div><b>Noise margins</b>\(V_{OH} - V_{IH}\), \(V_{IL} - V_{OL}\)</div>
+  <div><b>Pull-up</b>\(I = V_{DD}/R\) when low<br><span class="small">rise to 0.7 V<sub>DD</sub>: 1.2 RC</span></div>
+  <div><b>PWM</b>\(f = f_\text{clk}/(\text{psc}(\text{per} + 1))\)<br><span class="small">resolution log₂(per + 1) bits</span></div>
+  <div><b>Divider shifter</b>\(V_\text{out} = V_\text{in}R_2/(R_1 + R_2)\)</div>
+  <div><b>CMOS (3.3 V)</b>V<sub>IH</sub> ≈ 0.7 V<sub>DD</sub>, V<sub>IL</sub> ≈ 0.3 V<sub>DD</sub></div>
+</div>
+<h3>Further reading</h3>
+<ul class="small">
+  <li><em>The Art of Electronics</em> (Horowitz &amp; Hill), chapter 10: digital logic, including logic families, levels, interfacing and open-drain outputs, and chapter 15: microcontrollers.</li>
+  <li><em>Practical Electronics for Inventors</em> (Scherz &amp; Monk), chapters on digital electronics and microcontrollers, with logic levels, interfacing and practical examples.</li>
+  <li>Your microcontroller's reference manual: the GPIO, timer, interrupt, watchdog and reset chapters.</li>
+</ul>
 </section>
 
 <nav class="pager"></nav>
 </main>
 </div>
 <footer class="site">Hardware Engineering Fundamentals · EE Fundamentals</footer>
+
+<script>
+'use strict';
+const $ = s => document.querySelector(s);
+const {col, si, fmt, lin, log, ticks, axes, line, text, dot, rgba} = Plot;
+function setVerdict(el, cls, html){ el.className = 'verdict ' + cls; el.innerHTML = html; }
+
+/* ============ 1. Logic levels ============ */
+(() => {
+  const FAM = {
+    c18: {name: '1.8 V CMOS', vdd: 1.8, voh: 1.35, vol: 0.45, vih: 1.17, vil: 0.63, max: 2.1},
+    c33: {name: '3.3 V CMOS', vdd: 3.3, voh: 2.9, vol: 0.4, vih: 2.31, vil: 0.99, max: 3.6},
+    c5: {name: '5 V CMOS', vdd: 5, voh: 4.4, vol: 0.5, vih: 3.5, vil: 1.5, max: 5.5},
+    ttl: {name: '5 V TTL', vdd: 5, voh: 2.4, vol: 0.4, vih: 2.0, vil: 0.8, max: 5.5}
+  };
+  const drv = Plot.seg('#lD', upd), rcv = Plot.seg('#lR', upd);
+  let s = {};
+  function upd(){
+    const d = FAM[drv()], r = FAM[rcv()], n = +$('#lN').value;
+    const nh = d.voh - r.vih, nl = r.vil - d.vol, over = d.vdd > r.max;
+    s = {d, r, n};
+    $('#lNv').textContent = fmt(n, 2) + ' V';
+    $('#lH').textContent = fmt(nh, 2) + ' V'; $('#lL').textContent = fmt(nl, 2) + ' V';
+    $('#lHS').className = 'stat ' + (nh < 0 ? 'bad' : nh < n ? 'warn' : ''); $('#lLS').className = 'stat ' + (nl < 0 ? 'bad' : nl < n ? 'warn' : '');
+    const v = $('#lVerdict');
+    if (over) setVerdict(v, 'bad', `<b>Overdriven.</b> The ${d.name} output swings to ${d.vdd} V, above the ${r.name} input's ${r.max} V maximum: current flows through its protection diode into its supply. Use a level shifter, unless the pin is 5 V tolerant.`);
+    else if (nh < 0) setVerdict(v, 'bad', `<b>A high isn't guaranteed to read as high.</b> The output's minimum high (${fmt(d.voh, 2)} V) is below the input's ${fmt(r.vih, 2)} V threshold. It may work on the bench and fail with another part or temperature.`);
+    else if (nl < 0) setVerdict(v, 'bad', `<b>A low isn't guaranteed to read as low.</b> The output's maximum low is above the input's low threshold.`);
+    else if (Math.min(nh, nl) < n) setVerdict(v, 'warn', `<b>Compatible, but the margins (${fmt(Math.min(nh, nl), 2)} V) are smaller than the expected noise.</b> Errors are likely on a noisy or long connection.`);
+    else setVerdict(v, 'ok', `<b>Compatible.</b> Both margins exceed the ${fmt(n, 2)} V of noise allowed for.`);
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvLv'), (ctx, W, H) => {
+    const {d, r, n} = s; if (!d) return;
+    const P = {l: 50, r: W - 14, t: 24, b: H - 30}, top = Math.max(d.vdd, r.max)*1.08, Y = lin(0, top, P.b, P.t);
+    axes(ctx, P, lin(0, 1, P.l, P.r), Y, {xt: [], yt: ticks(0, top, 5), yl: 'V'});
+    const bw = (P.r - P.l)*0.22, x1 = P.l + (P.r - P.l)*0.15, x2 = P.l + (P.r - P.l)*0.6;
+    const box = (x, a, b, c) => { ctx.fillStyle = c; ctx.fillRect(x, Y(b), bw, Y(a) - Y(b)); };
+    box(x1, d.voh, d.vdd, rgba(col.good, .45)); box(x1, 0, d.vol, rgba(col.c1, .45));
+    box(x1, d.voh - n, d.voh, rgba(col.warn, .35)); box(x1, d.vol, d.vol + n, rgba(col.warn, .35));
+    box(x2, r.vih, r.vdd, rgba(col.good, .45)); box(x2, r.vil, r.vih, rgba(col.bad, .2)); box(x2, 0, r.vil, rgba(col.c1, .45));
+    line(ctx, [[x2 - 4, Y(r.max)], [x2 + bw + 4, Y(r.max)]], col.bad, 2);
+    text(ctx, 'abs. max ' + r.max + ' V', x2 + bw/2, Y(r.max) - 9, {align: 'center', color: col.bad});
+    text(ctx, 'output: ' + d.name, x1 + bw/2, P.b + 14, {align: 'center', color: col.ink2});
+    text(ctx, 'input: ' + r.name, x2 + bw/2, P.b + 14, {align: 'center', color: col.ink2});
+    text(ctx, 'high ≥ ' + fmt(d.voh, 2), x1 + bw + 4, Y(d.voh), {color: col.good});
+    text(ctx, 'low ≤ ' + fmt(d.vol, 2), x1 + bw + 4, Y(d.vol), {color: col.c1});
+    text(ctx, fmt(r.vih, 2), x2 - 4, Y(r.vih), {align: 'right', color: col.good});
+    text(ctx, fmt(r.vil, 2), x2 - 4, Y(r.vil), {align: 'right', color: col.c1});
+    text(ctx, 'undefined', x2 + bw/2, Y((r.vih + r.vil)/2), {align: 'center', color: col.bad});
+  });
+  $('#lN').addEventListener('input', upd);
+  upd();
+})();
+
+/* ============ 2. Pull-up, floating input and bounce ============ */
+(() => {
+  const mode = Plot.seg('#pM', upd), bnc = Plot.seg('#pB', upd), VDD = 3.3, TH = 1.65;
+  // a fixed pseudo-random sequence for noise
+  const rnd = (() => { const a = []; let x = 7; for (let i = 0; i < 5000; i++){ x = (x*1103515245 + 12345) % 2147483648; a.push(x/2147483648 - 0.5); } return a; })();
+  let s = {};
+  function upd(){
+    const pu = mode() === 'pu', R = Math.pow(10, +$('#pR').value), C = Math.pow(10, +$('#pC').value)*1e-12, b = bnc() === '1';
+    const T = 6e-3, N = 3000, dt = T/N, ts = [], vs = [], rd = [];
+    // contact state: pressed between 1 ms and 4 ms, with bounce near each edge
+    const bounce = [0, 40e-6, 70e-6, 130e-6, 160e-6, 260e-6, 300e-6, 420e-6];
+    const closed = t => {
+      if (t < 1e-3 || t >= 4e-3 + (b ? 0.45e-3 : 0)) return false;
+      if (b && t < 1.45e-3){ const k = bounce.findIndex(x => x > t - 1e-3); return k < 0 ? true : k % 2 === 1; }
+      if (t >= 4e-3){ const k = bounce.findIndex(x => x > t - 4e-3); return k < 0 ? false : k % 2 === 0; }
+      return true;
+    };
+    let v = pu ? VDD : 1.4, drift = 0;
+    for (let i = 0; i < N; i++){
+      const t = i*dt;
+      if (closed(t)) v = 0;
+      else if (pu) v += (VDD - v)*(1 - Math.exp(-dt/(R*C)));
+      else { drift = 0.995*drift + 0.03*rnd[i]; v = Math.min(VDD, Math.max(0, 1.6 + 0.9*Math.sin(2*Math.PI*50*t + 1) + 6*drift + 0.25*rnd[(i*7) % 5000])); }
+      ts.push(t); vs.push(v); rd.push(v > TH ? 1 : 0);
+    }
+    let edges = 0; for (let i = 1; i < N; i++) if (rd[i] !== rd[i - 1]) edges++;
+    const extra = Math.max(0, edges - 2), tr = R*C*1.2;
+    s = {ts, vs, rd, T};
+    $('#pRv').textContent = si(R, 'Ω'); $('#pCv').textContent = si(C, 'F'); $('#pR').closest('.ctrl').style.opacity = pu ? 1 : 0.4;
+    $('#pI').textContent = pu ? si(VDD/R, 'A') : '—'; $('#pT').textContent = pu ? si(tr, 's') : 'undefined';
+    $('#pE').textContent = extra; $('#pES').className = 'stat ' + (extra > 0 ? 'bad' : '');
+    const vv = $('#pVerdict');
+    if (!pu) setVerdict(vv, 'bad', `<b>Floating.</b> With the button released, nothing defines the pin's voltage; it wanders with coupled noise and the firmware reads random highs and lows.`);
+    else if (extra > 0) setVerdict(vv, 'warn', `<b>Bounce.</b> The firmware sees ${extra} extra transitions from a single press and release. Debounce in hardware (RC and a Schmitt trigger) or in firmware.`);
+    else if (tr > 0.3e-3) setVerdict(vv, 'warn', `<b>Slow release.</b> The weak pull-up takes ${si(tr, 's')} to bring the line back above the threshold.`);
+    else setVerdict(vv, 'ok', `<b>Clean.</b> One press, one release; ${si(VDD/R, 'A')} flows while the button is held.`);
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvPu'), (ctx, W, H) => {
+    const {ts, vs, rd, T} = s; if (!ts) return;
+    const A = {l: 58, r: W - 14, t: 14, b: H*0.58}, B = {l: 58, r: W - 14, t: H*0.7, b: H - 34};
+    const X = lin(0, T, A.l, A.r), Y = lin(-0.2, 3.6, A.b, A.t);
+    axes(ctx, A, X, Y, {xt: [], yt: [0, 1.65, 3.3], yl: 'pin (V)'});
+    Plot.clip(ctx, A);
+    ctx.fillStyle = rgba(col.c2, .1); ctx.fillRect(X(1e-3), A.t, X(4e-3) - X(1e-3), A.b - A.t);
+    line(ctx, [[A.l, Y(1.65)], [A.r, Y(1.65)]], col.muted, 1, [4, 4]);
+    line(ctx, ts.map((t, i) => [X(t), Y(vs[i])]), col.c1, 1.6);
+    ctx.restore();
+    text(ctx, 'button held', X(2.5e-3), A.t + 10, {align: 'center', color: col.c2});
+    const Xb = lin(0, T, B.l, B.r), Yb = lin(-0.2, 1.3, B.b, B.t);
+    axes(ctx, B, Xb, Yb, {xt: [0, 1e-3, 2e-3, 3e-3, 4e-3, 5e-3, 6e-3], yt: [0, 1], xl: 'time', yl: 'reads', xf: t => si(t, 's').replace(' ', '')});
+    const st = []; ts.forEach((t, i) => { if (i) st.push([Xb(t), Yb(rd[i - 1])]); st.push([Xb(t), Yb(rd[i])]); });
+    line(ctx, st, col.c5, 1.8);
+  });
+  ['#pR', '#pC'].forEach(id => $(id).addEventListener('input', upd));
+  upd();
+})();
+
+/* ============ 3. Timer PWM ============ */
+(() => {
+  let s = {};
+  function upd(){
+    const fc = Math.pow(10, +$('#tC').value), fw = Math.pow(10, +$('#tF').value), D = +$('#tD').value;
+    const per = Math.max(1, Math.round(fc/fw) - 1), fa = fc/(per + 1), cmp = Math.round(D*(per + 1)), bits = Math.log2(per + 1);
+    s = {per, cmp};
+    $('#tCv').textContent = si(fc, 'Hz'); $('#tFv').textContent = si(fw, 'Hz'); $('#tDv').textContent = fmt(D*100, 3) + ' %';
+    $('#tP').textContent = per; $('#tA').textContent = si(fa, 'Hz'); $('#tR').textContent = fmt(bits, 3) + ' bits';
+    $('#tRS').className = 'stat ' + (bits < 6 ? 'bad' : bits < 8 ? 'warn' : '');
+    w.redraw();
+  }
+  const w = Plot.widget($('#cvPwm'), (ctx, W, H) => {
+    const {per, cmp} = s; if (per === undefined) return;
+    const A = {l: 56, r: W - 14, t: 14, b: H*0.56}, B = {l: 56, r: W - 14, t: H*0.68, b: H - 38};
+    const X = lin(0, 3, A.l, A.r), Y = lin(0, per*1.08 + 1, A.b, A.t);
+    axes(ctx, A, X, Y, {xt: [], yt: [0, cmp, per].filter((v, i, a) => a.indexOf(v) === i), yl: 'count'});
+    Plot.clip(ctx, A);
+    const steps = Math.min(per + 1, 60);
+    for (let k = 0; k < 3; k++){ const pts = []; for (let j = 0; j <= steps; j++){ const c = Math.round(per*j/steps); const x0 = k + c/(per + 1), x1 = k + (c + (per + 1)/steps)/(per + 1); pts.push([X(x0), Y(c)], [X(Math.min(x1, k + 1)), Y(c)]); } line(ctx, pts, col.c1, 1.8); }
+    line(ctx, [[A.l, Y(cmp)], [A.r, Y(cmp)]], col.c2, 1.4, [5, 4]);
+    ctx.restore();
+    text(ctx, 'compare', A.r - 4, Y(cmp) - 9, {align: 'right', color: col.c2});
+    const Xb = lin(0, 3, B.l, B.r), Yb = lin(-0.2, 1.3, B.b, B.t);
+    axes(ctx, B, Xb, Yb, {xt: [0, 1, 2, 3], yt: [0, 1], xl: 'PWM periods', yl: 'output'});
+    const d = cmp/(per + 1), pts = []; for (let k = 0; k < 3; k++){ pts.push([Xb(k), Yb(d > 0 ? 1 : 0)], [Xb(k + d), Yb(d > 0 ? 1 : 0)], [Xb(k + d), Yb(0)], [Xb(k + 1), Yb(0)]); }
+    line(ctx, pts, col.c5, 2.2);
+  });
+  ['#tC', '#tF', '#tD'].forEach(id => $(id).addEventListener('input', upd));
+  upd();
+})();
+</script>
 </body>
 </html>
